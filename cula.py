@@ -207,91 +207,93 @@ def svd(a, full_matrices=1, compute_uv=1):
 
     """
 
-    _a, wrap = _makearray(a)
+    a, wrap = _makearray(a)
 
     # Set M and N:
-    (_m, _n) = _a.shape
+    (m, n) = a.shape
 
     # The free version of CULA only supports single precision floating
     # point numbers:
     real_t = np.float32
-    if np.iscomplexobj(_a):
+    if np.iscomplexobj(a):
         t = np.complex64
         cula_func = _libcula.culaCgesvd        
     else:
         t = np.float32
         cula_func = _libcula.culaSgesvd
-
-    _a = _fastCopyAndTranspose(t, _a)
-    _assertRank2(_a)
-    _assertNonEmpty(_a)
+    cula_func.restype = int
+    cula_func.argtypes = [ctypes.c_char,
+                          ctypes.c_char,
+                          ctypes.c_int,
+                          ctypes.c_int,
+                          ctypes.c_void_p,
+                          ctypes.c_int,
+                          ctypes.c_void_p,
+                          ctypes.c_void_p,
+                          ctypes.c_int,
+                          ctypes.c_void_p,
+                          ctypes.c_int]
+                                                    
+    a = _fastCopyAndTranspose(t, a)
+    _assertRank2(a)
+    _assertNonEmpty(a)
     
     # Set LDA:
-    _lda = max(1, _m)
+    lda = max(1, m)
 
     # Set S:
-    _s = np.zeros(min(_m, _n), real_t)
+    s = np.zeros(min(m, n), real_t)
 
     # Set JOBU and JOBVT:
     if compute_uv:
         if full_matrices:
-            _jobu = 'A'
-            _jobvt = 'A'
+            jobu = 'A'
+            jobvt = 'A'
         else:
-            _jobu = 'S'
-            _jobvt = 'S'
+            jobu = 'S'
+            jobvt = 'S'
     else:
-        _jobu = 'N'
-        _jobvt = 'N'
+        jobu = 'N'
+        jobvt = 'N'
 
     # Set LDU and transpose of U:
-    _ldu = _m
-    if _jobu == 'A':
-        _u = np.zeros((_ldu, _m), t)
-    elif _jobu == 'S':
-        _u = np.zeros((min(_m, _n), _ldu), t)
+    ldu = m
+    if jobu == 'A':
+        u = np.zeros((ldu, m), t)
+    elif jobu == 'S':
+        u = np.zeros((min(m, n), ldu), t)
     else:
-        _ldu = 1
-        _u = np.empty((1,1), t)
+        ldu = 1
+        u = np.empty((1, 1), t)
 
     # Set LDVT and transpose of VT:
-    if _jobvt == 'A':
-        _ldvt = _n
-        _vt = np.zeros((_n, _n), t)
-    elif _jobvt == 'S':
-        _ldvt = min(_m, _n)
-        _vt = np.zeros((_n, _ldvt), t)
+    if jobvt == 'A':
+        ldvt = n
+        vt = np.zeros((n, n), t)
+    elif jobvt == 'S':
+        ldvt = min(m, n)
+        vt = np.zeros((n, ldvt), t)
     else:
-        _ldvt = 1
-        _vt = np.empty((1, 1), t)        
+        ldvt = 1
+        vt = np.empty((1, 1), t)        
 
-    m = ctypes.c_int(_m)
-    n = ctypes.c_int(_n)
-    jobu = ctypes.c_char(_jobu)
-    jobvt = ctypes.c_char(_jobvt)
-    lda = ctypes.c_int(_lda)
-    ldu = ctypes.c_int(_ldu)
-    ldvt = ctypes.c_int(_ldvt)
-    a = _a.ctypes.data_as(ctypes.c_void_p)
-    s = _s.ctypes.data_as(ctypes.c_void_p)
-    u = _u.ctypes.data_as(ctypes.c_void_p)
-    vt = _vt.ctypes.data_as(ctypes.c_void_p)
-
-    status = cula_func(jobu, jobvt, m, n, a, lda, s,
-                       u, ldu, vt, ldvt)
+    status = cula_func(jobu, jobvt, m, n, a.ctypes.data,
+                       lda, s.ctypes.data, u.ctypes.data,
+                       ldu, vt.ctypes.data, ldvt)
     if status != 0:
         status = culaInitialize()
         culaCheckStatus(status)
-        status = cula_func(jobu, jobvt, m, n, a, lda, s,
-                           u, ldu, vt, ldvt)
+        status = cula_func(jobu, jobvt, m, n, a.ctypes.data,
+                           lda, s.ctypes.data, u.ctypes.data,
+                           ldu, vt.ctypes.data, ldvt)
         
     if status > 0:
         raise LinAlgError, 'SVD did not converge'
 
     if compute_uv:
-        return wrap(_u.transpose()), _s, wrap(_vt.transpose())
+        return wrap(u.transpose()), s, wrap(vt.transpose())
     else:
-        return _s
+        return s
 
 
 if __name__ == "__main__":
