@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-
 """
 Python interface to CULA toolkit.
 """
@@ -522,9 +521,11 @@ def svd(a, full_matrices=1, compute_uv=1):
 
     Examples
     --------
+    >>> import numpy as np
     >>> import cula
     >>> cula.culaInitialize()
     0
+
     >>> a = np.random.randn(6, 3) + 1j*np.random.randn(6, 3)
     >>> a = np.asarray(a, np.complex64)
     >>> U, s, Vh = cula.svd(a)
@@ -638,7 +639,7 @@ def svd_device(a, a_dtype, a_shape, full_matrices=1, compute_uv=1):
 
     Factorizes the matrix `a` into two unitary matrices, ``U`` and
     ``Vh``, and a 1-dimensional array of singular values, ``s`` (real,
-    non-negative), such that ``a == U S Vh``, where ``S`` is the
+    non-negative), such that ``a == U.T S Vh.T``, where ``S`` is the
     diagonal matrix ``np.diag(s)``.
 
     Parameters
@@ -651,27 +652,27 @@ def svd_device(a, a_dtype, a_shape, full_matrices=1, compute_uv=1):
     a_shape : tuple
         Shape of matrix data ``(M, N)``.
     full_matrices : bool, optional
-        If True (default), ``u`` and ``v.H`` have the shapes
+        If True (default), ``U`` and ``Vh`` have the shapes
         ``(M, M)`` and ``(N, N)``, respectively.  Otherwise, the shapes
-        are ``(M, K)`` and ``(K, N)``, resp., where ``K = min(M, N)``.
+        are ``(K, M)`` and ``(N, K)``, resp., where ``K = min(M, N)``.
     compute_uv : bool, optional
-        Whether or not to compute ``u`` and ``v.H`` in addition to ``s``.
+        Whether or not to compute ``U`` and ``Vh`` in addition to ``s``.
         True by default.
 
     Returns
     -------
-    u : c_void_p
+    U : c_void_p
         Pointer to device memory containing unitary matrix.
-        The shape of `U` is ``(M, M)`` or ``(M, K)``
+        The shape of `U` is ``(M, M)`` or ``(K, M)``
         depending on value of `full_matrices`.
     s : c_void_p
         Pointer to device memory containing 
         the singular values, sorted so that ``s[i] >= s[i+1]``.
-        `S` is a 1-D array of length ``min(M, N)``
-    v.H : c_void_p
+        `s` is a 1-D array of length ``min(M, N)``
+    Vh : c_void_p
         Pointer to device memory containing
-        unitary matrix of shape ``(N, N)`` or ``(K, N)``, depending
-        on `full_matrices`.
+        unitary matrix of shape ``(N, N)`` or ``(N, K)``, depending
+        on `full_matrices`. 
 
     Raises
     ------
@@ -688,6 +689,7 @@ def svd_device(a, a_dtype, a_shape, full_matrices=1, compute_uv=1):
 
     Examples
     --------
+    >>> import numpy as np
     >>> import cula
     >>> cula.culaInitialize()
     0
@@ -696,16 +698,16 @@ def svd_device(a, a_dtype, a_shape, full_matrices=1, compute_uv=1):
     >>> m, n = a.shape
     >>> at = a.T.copy()
     >>> a_ptr = cula.cuda_malloc(a.nbytes)
-    >>> cula.cuda_memcpy_htod(a_ptr, at.ctypes.data, a.nbytes)
+    >>> cula.cuda_memcpy_htod(a_ptr, at.ctypes.data, at.nbytes)
     >>> U_ptr, s_ptr, Vh_ptr = cula.svd_device(a_ptr, a.dtype, a.shape, full_matrices=False)
-    >>> U = np.empty((m, min(m, n)), a.dtype)
+    >>> U = np.empty((min(m, n), m), a.dtype)
     >>> s = np.empty(min(m, n), np.float32)
     >>> Vh = np.empty((n, min(m, n)), a.dtype)
     >>> cula.cuda_memcpy_dtoh(U.ctypes.data, U_ptr, U.nbytes)
     >>> cula.cuda_memcpy_dtoh(s.ctypes.data, s_ptr, s.nbytes)
     >>> cula.cuda_memcpy_dtoh(Vh.ctypes.data, Vh_ptr, Vh.nbytes)
     >>> S = np.diag(s)
-    >>> np.allclose(a, np.dot(U, np.dot(S, Vh.T)))
+    >>> np.allclose(a, np.dot(U.T, np.dot(S, Vh.T)))
     True
 
     """
