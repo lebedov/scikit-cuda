@@ -25,6 +25,24 @@ try:
 except OSError:
     print 'libcudart.so not found'
 
+try:
+    _libcublas = ctypes.cdll.LoadLibrary('libcublas.so')
+except OSError:
+    print 'libcublas.so not found'
+
+# Needed because of how ctypes handles None on 64-bit platforms.
+def POINTER(obj):
+    p = ctypes.POINTER(obj)
+    if not isinstance(p.from_param, classmethod):
+        def from_param(cls, x):
+            if x is None:
+                return cls()
+            else:
+                return x
+        p.from_param = classmethod(from_param)
+
+    return p
+
 # Function for retrieving string associated with specific CULA error
 # code:
 _culaGetStatusString = _libcula.culaGetStatusString
@@ -130,9 +148,6 @@ def culaShutdown():
     """Shuts down CULA."""
     
     return _libcula.culaShutdown()
-
-# Shut down CULA upon exit:
-atexit.register(_libcula.culaShutdown)
 
 # Function for retrieving string associated with specific CUDA runtime
 # error code:
@@ -449,7 +464,89 @@ def cuda_memcpy_dtoh(dst, src, count):
 
     status = _cudaMemcpy(dst, src,
                          ctypes.c_size_t(count), memcpyDeviceToHost)
-                         
+
+# Generic CUBLAS error:
+class cublasError(Exception):
+    "CUBLAS error"
+    
+    pass
+
+# Exceptions corresponding to different CUBLAS errors:
+class cublasNotInitialized(cublasError):
+    __doc__ = "CUBLAS library not initialized."
+    pass
+
+class cublasAllocFailed(cublasError):
+    __doc__ = "Resource allocation failed."
+    pass
+
+class cublasInvalidValue(cublasError):
+    __doc__ = "Unsupported numerical value was passed to function."
+    pass
+
+class cublasArchMismatch(cublasError):
+    __doc__ = "Function requires an architectural feature absent from the device."
+    pass
+
+class cublasMappingError(cublasError):
+    __doc__ = "Access to GPU memory space failed."""
+    pass
+
+class cublasExecutionFailed(cublasError):
+    __doc__ = "GPU program failed to execute."
+    pass
+
+class cublasInternalError(cublasError):
+    __doc__ = "An internal CUBLAS operation failed."
+    pass
+
+cublasExceptions = {
+    0x1: cublasNotInitialized,
+    0x3: cublasAllocFailed,
+    0x7: cublasInvalidValue,
+    0x8: cublasArchMismatch,
+    0xb: cublasMappingError,
+    0xd: cublasExecutionFailed,
+    0xe: cublasInternalError,
+    }
+
+_cublasGetError = _libcublas.cublasGetError
+_cublasGetError.restype = int
+_cublasGetError.argtypes = []
+def cublasGetError():
+    """Returns and resets the current CUBLAS error code."""
+
+    return _cublasGetError()
+
+_cublasInit = _libcublas.cublasInit
+_cublasInit.restype = int
+_cublasInit.argtypes = []
+def cublasInit():
+    """Must be called before using any other CUBLAS functions."""
+    
+    return _cublasInit()
+
+_cublasShutdown = _libcublas.cublasShutdown
+_cublasShutdown.restype = int
+_cublasShutdown.argtypes = []
+def cublasShutdown():
+    """Shuts down CUBLAS."""
+
+    return _cublasShutdown()
+
+def cublasCheckStatus(status):
+    """Raise an exception if the specified CUBLAS status is an error."""
+
+    if status != 0:
+        try:
+            raise cublasExceptions[status]
+        except KeyError:
+            raise cublasError
+
+# Shut down CULA and/or CUBLAS upon exit:
+atexit.register(_libcula.culaShutdown)
+atexit.register(_libcublas.cublasShutdown)
+
 # Functions copied from numpy.linalg:
 def _makearray(a):
     new = np.asarray(a)
@@ -473,38 +570,63 @@ def _fastCopyAndTranspose(type, a):
     else:
         return np.fastCopyAndTranspose(a.astype(type))
 
+_culaSgesvd = _libcula.culaSgesvd
+_culaSgesvd.restype = int
+_culaSgesvd.argtypes = [ctypes.c_char,
+                        ctypes.c_char,
+                        ctypes.c_int,
+                        ctypes.c_int,
+                        ctypes.c_void_p,
+                        ctypes.c_int,
+                        ctypes.c_void_p,
+                        ctypes.c_void_p,
+                        ctypes.c_int,
+                        ctypes.c_void_p,
+                        ctypes.c_int]
+_culaCgesvd = _libcula.culaCgesvd
+_culaCgesvd.restype = int
+_culaCgesvd.argtypes = [ctypes.c_char,
+                        ctypes.c_char,
+                        ctypes.c_int,
+                        ctypes.c_int,
+                        ctypes.c_void_p,
+                        ctypes.c_int,
+                        ctypes.c_void_p,
+                        ctypes.c_void_p,
+                        ctypes.c_int,
+                        ctypes.c_void_p,
+                        ctypes.c_int]
+
 def svd(a, full_matrices=1, compute_uv=1):
     """
     Singular Value Decomposition.
 
-    Factorizes the matrix `a` into two unitary matrices, ``U`` and
-    ``Vh``, and a 1-dimensional array of singular values, ``s`` (real,
-    non-negative), such that ``a == U S Vh``, where ``S`` is the
-    diagonal matrix ``np.diag(s)``.
+    Factors the matrix `a` into two unitary matrices, `u` and `vh`,
+    and a 1-dimensional array of real, non-negative singular values,
+    `s`, such that `a == dot(u, dot(diag(s), vh))`.
 
     Parameters
     ----------
     a : array_like
-        Matrix of shape ``(M, N)`` to decompose.
+        Matrix of shape `(m, n)` to decompose.
     full_matrices : bool, optional
-        If True (default), ``u`` and ``v.H`` have the shapes
-        ``(M, M)`` and ``(N, N)``, respectively.  Otherwise, the shapes
-        are ``(M, K)`` and ``(K, N)``, resp., where ``K = min(M, N)``.
+        If True (default), `u` and `vh` have the shapes
+        `(m, m)` and `(n, n)`, respectively.  Otherwise, the shapes
+        are `(m, k)` and `(k, n)`, respectively, where `k = min(m, n)`.
     compute_uv : bool, optional
-        Whether or not to compute ``u`` and ``v.H`` in addition to ``s``.
-        True by default.
+        If True (default), compute `u` and `vh` in addition to `s`.
 
     Returns
     -------
     u : ndarray
-        Unitary matrix. The shape of `U` is ``(M, M)`` or ``(M, K)``
+        Unitary matrix of shape `(m, m)` or `(m, k)`
         depending on value of `full_matrices`.
     s : ndarray
-        The singular values, sorted so that ``s[i] >= s[i+1]``.
-        `S` is a 1-D array of length ``min(M, N)``
-    v.H : ndarray
-        Unitary matrix of shape ``(N, N)`` or ``(K, N)``, depending
-        on `full_matrices`.
+        The singular values of `a`, sorted such that `s[i] >= s[i+1]`.
+        `s` is a 1-D array of length `min(m, n)`.
+    vh : ndarray
+        Unitary matrix of shape `(n, n)` or `(k, n)`, depending
+        on the value of `full_matrices`.
 
     Raises
     ------
@@ -516,27 +638,28 @@ def svd(a, full_matrices=1, compute_uv=1):
     Because of the limitations of the free version of CULA, the
     argument is cast to single precision.
     
-    If `a` is a matrix object (as opposed to an `ndarray`), then so are all
-    the return values.
+    If `a` is a matrix object (as opposed to an `ndarray`), then so
+    are all the return values.
 
-    Examples
-    --------
+    Example
+    -------
     >>> import numpy as np
     >>> import cula
-    >>> cula.culaInitialize()
+    >>> cula.culaInitialize();
     0
-
+    
     >>> a = np.random.randn(6, 3) + 1j*np.random.randn(6, 3)
     >>> a = np.asarray(a, np.complex64)
-    >>> U, s, Vh = cula.svd(a)
-    >>> U.shape, Vh.shape, s.shape
+    >>> u, s, vh = cula.svd(a)
+    >>> u.shape, vh.shape, s.shape
     ((6, 6), (3, 3), (3,))
 
-    >>> U, s, Vh = cula.svd(a, full_matrices=False)
-    >>> U.shape, Vh.shape, s.shape
+    >>> u, s, vh = cula.svd(a, full_matrices=False)
+    >>> u.shape, vh.shape, s.shape
     ((6, 3), (3, 3), (3,))
-    >>> S = np.diag(s)
-    >>> np.allclose(a, np.dot(U, np.dot(S, Vh)))
+
+    >>> s_mat = np.diag(s)
+    >>> np.allclose(a, np.dot(u, np.dot(s_mat, vh)))
     True
 
     >>> s2 = cula.svd(a, compute_uv=False)
@@ -555,22 +678,10 @@ def svd(a, full_matrices=1, compute_uv=1):
     real_dtype = np.float32
     if np.iscomplexobj(a):
         a_dtype = np.complex64
-        cula_func = _libcula.culaCgesvd        
+        cula_func = _culaCgesvd        
     else:
         a_dtype = np.float32
-        cula_func = _libcula.culaSgesvd
-    cula_func.restype = int
-    cula_func.argtypes = [ctypes.c_char,
-                          ctypes.c_char,
-                          ctypes.c_int,
-                          ctypes.c_int,
-                          ctypes.c_void_p,
-                          ctypes.c_int,
-                          ctypes.c_void_p,
-                          ctypes.c_void_p,
-                          ctypes.c_int,
-                          ctypes.c_void_p,
-                          ctypes.c_int]
+        cula_func = _culaSgesvd
                                                     
     a = _fastCopyAndTranspose(a_dtype, a)
     _assertRank2(a)
@@ -633,45 +744,70 @@ def svd(a, full_matrices=1, compute_uv=1):
     else:
         return s
 
+_culaDeviceSgesvd = _libcula.culaDeviceSgesvd
+_culaDeviceSgesvd.restype = int
+_culaDeviceSgesvd.argtypes = [ctypes.c_char,
+                              ctypes.c_char,
+                              ctypes.c_int,
+                              ctypes.c_int,
+                              ctypes.c_void_p,
+                              ctypes.c_int,
+                              ctypes.c_void_p,
+                              ctypes.c_void_p,
+                              ctypes.c_int,
+                              ctypes.c_void_p,
+                              ctypes.c_int]                                                    
+_culaDeviceCgesvd = _libcula.culaDeviceCgesvd
+_culaDeviceCgesvd.restype = int
+_culaDeviceCgesvd.argtypes = [ctypes.c_char,
+                              ctypes.c_char,
+                              ctypes.c_int,
+                              ctypes.c_int,
+                              ctypes.c_void_p,
+                              ctypes.c_int,
+                              ctypes.c_void_p,
+                              ctypes.c_void_p,
+                              ctypes.c_int,
+                              ctypes.c_void_p,
+                              ctypes.c_int]                                                    
+
 def svd_device(a, a_dtype, a_shape, full_matrices=1, compute_uv=1):
     """
     Singular Value Decomposition.
 
-    Factorizes the matrix `a` into two unitary matrices, ``U`` and
-    ``Vh``, and a 1-dimensional array of singular values, ``s`` (real,
-    non-negative), such that ``a == U.T S Vh.T``, where ``S`` is the
-    diagonal matrix ``np.diag(s)``.
+    Factors the matrix `a` into two unitary matrices, `u` and `vh`,
+    and a 1-dimensional array of real, non-negative singular values,
+    `s`, such that `a == dot(u.T, dot(diag(s), vh.T))`.
 
     Parameters
     ----------
     a : c_void_p
         Pointer to device memory containing
-        matrix of shape ``(M, N)`` to decompose.
-    a_dtype : type
+        matrix of shape `(m, n)` to decompose.
+    a_dtype : {float32, complex64}
         Type of matrix data.
     a_shape : tuple
-        Shape of matrix data ``(M, N)``.
+        Shape of matrix data `(m, n)`.
     full_matrices : bool, optional
-        If True (default), ``U`` and ``Vh`` have the shapes
-        ``(M, M)`` and ``(N, N)``, respectively.  Otherwise, the shapes
-        are ``(K, M)`` and ``(N, K)``, resp., where ``K = min(M, N)``.
+        If True (default), `u` and `vh` have the shapes
+        `(m, m)` and `(n, n)`, respectively.  Otherwise, the shapes
+        are `(k, m)` and `(n, k)`, resp., where `k = min(m, n)`.
     compute_uv : bool, optional
-        Whether or not to compute ``U`` and ``Vh`` in addition to ``s``.
-        True by default.
+        If True (default), compute `u` and `vh` in addition to `s`.
 
     Returns
     -------
-    U : c_void_p
-        Pointer to device memory containing unitary matrix.
-        The shape of `U` is ``(M, M)`` or ``(K, M)``
+    u : c_void_p
+        Pointer to device memory containing unitary matrix of
+        shape `(m, m)` or `(k, m)`
         depending on value of `full_matrices`.
     s : c_void_p
         Pointer to device memory containing 
-        the singular values, sorted so that ``s[i] >= s[i+1]``.
-        `s` is a 1-D array of length ``min(M, N)``
-    Vh : c_void_p
+        the singular values, sorted such that `s[i] >= s[i+1]`.
+        `s` is a 1-D array of length `min(m, n)`.
+    vh : c_void_p
         Pointer to device memory containing
-        unitary matrix of shape ``(N, N)`` or ``(N, K)``, depending
+        unitary matrix of shape `(n, n)` or `(n, k)`, depending
         on `full_matrices`. 
 
     Raises
@@ -687,12 +823,13 @@ def svd_device(a, a_dtype, a_shape, full_matrices=1, compute_uv=1):
     If `a` is a matrix object (as opposed to an `ndarray`), then so are all
     the return values.
 
-    Examples
-    --------
+    Example
+    -------
     >>> import numpy as np
     >>> import cula
     >>> cula.culaInitialize()
     0
+
     >>> a = np.random.randn(9, 6) + 1j*np.random.randn(9, 6)
     >>> a = np.asarray(a, np.complex64)
     >>> m, n = a.shape
@@ -717,26 +854,13 @@ def svd_device(a, a_dtype, a_shape, full_matrices=1, compute_uv=1):
     real_dtype = np.float32
     real_dtype_nbytes = np.nbytes[real_dtype]
     if a_dtype == np.complex64:
-        cula_func = _libcula.culaDeviceCgesvd        
+        cula_func = _culaDeviceCgesvd        
         a_dtype_nbytes = np.nbytes[a_dtype]
     elif a_dtype == np.float32:
-        cula_func = _libcula.culaDeviceSgesvd
+        cula_func = _culaDeviceSgesvd
         a_dtype_nbytes = np.nbytes[a_dtype]
     else:
         raise ValueError('unsupported type')
-
-    cula_func.restype = int
-    cula_func.argtypes = [ctypes.c_char,
-                          ctypes.c_char,
-                          ctypes.c_int,
-                          ctypes.c_int,
-                          ctypes.c_void_p,
-                          ctypes.c_int,
-                          ctypes.c_void_p,
-                          ctypes.c_void_p,
-                          ctypes.c_int,
-                          ctypes.c_void_p,
-                          ctypes.c_int]                                                    
 
     (m, n) = a_shape
     
@@ -799,6 +923,108 @@ def svd_device(a, a_dtype, a_shape, full_matrices=1, compute_uv=1):
         cuda_free(vt)
         return s
 
+_cublasSgemm = _libcublas.cublasSgemm
+_cublasSgemm.restype = None
+_cublasSgemm.argtypes = [ctypes.c_char,
+                         ctypes.c_char,
+                         ctypes.c_int,
+                         ctypes.c_int,
+                         ctypes.c_int,
+                         ctypes.c_float,
+                         ctypes.c_void_p,
+                         ctypes.c_int,
+                         ctypes.c_void_p,
+                         ctypes.c_int,
+                         ctypes.c_float,
+                         ctypes.c_void_p,
+                         ctypes.c_int]
+_cublasCgemm = _libcublas.cublasCgemm
+_cublasCgemm.restype = None
+_cublasCgemm.argtypes = [ctypes.c_char,
+                         ctypes.c_char,
+                         ctypes.c_int,
+                         ctypes.c_int,
+                         ctypes.c_int,
+                         ctypes.c_float,
+                         ctypes.c_void_p,
+                         ctypes.c_int,
+                         ctypes.c_void_p,
+                         ctypes.c_int,
+                         ctypes.c_float,
+                         ctypes.c_void_p,
+                         ctypes.c_int]
+
+def dot_device(a, a_shape, b, b_shape, a_dtype):
+    """
+    Matrix product of two arrays.
+
+    Computes the matrix product of two arrays of shapes `(m, k)` and
+    `(k, n)`; the result has shape `(m, n)`.
+
+    Parameters
+    ----------
+    a : c_void_p
+        Pointer to device memory containing
+        matrix of shape `(m, k)`.
+    a_shape : tuple
+        Shape of matrix `a` data `(m, k)`.
+    b : c_void_p
+        Pointer to device memory containing
+        matrix of shape `(k, n)`.
+    b_shape : tuple
+        Shape of matrix `b` data `(k, n)`.
+    a_dtype : {float32, complex64}
+        Type of matrix.
+        
+    Example
+    -------
+    >>> import numpy as np
+    >>> import cula
+    >>> cula.cublasInit()
+    0
+    
+    >>> a = np.array([[1, 2], [3, 4], [5, 6], [7, 8]], np.float32)
+    >>> b = np.array([[2, 3], [4, 5]], np.float32)
+    >>> c = np.empty((2, 4), np.float32)
+    >>> a_ptr = cula.cuda_malloc(a.nbytes)
+    >>> b_ptr = cula.cuda_malloc(b.nbytes)
+    >>> c_ptr = cula.dot_device(a_ptr, a.shape, b_ptr, b.shape, a.dtype)
+    >>> cula.cuda_memcpy_dtoh(c.ctypes.data, c_ptr, c.nbytes)
+    >>> np.allclose(np.dot(a, b), c.T)
+    True
+    
+    """
+
+    if (a_dtype == np.complex64):
+        cublas_func = _cublasCgemm        
+        a_dtype_nbytes = np.nbytes[a_dtype]
+        alpha = np.complex64(1.0)
+        beta = np.complex64(0.0)
+    elif a_dtype == np.float32:
+        cublas_func = _cublasSgemm
+        a_dtype_nbytes = np.nbytes[a_dtype]
+        alpha = np.float32(1.0)
+        beta = np.complex64(0.0)
+    else:
+        raise ValueError('unsupported type')
+
+    transa = 'N'
+    transb = 'N'
+    m = a_shape[0]
+    n = b_shape[1]
+    k = a_shape[1]
+    lda = a_shape[0]
+    ldb = b_shape[0]
+    ldc = max(1, m)
+    c = cuda_malloc(ldc*n*a_dtype_nbytes)
+
+    cublas_func(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta,
+                c, ldc)
+
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+    return c
 
 if __name__ == "__main__":
     import doctest
