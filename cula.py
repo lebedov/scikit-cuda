@@ -413,7 +413,7 @@ _cudaMalloc = _libcudart.cudaMalloc
 _cudaMalloc.restype = int
 _cudaMalloc.argtypes = [ctypes.POINTER(ctypes.c_void_p),
                         ctypes.c_size_t]
-def cuda_malloc(count, ctype=None):
+def cudaMalloc(count, ctype=None):
     """Allocate `count` bytes in GPU memory."""
     
     ptr = ctypes.c_void_p()
@@ -425,7 +425,7 @@ def cuda_malloc(count, ctype=None):
 _cudaFree = _libcudart.cudaFree
 _cudaFree.restype = int
 _cudaFree.argtypes = [ctypes.c_void_p]
-def cuda_free(ptr):
+def cudaFree(ptr):
     """Free the device memory at the specified pointer."""
     
     status = _cudaFree(ptr)
@@ -435,7 +435,7 @@ _cudaMallocPitch.restype = int
 _cudaMallocPitch.argtypes = [ctypes.POINTER(ctypes.c_void_p),
                              ctypes.POINTER(ctypes.c_size_t),
                              ctypes.c_size_t, ctypes.c_size_t]
-def cuda_malloc_pitch(pitch, rows, cols, elesize):
+def cudaMallocPitch(pitch, rows, cols, elesize):
     """Allocate memory on the device with a specific pitch."""
     
     ptr = ctypes.c_void_p()
@@ -834,7 +834,7 @@ def svd_device(a, a_dtype, a_shape, full_matrices=1, compute_uv=1):
     >>> a = np.asarray(a, np.complex64)
     >>> m, n = a.shape
     >>> at = a.T.copy()
-    >>> a_ptr = cula.cuda_malloc(a.nbytes)
+    >>> a_ptr = cula.cudaMalloc(a.nbytes)
     >>> cula.cuda_memcpy_htod(a_ptr, at.ctypes.data, at.nbytes)
     >>> u_ptr, s_ptr, vh_ptr = cula.svd_device(a_ptr, a.dtype, a.shape, full_matrices=False)
     >>> u = np.empty((min(m, n), m), a.dtype)
@@ -867,7 +867,7 @@ def svd_device(a, a_dtype, a_shape, full_matrices=1, compute_uv=1):
     lda = max(1, m)
 
     # Set S:
-    s = cuda_malloc(min(m, n)*real_dtype_nbytes)
+    s = cudaMalloc(min(m, n)*real_dtype_nbytes)
     
     # Set JOBU and JOBVT:
     if compute_uv:
@@ -884,23 +884,23 @@ def svd_device(a, a_dtype, a_shape, full_matrices=1, compute_uv=1):
     # Set LDU and transpose of U:
     ldu = m
     if jobu == 'A':
-        u = cuda_malloc(ldu*m*a_dtype_nbytes)
+        u = cudaMalloc(ldu*m*a_dtype_nbytes)
     elif jobu == 'S':
-        u = cuda_malloc(min(m, n)*ldu*a_dtype_nbytes)
+        u = cudaMalloc(min(m, n)*ldu*a_dtype_nbytes)
     else:
         ldu = 1
-        u = cuda_malloc(a_dtype_nbytes)
+        u = cudaMalloc(a_dtype_nbytes)
         
     # Set LDVT and transpose of VT:
     if jobvt == 'A':
         ldvt = n
-        vt = cuda_malloc(n*n*a_dtype_nbytes)
+        vt = cudaMalloc(n*n*a_dtype_nbytes)
     elif jobvt == 'S':
         ldvt = min(m, n)
-        vt = cuda_malloc(n*ldvt*a_dtype_nbytes)
+        vt = cudaMalloc(n*ldvt*a_dtype_nbytes)
     else:
         ldvt = 1
-        vt = cuda_malloc(a_dtype_nbytes)
+        vt = cudaMalloc(a_dtype_nbytes)
         
     status = cula_func(jobu, jobvt, m, n, a,
                        lda, s, u,
@@ -918,8 +918,8 @@ def svd_device(a, a_dtype, a_shape, full_matrices=1, compute_uv=1):
     if compute_uv:
         return u, s, vt
     else:
-        cuda_free(u)
-        cuda_free(vt)
+        cudaFree(u)
+        cudaFree(vt)
         return s
 
 _cublasSgemm = _libcublas.cublasSgemm
@@ -974,6 +974,12 @@ def dot_device(a, a_shape, b, b_shape, a_dtype):
         Shape of matrix `b` data `(k, n)`.
     a_dtype : {float32, complex64}
         Type of matrix.
+
+    Returns
+    -------
+    c_ptr : c_void_p
+        Pointer to device memory containing matrix product of shape
+        `(m, n)`.
         
     Example
     -------
@@ -985,8 +991,8 @@ def dot_device(a, a_shape, b, b_shape, a_dtype):
     >>> a = np.array([[1, 2], [3, 4], [5, 6], [7, 8]], np.float32)
     >>> b = np.array([[2, 3], [4, 5]], np.float32)
     >>> c = np.empty((2, 4), np.float32)
-    >>> a_ptr = cula.cuda_malloc(a.nbytes)
-    >>> b_ptr = cula.cuda_malloc(b.nbytes)
+    >>> a_ptr = cula.cudaMalloc(a.nbytes)
+    >>> b_ptr = cula.cudaMalloc(b.nbytes)
     >>> c_ptr = cula.dot_device(a_ptr, a.shape, b_ptr, b.shape, a.dtype)
     >>> cula.cuda_memcpy_dtoh(c.ctypes.data, c_ptr, c.nbytes)
     >>> np.allclose(np.dot(a, b), c.T)
@@ -1015,7 +1021,7 @@ def dot_device(a, a_shape, b, b_shape, a_dtype):
     lda = m
     ldb = k
     ldc = max(1, m)
-    c = cuda_malloc(ldc*n*a_dtype_nbytes)
+    c = cudaMalloc(ldc*n*a_dtype_nbytes)
 
     cublas_func(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta,
                 c, ldc)
