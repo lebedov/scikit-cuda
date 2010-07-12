@@ -836,15 +836,14 @@ def svd_device(a, a_dtype, a_shape, full_matrices=1, compute_uv=1):
     >>> at = a.T.copy()
     >>> a_ptr = cula.cuda_malloc(a.nbytes)
     >>> cula.cuda_memcpy_htod(a_ptr, at.ctypes.data, at.nbytes)
-    >>> U_ptr, s_ptr, Vh_ptr = cula.svd_device(a_ptr, a.dtype, a.shape, full_matrices=False)
-    >>> U = np.empty((min(m, n), m), a.dtype)
+    >>> u_ptr, s_ptr, vh_ptr = cula.svd_device(a_ptr, a.dtype, a.shape, full_matrices=False)
+    >>> u = np.empty((min(m, n), m), a.dtype)
     >>> s = np.empty(min(m, n), np.float32)
-    >>> Vh = np.empty((n, min(m, n)), a.dtype)
-    >>> cula.cuda_memcpy_dtoh(U.ctypes.data, U_ptr, U.nbytes)
+    >>> vh = np.empty((n, min(m, n)), a.dtype)
+    >>> cula.cuda_memcpy_dtoh(u.ctypes.data, u_ptr, u.nbytes)
     >>> cula.cuda_memcpy_dtoh(s.ctypes.data, s_ptr, s.nbytes)
-    >>> cula.cuda_memcpy_dtoh(Vh.ctypes.data, Vh_ptr, Vh.nbytes)
-    >>> S = np.diag(s)
-    >>> np.allclose(a, np.dot(U.T, np.dot(S, Vh.T)))
+    >>> cula.cuda_memcpy_dtoh(vh.ctypes.data, vh_ptr, vh.nbytes)
+    >>> np.allclose(a, np.dot(u.T, np.dot(np.diag(s), vh.T)))
     True
 
     """
@@ -1004,7 +1003,7 @@ def dot_device(a, a_shape, b, b_shape, a_dtype):
         cublas_func = _cublasSgemm
         a_dtype_nbytes = np.nbytes[a_dtype]
         alpha = np.float32(1.0)
-        beta = np.complex64(0.0)
+        beta = np.float32(0.0)
     else:
         raise ValueError('unsupported type')
 
@@ -1013,8 +1012,8 @@ def dot_device(a, a_shape, b, b_shape, a_dtype):
     m = a_shape[0]
     n = b_shape[1]
     k = a_shape[1]
-    lda = a_shape[0]
-    ldb = b_shape[0]
+    lda = m
+    ldb = k
     ldc = max(1, m)
     c = cuda_malloc(ldc*n*a_dtype_nbytes)
 
