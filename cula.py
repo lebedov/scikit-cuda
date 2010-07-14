@@ -791,7 +791,7 @@ def svd_device(a, a_dtype, a_shape, full_matrices=1, compute_uv=1):
     full_matrices : bool, optional
         If True (default), `u` and `vh` have the shapes
         `(m, m)` and `(n, n)`, respectively.  Otherwise, the shapes
-        are `(k, m)` and `(n, k)`, resp., where `k = min(m, n)`.
+        are `(m, k)` and `(k, n)`, resp., where `k = min(m, n)`.
     compute_uv : bool, optional
         If True (default), compute `u` and `vh` in addition to `s`.
 
@@ -799,15 +799,14 @@ def svd_device(a, a_dtype, a_shape, full_matrices=1, compute_uv=1):
     -------
     u : c_void_p
         Pointer to device memory containing unitary matrix of
-        shape `(m, m)` or `(k, m)`
-        depending on value of `full_matrices`.
+        shape `(m, m)` or `(m, k)` depending on value of `full_matrices`.
     s : c_void_p
         Pointer to device memory containing 
         the singular values, sorted such that `s[i] >= s[i+1]`.
         `s` is a 1-D array of length `min(m, n)`.
     vh : c_void_p
         Pointer to device memory containing
-        unitary matrix of shape `(n, n)` or `(n, k)`, depending
+        unitary matrix of shape `(n, n)` or `(k, n)`, depending
         on `full_matrices`. 
 
     Raises
@@ -823,6 +822,10 @@ def svd_device(a, a_dtype, a_shape, full_matrices=1, compute_uv=1):
     If `a` is a matrix object (as opposed to an `ndarray`), then so are all
     the return values.
 
+    The input matrices is stored in column-major format; hence, an
+    input ndarray must be transposed prior to being copied to the
+    device memory.
+
     Example
     -------
     >>> import numpy as np
@@ -837,9 +840,10 @@ def svd_device(a, a_dtype, a_shape, full_matrices=1, compute_uv=1):
     >>> a_ptr = cula.cudaMalloc(a.nbytes)
     >>> cula.cuda_memcpy_htod(a_ptr, at.ctypes.data, at.nbytes)
     >>> u_ptr, s_ptr, vh_ptr = cula.svd_device(a_ptr, a.dtype, a.shape, full_matrices=False)
-    >>> u = np.empty((min(m, n), m), a.dtype)
-    >>> s = np.empty(min(m, n), np.float32)
-    >>> vh = np.empty((n, min(m, n)), a.dtype)
+    >>> k = min(m, n)
+    >>> u = np.empty((k, m), a.dtype)
+    >>> s = np.empty(k, np.float32)
+    >>> vh = np.empty((n, k), a.dtype)
     >>> cula.cuda_memcpy_dtoh(u.ctypes.data, u_ptr, u.nbytes)
     >>> cula.cuda_memcpy_dtoh(s.ctypes.data, s_ptr, s.nbytes)
     >>> cula.cuda_memcpy_dtoh(vh.ctypes.data, vh_ptr, vh.nbytes)
@@ -953,7 +957,7 @@ _cublasCgemm.argtypes = [ctypes.c_char,
                          ctypes.c_void_p,
                          ctypes.c_int]
 
-def dot_device(a, a_shape, b, b_shape, a_dtype):
+def dot_device(a_ptr, a_shape, b_ptr, b_shape, a_dtype):
     """
     Matrix product of two arrays.
 
@@ -962,12 +966,12 @@ def dot_device(a, a_shape, b, b_shape, a_dtype):
 
     Parameters
     ----------
-    a : c_void_p
+    a_ptr : c_void_p
         Pointer to device memory containing
         matrix of shape `(m, k)`.
     a_shape : tuple
         Shape of matrix `a` data `(m, k)`.
-    b : c_void_p
+    b_ptr : c_void_p
         Pointer to device memory containing
         matrix of shape `(k, n)`.
     b_shape : tuple
@@ -980,7 +984,13 @@ def dot_device(a, a_shape, b, b_shape, a_dtype):
     c_ptr : c_void_p
         Pointer to device memory containing matrix product of shape
         `(m, n)`.
-        
+
+    Notes
+    -----
+    The input matrices is stored in column-major format; hence, an
+    input ndarray must be transposed prior to being copied to the
+    device memory.
+    
     Example
     -------
     >>> import numpy as np
@@ -988,14 +998,19 @@ def dot_device(a, a_shape, b, b_shape, a_dtype):
     >>> cula.cublasInit()
     0
     
-    >>> a = np.array([[1, 2], [3, 4], [5, 6], [7, 8]], np.float32)
-    >>> b = np.array([[2, 3], [4, 5]], np.float32)
-    >>> c = np.empty((2, 4), np.float32)
+    >>> a = np.asarray(np.random.rand(4, 2), np.float32)
+    >>> b = np.asarray(np.random.rand(2, 2), np.float32)
+    >>> c = np.empty((4, 2), np.float32)
+    >>> at = a.T.copy()
+    >>> bt = b.T.copy()
+    >>> ct = c.T.copy()
     >>> a_ptr = cula.cudaMalloc(a.nbytes)
     >>> b_ptr = cula.cudaMalloc(b.nbytes)
+    >>> cula.cuda_memcpy_htod(a_ptr, at.ctypes.data, a.nbytes)
+    >>> cula.cuda_memcpy_htod(b_ptr, bt.ctypes.data, b.nbytes)
     >>> c_ptr = cula.dot_device(a_ptr, a.shape, b_ptr, b.shape, a.dtype)
-    >>> cula.cuda_memcpy_dtoh(c.ctypes.data, c_ptr, c.nbytes)
-    >>> np.allclose(np.dot(a, b), c.T)
+    >>> cula.cuda_memcpy_dtoh(ct.ctypes.data, c_ptr, c.nbytes)
+    >>> np.allclose(np.dot(a, b), ct.T)
     True
     
     """
@@ -1021,16 +1036,34 @@ def dot_device(a, a_shape, b, b_shape, a_dtype):
     lda = m
     ldb = k
     ldc = max(1, m)
-    c = cudaMalloc(ldc*n*a_dtype_nbytes)
+    
+    c_ptr = cudaMalloc(ldc*n*a_dtype_nbytes)
+    cublas_func(transa, transb, m, n, k, alpha, a_ptr, lda, b_ptr, ldb, beta,
+                c_ptr, ldc)
 
-    cublas_func(transa, transb, m, n, k, alpha, a, lda, b, ldb, beta,
-                c, ldc)
-
-    status = cublasGetError()
+    status = _cublasGetError()
     cublasCheckStatus(status)
+    
+    return c_ptr
 
-    return c
+# def mdot(*args):
+#     """
+#     Product of several matrices.
 
+#     Compute the matrix product of several matrices in consecutive
+#     order.
+#     """
+
+#     # Since each matrix must be specified along with its shape, there
+#     # must be an odd number of arguments:
+#     n = len(args)-1
+#     if (n % 2 != 0):
+#         raise ValueError('matrix type not specified')
+#     a_dtype = args[-1]
+
+#     for i in xrange(n):
+        
+        
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
