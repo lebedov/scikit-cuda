@@ -756,7 +756,8 @@ _culaDeviceSgesvd.argtypes = [ctypes.c_char,
                               ctypes.c_void_p,
                               ctypes.c_int,
                               ctypes.c_void_p,
-                              ctypes.c_int]                                                    
+                              ctypes.c_int]
+
 _culaDeviceCgesvd = _libcula.culaDeviceCgesvd
 _culaDeviceCgesvd.restype = int
 _culaDeviceCgesvd.argtypes = [ctypes.c_char,
@@ -769,7 +770,8 @@ _culaDeviceCgesvd.argtypes = [ctypes.c_char,
                               ctypes.c_void_p,
                               ctypes.c_int,
                               ctypes.c_void_p,
-                              ctypes.c_int]                                                    
+                              ctypes.c_int]
+
 
 def svd_device(a, a_dtype, a_shape, full_matrices=1, compute_uv=1):
     """
@@ -822,9 +824,9 @@ def svd_device(a, a_dtype, a_shape, full_matrices=1, compute_uv=1):
     If `a` is a matrix object (as opposed to an `ndarray`), then so are all
     the return values.
 
-    The input matrices is stored in column-major format; hence, an
-    input ndarray must be transposed prior to being copied to the
-    device memory.
+    The input and output matrices are stored in column-major format;
+    hence, they must be transposed prior to being copied
+    between ndarrays and device memory.
 
     Example
     -------
@@ -987,10 +989,10 @@ def dot_device(a_ptr, a_shape, b_ptr, b_shape, a_dtype):
 
     Notes
     -----
-    The input matrices is stored in column-major format; hence, an
-    input ndarray must be transposed prior to being copied to the
-    device memory.
-    
+    The input and output matrices are stored in column-major format;
+    hence, they must be transposed prior to being copied
+    between ndarrays and device memory.
+
     Example
     -------
     >>> import numpy as np
