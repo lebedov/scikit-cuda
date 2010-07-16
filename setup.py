@@ -7,7 +7,7 @@ from distutils.core import setup
 from distutils.extension import Extension
 from distutils.sysconfig import get_python_lib
 
-NAME =               'cula_wrapper'
+NAME =               'cuda_utils'
 VERSION =            '0.01'
 IS_RELEASED =        True
 AUTHOR =             'Lev Givon'
@@ -15,7 +15,7 @@ AUTHOR_EMAIL =       'lev@columbia.edu'
 URL =                'http://bionet.ee.columbia.edu/code/'
 MAINTAINER =         'Lev Givon'
 MAINTAINER_EMAIL =   'lev@columbia.edu'
-DESCRIPTION =        'Python wrapper for CULA libraries'
+DESCRIPTION =        'Python utilities for CUDA'
 DOWNLOAD_URL =       URL
 LICENSE =            'BSD'
 CLASSIFIERS = [
@@ -42,4 +42,4 @@ if __name__ == "__main__":
           description = DESCRIPTION,
           license = LICENSE,
           classifiers = CLASSIFIERS,
-          py_modules = ['cula'])
+          packages = ['cuda_utils'])
