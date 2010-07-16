@@ -224,23 +224,6 @@ def dot_device(a_ptr, a_shape, b_ptr, b_shape, a_dtype):
     
     return c_ptr
 
-# def mdot(*args):
-#     """
-#     Product of several matrices.
-
-#     Compute the matrix product of several matrices in consecutive
-#     order.
-#     """
-
-#     # Since each matrix must be specified along with its shape, there
-#     # must be an odd number of arguments:
-#     n = len(args)-1
-#     if (n % 2 != 0):
-#         raise ValueError('matrix type not specified')
-#     a_dtype = args[-1]
-
-#     for i in xrange(n):
-        
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

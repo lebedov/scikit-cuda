@@ -120,7 +120,7 @@ def culaCheckStatus(status):
     
     if status != 0:
         try:
-            raise culaErrors[status]
+            raise culaExceptions[status]
         except KeyError:
             raise culaError
 
