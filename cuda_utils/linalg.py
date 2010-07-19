@@ -17,6 +17,12 @@ import cula
 def init():
     """
     Initialize CUDA utilities.
+
+    Notes
+    -----
+    PyCUDA must be initialized separately before using any of the
+    functions in the `linalg` module.
+    
     """
     
     status = cublas.cublasInit()
@@ -57,9 +63,6 @@ def svd(a_gpu, full_matrices=1, compute_uv=1):
 
     Notes
     -----
-    Because of the limitations of the free version of CULA, the
-    argument is cast to single precision.
-
     This function destroys the contents of the input matrix.
     
     Example
@@ -158,10 +161,9 @@ def dot(a_gpu, b_gpu):
 
     Returns
     -------
-    c_ptr : c_void_p
-        Pointer to device memory containing matrix product of shape
-        `(m, n)`.
-
+    c_gpu : GPUArray
+        Matrix product of shape `(m, n)`.
+    
     Example
     -------
     >>> import pycuda.gpuarray as gpuarray
@@ -198,7 +200,7 @@ def dot(a_gpu, b_gpu):
     lda = m
     ldb = k
     ldc = max(1, m)
-    
+
     c_gpu = gpuarray.empty((a_gpu.shape[0], b_gpu.shape[1]), a_gpu.dtype)
     cublas_func(transb, transa, m, n, k, alpha, int(b_gpu.gpudata),
                 lda, int(a_gpu.gpudata), ldb, beta, int(c_gpu.gpudata), ldc)
@@ -211,6 +213,8 @@ def dot(a_gpu, b_gpu):
 def mdot(*args):
     """
     Product of several matrices.
+
+    Computes the matrix product of several arrays of shapes.
 
     Example
     -------
@@ -231,9 +235,12 @@ def mdot(*args):
 
     """
 
+    # Free the temporary matrix allocated when computing the dot
+    # product:
     out_gpu = args[0]
     for next_gpu in args[1:]:
         temp_gpu = dot(out_gpu, next_gpu)
+        out_gpu.gpudata.free()
         del(out_gpu)
         out_gpu = temp_gpu
         del(temp_gpu)
@@ -400,6 +407,10 @@ def conj(a_gpu, tile_dim, block_rows):
     
     """
 
+    # Don't attempt to process non-complex matrix types:
+    if a_gpu.dtype == np.float32:
+        return
+    
     # if tile_dim*block_rows > \
     #        device.get_attribute(drv.device_attribute.MAX_THREADS_PER_BLOCK):
     #     raise ValueError('tile size too large')
@@ -445,7 +456,7 @@ def diag(v_gpu, tile_dim):
     """
     Construct a diagonal matrix.
 
-    Construct a matrix in device memory whose diagonal elements
+    Constructs a matrix in device memory whose diagonal elements
     correspond to the elements in the specified array; all
     non-diagonal elements are set to 0.
 
@@ -504,6 +515,17 @@ def pinv(a_gpu, tile_dim, block_rows):
     """
     Moore-Penrose pseudoinverse.
 
+    Compute the Moore-Penrose pseudoinverse of the specified matrix.
+    Parameters
+    ----------
+    a_gpu : GPUArray
+        Input matrix of shape `(m, n)`.
+    tile_dim : int
+        Each block of threads processes `tile_dim x tile_dim` elements.
+    block_rows : int
+        Each thread processes `tile_dim/block_rows` elements;
+        `block_rows` must therefore divide `tile_dim`.
+
     Notes
     -----
     
@@ -515,16 +537,15 @@ def pinv(a_gpu, tile_dim, block_rows):
     >>> import numpy as np
     >>> import linalg
     >>> linalg.init()
-    >>> a = np.asarray(np.random.rand(4, 4), np.float32)
+    >>> a = np.asarray(np.random.rand(8, 4), np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
-    >>> a_inv_gpu = pinv(a_gpu, 2, 2)
+    >>> a_inv_gpu = pinv(a_gpu, 4, 4)
     >>> np.allclose(np.linalg.pinv(a), a_inv_gpu.get())
     True
 
     """
-    
-    if a_gpu.dtype == np.complex64:
-        conj(a_gpu.gpudata, tile_dim, block_rows)
+        
+    conj(a_gpu, tile_dim, block_rows)
     u_gpu, s_gpu, vh_gpu = svd(a_gpu, 0)
     uh_gpu = transpose(u_gpu, tile_dim, block_rows)
     s_gpu **= np.float32(-1)
