@@ -189,6 +189,14 @@ def dot(a_gpu, b_gpu):
         cublas_func = cublas._cublasSgemm
         alpha = np.float32(1.0)
         beta = np.float32(0.0)
+    elif (a_gpu.dtype == np.complex128 and b_gpu.dtype == np.complex128):
+        cublas_func = cublas._cublasZgemm        
+        alpha = np.complex128(1.0)
+        beta = np.complex128(0.0)
+    elif (a_gpu.dtype == np.float64 and b_gpu.dtype == np.float64):
+        cublas_func = cublas._cublasDgemm
+        alpha = np.float64(1.0)
+        beta = np.float64(0.0)
     else:
         raise ValueError('unsupported combination of input types')
 
@@ -248,10 +256,31 @@ def mdot(*args):
 
 transpose_mod_template = Template("""
 #include <cuComplex.h>
-__global__ void transpose(${dtype} *odata, ${dtype} *idata,
+
+#define USE_DOUBLE ${use_double}
+#define USE_COMPLEX ${use_complex}
+#if USE_DOUBLE == 1
+#if USE_COMPLEX == 1
+#define TYPE cuDoubleComplex
+#define CONJ(x) cuConj(x)
+#else
+#define TYPE double
+#define CONJ(x) (x)
+#endif
+#else
+#if USE_COMPLEX == 1
+#define TYPE cuFloatComplex
+#define CONJ(x) cuConjf(x)
+#else
+#define TYPE float
+#define CONJ(x) (x)
+#endif
+#endif
+
+__global__ void transpose(TYPE *odata, TYPE *idata,
                           int width, int height)
 {
-    __shared__ ${dtype} tile[${tile_dim}][${tile_dim}+1];
+    __shared__ TYPE tile[${tile_dim}][${tile_dim}+1];
 	
     unsigned int xIndex = blockIdx.x * ${tile_dim} + threadIdx.x;
     unsigned int yIndex = blockIdx.y * ${tile_dim} + threadIdx.y;
@@ -268,7 +297,7 @@ __global__ void transpose(${dtype} *odata, ${dtype} *idata,
     __syncthreads();
 
     for (int i=0; i<${tile_dim}; i+=${block_rows}) {
-        odata[index_out+i*height] = ${conjf}(tile[threadIdx.x][threadIdx.y+i]);
+        odata[index_out+i*height] = CONJ(tile[threadIdx.x][threadIdx.y+i]);
     }
 }
 """)
@@ -312,10 +341,10 @@ def transpose(a_gpu, tile_dim, block_rows):
     >>> at_gpu = transpose(a_gpu, 2, 2)
     >>> np.all(a.T == at_gpu.get())
     True
-    >>> a = np.array([[1j, 2j, 3j, 4j, 5j, 6j], [7j, 8j, 9j, 10j, 11j, 12j]], np.complex64)
-    >>> a_gpu = gpuarray.to_gpu(a)
-    >>> at_gpu = transpose(a_gpu, 2, 2)
-    >>> np.all(np.conj(a.T) == at_gpu.get())
+    >>> b = np.array([[1j, 2j, 3j, 4j, 5j, 6j], [7j, 8j, 9j, 10j, 11j, 12j]], np.complex64)
+    >>> b_gpu = gpuarray.to_gpu(b)
+    >>> bt_gpu = transpose(b_gpu, 2, 2)
+    >>> np.all(np.conj(b.T) == bt_gpu.get())
     True
 
     """
@@ -330,20 +359,22 @@ def transpose(a_gpu, tile_dim, block_rows):
            (a_gpu.shape[1] % tile_dim != 0):
         raise ValueError('tile dimensions must divide matrix dimensions')
 
-    if a_gpu.dtype == np.float32:
-        dtype = 'float'
-        conjf = ''
-    elif a_gpu.dtype == np.complex64:
-        dtype = 'cuFloatComplex'
-        conjf = 'cuConjf'        
+    if a_gpu.dtype == np.float32 or a_gpu.dtype == np.complex64:
+        use_double = 0
     else:
-        raise ValueError('unsupported matrix type')
-    
+        use_double = 1
+
+    if a_gpu.dtype == np.complex64 or a_gpu.dtype == np.complex128:
+        use_complex = 1
+    else:
+        use_complex = 0
+            
     transpose_mod = \
                   SourceModule(transpose_mod_template.substitute(tile_dim=str(tile_dim),
                                                                  block_rows=str(block_rows),
-                                                                 dtype=dtype,
-                                                                 conjf=conjf))
+                                                                 use_double=use_double,
+                                                                 use_complex=use_complex))
+
     transpose = transpose_mod.get_function("transpose")
     at_gpu = gpuarray.empty(a_gpu.shape[::-1], a_gpu.dtype)
     transpose(at_gpu.gpudata, a_gpu.gpudata,
@@ -356,7 +387,15 @@ def transpose(a_gpu, tile_dim, block_rows):
 
 conj_mod_template = Template("""
 #include <cuComplex.h>
-__global__ void conj(cuFloatComplex *a, int width, int height)
+
+#define USE_DOUBLE ${use_double}
+#if USE_DOUBLE == 1
+#define CTYPE cuDoubleComplex
+#else
+#define CTYPE cuFloatComplex
+#endif
+
+__global__ void conj(CTYPE *a, int width, int height)
 {
     int xIndex = blockIdx.x * ${tile_dim} + threadIdx.x;
     int yIndex = blockIdx.y * ${tile_dim} + threadIdx.y;
@@ -408,9 +447,14 @@ def conj(a_gpu, tile_dim, block_rows):
     """
 
     # Don't attempt to process non-complex matrix types:
-    if a_gpu.dtype == np.float32:
+    if a_gpu.dtype == np.float32 or a_gpu.dtype == np.float64:
         return
-    
+
+    if a_gpu.dtype == np.complex64:
+        use_double = 0
+    else:
+        use_double = 1
+        
     # if tile_dim*block_rows > \
     #        device.get_attribute(drv.device_attribute.MAX_THREADS_PER_BLOCK):
     #     raise ValueError('tile size too large')
@@ -422,7 +466,8 @@ def conj(a_gpu, tile_dim, block_rows):
 
     conj_mod = \
              SourceModule(conj_mod_template.substitute(tile_dim=str(tile_dim),
-                                                       block_rows=str(block_rows)))
+                                                       block_rows=str(block_rows),
+                                                       use_double=use_double))
 
     conj = conj_mod.get_function("conj")
     conj(a_gpu.gpudata,
@@ -434,7 +479,25 @@ def conj(a_gpu, tile_dim, block_rows):
 
 
 diag_mod_template = Template("""
-__global__ void diag(${dtype} *v, ${dtype} *a, int N) {
+#include <cuComplex.h>
+
+#define USE_DOUBLE ${use_double}
+#define USE_COMPLEX ${use_complex}
+#if USE_DOUBLE == 1
+#if USE_COMPLEX == 1
+#define TYPE cuDoubleComplex
+#else
+#define TYPE double
+#endif
+#else
+#if USE_COMPLEX == 1
+#define TYPE cuFloatComplex
+#else
+#define TYPE float
+#endif
+#endif
+
+__global__ void diag(TYPE *v, TYPE *a, int N) {
     // Index into input array:
     int vIndex = blockIdx.x * ${tile_dim} + threadIdx.x;
 
@@ -494,16 +557,20 @@ def diag(v_gpu, tile_dim):
     if (n % tile_dim != 0):
         raise ValueError('tile dimension must divide input array length')
 
-    if v_gpu.dtype == np.float32:
-        dtype = 'float'
-    elif v_gpu.dtype == np.complex64:
-        dtype = 'complex float'
+    if v_gpu.dtype == np.float32 or v_gpu.dtype == np.complex64:
+        use_double = 0
     else:
-        raise ValueError('unsupported array type')
+        use_double = 1
+
+    if v_gpu.dtype == np.complex64 or v_gpu.dtype == np.complex128:
+        use_complex = 1
+    else:
+        use_complex = 0
 
     diag_mod = \
              SourceModule(diag_mod_template.substitute(tile_dim=str(tile_dim),
-                                                       dtype=dtype))
+                                                       use_double=use_double,
+                                                       use_complex=use_complex))
     diag = diag_mod.get_function("diag")    
     d_gpu = gpuarray.empty((n, n), v_gpu.dtype)
     diag(v_gpu.gpudata, d_gpu.gpudata, np.uint32(n),
@@ -544,7 +611,12 @@ def pinv(a_gpu, tile_dim, block_rows):
     True
 
     """
-        
+
+    # Check input dtype because the SVD can only be computed in single
+    # precision:
+    if not(a_gpu.dtype == np.float32 or a_gpu.dtype == np.complex64):
+        raise ValueError('unsupported type')
+    
     conj(a_gpu, tile_dim, block_rows)
     u_gpu, s_gpu, vh_gpu = svd(a_gpu, 0)
     uh_gpu = transpose(u_gpu, tile_dim, block_rows)
