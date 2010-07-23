@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-PyCUDA-based functions.
+PyCUDA-based linear algebra functions.
 """
 
 from pprint import pprint
