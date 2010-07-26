@@ -390,19 +390,21 @@ conj_mod_template = Template("""
 
 #define USE_DOUBLE ${use_double}
 #if USE_DOUBLE == 1
-#define CTYPE cuDoubleComplex
+#define COMPLEX cuDoubleComplex
+#define CONJ(z) cuConj(z)
 #else
-#define CTYPE cuFloatComplex
+#define COMPLEX cuFloatComplex
+#define CONJ(z) cuConjf(z)
 #endif
 
-__global__ void conj(CTYPE *a, int width, int height)
+__global__ void conj(COMPLEX *a, int width, int height)
 {
     int xIndex = blockIdx.x * ${tile_dim} + threadIdx.x;
     int yIndex = blockIdx.y * ${tile_dim} + threadIdx.y;
 
     int index = xIndex + width*yIndex;
     for (int i=0; i<${tile_dim}; i+=${block_rows}) {
-        a[index+i*width] = cuConjf(a[index+i*width]);
+        a[index+i*width] = CONJ(a[index+i*width]);
     }
 }
 """)
@@ -452,8 +454,10 @@ def conj(a_gpu, tile_dim, block_rows):
 
     if a_gpu.dtype == np.complex64:
         use_double = 0
-    else:
+    elif a_gpu.dtype == np.complex128:
         use_double = 1
+    else:
+        raise ValueError('unsupported type')
         
     # if tile_dim*block_rows > \
     #        device.get_attribute(drv.device_attribute.MAX_THREADS_PER_BLOCK):
