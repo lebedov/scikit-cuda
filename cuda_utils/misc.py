@@ -4,6 +4,8 @@
 General PyCUDA utility functions.
 """
 
+import pycuda.driver as drv
+
 def get_dev_attrs(dev):
     """
     Get select CUDA device attributes.
