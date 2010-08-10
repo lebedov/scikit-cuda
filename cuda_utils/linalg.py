@@ -14,6 +14,11 @@ import numpy as np
 import cublas
 import cula
 
+from cuda_utils.misc import get_dev_attrs, select_block_grid_sizes
+
+# Get installation location of C headers:
+from cuda_utils import install_headers
+
 def init():
     """
     Initialize CUDA utilities.
@@ -277,32 +282,19 @@ transpose_mod_template = Template("""
 #endif
 #endif
 
-__global__ void transpose(TYPE *odata, TYPE *idata,
-                          int width, int height)
+__global__ void transpose(TYPE *odata, TYPE *idata, unsigned int N)
 {
-    __shared__ TYPE tile[${tile_dim}][${tile_dim}+1];
-	
-    unsigned int xIndex = blockIdx.x * ${tile_dim} + threadIdx.x;
-    unsigned int yIndex = blockIdx.y * ${tile_dim} + threadIdx.y;
-    unsigned int index_in = xIndex + (yIndex)*width;
+    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
+                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    unsigned int ix = idx/${cols};
+    unsigned int iy = idx%${cols};
 
-    xIndex = blockIdx.y * ${tile_dim} + threadIdx.x;
-    yIndex = blockIdx.x * ${tile_dim} + threadIdx.y;    
-    unsigned int index_out = xIndex +(yIndex)*height;
-
-    for (int i=0; i<${tile_dim}; i+=${block_rows}) {
-	tile[threadIdx.y+i][threadIdx.x] = idata[index_in+i*width];
-    }
-
-    __syncthreads();
-
-    for (int i=0; i<${tile_dim}; i+=${block_rows}) {
-        odata[index_out+i*height] = CONJ(tile[threadIdx.x][threadIdx.y+i]);
-    }
+    if (idx < N)
+        odata[iy*${rows}+ix] = CONJ(idata[ix*${cols}+iy]);
 }
 """)
 
-def transpose(a_gpu, tile_dim, block_rows):
+def transpose(a_gpu, dev):
     """
     Matrix transpose.
     
@@ -313,11 +305,8 @@ def transpose(a_gpu, tile_dim, block_rows):
     ----------
     a_gpu : GPUArray
         Input matrix of shape `(m, n)`.
-    tile_dim : int
-        Each block of threads processes `tile_dim x tile_dim` elements.
-    block_rows : int
-        Each thread processes `tile_dim/block_rows` elements;
-        `block_rows` must therefore divide `tile_dim`.
+    dev : pycuda.driver.Device
+        Device object to be used.
 
     Returns
     -------
@@ -331,58 +320,56 @@ def transpose(a_gpu, tile_dim, block_rows):
     
     Example
     -------
-    >>> import pycuda.driver as drv
     >>> import pycuda.autoinit
+    >>> import pycuda.driver as drv
+    >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
     >>> import linalg
     >>> linalg.init()
     >>> a = np.array([[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]], np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
-    >>> at_gpu = transpose(a_gpu, 2, 2)
+    >>> at_gpu = transpose(a_gpu, pycuda.autoinit.device)
     >>> np.all(a.T == at_gpu.get())
     True
     >>> b = np.array([[1j, 2j, 3j, 4j, 5j, 6j], [7j, 8j, 9j, 10j, 11j, 12j]], np.complex64)
     >>> b_gpu = gpuarray.to_gpu(b)
-    >>> bt_gpu = transpose(b_gpu, 2, 2)
+    >>> bt_gpu = transpose(b_gpu, pycuda.autoinit.device)
     >>> np.all(np.conj(b.T) == bt_gpu.get())
     True
 
     """
 
-    # XXX: need to figure out how to determine which device is used when doing this check:
-    # if tile_dim*block_rows > \
-    #        device.get_attribute(drv.device_attribute.MAX_THREADS_PER_BLOCK):
-    #     raise ValueError('tile size too large')
-    if (tile_dim % block_rows != 0):
-        raise ValueError('tile_dim must be an integral multiple of block_rows')
-    if (a_gpu.shape[0] % tile_dim != 0) or \
-           (a_gpu.shape[1] % tile_dim != 0):
-        raise ValueError('tile dimensions must divide matrix dimensions')
+    if a_gpu.dtype not in [np.float32, np.float64, np.complex64,
+                           np.complex128]:
+        raise ValueError('unrecognized type')
 
-    if a_gpu.dtype == np.float32 or a_gpu.dtype == np.complex64:
-        use_double = 0
-    else:
-        use_double = 1
+    use_double = int(a_gpu.dtype in [np.float64, np.complex128])
+    use_complex = int(a_gpu.dtype in [np.complex64, np.complex128])
 
-    if a_gpu.dtype == np.complex64 or a_gpu.dtype == np.complex128:
-        use_complex = 1
-    else:
-        use_complex = 0
-            
+    # Get block/grid sizes:
+    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
+    block_dim, grid_dim = select_block_grid_sizes(dev, a_gpu.shape)
+    max_blocks_per_grid = max(max_grid_dim)
+
+    # Set this to False when debugging to make sure the compiled kernel is
+    # not cached:
+    cache_dir=None            
     transpose_mod = \
-                  SourceModule(transpose_mod_template.substitute(tile_dim=str(tile_dim),
-                                                                 block_rows=str(block_rows),
-                                                                 use_double=use_double,
-                                                                 use_complex=use_complex))
+                  SourceModule(transpose_mod_template.substitute(use_double=use_double,
+                                                                 use_complex=use_complex,
+                               max_threads_per_block=max_threads_per_block,
+                               max_blocks_per_grid=max_blocks_per_grid,
+                               cols=a_gpu.shape[1],
+                               rows=a_gpu.shape[0]),
+                               cache_dir=cache_dir)                                                                 
 
     transpose = transpose_mod.get_function("transpose")
     at_gpu = gpuarray.empty(a_gpu.shape[::-1], a_gpu.dtype)
     transpose(at_gpu.gpudata, a_gpu.gpudata,
-              np.uint32(a_gpu.shape[1]),
-              np.uint32(a_gpu.shape[0]),
-              block=(tile_dim, block_rows, 1),
-              grid=(a_gpu.shape[1]/tile_dim,
-                    a_gpu.shape[0]/tile_dim))
+              np.uint32(a_gpu.size),
+              block=block_dim,
+              grid=grid_dim)
+                    
     return at_gpu
 
 conj_mod_template = Template("""
@@ -397,19 +384,17 @@ conj_mod_template = Template("""
 #define CONJ(z) cuConjf(z)
 #endif
 
-__global__ void conj(COMPLEX *a, int width, int height)
+__global__ void conj(COMPLEX *a, unsigned int N)
 {
-    int xIndex = blockIdx.x * ${tile_dim} + threadIdx.x;
-    int yIndex = blockIdx.y * ${tile_dim} + threadIdx.y;
+    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
+                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
 
-    int index = xIndex + width*yIndex;
-    for (int i=0; i<${tile_dim}; i+=${block_rows}) {
-        a[index+i*width] = CONJ(a[index+i*width]);
-    }
+    if (idx < N)                       
+        a[idx] = CONJ(a[idx]);
 }
 """)
 
-def conj(a_gpu, tile_dim, block_rows):
+def conj(a_gpu, dev):
     """
     Complex conjugate.
     
@@ -419,11 +404,8 @@ def conj(a_gpu, tile_dim, block_rows):
     ----------
     a_gpu : GPUArray
         Input matrix of shape `(m, n)`.
-    tile_dim : int
-        Each block of threads processes `tile_dim x tile_dim` elements.
-    block_rows : int
-        Each thread processes `tile_dim/block_rows` elements;
-        `block_rows` must therefore divide `tile_dim`.
+    dev : pycuda.driver.Device
+        Device object to be used.
 
     Notes
     -----
@@ -442,14 +424,14 @@ def conj(a_gpu, tile_dim, block_rows):
     >>> linalg.init()
     >>> a = np.array([[1+1j, 2-2j, 3+3j, 4-4j], [5+5j, 6-6j, 7+7j, 8-8j]], np.complex64)
     >>> a_gpu = gpuarray.to_gpu(a)
-    >>> conj(a_gpu, 2, 2)
+    >>> conj(a_gpu, pycuda.autoinit.device)
     >>> np.all(a == np.conj(a_gpu.get()))
     True
     
     """
 
     # Don't attempt to process non-complex matrix types:
-    if a_gpu.dtype == np.float32 or a_gpu.dtype == np.float64:
+    if a_gpu.dtype in [np.float32, np.float64]:
         return
 
     if a_gpu.dtype == np.complex64:
@@ -458,29 +440,26 @@ def conj(a_gpu, tile_dim, block_rows):
         use_double = 1
     else:
         raise ValueError('unsupported type')
-        
-    # if tile_dim*block_rows > \
-    #        device.get_attribute(drv.device_attribute.MAX_THREADS_PER_BLOCK):
-    #     raise ValueError('tile size too large')
-    if (tile_dim % block_rows != 0):
-        raise ValueError('tile_dim must be an integral multiple of block_rows')
-    if (a_gpu.shape[0] % tile_dim != 0) or \
-           (a_gpu.shape[1] % tile_dim != 0):
-        raise ValueError('tile dimensions must divide matrix dimensions')
 
+    # Get block/grid sizes:
+    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
+    block_dim, grid_dim = select_block_grid_sizes(dev, a_gpu.shape)
+    max_blocks_per_grid = max(max_grid_dim)
+
+    # Set this to False when debugging to make sure the compiled kernel is
+    # not cached:
+    cache_dir=None
     conj_mod = \
-             SourceModule(conj_mod_template.substitute(tile_dim=str(tile_dim),
-                                                       block_rows=str(block_rows),
-                                                       use_double=use_double))
+             SourceModule(conj_mod_template.substitute(use_double=use_double,
+                          max_threads_per_block=max_threads_per_block,
+                          max_blocks_per_grid=max_blocks_per_grid),
+                          cache_dir=cache_dir)
 
     conj = conj_mod.get_function("conj")
     conj(a_gpu.gpudata,
-         np.uint32(a_gpu.shape[1]),
-         np.uint32(a_gpu.shape[0]),
-         block=(tile_dim, block_rows, 1),
-         grid=(a_gpu.shape[1]/tile_dim,
-               a_gpu.shape[0]/tile_dim))
-
+         np.uint32(a_gpu.size),
+         block=block_dim,
+         grid=grid_dim)
 
 diag_mod_template = Template("""
 #include <cuComplex.h>
@@ -501,25 +480,22 @@ diag_mod_template = Template("""
 #endif
 #endif
 
-__global__ void diag(TYPE *v, TYPE *a, int N) {
-    // Index into input array:
-    int vIndex = blockIdx.x * ${tile_dim} + threadIdx.x;
-
-    // Indices into output matrix:
-    int xIndex = blockIdx.x * ${tile_dim} + threadIdx.x;
-    int yIndex = blockIdx.y * ${tile_dim} + threadIdx.y;
-    int aIndex = xIndex + yIndex*N;
-
-    if (xIndex < N && yIndex < N) 
-        if (xIndex == yIndex) {
-            a[aIndex] = v[vIndex];
+__global__ void diag(TYPE *v, TYPE *d, int N) {
+    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
+                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    unsigned int ix = idx/${cols};
+    unsigned int iy = idx%${cols};
+    
+    if (idx < N)
+        if (ix == iy) {
+            d[idx] = v[ix];
         } else {
-            a[aIndex] = 0.0;
+            d[idx] = 0.0;
         }
 }
 """)
 
-def diag(v_gpu, tile_dim):
+def diag(v_gpu, dev):
     """
     Construct a diagonal matrix.
 
@@ -531,8 +507,8 @@ def diag(v_gpu, tile_dim):
     ----------
     a_obj : GPUArray
         Input array of length `n`.
-    tile_dim : int
-        Each block of threads processes `tile_dim x tile_dim` elements.
+    dev : pycuda.driver.Device
+        Device object to be used.
 
     Notes
     -----
@@ -548,41 +524,44 @@ def diag(v_gpu, tile_dim):
     >>> linalg.init()
     >>> v = np.array([1, 2, 3, 4, 5, 6], np.float32)
     >>> v_gpu = gpuarray.to_gpu(v)
-    >>> d_gpu = diag(v_gpu, 3);
+    >>> d_gpu = diag(v_gpu, pycuda.autoinit.device);
     >>> np.all(d_gpu.get() == np.diag(v))
     True
     
     """
 
-    # if tile_dim**2 > \
-    #        device.get_attribute(drv.device_attribute.MAX_THREADS_PER_BLOCK):
-    #     raise ValueError('tile size too large')
-    n = len(v_gpu)
-    if (n % tile_dim != 0):
-        raise ValueError('tile dimension must divide input array length')
+    if v_gpu.dtype not in [np.float32, np.float64, np.complex64,
+                           np.complex128]:
+        raise ValueError('unrecognized type')
 
-    if v_gpu.dtype == np.float32 or v_gpu.dtype == np.complex64:
-        use_double = 0
-    else:
-        use_double = 1
+    use_double = int(v_gpu.dtype in [np.float64, np.complex128])
+    use_complex = int(v_gpu.dtype in [np.complex64, np.complex128])
 
-    if v_gpu.dtype == np.complex64 or v_gpu.dtype == np.complex128:
-        use_complex = 1
-    else:
-        use_complex = 0
+    # Get block/grid sizes:
+    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
+    block_dim, grid_dim = select_block_grid_sizes(dev, v_gpu.shape)
+    max_blocks_per_grid = max(max_grid_dim)
 
+    # Set this to False when debugging to make sure the compiled kernel is
+    # not cached:
+    cache_dir=None
     diag_mod = \
-             SourceModule(diag_mod_template.substitute(tile_dim=str(tile_dim),
-                                                       use_double=use_double,
-                                                       use_complex=use_complex))
+             SourceModule(diag_mod_template.substitute(use_double=use_double,
+                                                       use_complex=use_complex,
+                          max_threads_per_block=max_threads_per_block,
+                          max_blocks_per_grid=max_blocks_per_grid,
+                          cols=v_gpu.size),
+                          cache_dir=cache_dir)
+
     diag = diag_mod.get_function("diag")    
-    d_gpu = gpuarray.empty((n, n), v_gpu.dtype)
-    diag(v_gpu.gpudata, d_gpu.gpudata, np.uint32(n),
-         block=(tile_dim, tile_dim, 1),
-         grid=(n/tile_dim, n/tile_dim))
+    d_gpu = gpuarray.empty((v_gpu.size, v_gpu.size), v_gpu.dtype)
+    diag(v_gpu.gpudata, d_gpu.gpudata, np.uint32(d_gpu.size),
+         block=block_dim,
+         grid=grid_dim)
+    
     return d_gpu
 
-def pinv(a_gpu, tile_dim, block_rows):
+def pinv(a_gpu, dev):
     """
     Moore-Penrose pseudoinverse.
 
@@ -591,11 +570,6 @@ def pinv(a_gpu, tile_dim, block_rows):
     ----------
     a_gpu : GPUArray
         Input matrix of shape `(m, n)`.
-    tile_dim : int
-        Each block of threads processes `tile_dim x tile_dim` elements.
-    block_rows : int
-        Each thread processes `tile_dim/block_rows` elements;
-        `block_rows` must therefore divide `tile_dim`.
 
     Notes
     -----
@@ -610,7 +584,7 @@ def pinv(a_gpu, tile_dim, block_rows):
     >>> linalg.init()
     >>> a = np.asarray(np.random.rand(8, 4), np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
-    >>> a_inv_gpu = pinv(a_gpu, 4, 4)
+    >>> a_inv_gpu = pinv(a_gpu, pycuda.autoinit.device)
     >>> np.allclose(np.linalg.pinv(a), a_inv_gpu.get())
     True
 
@@ -618,15 +592,15 @@ def pinv(a_gpu, tile_dim, block_rows):
 
     # Check input dtype because the SVD can only be computed in single
     # precision:
-    if not(a_gpu.dtype == np.float32 or a_gpu.dtype == np.complex64):
+    if a_gpu.dtype not in [np.float32, np.complex64]:
         raise ValueError('unsupported type')
     
-    conj(a_gpu, tile_dim, block_rows)
+    conj(a_gpu, dev)
     u_gpu, s_gpu, vh_gpu = svd(a_gpu, 0)
-    uh_gpu = transpose(u_gpu, tile_dim, block_rows)
+    uh_gpu = transpose(u_gpu, dev)
     s_gpu **= np.float32(-1)
-    s_diag_gpu = diag(s_gpu, tile_dim)
-    v_gpu = transpose(vh_gpu, tile_dim, block_rows)
+    s_diag_gpu = diag(s_gpu, dev)
+    v_gpu = transpose(vh_gpu, dev)
     suh_gpu = dot(s_diag_gpu, uh_gpu)
     return dot(v_gpu, suh_gpu)
 

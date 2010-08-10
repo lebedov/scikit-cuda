@@ -39,8 +39,12 @@ def get_dev_attrs(dev):
 
 def select_block_grid_sizes(dev, data_shape):
     """
-    Determine CUDA block and grid sizes given device constraints.
+    Determine CUDA block and grid dimensions given device constraints.
 
+    Determine the CUDA block and grid dimensions allowed by a GPU
+    device that are sufficient for processing every element of an
+    array in a separate thread.
+    
     Parameters
     ----------
     d : pycuda.driver.Device

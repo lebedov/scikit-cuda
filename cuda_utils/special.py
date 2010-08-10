@@ -97,8 +97,8 @@ def sici(x_gpu, dev):
     cache_dir=None
     sici_mod = \
              SourceModule(sici_mod_template.substitute(use_double=use_double,
-                          max_threads_per_block=str(max_threads_per_block),
-                          max_blocks_per_grid=str(max_blocks_per_grid)),
+                          max_threads_per_block=max_threads_per_block,
+                          max_blocks_per_grid=max_blocks_per_grid),
                           cache_dir=cache_dir,
                           options=["-I", install_headers])
     sici_func = sici_mod.get_function("sici_array")
@@ -246,8 +246,8 @@ def e1z(z_gpu, dev):
     cache_dir=None
     e1z_mod = \
              SourceModule(e1z_mod_template.substitute(use_double=use_double,
-                          max_threads_per_block=str(max_threads_per_block),
-                          max_blocks_per_grid=str(max_blocks_per_grid)),
+                          max_threads_per_block=max_threads_per_block,
+                          max_blocks_per_grid=max_blocks_per_grid),
                           cache_dir=cache_dir,
                           options=["-I", install_headers])
     e1z_func = e1z_mod.get_function("e1z")
