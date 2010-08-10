@@ -10,12 +10,14 @@ import pycuda.gpuarray as gpuarray
 from pycuda.compiler import SourceModule
 import numpy as np
 
+from cuda_utils.misc import get_dev_attrs, select_block_grid_sizes
+
 # Get installation location of C headers:
-from __info__ import install_headers
+from cuda_utils import install_headers
 
 # Adapted from Cephes library:
 sici_mod_template = Template("""
-#include <cuda_utils/cuSpecialFuncs.h>
+#include "cuSpecialFuncs.h"
 
 #define USE_DOUBLE ${use_double}
 #if USE_DOUBLE == 0
@@ -27,22 +29,20 @@ sici_mod_template = Template("""
 #endif
 
 __global__ void sici_array(FLOAT *x, FLOAT *si,
-                     FLOAT *ci, int width, int height) {
-    int xIndex = blockIdx.x * ${tile_dim} + threadIdx.x;
-    int yIndex = blockIdx.y * ${tile_dim} + threadIdx.y;
-
-    int index = xIndex + width*yIndex;
+                           FLOAT *ci, unsigned int N) {
+    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
+                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
     FLOAT si_temp, ci_temp;
-    for (int i=0; i<${tile_dim}; i+=${block_rows}) {
-         
-        SICI(x[index+i*width], &si_temp, &ci_temp);
-        si[index+i*width] = si_temp;
-        ci[index+i*width] = ci_temp;
+
+    if (idx < N) {         
+        SICI(x[idx], &si_temp, &ci_temp);
+        si[idx] = si_temp;
+        ci[idx] = ci_temp;
     }
 }
 """)
 
-def sici(x_gpu, tile_dim, block_rows):
+def sici(x_gpu, dev):
     """
     Sine/Cosine integral.
 
@@ -53,12 +53,9 @@ def sici(x_gpu, tile_dim, block_rows):
     ----------
     x_gpu : GPUArray
         Input matrix of shape `(m, n)`.
-    tile_dim : int
-        Each block of threads processes `tile_dim x tile_dim` elements.
-    block_rows : int
-        Each thread processes `tile_dim/block_rows` elements;
-        `block_rows` must therefore divide `tile_dim`.
-
+    dev : pycuda.driver.Device
+        Device object to be used.
+        
     Returns
     -------
     (si_gpu, ci_gpu) : tuple of GPUArrays
@@ -74,7 +71,7 @@ def sici(x_gpu, tile_dim, block_rows):
     >>> import special
     >>> x = np.array([[1, 2], [3, 4]], np.float32)
     >>> x_gpu = gpuarray.to_gpu(x)
-    >>> (si_gpu, ci_gpu) = sici(x_gpu, 2, 1)
+    >>> (si_gpu, ci_gpu) = sici(x_gpu, pycuda.autoinit.device)
     >>> (si, ci) = scipy.special.sici(x)
     >>> np.allclose(si, si_gpu.get())
     True
@@ -90,26 +87,34 @@ def sici(x_gpu, tile_dim, block_rows):
     else:
         raise ValueError('unsupported type')
 
+    # Get block/grid sizes:
+    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
+    block_dim, grid_dim = select_block_grid_sizes(dev, x_gpu.shape)
+    max_blocks_per_grid = max(max_grid_dim)
+
+    # Set this to False when debugging to make sure the compiled kernel is
+    # not cached:
+    cache_dir=None
     sici_mod = \
-             SourceModule(sici_mod_template.substitute(tile_dim=str(tile_dim),
-                                                       block_rows=str(block_rows),
-                                                       use_double=use_double),
-#                          cache_dir=False, # only use when debugging
-                              options=["-I", install_headers])
+             SourceModule(sici_mod_template.substitute(use_double=use_double,
+                          max_threads_per_block=str(max_threads_per_block),
+                          max_blocks_per_grid=str(max_blocks_per_grid)),
+                          cache_dir=cache_dir,
+                          options=["-I", install_headers])
     sici_func = sici_mod.get_function("sici_array")
 
     si_gpu = gpuarray.empty_like(x_gpu)
     ci_gpu = gpuarray.empty_like(x_gpu)
     sici_func(x_gpu.gpudata, si_gpu.gpudata, ci_gpu.gpudata,
-              np.uint32(x_gpu.shape[0]), np.uint32(x_gpu.shape[1]),
-              block=(tile_dim, block_rows, 1),
-              grid=(x_gpu.shape[0]/tile_dim, x_gpu.shape[1]/tile_dim))
+              np.uint32(x_gpu.size),
+              block=block_dim,
+              grid=grid_dim)
     return (si_gpu, ci_gpu)
 
 # Adapted from specfun.f in scipy:
 e1z_mod_template = Template("""
 #include <cuComplex.h>
-#include <cuda_utils/cuComplexFuncs.h>
+#include "cuComplexFuncs.h"
 
 #define PI 3.1415926535897931
 #define EL 0.5772156649015328
@@ -181,21 +186,32 @@ __device__ COMPLEX _e1z(COMPLEX z) {
 }
 
 __global__ void e1z(COMPLEX *z, COMPLEX *e,
-                    int width, int height) {
-    int xIndex = blockIdx.x * ${tile_dim} + threadIdx.x;
-    int yIndex = blockIdx.y * ${tile_dim} + threadIdx.y;
+                    unsigned int N) {
+    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
+                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
 
-    int index = xIndex + width*yIndex;
-    for (int i=0; i<${tile_dim}; i+=${block_rows}) {         
-        e[index+i*width] = _e1z(z[index+i*width]);
-    }
+    if (idx < N) 
+        e[idx] = _e1z(z[idx]);
 }
 
 """)
 
-def e1z(z_gpu, tile_dim, block_rows):
+def e1z(z_gpu, dev):
     """
     Exponential integral with `n = 1` of complex arguments.
+
+    Parameters
+    ----------
+    x_gpu : GPUArray
+        Input matrix of shape `(m, n)`.
+    dev : pycuda.driver.Device
+        Device object to be used.
+        
+    Returns
+    -------
+    e_gpu : GPUArray
+        GPUarrays containing the exponential integrals of
+        the entries of `z_gpu`.
 
     Example
     -------
@@ -206,7 +222,7 @@ def e1z(z_gpu, tile_dim, block_rows):
     >>> import special
     >>> z = np.asarray(np.random.rand(4, 4)+1j*np.random.rand(4, 4), np.complex64)
     >>> z_gpu = gpuarray.to_gpu(z)
-    >>> e_gpu = e1z(z_gpu, 2, 1)
+    >>> e_gpu = e1z(z_gpu, pycuda.autoinit.device)
     >>> e_sp = scipy.special.exp1(z)
     >>> np.allclose(e_sp, e_gpu.get())
     True
@@ -220,18 +236,27 @@ def e1z(z_gpu, tile_dim, block_rows):
     else:
         raise ValueError('unsupported type')
 
+    # Get block/grid sizes:
+    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
+    block_dim, grid_dim = select_block_grid_sizes(dev, z_gpu.shape)
+    max_blocks_per_grid = max(max_grid_dim)
+
+    # Set this to False when debugging to make sure the compiled kernel is
+    # not cached:
+    cache_dir=None
     e1z_mod = \
-             SourceModule(e1z_mod_template.substitute(tile_dim=str(tile_dim),
-                                                      block_rows=str(block_rows),
-                                                      use_double=use_double),
+             SourceModule(e1z_mod_template.substitute(use_double=use_double,
+                          max_threads_per_block=str(max_threads_per_block),
+                          max_blocks_per_grid=str(max_blocks_per_grid)),
+                          cache_dir=cache_dir,
                           options=["-I", install_headers])
     e1z_func = e1z_mod.get_function("e1z")
 
     e_gpu = gpuarray.empty_like(z_gpu)
     e1z_func(z_gpu.gpudata, e_gpu.gpudata,
-              np.uint32(z_gpu.shape[0]), np.uint32(z_gpu.shape[1]),
-              block=(tile_dim, block_rows, 1),
-              grid=(z_gpu.shape[0]/tile_dim, z_gpu.shape[1]/tile_dim))
+              np.uint32(z_gpu.size),
+              block=block_dim,
+              grid=grid_dim)
     return e_gpu
 
     

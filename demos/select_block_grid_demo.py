@@ -29,10 +29,11 @@ block_dim, grid_dim = select_block_grid_sizes(dev, a.shape)
 # Perform element-wise operation on input matrix:
 func_mod_template = Template("""
 __global__ void func(${float} *a, ${float} *b, unsigned int N) {
-    int index = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
+                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
 
-    if (index < N)
-        b[index] = 5*a[index];
+    if (idx < N)
+        b[idx] = 5*a[idx];
 }
 """)
 
