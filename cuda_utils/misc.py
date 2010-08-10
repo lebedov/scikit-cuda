@@ -5,6 +5,7 @@ General PyCUDA utility functions.
 """
 
 import pycuda.driver as drv
+import numpy as np
 
 def get_dev_attrs(dev):
     """
