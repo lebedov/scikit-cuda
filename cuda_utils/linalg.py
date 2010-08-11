@@ -85,7 +85,7 @@ def svd(a_gpu, full_matrices=1, compute_uv=1):
     >>> a = np.asarray(a, np.complex64)
     >>> a_gpu = gpuarray.to_gpu(a)
     >>> u_gpu, s_gpu, vh_gpu = linalg.svd(a_gpu, 0)
-    >>> np.allclose(a, np.dot(u_gpu.get(), np.dot(np.diag(s_gpu.get()), vh_gpu.get())))
+    >>> np.allclose(a, np.dot(u_gpu.get(), np.dot(np.diag(s_gpu.get()), vh_gpu.get())), 1e-4)
     True
 
     """
@@ -506,6 +506,7 @@ diag_mod_template = Template("""
 #endif
 #endif
 
+// N must contain the number of elements in d:
 __global__ void diag(TYPE *v, TYPE *d, int N) {
     unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
                        blockIdx.x*${max_threads_per_block}+threadIdx.x;
@@ -566,12 +567,18 @@ def diag(v_gpu, dev):
                            np.complex128]:
         raise ValueError('unrecognized type')
 
+    if len(v_gpu.shape) > 1:
+        raise ValueError('input array cannot be multidimensional')
+    
     use_double = int(v_gpu.dtype in [np.float64, np.complex128])
     use_complex = int(v_gpu.dtype in [np.complex64, np.complex128])
 
+    # Allocate output matrix:
+    d_gpu = gpuarray.empty((v_gpu.size, v_gpu.size), v_gpu.dtype)
+    
     # Get block/grid sizes:
     max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
-    block_dim, grid_dim = select_block_grid_sizes(dev, v_gpu.shape)
+    block_dim, grid_dim = select_block_grid_sizes(dev, d_gpu.shape)
     max_blocks_per_grid = max(max_grid_dim)
 
     # Set this to False when debugging to make sure the compiled kernel is
@@ -586,7 +593,6 @@ def diag(v_gpu, dev):
                           cache_dir=cache_dir)
 
     diag = diag_mod.get_function("diag")    
-    d_gpu = gpuarray.empty((v_gpu.size, v_gpu.size), v_gpu.dtype)
     diag(v_gpu.gpudata, d_gpu.gpudata, np.uint32(d_gpu.size),
          block=block_dim,
          grid=grid_dim)
