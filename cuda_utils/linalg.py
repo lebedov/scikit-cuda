@@ -599,7 +599,21 @@ def diag(v_gpu, dev):
     
     return d_gpu
 
-def pinv(a_gpu, dev):
+cutoff_invert_s_mod_template = Template("""
+// N must equal the length of s:
+__global__ void cutoff_invert_s(float *s, float *cutoff, unsigned int N) {
+    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
+                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+
+    if (idx < N) 
+        if (s[idx] > cutoff[0])
+            s[idx] = 1/s[idx];
+        else
+            s[idx] = 0.0;
+}
+""")
+
+def pinv(a_gpu, dev, rcond=1e-15):
     """
     Moore-Penrose pseudoinverse.
 
@@ -635,11 +649,30 @@ def pinv(a_gpu, dev):
     # precision:
     if a_gpu.dtype not in [np.float32, np.complex64]:
         raise ValueError('unsupported type')
-    
+
+    # Compute SVD:
     conj(a_gpu, dev)
     u_gpu, s_gpu, vh_gpu = svd(a_gpu, 0)
     uh_gpu = transpose(u_gpu, dev)
-    s_gpu **= np.float32(-1)
+
+    # Get block/grid sizes:
+    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
+    block_dim, grid_dim = select_block_grid_sizes(dev, s_gpu.shape)
+    max_blocks_per_grid = max(max_grid_dim)
+
+    # Suppress very small singular values:
+    cutoff_invert_s_mod = \
+        SourceModule(cutoff_invert_s_mod_template.substitute( 
+        max_threads_per_block=max_threads_per_block,
+        max_blocks_per_grid=max_blocks_per_grid))
+    cutoff_invert_s = \
+                    cutoff_invert_s_mod.get_function('cutoff_invert_s')
+    cutoff_gpu = gpuarray.max(s_gpu)*rcond
+    cutoff_invert_s(s_gpu.gpudata, cutoff_gpu.gpudata,
+                    np.uint32(s_gpu.size),
+                    block=block_dim, grid=grid_dim)
+    
+    # Finish pinv computation:
     s_diag_gpu = diag(s_gpu, dev)
     v_gpu = transpose(vh_gpu, dev)
     suh_gpu = dot(s_diag_gpu, uh_gpu)
