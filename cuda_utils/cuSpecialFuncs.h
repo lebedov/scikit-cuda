@@ -5,6 +5,22 @@
 #if !defined(CU_SPECIAL_FUNCS_H_)
 #define CU_SPECIAL_FUNCS_H_
 
+/* Sinc function */
+__device__ float sincf(float x) {
+    if (x == 0.0) 
+	return 1.0;
+    else
+	return sinpif(x)/(PI*x);
+}
+
+__device__ double sinc(double x) {
+    if (x == 0.0) 
+	return 1.0;
+    else
+	return sinpi(x)/(PI*x);
+}
+
+/* Sine/cosine integral */
 __device__ float polevlf(float x, float *coef, int N) {
     float ans;
     float *p;
