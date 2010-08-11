@@ -11,10 +11,11 @@ import pycuda.gpuarray as gpuarray
 import pycuda.driver as drv
 import numpy as np
 
+import cuda
 import cublas
 import cula
 
-from cuda_utils.misc import get_dev_attrs, select_block_grid_sizes
+from misc import get_dev_attrs, select_block_grid_sizes
 
 # Get installation location of C headers:
 from cuda_utils import install_headers
@@ -22,18 +23,21 @@ from cuda_utils import install_headers
 def init():
     """
     Initialize CUDA utilities.
-
+        
     Notes
     -----
-    PyCUDA must be initialized separately before using any of the
-    functions in the `linalg` module.
+    This function does not initialize PyCUDA; it uses whatever device
+    was initialized in the current host thread.
     
     """
-    
-    status = cublas.cublasInit()
-    cublas.cublasCheckStatus(status)
-    status = cula.culaInitialize()
-    cula.culaCheckStatus(status)
+
+    # CUBLAS uses whatever device is being used by the host thread:
+    cublas.cublasInit()
+
+    # culaSelectDevice() need not (and, in fact, cannot) be called
+    # here because the host thread has already been bound to a GPU
+    # device:
+    cula.culaInitialize()
     
 def svd(a_gpu, full_matrices=1, compute_uv=1):
     """
@@ -45,7 +49,7 @@ def svd(a_gpu, full_matrices=1, compute_uv=1):
 
     Parameters
     ----------
-    a : GPUArray
+    a : pycuda.gpuarray.GPUArray
         Input matrix of shape `(m, n)` to decompose.
     full_matrices : bool, optional
         If True (default), `u` and `vh` have the shapes
@@ -56,13 +60,13 @@ def svd(a_gpu, full_matrices=1, compute_uv=1):
 
     Returns
     -------
-    u : GPUArray
+    u : pycuda.gpuarray.GPUArray
         Unitary matrix of shape `(m, m)` or `(m, k)` depending on
         value of `full_matrices`.
-    s : GPUArray
+    s : pycuda.gpuarray.GPUArray
         Array containing the singular values, sorted such that `s[i] >= s[i+1]`.
         `s` is of length `min(m, n)`.
-    vh : GPUArray
+    vh : pycuda.gpuarray.GPUArray
         Unitary matrix of shape `(n, n)` or `(k, n)`, depending
         on `full_matrices`. 
 
@@ -90,9 +94,9 @@ def svd(a_gpu, full_matrices=1, compute_uv=1):
     # point numbers:
     real_dtype = np.dtype(np.float32)
     if a_gpu.dtype == np.complex64:
-        cula_func = cula._culaDeviceCgesvd        
+        cula_func = cula._libcula.culaDeviceCgesvd        
     elif a_gpu.dtype == np.float32:
-        cula_func = cula._culaDeviceSgesvd
+        cula_func = cula._libcula.culaDeviceSgesvd
     else:
         raise ValueError('unsupported type')
 
@@ -159,15 +163,19 @@ def dot(a_gpu, b_gpu):
 
     Parameters
     ----------
-    a_gpu : GPUArray
+    a_gpu : pycuda.gpuarray.GPUArray
         Matrix of shape `(m, k)`.
-    b_gpu : GPUArray
+    b_gpu : pycuda.gpuarray.GPUArray
         Matrix of shape `(k, n)`.
 
     Returns
     -------
-    c_gpu : GPUArray
+    c_gpu : pycuda.gpuarray.GPUArray
         Matrix product of shape `(m, n)`.
+    
+    Notes
+    -----
+    The input matrices must all contain elements of the same data type.
     
     Example
     -------
@@ -187,19 +195,19 @@ def dot(a_gpu, b_gpu):
     """
 
     if (a_gpu.dtype == np.complex64 and b_gpu.dtype == np.complex64):
-        cublas_func = cublas._cublasCgemm        
+        cublas_func = cublas._libcublas.cublasCgemm        
         alpha = np.complex64(1.0)
         beta = np.complex64(0.0)
     elif (a_gpu.dtype == np.float32 and b_gpu.dtype == np.float32):
-        cublas_func = cublas._cublasSgemm
+        cublas_func = cublas._libcublas.cublasSgemm
         alpha = np.float32(1.0)
         beta = np.float32(0.0)
     elif (a_gpu.dtype == np.complex128 and b_gpu.dtype == np.complex128):
-        cublas_func = cublas._cublasZgemm        
+        cublas_func = cublas._libcublas.cublasZgemm        
         alpha = np.complex128(1.0)
         beta = np.complex128(0.0)
     elif (a_gpu.dtype == np.float64 and b_gpu.dtype == np.float64):
-        cublas_func = cublas._cublasDgemm
+        cublas_func = cublas._libcublas.cublasDgemm
         alpha = np.float64(1.0)
         beta = np.float64(0.0)
     else:
@@ -218,7 +226,7 @@ def dot(a_gpu, b_gpu):
     cublas_func(transb, transa, m, n, k, alpha, int(b_gpu.gpudata),
                 lda, int(a_gpu.gpudata), ldb, beta, int(c_gpu.gpudata), ldc)
 
-    status = cublas._cublasGetError()
+    status = cublas.cublasGetError()
     cublas.cublasCheckStatus(status)
     
     return c_gpu
@@ -229,6 +237,20 @@ def mdot(*args):
 
     Computes the matrix product of several arrays of shapes.
 
+    Parameters
+    ----------
+    a_gpu, b_gpu, ... : pycuda.gpuarray.GPUArray
+        Arrays to multiply.
+
+    Returns
+    -------
+    c_gpu : pycuda.gpuarray.GPUArray
+        Matrix product of `a_gpu`, `b_gpu`, etc.
+
+    Notes
+    -----
+    The input matrices must all contain elements of the same data type.
+        
     Example
     -------
     >>> import pycuda.gpuarray as gpuarray
@@ -303,14 +325,14 @@ def transpose(a_gpu, dev):
 
     Parameters
     ----------
-    a_gpu : GPUArray
+    a_gpu : pycuda.gpuarray.GPUArray
         Input matrix of shape `(m, n)`.
     dev : pycuda.driver.Device
         Device object to be used.
 
     Returns
     -------
-    at_gpu : GPUArray
+    at_gpu : pycuda.gpuarray.GPUArray
         Transposed matrix of shape `(n, m)`.
 
     Notes
@@ -402,7 +424,7 @@ def conj(a_gpu, dev):
 
     Parameters
     ----------
-    a_gpu : GPUArray
+    a_gpu : pycuda.gpuarray.GPUArray
         Input matrix of shape `(m, n)`.
     dev : pycuda.driver.Device
         Device object to be used.
@@ -469,14 +491,18 @@ diag_mod_template = Template("""
 #if USE_DOUBLE == 1
 #if USE_COMPLEX == 1
 #define TYPE cuDoubleComplex
+#define ZERO make_cuDoubleComplex(0, 0)
 #else
 #define TYPE double
+#define ZERO 0.0
 #endif
 #else
 #if USE_COMPLEX == 1
 #define TYPE cuFloatComplex
+#define ZERO make_cuFloatComplex(0, 0)
 #else
 #define TYPE float
+#define ZERO 0.0
 #endif
 #endif
 
@@ -490,7 +516,7 @@ __global__ void diag(TYPE *v, TYPE *d, int N) {
         if (ix == iy) {
             d[idx] = v[ix];
         } else {
-            d[idx] = 0.0;
+            d[idx] = ZERO;
         }
 }
 """)
@@ -505,15 +531,16 @@ def diag(v_gpu, dev):
 
     Parameters
     ----------
-    a_obj : GPUArray
+    a_obj : pycuda.gpuarray.GPUArray
         Input array of length `n`.
     dev : pycuda.driver.Device
         Device object to be used.
 
-    Notes
-    -----
-    This function assumes that the input array contains real values.
-
+    Returns
+    -------
+    d_gpu : pycuda.gpuarray.GPUArray
+        Diagonal matrix of dimensions `[n, n]`.
+        
     Example
     -------
     >>> import pycuda.driver as drv
@@ -523,6 +550,11 @@ def diag(v_gpu, dev):
     >>> import linalg
     >>> linalg.init()
     >>> v = np.array([1, 2, 3, 4, 5, 6], np.float32)
+    >>> v_gpu = gpuarray.to_gpu(v)
+    >>> d_gpu = diag(v_gpu, pycuda.autoinit.device);
+    >>> np.all(d_gpu.get() == np.diag(v))
+    True
+    >>> v = np.array([1j, 2j, 3j, 4j, 5j, 6j], np.complex64)
     >>> v_gpu = gpuarray.to_gpu(v)
     >>> d_gpu = diag(v_gpu, pycuda.autoinit.device);
     >>> np.all(d_gpu.get() == np.diag(v))
@@ -566,14 +598,17 @@ def pinv(a_gpu, dev):
     Moore-Penrose pseudoinverse.
 
     Compute the Moore-Penrose pseudoinverse of the specified matrix.
+
     Parameters
     ----------
-    a_gpu : GPUArray
+    a_gpu : pycuda.gpuarray.GPUArray
         Input matrix of shape `(m, n)`.
 
-    Notes
-    -----
-    
+    Returns
+    -------
+    a_inv_gpu : pycuda.gpuarray.GPUArray
+        Pseudoinverse of input matrix.
+        
     Example
     -------
     >>> import pycuda.driver as drv
@@ -585,7 +620,7 @@ def pinv(a_gpu, dev):
     >>> a = np.asarray(np.random.rand(8, 4), np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
     >>> a_inv_gpu = pinv(a_gpu, pycuda.autoinit.device)
-    >>> np.allclose(np.linalg.pinv(a), a_inv_gpu.get())
+    >>> np.allclose(np.linalg.pinv(a), a_inv_gpu.get(), 1e-4)
     True
 
     """

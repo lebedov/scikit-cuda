@@ -8,7 +8,6 @@ import sys
 import ctypes
 import atexit
 import numpy as np
-from numpy.linalg import LinAlgError
 
 import cuda
 
@@ -40,18 +39,16 @@ def POINTER(obj):
 
 # Function for retrieving string associated with specific CULA error
 # code:
-_culaGetStatusString = _libcula.culaGetStatusString
-_culaGetStatusString.restype = ctypes.c_char_p
-_culaGetStatusString.argtypes = [ctypes.c_int]
+_libcula.culaGetStatusString.restype = ctypes.c_char_p
+_libcula.culaGetStatusString.argtypes = [ctypes.c_int]
 def culaGetStatusString(e):
     """Get string associated with the specified CULA error status code."""
 
-    return _culaGetStatusString(e)
+    return _libcula.culaGetStatusString(e)
 
 # Generic CULA error:
 class culaError(Exception):
     """CULA error."""
-
     pass
 
 # Exceptions corresponding to various CULA errors:
@@ -60,43 +57,43 @@ class culaNotFound(culaError):
     pass
 
 class culaNotInitialized(culaError):
-    __doc__ = _culaGetStatusString(1)
+    __doc__ = culaGetStatusString(1)
     pass
 
 class culaNoHardware(culaError):
-    __doc__ = _culaGetStatusString(2)
+    __doc__ = culaGetStatusString(2)
     pass
 
 class culaInsufficientRuntime(culaError):
-    __doc__ = _culaGetStatusString(3)
+    __doc__ = culaGetStatusString(3)
     pass
 
 class culaInsufficientComputeCapability(culaError):
-    __doc__ = _culaGetStatusString(4)
+    __doc__ = culaGetStatusString(4)
     pass
 
 class culaInsufficientMemory(culaError):
-    __doc__ = _culaGetStatusString(5)
+    __doc__ = culaGetStatusString(5)
     pass
 
 class culaFeatureNotImplemented(culaError):
-    __doc__ = _culaGetStatusString(6)
+    __doc__ = culaGetStatusString(6)
     pass
 
 class culaArgumentError(culaError):
-    __doc__ = _culaGetStatusString(7)
+    __doc__ = culaGetStatusString(7)
     pass
 
 class culaDataError(culaError):
-    __doc__ = _culaGetStatusString(8)
+    __doc__ = culaGetStatusString(8)
     pass
 
 class culaBlasError(culaError):
-    __doc__ = _culaGetStatusString(9)
+    __doc__ = culaGetStatusString(9)
     pass
 
 class culaRuntimeError(culaError):
-    __doc__ = _culaGetStatusString(10)
+    __doc__ = culaGetStatusString(10)
     pass
 
 culaExceptions = {
@@ -124,6 +121,8 @@ def culaCheckStatus(status):
         except KeyError:
             raise culaError
 
+_libcula.culaGetErrorInfo.restype = int
+_libcula.culaGetErrorInfo.argtype = [ctypes.c_int]
 def culaGetErrorInfo(e):
     """Returns extended information about the last CULA error."""
 
@@ -134,47 +133,57 @@ def culaGetLastStatus():
     
     return _libcula.culaGetLastStatus()
 
+_libcula.culaSelectDevice.restype = int
+_libcula.culaSelectDevice.argtype = [ctypes.c_int]
+def culaSelectDevice(dev):
+    """Selects a device with which CULA will operate. Must be called
+    before culaInitialize()."""
+
+    status = _libcula.culaSelectDevice(dev)
+    culaCheckStatus(status)
+
 def culaInitialize():
     """Must be called before using any other CULA function."""
     
-    return _libcula.culaInitialize()
+    status = _libcula.culaInitialize()
+    culaCheckStatus(status)
 
 def culaShutdown():
     """Shuts down CULA."""
     
-    return _libcula.culaShutdown()
+    status = _libcula.culaShutdown()
+    culaCheckStatus(status)
 
 # Shut down CULA upon exit:
 atexit.register(_libcula.culaShutdown)
 
 # LAPACK functions implemented by CULA:
-_culaDeviceSgesvd = _libcula.culaDeviceSgesvd
-_culaDeviceSgesvd.restype = int
-_culaDeviceSgesvd.argtypes = [ctypes.c_char,
-                              ctypes.c_char,
-                              ctypes.c_int,
-                              ctypes.c_int,
-                              ctypes.c_void_p,
-                              ctypes.c_int,
-                              ctypes.c_void_p,
-                              ctypes.c_void_p,
-                              ctypes.c_int,
-                              ctypes.c_void_p,
-                              ctypes.c_int]
 
-_culaDeviceCgesvd = _libcula.culaDeviceCgesvd
-_culaDeviceCgesvd.restype = int
-_culaDeviceCgesvd.argtypes = [ctypes.c_char,
-                              ctypes.c_char,
-                              ctypes.c_int,
-                              ctypes.c_int,
-                              ctypes.c_void_p,
-                              ctypes.c_int,
-                              ctypes.c_void_p,
-                              ctypes.c_void_p,
-                              ctypes.c_int,
-                              ctypes.c_void_p,
-                              ctypes.c_int]
+_libcula.culaDeviceSgesvd.restype = int
+_libcula.culaDeviceSgesvd.argtypes = [ctypes.c_char,
+                                      ctypes.c_char,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int]
+
+_libcula.culaDeviceCgesvd.restype = int
+_libcula.culaDeviceCgesvd.argtypes = [ctypes.c_char,
+                                      ctypes.c_char,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int]
 
 if __name__ == "__main__":
     import doctest

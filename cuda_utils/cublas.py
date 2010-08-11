@@ -68,31 +68,12 @@ cublasExceptions = {
     0xe: cublasInternalError,
     }
 
-_cublasGetError = _libcublas.cublasGetError
-_cublasGetError.restype = int
-_cublasGetError.argtypes = []
+_libcublas.cublasGetError.restype = int
+_libcublas.cublasGetError.argtypes = []
 def cublasGetError():
     """Returns and resets the current CUBLAS error code."""
 
-    return _cublasGetError()
-
-_cublasInit = _libcublas.cublasInit
-_cublasInit.restype = int
-_cublasInit.argtypes = []
-def cublasInit():
-    """Must be called before using any other CUBLAS functions."""
-    
-    return _cublasInit()
-
-_cublasShutdown = _libcublas.cublasShutdown
-_cublasShutdown.restype = int
-_cublasShutdown.argtypes = []
-def cublasShutdown():
-    """Shuts down CUBLAS."""
-
-    return _cublasShutdown()
-
-atexit.register(_cublasShutdown)
+    return _libcublas.cublasGetError()
 
 def cublasCheckStatus(status):
     """Raise an exception if the specified CUBLAS status is an error."""
@@ -103,37 +84,54 @@ def cublasCheckStatus(status):
         except KeyError:
             raise cublasError
 
+
+_libcublas.cublasInit.restype = int
+_libcublas.cublasInit.argtypes = []
+def cublasInit():
+    """Must be called before using any other CUBLAS functions."""
+    
+    status = _libcublas.cublasInit()
+    cublasCheckStatus(status)
+
+_libcublas.cublasShutdown.restype = int
+_libcublas.cublasShutdown.argtypes = []
+def cublasShutdown():
+    """Shuts down CUBLAS."""
+
+    status = _libcublas.cublasShutdown()
+    cublasCheckStatus(status)
+
+atexit.register(_libcublas.cublasShutdown)
+
 # BLAS functions implemented by CUBLAS:
-_cublasSgemm = _libcublas.cublasSgemm
-_cublasSgemm.restype = None
-_cublasSgemm.argtypes = [ctypes.c_char,
-                         ctypes.c_char,
-                         ctypes.c_int,
-                         ctypes.c_int,
-                         ctypes.c_int,
-                         ctypes.c_float,
-                         ctypes.c_void_p,
-                         ctypes.c_int,
-                         ctypes.c_void_p,
-                         ctypes.c_int,
-                         ctypes.c_float,
-                         ctypes.c_void_p,
-                         ctypes.c_int]
-_cublasCgemm = _libcublas.cublasCgemm
-_cublasCgemm.restype = None
-_cublasCgemm.argtypes = [ctypes.c_char,
-                         ctypes.c_char,
-                         ctypes.c_int,
-                         ctypes.c_int,
-                         ctypes.c_int,
-                         ctypes.c_float,
-                         ctypes.c_void_p,
-                         ctypes.c_int,
-                         ctypes.c_void_p,
-                         ctypes.c_int,
-                         ctypes.c_float,
-                         ctypes.c_void_p,
-                         ctypes.c_int]
+_libcublas.cublasSgemm.restype = None
+_libcublas.cublasSgemm.argtypes = [ctypes.c_char,
+                                   ctypes.c_char,
+                                   ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_float,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int,
+                                   ctypes.c_float,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int]
+_libcublas.cublasCgemm.restype = None
+_libcublas.cublasCgemm.argtypes = [ctypes.c_char,
+                                   ctypes.c_char,
+                                   ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_float,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int,
+                                   ctypes.c_float,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int]
 
 _cublasDgemm = _libcublas.cublasDgemm
 _cublasDgemm.restype = None
