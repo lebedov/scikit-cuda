@@ -334,6 +334,8 @@ def transpose(a_gpu, dev):
     -------
     at_gpu : pycuda.gpuarray.GPUArray
         Transposed matrix of shape `(n, m)`.
+    dev : pycuda.driver.Device
+        Device object to be used.
 
     Notes
     -----
@@ -623,7 +625,12 @@ def pinv(a_gpu, dev, rcond=1e-15):
     ----------
     a_gpu : pycuda.gpuarray.GPUArray
         Input matrix of shape `(m, n)`.
-
+    dev : pycuda.driver.Device
+        Device object to be used.
+    rcond : float
+        Singular values smaller than `rcond`*max(singular_values)`
+        are set to zero.
+        
     Returns
     -------
     a_inv_gpu : pycuda.gpuarray.GPUArray
