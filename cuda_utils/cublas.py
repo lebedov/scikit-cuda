@@ -25,7 +25,7 @@ except OSError:
 
 # Generic CUBLAS error:
 class cublasError(Exception):
-    "CUBLAS error"
+    """CUBLAS error"""
     
     pass
 
