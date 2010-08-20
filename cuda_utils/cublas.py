@@ -2,6 +2,8 @@
 
 """
 Python interface to CUBLAS functions.
+
+Note: this module does not explicitly depend on PyCUDA.
 """
 
 import sys
@@ -31,31 +33,31 @@ class cublasError(Exception):
 
 # Exceptions corresponding to different CUBLAS errors:
 class cublasNotInitialized(cublasError):
-    __doc__ = "CUBLAS library not initialized."
+    """CUBLAS library not initialized."""
     pass
 
 class cublasAllocFailed(cublasError):
-    __doc__ = "Resource allocation failed."
+    """Resource allocation failed."""
     pass
 
 class cublasInvalidValue(cublasError):
-    __doc__ = "Unsupported numerical value was passed to function."
+    """Unsupported numerical value was passed to function."""
     pass
 
 class cublasArchMismatch(cublasError):
-    __doc__ = "Function requires an architectural feature absent from the device."
+    """Function requires an architectural feature absent from the device."""
     pass
 
 class cublasMappingError(cublasError):
-    __doc__ = "Access to GPU memory space failed."""
+    """Access to GPU memory space failed."""
     pass
 
 class cublasExecutionFailed(cublasError):
-    __doc__ = "GPU program failed to execute."
+    """GPU program failed to execute."""
     pass
 
 class cublasInternalError(cublasError):
-    __doc__ = "An internal CUBLAS operation failed."
+    __"""An internal CUBLAS operation failed."""
     pass
 
 cublasExceptions = {
