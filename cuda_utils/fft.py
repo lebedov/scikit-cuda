@@ -4,7 +4,6 @@
 PyCUDA-based FFT functions.
 """
 
-import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
 import numpy as np
 
@@ -73,7 +72,7 @@ class Plan:
                                             
     def __del__(self):
         cufft.cufftDestroy(self.handle)
-
+          
 def _fft(x_gpu, p, direction, scale=False, inplace=False):
     """
     Fast Fourier Transform.
@@ -93,9 +92,10 @@ def _fft(x_gpu, p, direction, scale=False, inplace=False):
 
         # Scale the result by dividing it by the number of elements:
         if scale:
-            x_gpu /= np.prod(x_gpu.shape)
+            x_gpu.gpudata = (x_gpu/np.prod(x_gpu.shape)).gpudata
             
-        return x_gpu
+        # Don't return any value when inplace == True
+        
     else:
 
         if direction == cufft.CUFFT_FORWARD and \
@@ -120,7 +120,7 @@ def _fft(x_gpu, p, direction, scale=False, inplace=False):
                        
         # Scale the result by dividing it by the number of elements:
         if scale:
-            y_gpu /= np.prod(x_gpu.shape)
+            y_gpu.gpudata = (y_gpu/np.prod(x_gpu.shape)).gpudata
 
         return y_gpu
 
@@ -138,10 +138,11 @@ def fft(x_gpu, p, scale=False, inplace=False):
     p : Plan
         FFT plan.
     scale : bool, optional
-        If True, scale the computed FFT by the length of the input signal.        
+        If True, scale the computed FFT by the
+        length of the input signal.        
     inplace : bool, optional
         If True, replace the contents of the input array with the
-        computed FFT.
+        computed FFT and don't return anything.
 
     Returns
     -------
@@ -166,10 +167,11 @@ def ifft(x_gpu, p, scale=False, inplace=False):
     p : Plan
         FFT plan.
     scale : bool, optional
-        If True, scale the computed inverse FFT by the length of the input signal.        
+        If True, scale the computed inverse FFT by the
+        length of the input signal.        
     inplace : bool, optional
         If True, replace the contents of the input array with the
-        computed inverse FFT.
+        computed inverse FFT and don't return anything.
 
     Returns
     -------
