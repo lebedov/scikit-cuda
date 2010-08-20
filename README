@@ -7,8 +7,8 @@ Package Description
 -------------------
 
 This package provides Python interfaces to various functions in the
-CUDA, CUDART, and CUBLAS packages distributed as part of NVIDIA's CUDA
-Programming Toolkit [1]_. It also contains interfaces to select
+CUDA, CUDART, CUBLAS, and CUFFT packages distributed as part of NVIDIA's 
+CUDA Programming Toolkit [1]_. It also contains interfaces to select
 functions in the CULA Toolkit [2]_ that attempt to emulate comparable
 functions in the NumPy toolkit [3]_.
 
