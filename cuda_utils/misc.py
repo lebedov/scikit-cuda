@@ -4,7 +4,10 @@
 General PyCUDA utility functions.
 """
 
+from string import Template
 import pycuda.driver as drv
+import pycuda.gpuarray as gpuarray
+from pycuda.compiler import SourceModule
 import numpy as np
 
 def get_dev_attrs(dev):
@@ -107,3 +110,118 @@ def select_block_grid_sizes(dev, data_shape):
         raise ValueError('array size too large')
 
     return (max_threads_per_block, 1, 1), (grid_x, grid_y)
+
+maxabs_mod_template = Template("""
+#include <cuComplex.h>
+
+#define USE_DOUBLE ${use_double}
+#define USE_COMPLEX ${use_complex}
+
+#if USE_DOUBLE == 1
+#define REAL_TYPE double
+#if USE_COMPLEX == 1
+#define TYPE cuDoubleComplex
+#define ABS(z) cuCabs(z)
+#else
+#define TYPE double
+#define ABS(X) abs(x)
+#endif
+#else
+#define REAL_TYPE float
+#if USE_COMPLEX == 1
+#define TYPE cuFloatComplex
+#define ABS(z) cuCabsf(z)
+#else
+#define TYPE float
+#define ABS(x) fabs(x)
+#endif
+#endif
+
+// This kernel is only meant to be run in one thread;
+// N must contain the length of x:
+__global__ void maxabs(TYPE *x, REAL_TYPE *m,
+                       unsigned int N) {
+    unsigned int idx = threadIdx.x;
+
+    REAL_TYPE result, temp;
+    
+    if (idx == 0) {
+        result = 0;
+        for (unsigned int i = 0; i < N; i++) {
+           temp = ABS(x[i]);
+           if (temp >= result)
+               result = temp;
+        }
+        m[0] = result;
+    }
+}                             
+""")
+
+def maxabs(x_gpu):
+    """
+    Get maximum absolute value.
+
+    Find maximum absolute value in the specified array.
+
+    Parameters
+    ----------
+    x_gpu : pycuda.gpuarray.GPUArray
+        Input array.
+
+    Returns
+    -------
+    m_gpu : pycuda.gpuarray.GPUArray
+        Length 1 array containing the maximum absolute value in
+        `x_gpu`.
+
+    Notes
+    -----
+    This implementation could be made faster by computing the absolute
+    values of the input array in parallel.
+    
+    Example
+    -------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import fft
+    >>> x_gpu = gpuarray.to_gpu(np.array([-1, 2, -3], np.float32))
+    >>> m_gpu = fft.maxabs(x_gpu)
+    >>> np.allclose(m_gpu.get(), 3.0)
+    True
+    >>> y_gpu = gpuarray.to_gpu(np.array([-1j, 2, -3j], np.complex64))
+    >>> m_gpu = fft.maxabs(y_gpu)
+    >>> np.allclose(m_gpu.get(), 3.0)
+    True
+    
+    """
+
+    if x_gpu.dtype == np.double:
+        use_double = 1
+        real_type = np.float64
+    else:
+        use_double = 0
+        real_type = np.float32
+    
+    if x_gpu.dtype in [np.complex64, np.complex128]:
+        use_complex = 1
+    else:
+        use_complex = 0
+
+    # Set this to False when debugging to make sure the compiled kernel is
+    # not cached:
+    cache_dir = None
+    maxabs_mod = \
+               SourceModule(maxabs_mod_template.substitute(use_double=use_double,
+                                                           use_complex=use_complex),
+                            cache_dir=cache_dir)
+
+    maxabs = maxabs_mod.get_function("maxabs")
+    m_gpu = gpuarray.empty(1, real_type)
+    maxabs(x_gpu.gpudata, m_gpu.gpudata, np.uint32(x_gpu.size),
+           block=(1, 1, 1), grid=(1, 1))
+
+    return m_gpu
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()
