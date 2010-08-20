@@ -57,7 +57,7 @@ class cublasExecutionFailed(cublasError):
     pass
 
 class cublasInternalError(cublasError):
-    __"""An internal CUBLAS operation failed."""
+    """An internal CUBLAS operation failed."""
     pass
 
 cublasExceptions = {
