@@ -158,20 +158,21 @@ def dot(a_gpu, b_gpu):
     """
     Matrix product of two arrays.
 
-    Computes the matrix product of two arrays of shapes `(m, k)` and
-    `(k, n)`; the result has shape `(m, n)`.
+    For 1D arrays, this function computes the inner product. For 2D
+    arrays of shapes `(m, k)` and `(k, n)`, it computes the matrix
+    product; the result has shape `(m, n)`.
 
     Parameters
     ----------
     a_gpu : pycuda.gpuarray.GPUArray
-        Matrix of shape `(m, k)`.
+        Input array.
     b_gpu : pycuda.gpuarray.GPUArray
-        Matrix of shape `(k, n)`.
-
+        Input array.
+        
     Returns
     -------
     c_gpu : pycuda.gpuarray.GPUArray
-        Matrix product of shape `(m, n)`.
+        Dot product of `a_gpu` and `b_gpu`.
     
     Notes
     -----
@@ -191,45 +192,80 @@ def dot(a_gpu, b_gpu):
     >>> c_gpu = linalg.dot(a_gpu, b_gpu)
     >>> np.allclose(np.dot(a, b), c_gpu.get())
     True
+    >>> d = np.asarray(np.random.rand(5), np.float32)
+    >>> e = np.asarray(np.random.rand(5), np.float32)
+    >>> d_gpu = gpuarray.to_gpu(d)
+    >>> e_gpu = gpuarray.to_gpu(e)
+    >>> f = linalg.dot(d_gpu, e_gpu)
+    >>> np.allclose(np.dot(d, e), f)
+    True
     
     """
 
-    if (a_gpu.dtype == np.complex64 and b_gpu.dtype == np.complex64):
-        cublas_func = cublas._libcublas.cublasCgemm        
-        alpha = np.complex64(1.0)
-        beta = np.complex64(0.0)
-    elif (a_gpu.dtype == np.float32 and b_gpu.dtype == np.float32):
-        cublas_func = cublas._libcublas.cublasSgemm
-        alpha = np.float32(1.0)
-        beta = np.float32(0.0)
-    elif (a_gpu.dtype == np.complex128 and b_gpu.dtype == np.complex128):
-        cublas_func = cublas._libcublas.cublasZgemm        
-        alpha = np.complex128(1.0)
-        beta = np.complex128(0.0)
-    elif (a_gpu.dtype == np.float64 and b_gpu.dtype == np.float64):
-        cublas_func = cublas._libcublas.cublasDgemm
-        alpha = np.float64(1.0)
-        beta = np.float64(0.0)
+    if len(a_gpu.shape) == 1 and len(b_gpu.shape) == 1:
+
+        # Compute inner product for 1D arrays:
+        if (a_gpu.dtype == np.complex64 and b_gpu.dtype == np.complex64):
+            cublas_func = cublas._libcublas.cublasCdotu
+        elif (a_gpu.dtype == np.float32 and b_gpu.dtype == np.float32):
+            cublas_func = cublas._libcublas.cublasSdot
+        elif (a_gpu.dtype == np.complex128 and b_gpu.dtype == np.complex128):
+            cublas_func = cublas._libcublas.cublasZdotu
+        elif (a_gpu.dtype == np.float64 and b_gpu.dtype == np.float64):
+            cublas_func = cublas._libcublas.cublasDdot
+        else:
+            raise ValueError('unsupported combination of input types')
+
+        result = cublas_func(a_gpu.size, int(a_gpu.gpudata), 1,
+                             int(b_gpu.gpudata), 1)
+
+        if a_gpu.dtype == np.complex64:
+            return np.float32(result.x)+1j*np.float32(result.y)
+        elif a_gpu.dtype == np.complex128:
+            return np.float64(result.x)+1j*np.float64(result.y)
+        elif a_gpu.dtype == np.float32:
+            return np.float32(result)
+        else:
+            return np.float64(result)
     else:
-        raise ValueError('unsupported combination of input types')
 
-    transa = 'N'
-    transb = 'N'
-    m = b_gpu.shape[1]
-    n = a_gpu.shape[0]
-    k = b_gpu.shape[0]
-    lda = m
-    ldb = k
-    ldc = max(1, m)
+        # Perform matrix multiplication for 2D arrays:
+        if (a_gpu.dtype == np.complex64 and b_gpu.dtype == np.complex64):
+            cublas_func = cublas._libcublas.cublasCgemm        
+            alpha = np.complex64(1.0)
+            beta = np.complex64(0.0)
+        elif (a_gpu.dtype == np.float32 and b_gpu.dtype == np.float32):
+            cublas_func = cublas._libcublas.cublasSgemm
+            alpha = np.float32(1.0)
+            beta = np.float32(0.0)
+        elif (a_gpu.dtype == np.complex128 and b_gpu.dtype == np.complex128):
+            cublas_func = cublas._libcublas.cublasZgemm        
+            alpha = np.complex128(1.0)
+            beta = np.complex128(0.0)
+        elif (a_gpu.dtype == np.float64 and b_gpu.dtype == np.float64):
+            cublas_func = cublas._libcublas.cublasDgemm
+            alpha = np.float64(1.0)
+            beta = np.float64(0.0)
+        else:
+            raise ValueError('unsupported combination of input types')
 
-    c_gpu = gpuarray.empty((a_gpu.shape[0], b_gpu.shape[1]), a_gpu.dtype)
-    cublas_func(transb, transa, m, n, k, alpha, int(b_gpu.gpudata),
-                lda, int(a_gpu.gpudata), ldb, beta, int(c_gpu.gpudata), ldc)
+        transa = 'N'
+        transb = 'N'
+        m = b_gpu.shape[1]
+        n = a_gpu.shape[0]
+        k = b_gpu.shape[0]
+        lda = m
+        ldb = k
+        ldc = max(1, m)
 
-    status = cublas.cublasGetError()
-    cublas.cublasCheckStatus(status)
-    
-    return c_gpu
+        c_gpu = gpuarray.empty((a_gpu.shape[0], b_gpu.shape[1]), a_gpu.dtype)
+        cublas_func(transb, transa, m, n, k, alpha, int(b_gpu.gpudata),
+                    lda, int(a_gpu.gpudata), ldb, beta, int(c_gpu.gpudata), ldc)
+
+        status = cublas.cublasGetError()
+        cublas.cublasCheckStatus(status)
+
+        return c_gpu
 
 def mdot(*args):
     """
