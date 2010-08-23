@@ -135,36 +135,35 @@ _libcublas.cublasCgemm.argtypes = [ctypes.c_char,
                                    ctypes.c_void_p,
                                    ctypes.c_int]
 
-_cublasDgemm = _libcublas.cublasDgemm
-_cublasDgemm.restype = None
-_cublasDgemm.argtypes = [ctypes.c_char,
-                         ctypes.c_char,
-                         ctypes.c_int,
-                         ctypes.c_int,
-                         ctypes.c_int,
-                         ctypes.c_double,
-                         ctypes.c_void_p,
-                         ctypes.c_int,
-                         ctypes.c_void_p,
-                         ctypes.c_int,
-                         ctypes.c_double,
-                         ctypes.c_void_p,
-                         ctypes.c_int]
-_cublasZgemm = _libcublas.cublasZgemm
-_cublasZgemm.restype = None
-_cublasZgemm.argtypes = [ctypes.c_char,
-                         ctypes.c_char,
-                         ctypes.c_int,
-                         ctypes.c_int,
-                         ctypes.c_int,
-                         ctypes.c_double,
-                         ctypes.c_void_p,
-                         ctypes.c_int,
-                         ctypes.c_void_p,
-                         ctypes.c_int,
-                         ctypes.c_double,
-                         ctypes.c_void_p,
-                         ctypes.c_int]
+_libcublas.cublasDgemm.restype = None
+_libcublas.cublasDgemm.argtypes = [ctypes.c_char,
+                                   ctypes.c_char,
+                                   ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_double,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int,
+                                   ctypes.c_double,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int]
+
+_libcublas.cublasZgemm.restype = None
+_libcublas.cublasZgemm.argtypes = [ctypes.c_char,
+                                   ctypes.c_char,
+                                   ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_double,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int,
+                                   ctypes.c_double,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int]
 
 if __name__ == "__main__":
     import doctest
