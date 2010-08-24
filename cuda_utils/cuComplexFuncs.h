@@ -41,6 +41,11 @@ __host__ __device__ static __inline__ cuFloatComplex cuClogf (cuFloatComplex z)
     return clogf(z);
 }
 
+__host__ __device__ static __inline__ cuFloatComplex cuCsqrtf (cuFloatComplex z)
+{
+    return csqrtf(z);
+}
+
 /* -- Double Precision -- */
 
 __host__ __device__ static __inline__ cuDoubleComplex cuCsin (cuDoubleComplex z)
@@ -71,6 +76,11 @@ __host__ __device__ static __inline__ cuDoubleComplex cuCexp (cuDoubleComplex z)
 __host__ __device__ static __inline__ cuDoubleComplex cuClog (cuDoubleComplex z)
 {
     return clog(z);
+}
+
+__host__ __device__ static __inline__ cuFloatComplex cuCsqrt (cuFloatComplex z)
+{
+    return csqrt(z);
 }
 
 /* versions for target or hosts without native support for 'complex' */
@@ -120,6 +130,14 @@ __host__ __device__ static __inline__ cuFloatComplex cuClogf (cuFloatComplex z)
     return make_cuFloatComplex(logf(cuCabsf(z)), cuCargf(z));
 }
 
+__host__ __device__ static __inline__ cuFloatComplex cuCsqrtf (cuFloatComplex z)
+{
+    float a = powf(z.x*z.x+z.y*z.y, 1.0/4.0);
+    float sin_atan2_yx, cos_atan2_yx;
+    sincosf(atan2f(z.y, z.x)/2.0, &sin_atan2_yx, &cos_atan2_yx);
+    return make_cuFloatComplex(a*cos_atan2_yx, a*sin_atan2_yx);
+}
+
 /* -- Double precision -- */
 
 __host__ __device__ static __inline__ cuDoubleComplex cuCsin (cuDoubleComplex z)
@@ -161,6 +179,14 @@ __host__ __device__ static __inline__ cuDoubleComplex cuCexp (cuDoubleComplex z)
 __host__ __device__ static __inline__ cuDoubleComplex cuClog (cuDoubleComplex z)
 {
     return make_cuDoubleComplex(log(cuCabs(z)), cuCarg(z));
+}
+
+__host__ __device__ static __inline__ cuDoubleComplex cuCsqrt (cuDoubleComplex z)
+{
+    float a = pow(z.x*z.x+z.y*z.y, 1.0/4.0);
+    float sin_atan2_yx, cos_atan2_yx;
+    sincos(atan2(z.y, z.x)/2.0, &sin_atan2_yx, &cos_atan2_yx);
+    return make_cuDoubleComplex(a*cos_atan2_yx, a*sin_atan2_yx);
 }
 
 #endif /* (!defined(__CUDACC__) && defined(CU_USE_NATIVE_COMPLEX)) */
