@@ -297,13 +297,13 @@ def cudaCheckStatus(status):
     """
     Raise CUDA exception.
 
-    Raise an exception corresponding to the specified CUDA return
+    Raise an exception corresponding to the specified CUDA error
     code.
     
     Parameters
     ----------
     status : int
-        CUDA return code.
+        CUDA error code.
 
     See Also
     --------

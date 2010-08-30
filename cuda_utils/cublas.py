@@ -28,7 +28,6 @@ except OSError:
 # Generic CUBLAS error:
 class cublasError(Exception):
     """CUBLAS error"""
-    
     pass
 
 # Exceptions corresponding to different CUBLAS errors:
@@ -73,13 +72,43 @@ cublasExceptions = {
 _libcublas.cublasGetError.restype = int
 _libcublas.cublasGetError.argtypes = []
 def cublasGetError():
-    """Returns and resets the current CUBLAS error code."""
+    """
+    Retrieve and reset CUBLAS error code.
+
+    Retrieves the current CUBLAS error code and resets it in
+    preparation for the next CUBLAS operation.
+
+    Returns
+    -------
+    e : int
+        Error code.
+
+    See Also
+    --------
+    cublasExceptions
+    
+    """
 
     return _libcublas.cublasGetError()
 
 def cublasCheckStatus(status):
-    """Raise an exception if the specified CUBLAS status is an error."""
+    """
+    Raise CUBLAS exception
+    
+    Raise an exception corresponding to the specified CUBLAS error
+    code.
+    
+    Parameters
+    ----------
+    status : int
+        CUBLAS error code.
 
+    See Also
+    --------
+    cublasExceptions
+
+    """
+    
     if status != 0:
         try:
             raise cublasExceptions[status]
@@ -90,7 +119,12 @@ def cublasCheckStatus(status):
 _libcublas.cublasInit.restype = int
 _libcublas.cublasInit.argtypes = []
 def cublasInit():
-    """Must be called before using any other CUBLAS functions."""
+    """
+    Initialize CUBLAS.
+
+    This function must be called before using any other CUBLAS functions.
+
+    """
     
     status = _libcublas.cublasInit()
     cublasCheckStatus(status)
@@ -98,7 +132,13 @@ def cublasInit():
 _libcublas.cublasShutdown.restype = int
 _libcublas.cublasShutdown.argtypes = []
 def cublasShutdown():
-    """Shuts down CUBLAS."""
+    """
+    Shut down CUBLAS.
+
+    This function must be called before an application that uses
+    CUBLAS terminates.
+    
+    """
 
     status = _libcublas.cublasShutdown()
     cublasCheckStatus(status)
