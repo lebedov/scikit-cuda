@@ -18,13 +18,18 @@ class Plan:
     Parameters
     ----------
     shape : tuple of ints
-        Shape of data to transform. Must contain no more than 3
-        elements.
+        Transform size. Must contain no more than 3 elements.
     in_dtype : { numpy.float32, numpy.float64, numpy.complex64, numpy.complex128 }
         Type of input data.
     out_dtype : : { numpy.float32, numpy.float64, numpy.complex64, numpy.complex128 }
         Type of output data.
-        
+
+    Notes
+    -----
+    Transform plan configurations of dimensions higher than 3 are
+    supported by CUFFT, but have not yet been exposed in this
+    function.
+    
     """
     
     def __init__(self, shape, in_dtype, out_dtype):
@@ -70,63 +75,63 @@ class Plan:
             self.handle = cufft.cufftPlan3d(self.shape[0], self.shape[1],
                                             self.shape[2], self.fft_type)
         else:
-            raise ValueError('unsupported data shape')
+            raise ValueError('transforms of dimension > 3 not yet supported')
                                             
     def __del__(self):
         cufft.cufftDestroy(self.handle)
           
-def _fft(x_gpu, p, direction, scale=False, inplace=False):
+def _fft(x_gpu, y_gpu, plan, direction, scale=None):
     """
     Fast Fourier Transform.
 
+    Parameters
+    ----------
+    x_gpu : pycuda.gpuarray.GPUArray
+        Input array.
+    y_gpu : pycuda.gpuarray.GPUArray
+        Output array.
+    plan : Plan
+        FFT plan.
+    direction : { cufft.CUFFT_FORWARD, cufft.CUFFT_INVERSE }
+        Transform direction. Only affects in-place transforms.
+    
+    Optional Parameters
+    -------------------
+    scale : int or float
+        Scale the values in the output array by dividing them by this value.
+    
     Notes
     -----
     This function should not be called directly.
     
     """
 
-    if inplace:
-        if p.fft_type not in [cufft.CUFFT_C2C, cufft.CUFFT_Z2Z]:
-            raise ValueError('can only perform inplace transformation of complex data')
+    if (x_gpu.gpudata == y_gpu.gpudata) and \
+           plan.fft_type not in [cufft.CUFFT_C2C, cufft.CUFFT_Z2Z]:
+        raise ValueError('can only compute in-place transform of complex data')
+    
+    if direction == cufft.CUFFT_FORWARD and \
+           plan.in_dtype in [np.complex64, np.complex128] and \
+           plan.out_dtype in [np.float64, np.float128]:
+        raise ValueError('cannot compute forward complex -> real transform')
 
-        p.fft_func(p.handle, int(x_gpu.gpudata), int(x_gpu.gpudata),
-                   direction)
+    if direction == cufft.CUFFT_INVERSE and \
+           plan.in_dtype in [np.float64, np.float128] and \
+           plan.out_dtype in [np.complex64, np.complex128]:
+        raise ValueError('cannot compute inverse real -> complex transform')
 
-        # Scale the result by dividing it by the number of elements:
-        if scale:
-            x_gpu.gpudata = (x_gpu/np.prod(x_gpu.shape)).gpudata
-            
-        # Don't return any value when inplace == True
-        
+    if plan.fft_type in [cufft.CUFFT_C2C, cufft.CUFFT_Z2Z]:
+        plan.fft_func(plan.handle, int(x_gpu.gpudata), int(y_gpu.gpudata),
+                      direction)
     else:
+        plan.fft_func(plan.handle, int(x_gpu.gpudata),
+                      int(y_gpu.gpudata))
+        
+    # Scale the result by dividing it by the number of elements:
+    if scale != None:
+        y_gpu.gpudata = (y_gpu/np.cast[y_gpu.dtype](scale)).gpudata
 
-        if direction == cufft.CUFFT_FORWARD and \
-               p.in_dtype in [np.complex64, np.complex128] and \
-               p.out_dtype in [np.float64, np.float128]:
-            raise ValueError('cannot perform forward complex -> real transformation')
-
-        if direction == cufft.CUFFT_INVERSE and \
-               p.in_dtype in [np.float64, np.float128] and \
-               p.out_dtype in [np.complex64, np.complex128]:
-            raise ValueError('cannot perform inverse real -> complex transformation')
-
-        # Create new GPUArray as output:
-        y_gpu = gpuarray.empty(x_gpu.shape, p.out_dtype)
-
-        if p.fft_type in [cufft.CUFFT_C2C, cufft.CUFFT_Z2Z]:
-            p.fft_func(p.handle, int(x_gpu.gpudata), int(y_gpu.gpudata),
-                       direction)
-        else:
-            p.fft_func(p.handle, int(x_gpu.gpudata),
-                       int(y_gpu.gpudata))
-                       
-        # Scale the result by dividing it by the number of elements:
-        if scale:
-            y_gpu.gpudata = (y_gpu/np.prod(x_gpu.shape)).gpudata
-
-        return y_gpu
-
-def fft(x_gpu, p, scale=False, inplace=False):
+def fft(x_gpu, y_gpu, plan, scale=False):
     """
     Fast Fourier Transform.
 
@@ -137,25 +142,47 @@ def fft(x_gpu, p, scale=False, inplace=False):
     ----------
     x_gpu : pycuda.gpuarray.GPUArray
         Input array.
-    p : Plan
+    y_gpu : pycuda.gpuarray.GPUArray
+        FFT of input array.
+    plan : Plan
         FFT plan.
     scale : bool, optional
-        If True, scale the computed FFT by the
-        length of the input signal.        
-    inplace : bool, optional
-        If True, replace the contents of the input array with the
-        computed FFT and don't return anything.
+        If True, scale the computed FFT by the number of elements in
+        the input array.
 
+    Examples
+    --------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import numpy as np
+    >>> N = 128
+    >>> x = np.asarray(np.random.rand(N), np.float32)
+    >>> xf = np.fft.fft(x)
+    >>> x_gpu = gpuarray.to_gpu(x)
+    >>> xf_gpu = gpuarray.empty(N/2+1, np.complex64)
+    >>> plan = Plan(x.shape, np.float32, np.complex64)
+    >>> fft(x_gpu, xf_gpu, plan)
+    >>> np.allclose(xf[0:N/2+1], xf_gpu.get(), atol=1e-6)
+    True
+    
     Returns
     -------
     y_gpu : pycuda.gpuarray.GPUArray
         Computed FFT.
 
+    Notes
+    -----
+    For real to complex transformations, this function computes
+    N/2+1 non-redundant coefficients of a length-N input signal.
+    
     """
 
-    return _fft(x_gpu, p, cufft.CUFFT_FORWARD, scale, inplace)
-
-def ifft(x_gpu, p, scale=False, inplace=False):
+    if scale == True:
+        return _fft(x_gpu, y_gpu, plan, cufft.CUFFT_FORWARD, x_gpu.size)
+    else:
+        return _fft(x_gpu, y_gpu, plan, cufft.CUFFT_FORWARD)
+    
+def ifft(x_gpu, y_gpu, plan, scale=False):
     """
     Inverse Fast Fourier Transform.
 
@@ -166,23 +193,41 @@ def ifft(x_gpu, p, scale=False, inplace=False):
     ----------
     x_gpu : pycuda.gpuarray.GPUArray
         Input array.
-    p : Plan
+    y_gpu : pycuda.gpuarray.GPUArray
+        Inverse FFT of input array.
+    plan : Plan
         FFT plan.
     scale : bool, optional
-        If True, scale the computed inverse FFT by the
-        length of the input signal.        
-    inplace : bool, optional
-        If True, replace the contents of the input array with the
-        computed inverse FFT and don't return anything.
+        If True, scale the computed inverse FFT by the number of
+        elements in the output array.        
 
-    Returns
-    -------
-    y_gpu : pycuda.gpuarray.GPUArray
-        Computed inverse FFT.
+    Examples
+    --------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import numpy as np
+    >>> N = 128
+    >>> x = np.asarray(np.random.rand(N), np.float32)
+    >>> xf = np.asarray(np.fft.fft(x), np.complex64)
+    >>> xf_gpu = gpuarray.to_gpu(xf[0:N/2+1])
+    >>> x_gpu = gpuarray.empty(N, np.float32)
+    >>> plan = Plan(N, np.complex64, np.float32)
+    >>> ifft(xf_gpu, x_gpu, plan, True)
+    >>> np.allclose(x, x_gpu.get(), atol=1e-6)
+    True
 
-    """
+    Notes
+    -----
+    For complex to real transformations, this function assumes the
+    input contains N/2+1 non-redundant FFT coefficents of a signal of
+    length N.
     
-    return _fft(x_gpu, p, cufft.CUFFT_INVERSE, scale, inplace)
+    """
+
+    if scale == True:
+        return _fft(x_gpu, y_gpu, plan, cufft.CUFFT_INVERSE, y_gpu.size)
+    else:
+        return _fft(x_gpu, y_gpu, plan, cufft.CUFFT_INVERSE)
 
 if __name__ == "__main__":
     import doctest
