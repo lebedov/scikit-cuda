@@ -36,15 +36,29 @@ except OSError:
 _libcudart.cudaGetErrorString.restype = ctypes.c_char_p
 _libcudart.cudaGetErrorString.argtypes = [ctypes.c_int]
 def cudaGetErrorString(e):
-    """Get string associated with the specified CUDA error status
-    code."""
+    """
+    Retrieve CUDA error string.
+    
+    Return the string associated with the specified CUDA error status
+    code.
+
+    Parameters
+    ----------
+    e : int
+        Error number.
+
+    Returns
+    -------
+    s : str
+        Error string.
+        
+    """
 
     return _libcudart.cudaGetErrorString(e)
 
 # Generic CUDA error:
 class cudaError(Exception):
     """CUDA error."""
-
     pass
 
 # Exceptions corresponding to various CUDA runtime errors:
@@ -280,7 +294,22 @@ cudaExceptions = {
     }
 
 def cudaCheckStatus(status):
-    """Raise an exception if the specified CUDA status is an error."""
+    """
+    Raise CUDA exception.
+
+    Raise an exception corresponding to the specified CUDA return
+    code.
+    
+    Parameters
+    ----------
+    status : int
+        CUDA return code.
+
+    See Also
+    --------
+    cudaExceptions
+    
+    """
 
     if status != 0:
         try:
@@ -293,19 +322,48 @@ _libcudart.cudaMalloc.restype = int
 _libcudart.cudaMalloc.argtypes = [ctypes.POINTER(ctypes.c_void_p),
                                   ctypes.c_size_t]
 def cudaMalloc(count, ctype=None):
-    """Allocate `count` bytes in GPU memory."""
+    """
+    Allocate device memory.
+
+    Allocate memory on the device associated with the current active
+    context.
+
+    Parameters
+    ----------
+    count : int
+        Number of bytes of memory to allocate
+    ctype : _ctypes.SimpleType, optional
+        ctypes type to cast returned pointer.
+        
+    Returns
+    -------
+    ptr : ctypes pointer
+        Pointer to allocated device memory.
+
+    """
     
     ptr = ctypes.c_void_p()
     status = _libcudart.cudaMalloc(ctypes.byref(ptr), count)
     cudaCheckStatus(status)
     if ctype != None:
         ptr = ctypes.cast(ptr, ctypes.POINTER(ctype))
-    return ptr
+    return p
 
 _libcudart.cudaFree.restype = int
 _libcudart.cudaFree.argtypes = [ctypes.c_void_p]
 def cudaFree(ptr):
-    """Free the device memory at the specified pointer."""
+    """
+    Free device memory.
+
+    Free allocated memory on the device associated with the current active
+    context.
+
+    Parameters
+    ----------
+    ptr : ctypes pointer
+        Pointer to allocated device memory.
+
+    """
     
     status = _libcudart.cudaFree(ptr)
     cudaCheckStatus(status)
@@ -315,7 +373,29 @@ _libcudart.cudaMallocPitch.argtypes = [ctypes.POINTER(ctypes.c_void_p),
                                        ctypes.POINTER(ctypes.c_size_t),
                                        ctypes.c_size_t, ctypes.c_size_t]
 def cudaMallocPitch(pitch, rows, cols, elesize):
-    """Allocate memory on the device with a specific pitch."""
+    """
+    Allocate pitched device memory.
+
+    Allocate pitched memory on the device associated with the current active
+    context.
+    
+    Parameters
+    ----------
+    pitch : int
+        Pitch for allocation.
+    rows : int
+        Requested pitched allocation height.
+    cols : int
+        Requested pitched allocation width.
+    elesize : int
+        Size of memory element.
+
+    Returns
+    -------
+    ptr : ctypes pointer
+        Pointer to allocated device memory.
+        
+    """
     
     ptr = ctypes.c_void_p()
     status = _libcudart.cudaMallocPitch(ctypes.byref(ptr),
@@ -334,8 +414,21 @@ _libcudart.cudaMemcpy.restype = int
 _libcudart.cudaMemcpy.argtypes = [ctypes.c_void_p, ctypes.c_void_p,
                                   ctypes.c_size_t, ctypes.c_int]
 def cudaMemcpy_htod(dst, src, count):
-    """Copy `count` bytes of memory from the host memory pointer `src`
-    to the device memory pointer `dst`."""
+    """
+    Copy memory from host to device.
+
+    Copy data from host memory to device memory.
+
+    Parameters
+    ----------
+    dst : ctypes pointer
+        Device memory pointer.
+    src : ctypes pointer
+        Host memory pointer.
+    count : int
+        Number of bytes to copy.
+    
+    """
     
     status = _libcudart.cudaMemcpy(dst, src,
                                    ctypes.c_size_t(count),
@@ -343,8 +436,21 @@ def cudaMemcpy_htod(dst, src, count):
     cudaCheckStatus(status)
     
 def cudaMemcpy_dtoh(dst, src, count):
-    """Copy `count` bytes of memory from the the device memory pointer `src` 
-    to the host memory pointer `dst` ."""
+    """
+    Copy memory from device to host.
+
+    Copy data from device memory to host memory.
+
+    Parameters
+    ----------
+    dst : ctypes pointer
+        Host memory pointer.
+    src : ctypes pointer
+        Device memory pointer.
+    count : int
+        Number of bytes to copy.
+
+    """
 
     status = _libcudart.cudaMemcpy(dst, src,
                                    ctypes.c_size_t(count),
@@ -354,7 +460,17 @@ def cudaMemcpy_dtoh(dst, src, count):
 _libcudart.cudaSetDevice.restype = int
 _libcudart.cudaSetDevice.argtypes = [ctypes.c_int]
 def cudaSetDevice(dev):
-    """Select a device to use for subsequent CUDA operations."""
+    """
+    Set current CUDA device.
+
+    Select a device to use for subsequent CUDA operations.
+    
+    Parameters
+    ----------
+    dev : int
+        Device number.
+
+    """
 
     status = _libcudart.cudaSetDevice(dev)
     cudaCheckStatus(status)
@@ -362,7 +478,18 @@ def cudaSetDevice(dev):
 _libcudart.cudaGetDevice.restype = int
 _libcudart.cudaGetDevice.argtypes = [ctypes.POINTER(ctypes.c_int)]
 def cudaGetDevice():
-    """Get the number of the device currently used for CUDA operations."""
+    """
+    Get current CUDA device.
+
+    Return the identifying number of the device currently used to
+    process CUDA operations.
+
+    Returns
+    -------
+    dev : int
+        Device number.
+
+    """    
 
     dev = ctypes.c_int()
     status = _libcudart.cudaGetDevice(ctypes.byref(dev))
