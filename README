@@ -6,17 +6,22 @@ CUDA Python Utilities
 Package Description
 -------------------
 
-This package provides Python interfaces to various functions in the
-CUDA, CUDART, CUBLAS, and CUFFT packages distributed as part of NVIDIA's 
-CUDA Programming Toolkit [1]_. It also contains interfaces to select
-functions in the CULA Toolkit [2]_ that attempt to emulate comparable
-functions in the NumPy toolkit [3]_.
+This package provides Python interfaces to a subset of the functions
+in the CUDA, CUDART, CUBLAS, and CUFFT libraries distributed as part
+of NVIDIA's CUDA Programming Toolkit [1]_, as well as interfaces to
+select functions in the free-of-charge CULA Toolkit [2]_. In contrast
+to the various low-level Python wrappers to these libraries that
+already exist, this package uses PyCUDA [3]_ to provide high level
+functions comparable to those in the NumPy Toolkit [4]_.
 
 Authors & Acknowledgments
 --------------------------
 
 This software was written and packaged by Lev Givon, currently at the
-Bionet Group [4]_ at Columbia University. 
+Bionet Group [5]_ at Columbia University. 
+
+Special thanks are due to Yiyin Zhou and Rob Turetsky (also at the
+Bionet Group) for invaluable feedback and improvements.
 
 License
 -------
@@ -34,5 +39,6 @@ Please direct all questions and comments pertaining to this software to
 
 .. [1] http://www.nvidia.com/cuda
 .. [2] http://www.culatools.com/
-.. [3] http://numpy.scipy.org/
-.. [4] http://bionet.ee.columbia.edu/
+.. [3] http://mathema.tician.de/software/pycuda/
+.. [4] http://numpy.scipy.org/
+.. [5] http://bionet.ee.columbia.edu/

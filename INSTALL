@@ -1,0 +1,34 @@
+.. -*- rst -*-
+
+Installation Instructions
+=========================
+
+Prerequisites
+-------------
+
+This package requires that the following software packages be
+installed:
+
+* `Python <http://www.python.org>`_ 2.5 or later.
+* `Numpy <http://numpy.scipy.org>`_ 1.2.0 or later.
+* `Scipy <http://www.scipy.org>`_ 0.7.0 or later.
+* `PyCUDA <http://mathema.tician.de/software/pycuda>`_ 0.94rc or later.
+* `NIVIDIA CUDA Toolkit <http://www.nvidia.com/object/cuda_home_new.html>`_ 3.0 or later
+
+This software has been tested on Linux.
+
+Building and Installation
+-------------------------
+
+To build and install the toolbox, download and unpack the source 
+release and run::
+
+   python setup.py install
+
+from within the main directory in the release. Sample code
+demonstrating how to use different parts of the toolbox is located in
+the ``demos/`` subdirectory. Many of the high-level functions also
+contain doctests that describe their usage.
+
+
+
