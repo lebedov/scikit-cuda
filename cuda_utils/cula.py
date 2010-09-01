@@ -24,19 +24,6 @@ try:
 except OSError:
     print '%s not found' % _libcula_libname
 
-# Needed because of how ctypes handles None on 64-bit platforms.
-def POINTER(obj):
-    p = ctypes.POINTER(obj)
-    if not isinstance(p.from_param, classmethod):
-        def from_param(cls, x):
-            if x is None:
-                return cls()
-            else:
-                return x
-        p.from_param = classmethod(from_param)
-
-    return p
-
 # Function for retrieving string associated with specific CULA error
 # code:
 _libcula.culaGetStatusString.restype = ctypes.c_char_p

@@ -115,7 +115,6 @@ def cublasCheckStatus(status):
         except KeyError:
             raise cublasError
 
-
 _libcublas.cublasInit.restype = int
 _libcublas.cublasInit.argtypes = []
 def cublasInit():
@@ -205,22 +204,6 @@ _libcublas.cublasZgemm.argtypes = [ctypes.c_char,
                                    ctypes.c_void_p,
                                    ctypes.c_int]
 
-class cuFloatComplex(ctypes.Structure):
-    pass
-
-cuFloatComplex._fields_ = [
-    ('x', ctypes.c_float),
-    ('y', ctypes.c_float)
-    ]
-
-class cuDoubleComplex(ctypes.Structure):
-    pass
-
-cuDoubleComplex._fields_ = [
-    ('x', ctypes.c_double),
-    ('y', ctypes.c_double)
-    ]
-
 _libcublas.cublasSdot.restype = ctypes.c_float
 _libcublas.cublasSdot.argtypes = [ctypes.c_int,
                                   ctypes.c_void_p,
@@ -228,8 +211,7 @@ _libcublas.cublasSdot.argtypes = [ctypes.c_int,
                                   ctypes.c_void_p,
                                   ctypes.c_int]
 
-
-_libcublas.cublasCdotu.restype = cuFloatComplex
+_libcublas.cublasCdotu.restype = cuda.cuFloatComplex
 _libcublas.cublasCdotu.argtypes = [ctypes.c_int,
                                    ctypes.c_void_p,
                                    ctypes.c_int,
@@ -243,7 +225,7 @@ _libcublas.cublasDdot.argtypes = [ctypes.c_int,
                                   ctypes.c_void_p,
                                   ctypes.c_int]
 
-_libcublas.cublasZdotu.restype = cuDoubleComplex
+_libcublas.cublasZdotu.restype = cuda.cuDoubleComplex
 _libcublas.cublasZdotu.argtypes = [ctypes.c_int,
                                    ctypes.c_void_p,
                                    ctypes.c_int,

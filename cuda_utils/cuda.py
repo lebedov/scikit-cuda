@@ -30,8 +30,48 @@ try:
 except OSError:
     print '% not found' % _libcudart_libname
 
-# Function for retrieving string associated with specific CUDA runtime
-# error code:
+# Code adapted from PARRET:
+def POINTER(obj):
+    """
+    Create ctypes pointer to object.
+
+    Notes
+    -----
+    This function converts None to a real NULL pointer because of bug
+    in how ctypes handles None on 64-bit platforms.
+
+    """
+    
+    p = ctypes.POINTER(obj)
+    if not isinstance(p.from_param, classmethod):
+        def from_param(cls, x):
+            if x is None:
+                return cls()
+            else:
+                return x
+        p.from_param = classmethod(from_param)
+
+    return p
+
+# Classes corresponding to CUDA vector structures:
+class float2(ctypes.Structure):
+    pass
+
+float2._fields_ = [
+    ('x', ctypes.c_float),
+    ('y', ctypes.c_float)
+    ]
+
+class double2(ctypes.Structure):
+    pass
+
+double2._fields_ = [
+    ('x', ctypes.c_double),
+    ('y', ctypes.c_double)
+    ]
+
+cuFloatComplex = float2
+cuDoubleComplex = double2
 
 _libcudart.cudaGetErrorString.restype = ctypes.c_char_p
 _libcudart.cudaGetErrorString.argtypes = [ctypes.c_int]
