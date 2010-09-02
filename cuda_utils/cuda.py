@@ -387,7 +387,7 @@ def cudaMalloc(count, ctype=None):
     cudaCheckStatus(status)
     if ctype != None:
         ptr = ctypes.cast(ptr, ctypes.POINTER(ctype))
-    return p
+    return ptr
 
 _libcudart.cudaFree.restype = int
 _libcudart.cudaFree.argtypes = [ctypes.c_void_p]
