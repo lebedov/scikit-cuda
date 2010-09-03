@@ -792,7 +792,7 @@ def cublasCdotc(n, x, incx, y, incy):
     a = _libcublas.cublasCdotc(n, int(x), incx, int(y), incy)
     status = cublasGetError()
     cublasCheckStatus(status)
-    return np.float32(a.x) + 1j * np.float32(a.y)
+    return np.float32(a.x) + np.complex64(1j)*np.float32(a.y)
 
 _libcublas.cublasCdotu.restype = cuda.cuFloatComplex
 _libcublas.cublasCdotu.argtypes = [ctypes.c_int,
@@ -809,7 +809,7 @@ def cublasCdotu(n, x, incx, y, incy):
     a = _libcublas.cublasCdotu(n, int(x), incx, int(y), incy)
     status = cublasGetError()
     cublasCheckStatus(status)
-    return np.float32(a.x) + 1j * np.float32(a.y)
+    return np.float32(a.x) + np.complex64(1j)*np.float32(a.y)
 
 _libcublas.cublasCrot.restype = None
 _libcublas.cublasCrot.argtypes = [ctypes.c_int,
@@ -1651,7 +1651,7 @@ def cublasZdotc(n, x, incx, y, incy):
     a = _libcublas.cublasZdotc(n, int(x), incx, int(y), incy)
     status = cublasGetError()
     cublasCheckStatus(status)
-    return np.float64(a.x) + 1j * np.float64(a.y)
+    return np.float64(a.x) + np.complex128(1j)*np.float64(a.y)
 
 
 _libcublas.cublasZdotu.restype = cuda.cuDoubleComplex
@@ -1670,7 +1670,7 @@ def cublasZdotu(n, x, incx, y, incy):
     a = _libcublas.cublasZdotu(n, int(x), incx, int(y), incy)
     status = cublasGetError()
     cublasCheckStatus(status)
-    return np.float64(a.x) + 1j * np.float64(a.y)
+    return np.float64(a.x) + np.complex128(1j)*np.float64(a.y)
 
 _libcublas.cublasZdrot.restype = None
 _libcublas.cublasZdrot.argtypes = [ctypes.c_int,
