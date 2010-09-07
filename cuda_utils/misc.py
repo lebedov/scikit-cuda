@@ -40,7 +40,7 @@ def get_dev_attrs(dev):
             attrs[drv.device_attribute.MAX_GRID_DIM_Y])]
 
 
-def select_block_grid_sizes(dev, data_shape):
+def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
     """
     Determine CUDA block and grid dimensions given device constraints.
 
@@ -54,7 +54,11 @@ def select_block_grid_sizes(dev, data_shape):
         Device object to be used.
     data_shape : tuple
         Shape of input data array. Must be of length 2.
-
+    threads_per_block : int, optional
+        Number of threads to execute in each block. If this is None,
+        the maximum number of threads per block allowed by device `d`
+        is used.
+        
     Returns
     -------
     block_dim : tuple
@@ -70,6 +74,9 @@ def select_block_grid_sizes(dev, data_shape):
     The indices of the element `data[ix, iy]` where `data.shape == [r, c]`
     can be computed as `ix = int(floor(i/c))` and `iy = i % c`.
 
+    It is advisable that the number of threads per block be a multiple
+    of the warp size to fully utilize a device's computing resources.
+    
     """
 
     # Sanity checks:
@@ -85,11 +92,14 @@ def select_block_grid_sizes(dev, data_shape):
 
     # Get device constraints:
     max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
-    
-    # Assume that the maximum number of threads per block is equal to
-    # the maximum X and Y dimension of a thread block:
-    assert max_threads_per_block == max_block_dim[0]
-    assert max_threads_per_block == max_block_dim[1]
+
+    if threads_per_block != None:
+        max_threads_per_block = threads_per_block
+        
+    # Assume that the maximum number of threads per block is no larger
+    # than the maximum X and Y dimension of a thread block:
+    assert max_threads_per_block <= max_block_dim[0]
+    assert max_threads_per_block <= max_block_dim[1]
 
     # Assume that the maximum X and Y dimensions of a grid are the
     # same:
