@@ -1,11 +1,14 @@
 // Special functions for CUDA
 
+// Some of these functions are adapted from the Cephes library:
+// http://www.netlib.org/cephes/
+
 #include "cuConstants.h"
 
 #if !defined(CU_SPECIAL_FUNCS_H_)
 #define CU_SPECIAL_FUNCS_H_
 
-/* Sinc function */
+/* Sinc function. */
 __device__ float sincf(float x) {
     if (x == 0.0) 
 	return 1.0;
@@ -20,7 +23,7 @@ __device__ double sinc(double x) {
 	return sinpi(x)/(PI*x);
 }
 
-/* Sine/cosine integral */
+/* Polynomial evaluation. */
 __device__ float polevlf(float x, float *coef, int N) {
     float ans;
     float *p;
@@ -85,6 +88,7 @@ __device__ double p1evl(double x, double *coef, int N) {
     return (ans);
 }
 
+/* Constants used to compute the sine/cosine integrals. */
 __constant__ float SNf[] = {
     -8.39167827910303881427E-11,
     4.62591714427012837309E-8,
@@ -321,6 +325,7 @@ __constant__ double GD8[] = {
     3.14040098946363335242E-15,
 };
 
+/* Sine/cosine integrals. */
 __device__ void sicif(float x, float *si, float *ci) {
     float z, c, s, f, g;
     short sign;
