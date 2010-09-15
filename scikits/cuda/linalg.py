@@ -199,6 +199,20 @@ def dot(a_gpu, b_gpu):
     >>> f = linalg.dot(d_gpu, e_gpu)
     >>> np.allclose(np.dot(d, e), f)
     True
+    >>> p = np.asarray(np.random.rand(4, 2), np.complex64)
+    >>> q = np.asarray(np.random.rand(2, 2), np.complex64)
+    >>> p_gpu = gpuarray.to_gpu(p)
+    >>> q_gpu = gpuarray.to_gpu(q)
+    >>> r_gpu = linalg.dot(p_gpu, q_gpu)
+    >>> np.allclose(np.dot(p, q), r_gpu.get())
+    True
+    >>> s = np.asarray(np.random.rand(5), np.complex128)
+    >>> t = np.asarray(np.random.rand(5), np.complex128)
+    >>> s_gpu = gpuarray.to_gpu(s)
+    >>> t_gpu = gpuarray.to_gpu(t)
+    >>> u = linalg.dot(s_gpu, t_gpu)
+    >>> np.allclose(np.dot(s, t), u)
+    True
     
     """
 
@@ -232,16 +246,16 @@ def dot(a_gpu, b_gpu):
         # Perform matrix multiplication for 2D arrays:
         if (a_gpu.dtype == np.complex64 and b_gpu.dtype == np.complex64):
             cublas_func = cublas._libcublas.cublasCgemm        
-            alpha = np.complex64(1.0)
-            beta = np.complex64(0.0)
+            alpha = cuda.cuFloatComplex(1, 0)
+            beta = cuda.cuFloatComplex(0, 0)
         elif (a_gpu.dtype == np.float32 and b_gpu.dtype == np.float32):
             cublas_func = cublas._libcublas.cublasSgemm
             alpha = np.float32(1.0)
             beta = np.float32(0.0)
         elif (a_gpu.dtype == np.complex128 and b_gpu.dtype == np.complex128):
             cublas_func = cublas._libcublas.cublasZgemm        
-            alpha = np.complex128(1.0)
-            beta = np.complex128(0.0)
+            alpha = cuda.cuDoubleComplex(1, 0)
+            beta = cuda.cuDoubleComplex(0, 0)
         elif (a_gpu.dtype == np.float64 and b_gpu.dtype == np.float64):
             cublas_func = cublas._libcublas.cublasDgemm
             alpha = np.float64(1.0)

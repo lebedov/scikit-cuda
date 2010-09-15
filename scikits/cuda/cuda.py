@@ -55,20 +55,16 @@ def POINTER(obj):
 
 # Classes corresponding to CUDA vector structures:
 class float2(ctypes.Structure):
-    pass
-
-float2._fields_ = [
-    ('x', ctypes.c_float),
-    ('y', ctypes.c_float)
-    ]
+    _fields_ = [
+        ('x', ctypes.c_float),
+        ('y', ctypes.c_float)
+        ]
 
 class double2(ctypes.Structure):
-    pass
-
-double2._fields_ = [
-    ('x', ctypes.c_double),
-    ('y', ctypes.c_double)
-    ]
+    _fields_ = [
+        ('x', ctypes.c_double),
+        ('y', ctypes.c_double)
+        ]
 
 cuFloatComplex = float2
 cuDoubleComplex = double2
