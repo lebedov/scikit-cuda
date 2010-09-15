@@ -18,7 +18,7 @@ import cula
 from misc import get_dev_attrs, select_block_grid_sizes
 
 # Get installation location of C headers:
-from cuda_utils import install_headers
+from __info__ import install_headers
 
 def init():
     """

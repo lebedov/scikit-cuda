@@ -752,9 +752,46 @@ def cublasCaxpy(n, alpha, x, incx, y, incy):
     """
     Complex vector addition.
 
-    """
+    Computes the sum of a single-precision complex vector scaled by a
+    single-precision complex scalar and another single-precision
+    complex vector.
+
+    Parameters
+    ----------
+    n : int
+        Number of elements in input vectors.
+    alpha : numpy.complex64
+        Single-precision complex scalar.
+    x : ctypes.c_void_p
+        Pointer to single-precision complex input vector.
+    incx : int
+        Storage spacing between elements of `x`.
+    y : ctypes.c_void_p
+        Pointer to single-precision complex input/output vector.
+    incy : int
+        Storage spacing between elements of `y`.
+
+    Example
+    -------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import numpy as np
+    >>> alpha = np.complex64(np.random.rand())
+    >>> x = np.random.rand(5).astype(np.complex64)
+    >>> y = np.random.rand(5).astype(np.complex64)
+    >>> x_gpu = gpuarray.to_gpu(x)
+    >>> y_gpu = gpuarray.to_gpu(y)
+    >>> cublasCaxpy(x_gpu.size, alpha, x_gpu.gpudata, 1, y_gpu.gpudata, 1)
+    >>> np.allclose(y_gpu.get(), alpha*x+y)
+    True
+
+    Notes
+    -----
+    Both `x` and `y` must contain `n` elements.
     
-    _libcublas.cublasCaxpy(n, cuFloatComplex(alpha.real,
+    """
+
+    _libcublas.cublasCaxpy(n, cuda.cuFloatComplex(alpha.real,
                                              alpha.imag),
                            int(x), incx, int(y), incy)
     status = cublasGetError()
@@ -1612,6 +1649,43 @@ def cublasZaxpy(n, alpha, x, incx, y, incy):
     """
     Complex vector addition.
 
+    Computes the sum of a double-precision complex vector scaled by a
+    double-precision complex scalar and another double-precision
+    complex vector.
+
+    Parameters
+    ----------
+    n : int
+        Number of elements in input vectors.
+    alpha : numpy.complex128
+        Double-precision complex scalar.
+    x : ctypes.c_void_p
+        Pointer to double-precision complex input vector.
+    incx : int
+        Storage spacing between elements of `x`.
+    y : ctypes.c_void_p
+        Pointer to double-precision complex input/output vector.
+    incy : int
+        Storage spacing between elements of `y`.
+
+    Example
+    -------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import numpy as np
+    >>> alpha = np.complex128(np.random.rand())
+    >>> x = np.random.rand(5).astype(np.complex128)
+    >>> y = np.random.rand(5).astype(np.complex128)
+    >>> x_gpu = gpuarray.to_gpu(x)
+    >>> y_gpu = gpuarray.to_gpu(y)
+    >>> cublasZaxpy(x_gpu.size, alpha, x_gpu.gpudata, 1, y_gpu.gpudata, 1)
+    >>> np.allclose(y_gpu.get(), alpha*x+y)
+    True
+
+    Notes
+    -----
+    Both `x` and `y` must contain `n` elements.
+    
     """
     
     _libcublas.cublasZaxpy(n, cuda.cuDoubleComplex(alpha.real,

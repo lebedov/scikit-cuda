@@ -12,7 +12,7 @@ import pycuda.gpuarray as gpuarray
 from pycuda.compiler import SourceModule
 import numpy as np
 
-from cuda_utils.misc import get_dev_attrs, select_block_grid_sizes
+from scikits.cuda.misc import get_dev_attrs, select_block_grid_sizes
 
 # Device selected by PyCUDA:
 dev = pycuda.autoinit.device

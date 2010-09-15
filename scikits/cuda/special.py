@@ -10,10 +10,10 @@ import pycuda.gpuarray as gpuarray
 from pycuda.compiler import SourceModule
 import numpy as np
 
-from cuda_utils.misc import get_dev_attrs, select_block_grid_sizes
+from misc import get_dev_attrs, select_block_grid_sizes
 
 # Get installation location of C headers:
-from cuda_utils import install_headers
+from __info__ import install_headers
 
 # Adapted from Cephes library:
 sici_mod_template = Template("""

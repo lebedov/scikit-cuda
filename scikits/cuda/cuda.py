@@ -73,6 +73,23 @@ double2._fields_ = [
 cuFloatComplex = float2
 cuDoubleComplex = double2
 
+def gpuarray_ptr(g):
+    """
+    Return ctypes pointer to data in GPUAarray object.
+
+    """
+
+    if g.dtype == np.float32:
+        return ctypes.cast(int(g.gpudata), POINTER(ctypes.c_float))
+    elif g.dtype == np.float64:
+        return ctypes.cast(int(g.gpudata), POINTER(ctypes.c_double))
+    elif g.dtype == np.complex64:
+        return ctypes.cast(int(g.gpudata), POINTER(cuFloatComplex))
+    elif g.dtype == np.complex128:
+        return ctypes.cast(int(g.gpudata), POINTER(cuDoubleComplex))
+    else:
+        raise ValueError('unrecognized type')
+    
 _libcudart.cudaGetErrorString.restype = ctypes.c_char_p
 _libcudart.cudaGetErrorString.argtypes = [ctypes.c_int]
 def cudaGetErrorString(e):

@@ -8,7 +8,7 @@ import pycuda.autoinit
 import pycuda.gpuarray as gpuarray
 import numpy as np
 
-import cuda_utils.fft as cu_fft
+import scikits.cuda.fft as cu_fft
 
 # Perform usual forward/reverse transformations:
 N = 4096*16
