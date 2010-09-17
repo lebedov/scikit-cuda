@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Demonstrates how to use the PyCUDA dot product.
+Demonstrates multiplication of two matrices on the GPU.
 """
 
 import pycuda.autoinit

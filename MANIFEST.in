@@ -1,0 +1,3 @@
+include CHANGES INSTALL LICENSE README
+recursive-include demos *.py
+exclude MANIFEST.in
