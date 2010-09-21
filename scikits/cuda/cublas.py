@@ -170,8 +170,8 @@ def cublasIsamax(n, x, incx):
     idx : int
         Index of maximum magnitude element.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
@@ -218,8 +218,8 @@ def cublasIsamin(n, x, incx):
     idx : int
         Index of minimum magnitude element.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
@@ -262,8 +262,8 @@ def cublasSasum(n, x, incx):
     incx : int
         Storage spacing between elements of `x`.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
@@ -315,8 +315,8 @@ def cublasSaxpy(n, alpha, x, incx, y, incy):
     incy : int
         Storage spacing between elements of `y`.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
@@ -366,8 +366,8 @@ def cublasScopy(n, x, incx, y, incy):
     incy : int
         Storage spacing between elements of `y`.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
@@ -419,8 +419,8 @@ def cublasSdot(n, x, incx, y, incy):
     d : numpy.float32
         Dot product of `x` and `y`.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
@@ -467,8 +467,8 @@ def cublasSnrm2(n, x, incx):
     nrm : numpy.float32
         Euclidean norm of `x`.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
@@ -670,8 +670,8 @@ def cublasSscal(n, alpha, x, incx):
     incx : int
         Storage spacing between elements of `x`.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
@@ -715,8 +715,8 @@ def cublasSswap(n, x, incx, y, incy):
     incy : int
         Storage spacing between elements of `y`.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
@@ -771,8 +771,8 @@ def cublasCaxpy(n, alpha, x, incx, y, incy):
     incy : int
         Storage spacing between elements of `y`.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
@@ -935,8 +935,8 @@ def cublasCsscal(n, alpha, x, incx):
     status = cublasGetError()
     cublasCheckStatus(status)
 
-_libcublas.cublasSswap.restype = None
-_libcublas.cublasSswap.argtypes = [ctypes.c_int,
+_libcublas.cublasCswap.restype = None
+_libcublas.cublasCswap.argtypes = [ctypes.c_int,
                                    ctypes.c_void_p,
                                    ctypes.c_int,
                                    ctypes.c_void_p,
@@ -1038,8 +1038,8 @@ def cublasIdamax(n, x, incx):
     idx : int
         Index of maximum magnitude element.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
@@ -1085,8 +1085,8 @@ def cublasIdamin(n, x, incx):
     idx : int
         Index of minimum magnitude element.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
@@ -1127,8 +1127,8 @@ def cublasDasum(n, x, incx):
     incx : int
         Storage spacing between elements of `x`.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
@@ -1179,8 +1179,8 @@ def cublasDaxpy(n, alpha, x, incx, y, incy):
     incy : int
         Storage spacing between elements of `y`.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
@@ -1229,8 +1229,8 @@ def cublasDcopy(n, x, incx, y, incy):
     incy : int
         Storage spacing between elements of `y`.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
@@ -1281,8 +1281,8 @@ def cublasDdot(n, x, incx, y, incy):
     d : numpy.float64
         Dot product of `x` and `y`.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
@@ -1329,8 +1329,8 @@ def cublasDnrm2(n, x, incx):
     nrm : numpy.float64
         Euclidean norm of `x`.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
@@ -1498,8 +1498,8 @@ def cublasDscal(n, alpha, x, incx):
     incx : int
         Storage spacing between elements of `x`.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
@@ -1542,8 +1542,8 @@ def cublasDswap(n, x, incx, y, incy):
     incy : int
         Storage spacing between elements of `y`.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
@@ -1668,8 +1668,8 @@ def cublasZaxpy(n, alpha, x, incx, y, incy):
     incy : int
         Storage spacing between elements of `y`.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
