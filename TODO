@@ -3,7 +3,6 @@
 TODO
 ====
 
-* Add more docstrings to the ctypes wrapper functions.
+* Improve docstrings for the ctypes wrapper functions.
 * Add more doctests.
-* Generate documentation with Sphinx.
 * Replace naive transpose kernel with more efficient algorithm.
