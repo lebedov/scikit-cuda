@@ -74,8 +74,8 @@ def svd(a_gpu, full_matrices=1, compute_uv=1):
     -----
     This function destroys the contents of the input matrix.
     
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
     >>> import numpy as np
@@ -178,8 +178,8 @@ def dot(a_gpu, b_gpu):
     -----
     The input matrices must all contain elements of the same data type.
     
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
     >>> import numpy as np
@@ -301,8 +301,8 @@ def mdot(*args):
     -----
     The input matrices must all contain elements of the same data type.
         
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
     >>> import numpy as np
@@ -392,8 +392,8 @@ def transpose(a_gpu, dev):
     If the specified matrix type is complex, the function will return
     the Hermitian of the input matrix.
     
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.driver as drv
     >>> import pycuda.gpuarray as gpuarray
@@ -488,8 +488,8 @@ def conj(a_gpu, dev):
     This function assumes that the input matrix contains complex
     numbers; undefined behavior may occur for other types.
     
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.driver as drv
     >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
@@ -594,8 +594,8 @@ def diag(v_gpu, dev):
     d_gpu : pycuda.gpuarray.GPUArray
         Diagonal matrix of dimensions `[n, n]`.
         
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.driver as drv
     >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
@@ -686,8 +686,8 @@ def pinv(a_gpu, dev, rcond=1e-15):
     a_inv_gpu : pycuda.gpuarray.GPUArray
         Pseudoinverse of input matrix.
         
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.driver as drv
     >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit

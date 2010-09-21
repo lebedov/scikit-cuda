@@ -62,8 +62,8 @@ def sici(x_gpu, dev):
         Tuple of GPUarrays containing the sine integrals and cosine
         integrals of the entries of `x_gpu`.
         
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
     >>> import numpy as np
@@ -213,8 +213,8 @@ def e1z(z_gpu, dev):
         GPUarrays containing the exponential integrals of
         the entries of `z_gpu`.
 
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
     >>> import numpy as np

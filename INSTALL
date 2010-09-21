@@ -3,20 +3,34 @@
 Installation Instructions
 =========================
 
+Obtaining the Latest Software
+-----------------------------
+
+The latest version of ``scikits.cuda`` can be downloaded from the
+`Bionet Code Repository <http://bionet.ee.columbia.edu/code/>`_.
+
 Prerequisites
 -------------
 
-This package requires that the following software packages be
+``scikits.cuda`` requires that the following software packages be
 installed:
 
 * `Python <http://www.python.org>`_ 2.5 or later.
-* `setuptools <http://peak.telecommunity.com/DevCenter/setuptools>_ 0.6c10 or later.
-* `Numpy <http://numpy.scipy.org>`_ 1.2.0 or later.
-* `Scipy <http://www.scipy.org>`_ 0.7.0 or later.
+* `setuptools <http://peak.telecommunity.com/DevCenter/setuptools>`_ 0.6c10 or later.
+* `NumPy <http://numpy.scipy.org>`_ 1.2.0 or later.
+* `SciPy <http://www.scipy.org>`_ 0.7.0 or later.
 * `PyCUDA <http://mathema.tician.de/software/pycuda>`_ 0.94rc or later.
 * `NIVIDIA CUDA Toolkit <http://www.nvidia.com/object/cuda_home_new.html>`_ 3.0 or later
 
-This software has been tested on Linux.
+To build the documentation, the following packages are also required:
+
+* `Docutils <http://docutils.sourceforge.net>`_ 0.5 or later.
+* `Sphinx <http://sphinx.pocoo.org>`_ 1.0.1 or later
+* `Jinja2 <http://jinja.pocoo.org>`_ 2.2 or later
+* `Pygments <http://pygments.org>`_ 0.8 or later
+
+The software has been tested on Linux; it should also work on other
+platforms supported by the above packages.
 
 Building and Installation
 -------------------------
@@ -31,5 +45,8 @@ demonstrating how to use different parts of the toolbox is located in
 the ``demos/`` subdirectory. Many of the high-level functions also
 contain doctests that describe their usage.
 
+To rebuild the documentation, run::
 
+   make
 
+from within the ``doc/`` subdirectory and follow the directions.
