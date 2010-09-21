@@ -90,7 +90,7 @@ Double Precision BLAS1 Routines
    cublasZswap
 
 Single Precision BLAS2 Routines
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autosummary::
    :toctree: generated/
    :nosignatures:
@@ -130,7 +130,7 @@ Single Precision BLAS2 Routines
    cublasCtrsv
 
 Double Precision BLAS2 Routines
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autosummary::
    :toctree: generated/
    :nosignatures:
@@ -170,7 +170,7 @@ Double Precision BLAS2 Routines
    cublasZtrsv
 
 Single Precision BLAS3 Routines
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autosummary::
    :toctree: generated/
    :nosignatures:
@@ -192,7 +192,7 @@ Single Precision BLAS3 Routines
    cublasCtrsm
 
 Double Precision BLAS3 Routines
--------------------------------
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autosummary::
    :toctree: generated/
    :nosignatures:
