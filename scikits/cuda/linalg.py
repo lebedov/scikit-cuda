@@ -699,6 +699,11 @@ def pinv(a_gpu, dev, rcond=1e-15):
     >>> a_inv_gpu = pinv(a_gpu, pycuda.autoinit.device)
     >>> np.allclose(np.linalg.pinv(a), a_inv_gpu.get(), 1e-4)
     True
+    >>> b = np.asarray(np.random.rand(8, 4)+1j*np.random.rand(8, 4), np.complex64)
+    >>> b_gpu = gpuarray.to_gpu(b)
+    >>> b_inv_gpu = pinv(b_gpu, pycuda.autoinit.device)
+    >>> np.allclose(np.linalg.pinv(b), b_inv_gpu.get(), 1e-4)
+    True
 
     """
 
@@ -708,7 +713,6 @@ def pinv(a_gpu, dev, rcond=1e-15):
         raise ValueError('unsupported type')
 
     # Compute SVD:
-    conj(a_gpu, dev)
     u_gpu, s_gpu, vh_gpu = svd(a_gpu, 0)
     uh_gpu = transpose(u_gpu, dev)
 
@@ -729,8 +733,13 @@ def pinv(a_gpu, dev, rcond=1e-15):
                     np.uint32(s_gpu.size),
                     block=block_dim, grid=grid_dim)
     
+    # The singular values must data type is in uh_gpu:
+    if s_gpu.dtype == uh_gpu.dtype:
+        s_diag_gpu = diag(s_gpu, dev)
+    else:
+        s_diag_gpu = diag(s_gpu.astype(uh_gpu.dtype), dev)
+
     # Finish pinv computation:
-    s_diag_gpu = diag(s_gpu, dev)
     v_gpu = transpose(vh_gpu, dev)
     suh_gpu = dot(s_diag_gpu, uh_gpu)
     return dot(v_gpu, suh_gpu)
