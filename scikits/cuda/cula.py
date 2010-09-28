@@ -22,7 +22,7 @@ else:
 try:
     _libcula = ctypes.cdll.LoadLibrary(_libcula_libname)
 except OSError:
-    print '%s not found' % _libcula_libname
+    raise RuntimeError('%s not found' % _libcula_libname)
 
 # Function for retrieving string associated with specific CULA error
 # code:
