@@ -109,15 +109,15 @@ def _fft(x_gpu, y_gpu, plan, direction, scale=None):
     if (x_gpu.gpudata == y_gpu.gpudata) and \
            plan.fft_type not in [cufft.CUFFT_C2C, cufft.CUFFT_Z2Z]:
         raise ValueError('can only compute in-place transform of complex data')
-    
+
     if direction == cufft.CUFFT_FORWARD and \
-           plan.in_dtype in [np.complex64, np.complex128] and \
-           plan.out_dtype in [np.float64, np.float128]:
+           plan.in_dtype in np.sctypes['complex'] and \
+           plan.out_dtype in np.sctypes['float']:
         raise ValueError('cannot compute forward complex -> real transform')
 
     if direction == cufft.CUFFT_INVERSE and \
-           plan.in_dtype in [np.float64, np.float128] and \
-           plan.out_dtype in [np.complex64, np.complex128]:
+           plan.in_dtype in np.sctypes['float'] and \
+           plan.out_dtype in np.sctypes['complex']:
         raise ValueError('cannot compute inverse real -> complex transform')
 
     if plan.fft_type in [cufft.CUFFT_C2C, cufft.CUFFT_Z2Z]:
