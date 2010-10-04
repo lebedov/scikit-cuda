@@ -16,10 +16,11 @@ elif sys.platform == 'darwin':
 else:
     raise RuntimeError('unsupported platform')
 
+# Print understandable error message when library cannot be found:
 try:
     _libcufft = ctypes.cdll.LoadLibrary(_libcufft_libname)
 except OSError:
-    print '%s not found' % _libcufft_libname
+    raise OSError('%s not found' % _libcufft_libname)
     
 # General CUFFT error:
 class cufftError(Exception):

@@ -20,15 +20,16 @@ elif sys.platform == 'darwin':
 else:
     raise RuntimeError('unsupported platform')
 
+# Print understandable error message when library cannot be found:
 try:
     _libcuda = ctypes.cdll.LoadLibrary(_libcuda_libname)
 except OSError:
-    print '%s not found' % _libcuda_libname
+    OSError('%s not found' % _libcuda_libname)
     
 try:
     _libcudart = ctypes.cdll.LoadLibrary(_libcudart_libname)
 except OSError:
-    print '% not found' % _libcudart_libname
+    OSError('%s not found' % _libcudart_libname)
 
 # Code adapted from PARRET:
 def POINTER(obj):

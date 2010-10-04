@@ -20,10 +20,11 @@ elif sys.platform == 'darwin':
 else:
     raise RuntimeError('unsupported platform')
 
+# Print understandable error message when library cannot be found:
 try:
     _libcublas = ctypes.cdll.LoadLibrary(_libcublas_libname)
 except OSError:
-    print '%s not found' % _libcublas_libname
+    raise OSError('%s not found' % _libcublas_libname)
 
 # Generic CUBLAS error:
 class cublasError(Exception):
