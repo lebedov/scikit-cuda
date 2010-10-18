@@ -334,6 +334,7 @@ def mdot(*args):
 transpose_mod_template = Template("""
 #include <cuComplex.h>
 
+#define HERMITIAN ${hermitian}
 #define USE_DOUBLE ${use_double}
 #define USE_COMPLEX ${use_complex}
 #if USE_DOUBLE == 1
@@ -362,7 +363,10 @@ __global__ void transpose(TYPE *odata, TYPE *idata, unsigned int N)
     unsigned int iy = idx%${cols};
 
     if (idx < N)
-        odata[iy*${rows}+ix] = CONJ(idata[ix*${cols}+iy]);
+        if (HERMITIAN == 1)
+            odata[iy*${rows}+ix] = CONJ(idata[ix*${cols}+iy]);
+        else
+            odata[iy*${rows}+ix] = idata[ix*${cols}+iy];
 }
 """)
 
@@ -371,7 +375,7 @@ def transpose(a_gpu, dev):
     Matrix transpose.
     
     Transpose a matrix in device memory and return an object
-    representing the transposed matrix.
+    representing the transposed matrix. 
 
     Parameters
     ----------
@@ -386,11 +390,6 @@ def transpose(a_gpu, dev):
         Transposed matrix of shape `(n, m)`.
     dev : pycuda.driver.Device
         Device object to be used.
-
-    Notes
-    -----
-    If the specified matrix type is complex, the function will return
-    the Hermitian of the input matrix.
     
     Examples
     --------
@@ -408,6 +407,82 @@ def transpose(a_gpu, dev):
     >>> b = np.array([[1j, 2j, 3j, 4j, 5j, 6j], [7j, 8j, 9j, 10j, 11j, 12j]], np.complex64)
     >>> b_gpu = gpuarray.to_gpu(b)
     >>> bt_gpu = transpose(b_gpu, pycuda.autoinit.device)
+    >>> np.all(b.T == bt_gpu.get())
+    True
+
+    """
+
+    if a_gpu.dtype not in [np.float32, np.float64, np.complex64,
+                           np.complex128]:
+        raise ValueError('unrecognized type')
+
+    use_double = int(a_gpu.dtype in [np.float64, np.complex128])
+    use_complex = int(a_gpu.dtype in [np.complex64, np.complex128])
+
+    # Get block/grid sizes:
+    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
+    block_dim, grid_dim = select_block_grid_sizes(dev, a_gpu.shape)
+    max_blocks_per_grid = max(max_grid_dim)
+
+    # Set this to False when debugging to make sure the compiled kernel is
+    # not cached:
+    cache_dir=None            
+    transpose_mod = \
+                  SourceModule(transpose_mod_template.substitute(use_double=use_double,
+                                                                 use_complex=use_complex,
+                                                                 hermitian=0,
+                               max_threads_per_block=max_threads_per_block,
+                               max_blocks_per_grid=max_blocks_per_grid,
+                               cols=a_gpu.shape[1],
+                               rows=a_gpu.shape[0]),
+                               cache_dir=cache_dir)
+    
+    transpose = transpose_mod.get_function("transpose")
+    at_gpu = gpuarray.empty(a_gpu.shape[::-1], a_gpu.dtype)
+    transpose(at_gpu.gpudata, a_gpu.gpudata,
+              np.uint32(a_gpu.size),
+              block=block_dim,
+              grid=grid_dim)
+                    
+    return at_gpu
+
+def hermitian(a_gpu, dev):
+    """
+    Hermitian (conjugate) matrix transpose.
+    
+    Conjugate transpose a matrix in device memory and return an object
+    representing the transposed matrix. 
+
+    Parameters
+    ----------
+    a_gpu : pycuda.gpuarray.GPUArray
+        Input matrix of shape `(m, n)`.
+    dev : pycuda.driver.Device
+        Device object to be used.
+
+    Returns
+    -------
+    at_gpu : pycuda.gpuarray.GPUArray
+        Transposed matrix of shape `(n, m)`.
+    dev : pycuda.driver.Device
+        Device object to be used.
+    
+    Examples
+    --------
+    >>> import pycuda.autoinit
+    >>> import pycuda.driver as drv
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import numpy as np
+    >>> import linalg
+    >>> linalg.init()
+    >>> a = np.array([[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]], np.float32)
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> at_gpu = hermitian(a_gpu, pycuda.autoinit.device)
+    >>> np.all(a.T == at_gpu.get())
+    True
+    >>> b = np.array([[1j, 2j, 3j, 4j, 5j, 6j], [7j, 8j, 9j, 10j, 11j, 12j]], np.complex64)
+    >>> b_gpu = gpuarray.to_gpu(b)
+    >>> bt_gpu = hermitian(b_gpu, pycuda.autoinit.device)
     >>> np.all(np.conj(b.T) == bt_gpu.get())
     True
 
@@ -431,12 +506,13 @@ def transpose(a_gpu, dev):
     transpose_mod = \
                   SourceModule(transpose_mod_template.substitute(use_double=use_double,
                                                                  use_complex=use_complex,
+                                                                 hermitian=1,
                                max_threads_per_block=max_threads_per_block,
                                max_blocks_per_grid=max_blocks_per_grid,
                                cols=a_gpu.shape[1],
                                rows=a_gpu.shape[0]),
-                               cache_dir=cache_dir)                                                                 
-
+                               cache_dir=cache_dir)
+    
     transpose = transpose_mod.get_function("transpose")
     at_gpu = gpuarray.empty(a_gpu.shape[::-1], a_gpu.dtype)
     transpose(at_gpu.gpudata, a_gpu.gpudata,

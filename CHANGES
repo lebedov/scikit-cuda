@@ -6,6 +6,7 @@ Change Log
 Release ()
 ----------
 * Fix pinv() to properly invert complex matrices.
+* Add hermitian transpose.
 
 Release 0.02 - (September 21, 2010)
 ------------------------------------

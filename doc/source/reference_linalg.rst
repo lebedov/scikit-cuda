@@ -11,6 +11,7 @@ Linear Algebra Routines
 
    diag
    dot
+   hermitian
    init
    mdot
    pinv
