@@ -790,7 +790,7 @@ def pinv(a_gpu, dev, rcond=1e-15):
 
     # Compute SVD:
     u_gpu, s_gpu, vh_gpu = svd(a_gpu, 0)
-    uh_gpu = transpose(u_gpu, dev)
+    uh_gpu = hermitian(u_gpu, dev)
 
     # Get block/grid sizes:
     max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
@@ -816,7 +816,7 @@ def pinv(a_gpu, dev, rcond=1e-15):
         s_diag_gpu = diag(s_gpu.astype(uh_gpu.dtype), dev)
 
     # Finish pinv computation:
-    v_gpu = transpose(vh_gpu, dev)
+    v_gpu = hermitian(vh_gpu, dev)
     suh_gpu = dot(s_diag_gpu, uh_gpu)
     return dot(v_gpu, suh_gpu)
 
