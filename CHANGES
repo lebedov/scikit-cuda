@@ -5,6 +5,7 @@ Change Log
 
 Release ()
 ----------
+* Add support for premium version of CULA toolkit.
 * Fix pinv() to properly invert complex matrices.
 * Add hermitian transpose.
 

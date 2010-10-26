@@ -9,12 +9,12 @@ Package Description
 This SciKit (toolkit for SciPy [1]_) provides Python interfaces to a
 subset of the functions in the CUDA, CUDART, CUBLAS, and CUFFT
 libraries distributed as part of NVIDIA's CUDA Programming Toolkit
-[2]_, as well as interfaces to select functions in the free-of-charge
-CULA Toolkit [3]_. In contrast to most existing Python wrappers for
-these libraries (many of which only provide a low-level interface to
-the actual library functions), this package uses PyCUDA [4]_ to
-provide high-level functions comparable to those in the NumPy package
-[5]_.
+[2]_, as well as interfaces to select functions in the basic and
+premium versions of the CULA Toolkit [3]_. In contrast to most
+existing Python wrappers for these libraries (many of which only
+provide a low-level interface to the actual library functions), this
+package uses PyCUDA [4]_ to provide high-level functions comparable to
+those in the NumPy package [5]_.
 
 Authors & Acknowledgments
 -------------------------

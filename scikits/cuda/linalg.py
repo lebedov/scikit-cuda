@@ -72,6 +72,9 @@ def svd(a_gpu, full_matrices=1, compute_uv=1):
 
     Notes
     -----
+    Double precision is only supported if the premium version of the
+    CULA toolkit is installed.
+
     This function destroys the contents of the input matrix.
     
     Examples
@@ -98,8 +101,15 @@ def svd(a_gpu, full_matrices=1, compute_uv=1):
     elif a_gpu.dtype == np.float32:
         cula_func = cula._libcula.culaDeviceSgesvd
     else:
-        raise ValueError('unsupported type')
-
+        if cula._libcula_toolkit == 'premium':
+            if a_gpu.dtype == np.complex128:
+                cula_func = cula._libcula.culaDeviceZgesvd
+            elif a_gpu.dtype == np.float64:
+                cula_func = cula._libcula.culaDeviceDgesvd
+            else:
+                raise ValueError('unsupported type')
+            real_dtype = np.dtype(np.float64)
+            
     # Transpose shape because CUDA assumes arrays are stored in
     # column-major format:
     (m, n) = a_gpu.shape[::-1]
@@ -339,23 +349,23 @@ transpose_mod_template = Template("""
 #define USE_COMPLEX ${use_complex}
 #if USE_DOUBLE == 1
 #if USE_COMPLEX == 1
-#define TYPE cuDoubleComplex
+#define FLOAT cuDoubleComplex
 #define CONJ(x) cuConj(x)
 #else
-#define TYPE double
+#define FLOAT double
 #define CONJ(x) (x)
 #endif
 #else
 #if USE_COMPLEX == 1
-#define TYPE cuFloatComplex
+#define FLOAT cuFloatComplex
 #define CONJ(x) cuConjf(x)
 #else
-#define TYPE float
+#define FLOAT float
 #define CONJ(x) (x)
 #endif
 #endif
 
-__global__ void transpose(TYPE *odata, TYPE *idata, unsigned int N)
+__global__ void transpose(FLOAT *odata, FLOAT *idata, unsigned int N)
 {
     unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
                        blockIdx.x*${max_threads_per_block}+threadIdx.x;
@@ -618,24 +628,24 @@ diag_mod_template = Template("""
 #define USE_COMPLEX ${use_complex}
 #if USE_DOUBLE == 1
 #if USE_COMPLEX == 1
-#define TYPE cuDoubleComplex
+#define FLOAT cuDoubleComplex
 #define ZERO make_cuDoubleComplex(0, 0)
 #else
-#define TYPE double
+#define FLOAT double
 #define ZERO 0.0
 #endif
 #else
 #if USE_COMPLEX == 1
-#define TYPE cuFloatComplex
+#define FLOAT cuFloatComplex
 #define ZERO make_cuFloatComplex(0, 0)
 #else
-#define TYPE float
+#define FLOAT float
 #define ZERO 0.0
 #endif
 #endif
 
 // N must contain the number of elements in d:
-__global__ void diag(TYPE *v, TYPE *d, int N) {
+__global__ void diag(FLOAT *v, FLOAT *d, int N) {
     unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
                        blockIdx.x*${max_threads_per_block}+threadIdx.x;
     unsigned int ix = idx/${cols};
@@ -728,8 +738,15 @@ def diag(v_gpu, dev):
     return d_gpu
 
 cutoff_invert_s_mod_template = Template("""
+#define USE_DOUBLE ${use_double}
+#if USE_DOUBLE == 1
+#define FLOAT double
+#else
+#define FLOAT float
+#endif
+
 // N must equal the length of s:
-__global__ void cutoff_invert_s(float *s, float *cutoff, unsigned int N) {
+__global__ void cutoff_invert_s(FLOAT *s, FLOAT *cutoff, unsigned int N) {
     unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
                        blockIdx.x*${max_threads_per_block}+threadIdx.x;
 
@@ -761,7 +778,12 @@ def pinv(a_gpu, dev, rcond=1e-15):
     -------
     a_inv_gpu : pycuda.gpuarray.GPUArray
         Pseudoinverse of input matrix.
-        
+
+    Notes
+    -----
+    Double precision is only supported if the premium version of the
+    CULA toolkit is installed.
+    
     Examples
     --------
     >>> import pycuda.driver as drv
@@ -783,11 +805,6 @@ def pinv(a_gpu, dev, rcond=1e-15):
 
     """
 
-    # Check input dtype because the SVD can only be computed in single
-    # precision:
-    if a_gpu.dtype not in [np.float32, np.complex64]:
-        raise ValueError('unsupported type')
-
     # Compute SVD:
     u_gpu, s_gpu, vh_gpu = svd(a_gpu, 0)
     uh_gpu = hermitian(u_gpu, dev)
@@ -798,10 +815,12 @@ def pinv(a_gpu, dev, rcond=1e-15):
     max_blocks_per_grid = max(max_grid_dim)
 
     # Suppress very small singular values:
+    use_double = 1 if s_gpu.dtype == np.float64 else 0
     cutoff_invert_s_mod = \
         SourceModule(cutoff_invert_s_mod_template.substitute( 
         max_threads_per_block=max_threads_per_block,
-        max_blocks_per_grid=max_blocks_per_grid))
+        max_blocks_per_grid=max_blocks_per_grid,
+        use_double=use_double))
     cutoff_invert_s = \
                     cutoff_invert_s_mod.get_function('cutoff_invert_s')
     cutoff_gpu = gpuarray.max(s_gpu)*rcond

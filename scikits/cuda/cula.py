@@ -24,6 +24,16 @@ try:
 except OSError:
     raise RuntimeError('%s not found' % _libcula_libname)
 
+# Check whether the basic or premium version of the toolkit is
+# installed by trying to access a function that is only available in
+# the latter:
+try:
+    _libcula.culaDeviceMalloc
+except AttributeError:
+    _libcula_toolkit = 'basic'
+else:
+    _libcula_toolkit = 'premium'
+    
 # Function for retrieving string associated with specific CULA error
 # code:
 _libcula.culaGetStatusString.restype = ctypes.c_char_p
@@ -144,8 +154,7 @@ def culaShutdown():
 # Shut down CULA upon exit:
 atexit.register(_libcula.culaShutdown)
 
-# LAPACK functions implemented by CULA:
-
+# LAPACK functions available in CULA basic:
 _libcula.culaDeviceSgesvd.restype = int
 _libcula.culaDeviceSgesvd.argtypes = [ctypes.c_char,
                                       ctypes.c_char,
@@ -172,6 +181,34 @@ _libcula.culaDeviceCgesvd.argtypes = [ctypes.c_char,
                                       ctypes.c_void_p,
                                       ctypes.c_int]
 
+# LAPACK functions available in CULA premium:
+if _libcula_toolkit == 'premium':
+    _libcula.culaDeviceDgesvd.restype = int
+    _libcula.culaDeviceDgesvd.argtypes = [ctypes.c_char,
+                                          ctypes.c_char,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int]
+
+    _libcula.culaDeviceZgesvd.restype = int
+    _libcula.culaDeviceZgesvd.argtypes = [ctypes.c_char,
+                                          ctypes.c_char,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int]
+    
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
