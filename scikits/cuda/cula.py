@@ -237,7 +237,7 @@ if _libcula_toolkit == 'premium':
     _libcula.culaDeviceDgesvd.restype = \
     _libcula.culaDeviceZgesvd.restype = int
 
-    _libcula.culaDeviceDgesvd.argtypes = \ 
+    _libcula.culaDeviceDgesvd.argtypes = \
     _libcula.culaDeviceZgesvd.argtypes = [ctypes.c_char,
                                           ctypes.c_char,
                                           ctypes.c_int,
@@ -246,6 +246,36 @@ if _libcula_toolkit == 'premium':
                                           ctypes.c_int,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int]
+    
+
+    _libcula.culaDeviceSposv.restype = \
+    _libcula.culaDeviceCposv.restype = \                                     
+    _libcula.culaDeviceDposv.restype = \
+    _libcula.culaDeviceZposv.restype = int
+
+    _libcula.culaDeviceSposv.argtypes = \
+    _libcula.culaDeviceCposv.argtypes = \
+    _libcula.culaDeviceDposv.argtypes = \
+    _libcula.culaDeviceZposv.argtypes = [ctypes.c_char,
+                                         ctypes.c_int,
+                                         ctypes.c_int,
+                                         ctypes.c_void_p,
+                                         ctypes.c_int,
+                                         ctypes.c_void_p,
+                                         ctypes.c_int]
+
+    _libcula.culaDeviceSpotrf.restype = \
+    _libcula.culaDeviceCpotrf.restype = \
+    _libcula.culaDeviceDpotrf.restype = \
+    _libcula.culaDeviceZpotrf.restype = int
+
+    _libcula.culaDeviceSpotrf.argtypes = \
+    _libcula.culaDeviceCpotrf.argtypes = \
+    _libcula.culaDeviceDpotrf.argtypes = \
+    _libcula.culaDeviceZpotrf.argtypes = [ctypes.c_char,
                                           ctypes.c_int,
                                           ctypes.c_void_p,
                                           ctypes.c_int]
