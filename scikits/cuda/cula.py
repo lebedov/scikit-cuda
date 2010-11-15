@@ -155,20 +155,71 @@ def culaShutdown():
 atexit.register(_libcula.culaShutdown)
 
 # LAPACK functions available in CULA basic:
-_libcula.culaDeviceSgesvd.restype = int
-_libcula.culaDeviceSgesvd.argtypes = [ctypes.c_char,
-                                      ctypes.c_char,
-                                      ctypes.c_int,
-                                      ctypes.c_int,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int,
-                                      ctypes.c_void_p,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int]
+_libcula.culaDeviceSgesv.restype = \
+_libcula.culaDeviceCgesv.restype = int
 
+_libcula.culaDeviceSgesv.argtypes = \
+_libcula.culaDeviceCgesv.argtypes = [ctypes.c_int,
+                                     ctypes.c_int,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int,
+                                     ctypes.c_void_p,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int]
+
+_libcula.culaSgetrf.restype = \
+_libcula.culaCgetrf.restype = int
+
+_libcula.culaSgetrf.argtypes = \
+_libcula.culaCgetrf.argtypes = [ctypes.c_int,
+                                ctypes.c_int,
+                                ctypes.c_void_p,
+                                ctypes.c_int,
+                                ctypes.c_void_p]
+
+_libcula.culaSgeqrf.restype = \
+_libcula.culaCgeqrf.restype = int
+
+_libcula.culaSgeqrf.argtypes = \
+_libcula.culaCgeqrf.argtypes = [ctypes.c_int,
+                                ctypes.c_int,
+                                ctypes.c_void_p,
+                                ctypes.c_int,
+                                ctypes.c_void_p]
+
+
+_libcula.culaSgels.restype = \
+_libcula.culaCgels.restype = int
+
+_libcula.culaSgels.argtypes = \
+_libcula.culaCgels.argtypes = [ctypes.c_char,                           
+                               ctypes.c_int,
+                               ctypes.c_int,
+                               ctypes.c_int,
+                               ctypes.c_void_p,                              
+                               ctypes.c_int,
+                               ctypes.c_void_p,
+                               ctypes.c_int]
+
+_libcula.culaSgglse.restype = \
+_libcula.culaCgglse.restype = int
+
+_libcula.culaSgglse.argtypes = \
+_libcula.culaCgglse.argtypes = [ctypes.c_int,                             
+                                ctypes.c_int,
+                                ctypes.c_int,
+                                ctypes.c_void_p,
+                                ctypes.c_int,
+                                ctypes.c_void_p,
+                                ctypes.c_int,
+                                ctypes.c_void_p,
+                                ctypes.c_void_p,
+                                ctypes.c_void_p]
+
+_libcula.culaDeviceSgesvd.restype = \
 _libcula.culaDeviceCgesvd.restype = int
+
+_libcula.culaDeviceSgesvd.argtypes = \
 _libcula.culaDeviceCgesvd.argtypes = [ctypes.c_char,
                                       ctypes.c_char,
                                       ctypes.c_int,
@@ -183,20 +234,10 @@ _libcula.culaDeviceCgesvd.argtypes = [ctypes.c_char,
 
 # LAPACK functions available in CULA premium:
 if _libcula_toolkit == 'premium':
-    _libcula.culaDeviceDgesvd.restype = int
-    _libcula.culaDeviceDgesvd.argtypes = [ctypes.c_char,
-                                          ctypes.c_char,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int]
-
+    _libcula.culaDeviceDgesvd.restype = \
     _libcula.culaDeviceZgesvd.restype = int
+
+    _libcula.culaDeviceDgesvd.argtypes = \ 
     _libcula.culaDeviceZgesvd.argtypes = [ctypes.c_char,
                                           ctypes.c_char,
                                           ctypes.c_int,
