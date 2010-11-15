@@ -14,17 +14,23 @@ import numpy as np
 import cuda
 
 if sys.platform == 'linux2':
-    _libcublas_libname = 'libcublas.so'
+    _libcublas_libname_list = ['libcublas.so', 'libcublas.so.3']
 elif sys.platform == 'darwin':
-    _libcublas_libname = 'libcublas.dylib'
+    _libcublas_libname_list = ['libcublas.dylib']
 else:
     raise RuntimeError('unsupported platform')
 
 # Print understandable error message when library cannot be found:
-try:
-    _libcublas = ctypes.cdll.LoadLibrary(_libcublas_libname)
-except OSError:
-    raise OSError('%s not found' % _libcublas_libname)
+_libcublas = None
+for _libcublas_libname in _libcublas_libname_list:
+    try:
+        _libcublas = ctypes.cdll.LoadLibrary(_libcublas_libname)
+    except OSError:
+        pass
+    else:
+        break
+if _libcublas == None:
+    raise OSError('cublas library not found')
 
 # Generic CUBLAS error:
 class cublasError(Exception):

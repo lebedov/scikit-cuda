@@ -12,24 +12,37 @@ import atexit
 
 # Load CUDA libraries:
 if sys.platform == 'linux2':
-    _libcuda_libname = 'libcuda.so'
-    _libcudart_libname = 'libcudart.so'
+    _libcuda_libname_list = ['libcuda.so', 'libcuda.so.3']
+    _libcudart_libname_list = ['libcudart.so', 'libcudart.so.3']
 elif sys.platform == 'darwin':
-    _libcuda_libname = 'libcuda.dylib'
-    _libcudart_libname = 'libcudart.dylib'
+    _libcuda_libname_list = ['libcuda.dylib']
+    _libcudart_libname_list = ['libcudart.dylib']
 else:
     raise RuntimeError('unsupported platform')
 
 # Print understandable error message when library cannot be found:
-try:
-    _libcuda = ctypes.cdll.LoadLibrary(_libcuda_libname)
-except OSError:
-    OSError('%s not found' % _libcuda_libname)
-    
-try:
-    _libcudart = ctypes.cdll.LoadLibrary(_libcudart_libname)
-except OSError:
-    OSError('%s not found' % _libcudart_libname)
+_libcuda = None
+for _libcuda_libname in _libcuda_libname_list:
+    try:
+        _libcuda = ctypes.cdll.LoadLibrary(_libcuda_libname)
+    except OSError:
+        pass
+    else:
+        break
+if _libcuda == None:
+    raise OSError('cuda library not found')
+
+_libcudart = None    
+for _libcudart_libname in _libcudart_libname_list:
+    try:
+        _libcudart = ctypes.cdll.LoadLibrary(_libcudart_libname)
+    except OSError:
+        pass
+    else:
+        break
+if _libcudart == None:
+    OSError('libcudart not found')
+
 
 # Code adapted from PARRET:
 def POINTER(obj):

@@ -10,17 +10,23 @@ import sys
 import ctypes
 
 if sys.platform == 'linux2':
-    _libcufft_libname = 'libcufft.so'
+    _libcufft_libname_list = ['libcufft.so', 'libcufft.so.3']        
 elif sys.platform == 'darwin':
-    _libcufft_libname = 'libcufft.dylib'
+    _libcufft_libname_list = ['libcufft.dylib']
 else:
     raise RuntimeError('unsupported platform')
 
 # Print understandable error message when library cannot be found:
-try:
-    _libcufft = ctypes.cdll.LoadLibrary(_libcufft_libname)
-except OSError:
-    raise OSError('%s not found' % _libcufft_libname)
+_libcufft = None
+for _libcufft_libname in _libcufft_libname_list:
+    try:
+        _libcufft = ctypes.cdll.LoadLibrary(_libcufft_libname)
+    except OSError:
+        pass
+    else:
+        break
+if _libcufft == None:
+    raise OSError('cufft library not found')
     
 # General CUFFT error:
 class cufftError(Exception):
