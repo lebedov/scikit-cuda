@@ -40,18 +40,27 @@ platforms supported by the above packages.
 Building and Installation
 -------------------------
 
+``scikits.cuda`` searches for CUDA libraries in the system library
+search path. You may have to modify this path (e.g., by adding the
+path to the CUDA libraries to /etc/ld.so.conf or to the
+LD_LIBRARY_PATH environmental variable on Linux) if the libraries are
+not being found.
+
 To build and install the toolbox, download and unpack the source 
 release and run::
 
    python setup.py install
 
-from within the main directory in the release. Sample code
-demonstrating how to use different parts of the toolbox is located in
-the ``demos/`` subdirectory. Many of the high-level functions also
-contain doctests that describe their usage.
-
-To rebuild the documentation, run::
+from within the main directory in the release. To rebuild the
+documentation, run::
 
    make
 
 from within the ``doc/`` subdirectory and follow the directions.
+
+
+Getting Started
+---------------
+Sample code demonstrating how to use different parts of the toolbox is
+located in the ``demos/`` subdirectory. Many of the high-level
+functions also contain doctests that describe their usage.
