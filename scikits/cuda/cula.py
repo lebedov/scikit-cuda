@@ -252,7 +252,7 @@ if _libcula_toolkit == 'premium':
     
 
     _libcula.culaDeviceSposv.restype = \
-    _libcula.culaDeviceCposv.restype = \                                     
+    _libcula.culaDeviceCposv.restype = \
     _libcula.culaDeviceDposv.restype = \
     _libcula.culaDeviceZposv.restype = int
 
