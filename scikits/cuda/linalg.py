@@ -670,7 +670,7 @@ def diag(v_gpu, dev):
 
     Parameters
     ----------
-    a_obj : pycuda.gpuarray.GPUArray
+    v_obj : pycuda.gpuarray.GPUArray
         Input array of length `n`.
     dev : pycuda.driver.Device
         Device object to be used.
@@ -839,6 +839,138 @@ def pinv(a_gpu, dev, rcond=1e-15):
     suh_gpu = dot(s_diag_gpu, uh_gpu)
     return dot(v_gpu, suh_gpu)
 
+tril_mod_template = Template("""
+#define USE_DOUBLE ${use_double}
+#define USE_COMPLEX ${use_complex}
+#if USE_DOUBLE == 1
+#if USE_COMPLEX == 1
+#define FLOAT cuDoubleComplex
+#define ZERO make_cuDoubleComplex(0, 0)
+#else
+#define FLOAT double
+#define ZERO 0.0
+#endif
+#else
+#if USE_COMPLEX == 1
+#define FLOAT cuFloatComplex
+#define ZERO make_cuFloatComplex(0, 0)
+#else
+#define FLOAT float
+#define ZERO 0.0
+#endif
+#endif
+
+__global__ void tril(FLOAT *a, unsigned int N) {
+    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
+                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    unsigned int ix = idx/${cols};
+    unsigned int iy = idx%${cols};
+
+    if (idx < N) {
+        if (ix < iy)
+            a[idx] = ZERO;
+    }
+}
+""")
+
+def tril(a_gpu, dev, overwrite=True):
+    """
+    Lower triangle of a matrix.
+
+    Return the lower triangle of a square matrix.
+
+    Parameters
+    ----------
+    a_gpu : pycuda.gpuarray.GPUArray
+        Input matrix of shape `(m, m)`
+    dev : pycuda.driver.Device
+        Device object to be used.
+    overwrite : boolean
+        If true (default), zero out the upper triangle of the matrix.
+        If false, return the result in a newly allocated matrix.
+
+    Returns
+    -------
+    l_gpu : pycuda.gpuarray
+        The lower triangle of the original matrix.
+
+    Examples
+    --------
+    >>> import pycuda.driver as drv
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import pycuda.autoinit
+    >>> import numpy as np
+    >>> import linalg
+    >>> linalg.init()
+    >>> a = np.asarray(np.random.rand(4, 4), np.float32)
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> l_gpu = tril(a_gpu, pycuda.autoinit.device, False)
+    >>> np.allclose(np.tril(a), l_gpu.get())
+    True
+    
+    """
+
+    if len(a_gpu.shape) != 2 or a_gpu.shape[0] != a_gpu.shape[1]:
+        raise ValueError('matrix must be square')
+
+    if a_gpu.dtype == np.float32:
+        swap_func = cublas.cublasSswap
+        copy_func = cublas.cublasScopy
+        use_double = False
+        use_complex = False
+    elif a_gpu.dtype == np.float64:
+        swap_func = cublas.cublasDswap
+        copy_func = cublas.cublasDcopy
+        use_double = True
+        use_complex = False
+    elif a_gpu.dtype == np.complex64:
+        swap_func = cublas.cublasCswap
+        copy_func = cublas.cublasCcopy
+        use_double = False
+        use_complex = True
+    elif a_gpu.dtype == np.complex128:
+        swap_func = cublas.cublasZswap
+        copy_func = cublas.cublasZcopy
+        use_double = True
+        use_complex = True
+    else:
+        raise ValueError('unrecognized type')
+
+    N = a_gpu.shape[0]
+
+    # Get block/grid sizes:
+    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
+    block_dim, grid_dim = select_block_grid_sizes(dev, a_gpu.shape)
+    max_blocks_per_grid = max(max_grid_dim)
+
+    # Set this to False when debugging to make sure the compiled kernel is
+    # not cached:
+    cache_dir=None
+    tril_mod = \
+             SourceModule(tril_mod_template.substitute(use_double=use_double,
+                                                       use_complex=use_complex,
+                          max_threads_per_block=max_threads_per_block,
+                          max_blocks_per_grid=max_blocks_per_grid,
+                          cols=N),
+                          cache_dir=cache_dir)
+    tril = tril_mod.get_function("tril")
+
+    if not overwrite:
+        a_orig_gpu = gpuarray.empty(a_gpu.shape, a_gpu.dtype)
+        copy_func(a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
+
+    tril(a_gpu.gpudata, np.uint32(a_gpu.size),
+         block=block_dim,
+         grid=grid_dim)
+
+    if overwrite:
+        return a_gpu
+    else:
+
+        # Restore original contents of a_gpu:
+        swap_func(a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
+        return a_orig_gpu
+                         
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

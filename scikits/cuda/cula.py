@@ -53,6 +53,10 @@ class culaNotFound(culaError):
     """CULA shared library not found"""
     pass
 
+class culaPremiumNotFound(culaError):
+    """Premium CULA toolkit unavailable"""
+    pass
+
 class culaNotInitialized(culaError):
     __doc__ = culaGetStatusString(1)
     pass
