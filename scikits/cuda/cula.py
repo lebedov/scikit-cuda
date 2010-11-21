@@ -161,7 +161,6 @@ atexit.register(_libcula.culaShutdown)
 # LAPACK functions available in CULA basic:
 _libcula.culaDeviceSgesv.restype = \
 _libcula.culaDeviceCgesv.restype = int
-
 _libcula.culaDeviceSgesv.argtypes = \
 _libcula.culaDeviceCgesv.argtypes = [ctypes.c_int,
                                      ctypes.c_int,
@@ -170,59 +169,90 @@ _libcula.culaDeviceCgesv.argtypes = [ctypes.c_int,
                                      ctypes.c_void_p,
                                      ctypes.c_void_p,
                                      ctypes.c_int]
+def culaDeviceSgesv(n, nrhs, a, lda, ipiv, b, ldb):
+    status = _libcula.culaDeviceSgesv(n, nrhs, int(a), lda, int(ipiv),
+                                      int(b), ldb)
+    culaCheckStatus(status)
+def culaDeviceCgesv(n, nrhs, a, lda, ipiv, b, ldb):
+    status = _libcula.culaDeviceCgesv(n, nrhs, int(a), lda, int(ipiv),
+                                      int(b), ldb)
+    culaCheckStatus(status)
 
-_libcula.culaSgetrf.restype = \
-_libcula.culaCgetrf.restype = int
+_libcula.culaDeviceSgetrf.restype = \
+_libcula.culaDeviceCgetrf.restype = int
+_libcula.culaDeviceSgetrf.argtypes = \
+_libcula.culaDeviceCgetrf.argtypes = [ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p]
+def culaDeviceSgetrf(m, n, a, lda, ipiv):
+    status = _libcula.culaDeviceSgetrf(m, n, int(a), lda, int(ipiv))
+    culaCheckStatus(status)
+def culaDeviceCgetrf(m, n, a, lda, ipiv):
+    status = _libcula.culaDeviceCgetrf(m, n, int(a), lda, int(ipiv))
+    culaCheckStatus(status)
 
-_libcula.culaSgetrf.argtypes = \
-_libcula.culaCgetrf.argtypes = [ctypes.c_int,
-                                ctypes.c_int,
-                                ctypes.c_void_p,
-                                ctypes.c_int,
-                                ctypes.c_void_p]
+_libcula.culaDeviceSgeqrf.restype = \
+_libcula.culaDeviceCgeqrf.restype = int
+_libcula.culaDeviceSgeqrf.argtypes = \
+_libcula.culaDeviceCgeqrf.argtypes = [ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p]
+def culaDeviceSgeqrf(m, n, a, lda, tau):
+    status = _libcula.culaDeviceSgeqrf(m, n, int(a), lda, int(tau))
+    culaCheckStatus(status)
+def culaDeviceCgeqrf(m, n, a, lda, tau):
+    status = _libcula.culaDeviceCgeqrf(m, n, int(a), lda, int(tau))
+    culaCheckStatus(status)
 
-_libcula.culaSgeqrf.restype = \
-_libcula.culaCgeqrf.restype = int
+_libcula.culaDeviceSgels.restype = \
+_libcula.culaDeviceCgels.restype = int
+_libcula.culaDeviceSgels.argtypes = \
+_libcula.culaDeviceCgels.argtypes = [ctypes.c_char,                           
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     ctypes.c_void_p,                              
+                                     ctypes.c_int,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int]
+def culaDeviceSgels(trans, m, n, nrhs, a, lda, b, ldb):
+    status = _libcula.culaDeviceSgels(trans, m, n, nrhs, int(a),
+                                      lda, int(b), ldb)
+    culaCheckStatus(status)
+def culaDeviceCgels(trans, m, n, nrhs, a, lda, b, ldb):
+    status = _libcula.culaDeviceCgels(trans, m, n, nrhs, int(a),
+                                      lda, int(b), ldb)
+    culaCheckStatus(status)
 
-_libcula.culaSgeqrf.argtypes = \
-_libcula.culaCgeqrf.argtypes = [ctypes.c_int,
-                                ctypes.c_int,
-                                ctypes.c_void_p,
-                                ctypes.c_int,
-                                ctypes.c_void_p]
+_libcula.culaDeviceSgglse.restype = \
+_libcula.culaDeviceCgglse.restype = int
 
-
-_libcula.culaSgels.restype = \
-_libcula.culaCgels.restype = int
-
-_libcula.culaSgels.argtypes = \
-_libcula.culaCgels.argtypes = [ctypes.c_char,                           
-                               ctypes.c_int,
-                               ctypes.c_int,
-                               ctypes.c_int,
-                               ctypes.c_void_p,                              
-                               ctypes.c_int,
-                               ctypes.c_void_p,
-                               ctypes.c_int]
-
-_libcula.culaSgglse.restype = \
-_libcula.culaCgglse.restype = int
-
-_libcula.culaSgglse.argtypes = \
-_libcula.culaCgglse.argtypes = [ctypes.c_int,                             
-                                ctypes.c_int,
-                                ctypes.c_int,
-                                ctypes.c_void_p,
-                                ctypes.c_int,
-                                ctypes.c_void_p,
-                                ctypes.c_int,
-                                ctypes.c_void_p,
-                                ctypes.c_void_p,
-                                ctypes.c_void_p]
-
+_libcula.culaDeviceSgglse.argtypes = \
+_libcula.culaDeviceCgglse.argtypes = [ctypes.c_int,                             
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_void_p,
+                                      ctypes.c_void_p]
+def culaDeviceSgglse(m, n, p, a, lda, b, ldb, c, d, x):
+    status = _libcula.culaDeviceSgglse(m, n, p, int(a), lda, int(b),
+                                       ldb, int(c), int(d), int(x))
+    culaCheckStatus(status)
+def culaDeviceCgglse(m, n, p, a, lda, b, ldb, c, d, x):
+    status = _libcula.culaDeviceCgglse(m, n, p, int(a), lda, int(b),
+                                       ldb, int(c), int(d), int(x))
+    culaCheckStatus(status)
+    
 _libcula.culaDeviceSgesvd.restype = \
 _libcula.culaDeviceCgesvd.restype = int
-
 _libcula.culaDeviceSgesvd.argtypes = \
 _libcula.culaDeviceCgesvd.argtypes = [ctypes.c_char,
                                       ctypes.c_char,
@@ -235,12 +265,21 @@ _libcula.culaDeviceCgesvd.argtypes = [ctypes.c_char,
                                       ctypes.c_int,
                                       ctypes.c_void_p,
                                       ctypes.c_int]
+def culaDeviceSgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
+    status = _libcula.culaDeviceSgesvd(jobu, jobvt, m, n, int(a), lda,
+                                       int(s), int(u), ldu, int(vt),
+                                       ldvt)
+    culaCheckStatus(status)
+def culaDeviceCgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
+    status = _libcula.culaDeviceCgesvd(jobu, jobvt, m, n, int(a), lda,
+                                       int(s), int(u), ldu, int(vt),
+                                       ldvt)
+    culaCheckStatus(status)
 
 # LAPACK functions available in CULA premium:
 if _libcula_toolkit == 'premium':
     _libcula.culaDeviceDgesvd.restype = \
     _libcula.culaDeviceZgesvd.restype = int
-
     _libcula.culaDeviceDgesvd.argtypes = \
     _libcula.culaDeviceZgesvd.argtypes = [ctypes.c_char,
                                           ctypes.c_char,
@@ -253,13 +292,22 @@ if _libcula_toolkit == 'premium':
                                           ctypes.c_int,
                                           ctypes.c_void_p,
                                           ctypes.c_int]
-    
+    def culaDeviceDgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
+        status = _libcula.culaDeviceDgesvd(jobu, jobvt, m, n, int(a), lda,
+                                           int(s), int(u), ldu, int(vt),
+                                           ldvt)
+        culaCheckStatus(status)
+    def culaDeviceZgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
+        status = _libcula.culaDeviceZgesvd(jobu, jobvt, m, n, int(a), lda,
+                                           int(s), int(u), ldu, int(vt),
+                                           ldvt)
+        culaCheckStatus(status)
+
 
     _libcula.culaDeviceSposv.restype = \
     _libcula.culaDeviceCposv.restype = \
     _libcula.culaDeviceDposv.restype = \
     _libcula.culaDeviceZposv.restype = int
-
     _libcula.culaDeviceSposv.argtypes = \
     _libcula.culaDeviceCposv.argtypes = \
     _libcula.culaDeviceDposv.argtypes = \
@@ -270,12 +318,27 @@ if _libcula_toolkit == 'premium':
                                          ctypes.c_int,
                                          ctypes.c_void_p,
                                          ctypes.c_int]
-
+    def culaDeviceSposv(upio, n, nrhs, a, lda, b, ldb):
+        status = _libcula.culaDeviceSposv(upio, n, nrhs, int(a), lda, int(b),
+                                          ldb)
+        culaCheckStatus(status)
+    def culaDeviceCposv(upio, n, nrhs, a, lda, b, ldb):
+        status = _libcula.culaDeviceCposv(upio, n, nrhs, int(a), lda, int(b),
+                                          ldb)
+        culaCheckStatus(status)
+    def culaDeviceDposv(upio, n, nrhs, a, lda, b, ldb):
+        status = _libcula.culaDeviceDposv(upio, n, nrhs, int(a), lda, int(b),
+                                          ldb)
+        culaCheckStatus(status)
+    def culaDeviceZposv(upio, n, nrhs, a, lda, b, ldb):
+        status = _libcula.culaDeviceZposv(upio, n, nrhs, int(a), lda, int(b),
+                                          ldb)
+        culaCheckStatus(status)
+        
     _libcula.culaDeviceSpotrf.restype = \
     _libcula.culaDeviceCpotrf.restype = \
     _libcula.culaDeviceDpotrf.restype = \
     _libcula.culaDeviceZpotrf.restype = int
-
     _libcula.culaDeviceSpotrf.argtypes = \
     _libcula.culaDeviceCpotrf.argtypes = \
     _libcula.culaDeviceDpotrf.argtypes = \
@@ -283,7 +346,19 @@ if _libcula_toolkit == 'premium':
                                           ctypes.c_int,
                                           ctypes.c_void_p,
                                           ctypes.c_int]
-    
+    def culaDeviceSpotrf(uplo, n, a, lda):
+        status = _libcula.culaDeviceSpotrf(uplo, n, int(a), lda)
+        culaCheckStatus(status)
+    def culaDeviceCpotrf(uplo, n, a, lda):
+        status = _libcula.culaDeviceCpotrf(uplo, n, int(a), lda)
+        culaCheckStatus(status)
+    def culaDeviceDpotrf(uplo, n, a, lda):
+        status = _libcula.culaDeviceDpotrf(uplo, n, int(a), lda)
+        culaCheckStatus(status)
+    def culaDeviceZpotrf(uplo, n, a, lda):
+        status = _libcula.culaDeviceZpotrf(uplo, n, int(a), lda)
+        culaCheckStatus(status)
+        
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
