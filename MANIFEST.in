@@ -1,4 +1,5 @@
 include AUTHORS CHANGES INSTALL LICENSE README
+recursive-include scikits *.h
 recursive-include demos *.py
 recursive-include doc *
 exclude MANIFEST.in
