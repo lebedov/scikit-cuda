@@ -6,3 +6,4 @@ TODO
 * Improve docstrings for the ctypes wrapper functions.
 * Add more doctests.
 * Replace naive transpose kernel with more efficient algorithm.
+* Make tril function more efficient.

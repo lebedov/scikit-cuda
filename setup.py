@@ -9,7 +9,7 @@ from setuptools import find_packages
 from numpy.distutils.core import setup
 
 NAME =               'scikits.cuda'
-VERSION =            '0.02'
+VERSION =            '0.03'
 IS_RELEASED =        True
 AUTHOR =             'Lev Givon'
 AUTHOR_EMAIL =       'lev@columbia.edu'

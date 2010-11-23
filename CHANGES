@@ -3,11 +3,15 @@
 Change Log
 ==========
 
-Release ()
-----------
+Release 0.03 - (November 22, 2010)
+----------------------------------
 * Add support for premium version of CULA toolkit.
+* Add wrappers for all lapack functions in basic CULA toolkit.
 * Fix pinv() to properly invert complex matrices.
 * Add hermitian transpose.
+* Add tril function.
+* Fix missing library detection.
+* Include missing CUDA headers in package.
 
 Release 0.02 - (September 21, 2010)
 ------------------------------------
