@@ -170,10 +170,20 @@ _libcula.culaDeviceCgesv.argtypes = [ctypes.c_int,
                                      ctypes.c_void_p,
                                      ctypes.c_int]
 def culaDeviceSgesv(n, nrhs, a, lda, ipiv, b, ldb):
+    """
+    Solve linear system with LU factorization.
+
+    """
+
     status = _libcula.culaDeviceSgesv(n, nrhs, int(a), lda, int(ipiv),
                                       int(b), ldb)
     culaCheckStatus(status)
 def culaDeviceCgesv(n, nrhs, a, lda, ipiv, b, ldb):
+    """
+    Solve linear system with LU factorization.
+
+    """
+
     status = _libcula.culaDeviceCgesv(n, nrhs, int(a), lda, int(ipiv),
                                       int(b), ldb)
     culaCheckStatus(status)
@@ -187,9 +197,19 @@ _libcula.culaDeviceCgetrf.argtypes = [ctypes.c_int,
                                       ctypes.c_int,
                                       ctypes.c_void_p]
 def culaDeviceSgetrf(m, n, a, lda, ipiv):
+    """
+    LU factorization.
+
+    """
+    
     status = _libcula.culaDeviceSgetrf(m, n, int(a), lda, int(ipiv))
     culaCheckStatus(status)
 def culaDeviceCgetrf(m, n, a, lda, ipiv):
+    """
+    LU factorization.
+
+    """
+    
     status = _libcula.culaDeviceCgetrf(m, n, int(a), lda, int(ipiv))
     culaCheckStatus(status)
 
@@ -202,9 +222,19 @@ _libcula.culaDeviceCgeqrf.argtypes = [ctypes.c_int,
                                       ctypes.c_int,
                                       ctypes.c_void_p]
 def culaDeviceSgeqrf(m, n, a, lda, tau):
+    """
+    QR factorization.
+
+    """
+    
     status = _libcula.culaDeviceSgeqrf(m, n, int(a), lda, int(tau))
     culaCheckStatus(status)
 def culaDeviceCgeqrf(m, n, a, lda, tau):
+    """
+    QR factorization.
+
+    """
+    
     status = _libcula.culaDeviceCgeqrf(m, n, int(a), lda, int(tau))
     culaCheckStatus(status)
 
@@ -220,17 +250,26 @@ _libcula.culaDeviceCgels.argtypes = [ctypes.c_char,
                                      ctypes.c_void_p,
                                      ctypes.c_int]
 def culaDeviceSgels(trans, m, n, nrhs, a, lda, b, ldb):
+    """
+    Solve linear system with QR or LQ factorization.
+
+    """
+    
     status = _libcula.culaDeviceSgels(trans, m, n, nrhs, int(a),
                                       lda, int(b), ldb)
     culaCheckStatus(status)
 def culaDeviceCgels(trans, m, n, nrhs, a, lda, b, ldb):
+    """
+    Solve linear system with QR or LQ factorization.
+
+    """
+
     status = _libcula.culaDeviceCgels(trans, m, n, nrhs, int(a),
                                       lda, int(b), ldb)
     culaCheckStatus(status)
 
 _libcula.culaDeviceSgglse.restype = \
 _libcula.culaDeviceCgglse.restype = int
-
 _libcula.culaDeviceSgglse.argtypes = \
 _libcula.culaDeviceCgglse.argtypes = [ctypes.c_int,                             
                                       ctypes.c_int,
@@ -243,10 +282,20 @@ _libcula.culaDeviceCgglse.argtypes = [ctypes.c_int,
                                       ctypes.c_void_p,
                                       ctypes.c_void_p]
 def culaDeviceSgglse(m, n, p, a, lda, b, ldb, c, d, x):
+    """
+    Solve linear equality-constrained least squares problem.
+
+    """
+    
     status = _libcula.culaDeviceSgglse(m, n, p, int(a), lda, int(b),
                                        ldb, int(c), int(d), int(x))
     culaCheckStatus(status)
 def culaDeviceCgglse(m, n, p, a, lda, b, ldb, c, d, x):
+    """
+    Solve linear equality-constrained least squares problem.
+
+    """
+
     status = _libcula.culaDeviceCgglse(m, n, p, int(a), lda, int(b),
                                        ldb, int(c), int(d), int(x))
     culaCheckStatus(status)
@@ -266,18 +315,184 @@ _libcula.culaDeviceCgesvd.argtypes = [ctypes.c_char,
                                       ctypes.c_void_p,
                                       ctypes.c_int]
 def culaDeviceSgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
+    """
+    SVD decomposition.
+
+    """
+    
     status = _libcula.culaDeviceSgesvd(jobu, jobvt, m, n, int(a), lda,
                                        int(s), int(u), ldu, int(vt),
                                        ldvt)
     culaCheckStatus(status)
 def culaDeviceCgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
+    """
+    SVD decomposition.
+
+    """
+
     status = _libcula.culaDeviceCgesvd(jobu, jobvt, m, n, int(a), lda,
                                        int(s), int(u), ldu, int(vt),
                                        ldvt)
     culaCheckStatus(status)
 
 # LAPACK functions available in CULA premium:
-if _libcula_toolkit == 'premium':
+try:
+    _libcula.culaDeviceDgesv.restype = \
+    _libcula.culaDeviceZgesv.restype = int
+    _libcula.culaDeviceDgesv.argtypes = \
+    _libcula.culaDeviceZgesv.argtypes = [ctypes.c_int,
+                                         ctypes.c_int,
+                                         ctypes.c_void_p,
+                                         ctypes.c_int,
+                                         ctypes.c_void_p,
+                                         ctypes.c_void_p,
+                                         ctypes.c_int]
+except AttributeError:
+    pass
+def culaDeviceDgesv(n, nrhs, a, lda, ipiv, b, ldb):
+    """
+    Solve linear system with LU factorization.
+
+    """
+
+    status = _libcula.culaDeviceDgesv(n, nrhs, int(a), lda, int(ipiv),
+                                      int(b), ldb)
+    culaCheckStatus(status)
+def culaDeviceZgesv(n, nrhs, a, lda, ipiv, b, ldb):
+    """
+    Solve linear system with LU factorization.
+
+    """
+
+    status = _libcula.culaDeviceZgesv(n, nrhs, int(a), lda, int(ipiv),
+                                      int(b), ldb)
+    culaCheckStatus(status)
+
+try:
+    _libcula.culaDeviceDgetrf.restype = \
+    _libcula.culaDeviceZgetrf.restype = int
+    _libcula.culaDeviceDgetrf.argtypes = \
+    _libcula.culaDeviceZgetrf.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p]
+except AttributeError:
+    pass
+def culaDeviceDgetrf(m, n, a, lda, ipiv):
+    """
+    LU factorization.
+
+    """
+    
+    status = _libcula.culaDeviceDgetrf(m, n, int(a), lda, int(ipiv))
+    culaCheckStatus(status)
+def culaDeviceZgetrf(m, n, a, lda, ipiv):
+    """
+    LU factorization.
+
+    """
+    
+    status = _libcula.culaDeviceZgetrf(m, n, int(a), lda, int(ipiv))
+    culaCheckStatus(status)
+
+try:
+    _libcula.culaDeviceDgeqrf.restype = \
+    _libcula.culaDeviceZgeqrf.restype = int
+    _libcula.culaDeviceDgeqrf.argtypes = \
+    _libcula.culaDeviceZgeqrf.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p]
+except AttributeError:
+    pass
+def culaDeviceDgeqrf(m, n, a, lda, tau):
+    """
+    QR factorization.
+
+    """
+    
+    status = _libcula.culaDeviceDgeqrf(m, n, int(a), lda, int(tau))
+    culaCheckStatus(status)
+def culaDeviceZgeqrf(m, n, a, lda, tau):
+    """
+    QR factorization.
+
+    """
+    
+    status = _libcula.culaDeviceZgeqrf(m, n, int(a), lda, int(tau))
+    culaCheckStatus(status)
+
+try:
+    _libcula.culaDeviceDgels.restype = \
+    _libcula.culaDeviceZgels.restype = int
+    _libcula.culaDeviceDgels.argtypes = \
+    _libcula.culaDeviceZgels.argtypes = [ctypes.c_char,                           
+                                         ctypes.c_int,
+                                         ctypes.c_int,
+                                         ctypes.c_int,
+                                         ctypes.c_void_p,                              
+                                         ctypes.c_int,
+                                         ctypes.c_void_p,
+                                         ctypes.c_int]
+except AttributeError:
+    pass
+def culaDeviceDgels(trans, m, n, nrhs, a, lda, b, ldb):
+    """
+    Solve linear system with QR or LQ factorization.
+
+    """
+    
+    status = _libcula.culaDeviceDgels(trans, m, n, nrhs, int(a),
+                                      lda, int(b), ldb)
+    culaCheckStatus(status)
+def culaDeviceZgels(trans, m, n, nrhs, a, lda, b, ldb):
+    """
+    Solve linear system with QR or LQ factorization.
+
+    """
+
+    status = _libcula.culaDeviceZgels(trans, m, n, nrhs, int(a),
+                                      lda, int(b), ldb)
+    culaCheckStatus(status)
+
+try:
+    _libcula.culaDeviceDgglse.restype = \
+    _libcula.culaDeviceZgglse.restype = int
+    _libcula.culaDeviceDgglse.argtypes = \
+    _libcula.culaDeviceZgglse.argtypes = [ctypes.c_int,                             
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p]
+except AttributeError:
+    pass
+def culaDeviceDgglse(m, n, p, a, lda, b, ldb, c, d, x):
+    """
+    Solve linear equality-constrained least squares problem.
+
+    """
+    
+    status = _libcula.culaDeviceDgglse(m, n, p, int(a), lda, int(b),
+                                       ldb, int(c), int(d), int(x))
+    culaCheckStatus(status)
+def culaDeviceZgglse(m, n, p, a, lda, b, ldb, c, d, x):
+    """
+    Solve linear equality-constrained least squares problem.
+
+    """
+
+    status = _libcula.culaDeviceZgglse(m, n, p, int(a), lda, int(b),
+                                       ldb, int(c), int(d), int(x))
+    culaCheckStatus(status)
+
+try:
     _libcula.culaDeviceDgesvd.restype = \
     _libcula.culaDeviceZgesvd.restype = int
     _libcula.culaDeviceDgesvd.argtypes = \
@@ -292,18 +507,31 @@ if _libcula_toolkit == 'premium':
                                           ctypes.c_int,
                                           ctypes.c_void_p,
                                           ctypes.c_int]
-    def culaDeviceDgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
-        status = _libcula.culaDeviceDgesvd(jobu, jobvt, m, n, int(a), lda,
-                                           int(s), int(u), ldu, int(vt),
-                                           ldvt)
-        culaCheckStatus(status)
-    def culaDeviceZgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
-        status = _libcula.culaDeviceZgesvd(jobu, jobvt, m, n, int(a), lda,
-                                           int(s), int(u), ldu, int(vt),
-                                           ldvt)
-        culaCheckStatus(status)
+except AttributeError:
+    pass
+def culaDeviceDgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
+    """
+    SVD decomposition.
+    
+    """
+    
+    status = _libcula.culaDeviceDgesvd(jobu, jobvt, m, n, int(a), lda,
+                                       int(s), int(u), ldu, int(vt),
+                                       ldvt)
+    culaCheckStatus(status)
+def culaDeviceZgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
+    """
+    SVD decomposition.
+    
+    """
+            
+    status = _libcula.culaDeviceZgesvd(jobu, jobvt, m, n, int(a), lda,
+                                       int(s), int(u), ldu, int(vt),
+                                       ldvt)
+    culaCheckStatus(status)
 
 
+try:
     _libcula.culaDeviceSposv.restype = \
     _libcula.culaDeviceCposv.restype = \
     _libcula.culaDeviceDposv.restype = \
@@ -318,23 +546,46 @@ if _libcula_toolkit == 'premium':
                                          ctypes.c_int,
                                          ctypes.c_void_p,
                                          ctypes.c_int]
-    def culaDeviceSposv(upio, n, nrhs, a, lda, b, ldb):
-        status = _libcula.culaDeviceSposv(upio, n, nrhs, int(a), lda, int(b),
-                                          ldb)
-        culaCheckStatus(status)
-    def culaDeviceCposv(upio, n, nrhs, a, lda, b, ldb):
-        status = _libcula.culaDeviceCposv(upio, n, nrhs, int(a), lda, int(b),
-                                          ldb)
-        culaCheckStatus(status)
-    def culaDeviceDposv(upio, n, nrhs, a, lda, b, ldb):
-        status = _libcula.culaDeviceDposv(upio, n, nrhs, int(a), lda, int(b),
-                                          ldb)
-        culaCheckStatus(status)
-    def culaDeviceZposv(upio, n, nrhs, a, lda, b, ldb):
-        status = _libcula.culaDeviceZposv(upio, n, nrhs, int(a), lda, int(b),
-                                          ldb)
-        culaCheckStatus(status)
-        
+except AttributeError:
+    pass
+def culaDeviceSposv(upio, n, nrhs, a, lda, b, ldb):
+    """
+    Solve positive definite linear system with Cholesky factorization.
+
+    """
+
+    status = _libcula.culaDeviceSposv(upio, n, nrhs, int(a), lda, int(b),
+                                      ldb)
+    culaCheckStatus(status)
+def culaDeviceCposv(upio, n, nrhs, a, lda, b, ldb):
+    """
+    Solve positive definite linear system with Cholesky factorization.
+
+    """
+
+    status = _libcula.culaDeviceCposv(upio, n, nrhs, int(a), lda, int(b),
+                                      ldb)
+    culaCheckStatus(status)
+def culaDeviceDposv(upio, n, nrhs, a, lda, b, ldb):
+    """
+    Solve positive definite linear system with Cholesky factorization.
+
+    """
+
+    status = _libcula.culaDeviceDposv(upio, n, nrhs, int(a), lda, int(b),
+                                      ldb)
+    culaCheckStatus(status)
+def culaDeviceZposv(upio, n, nrhs, a, lda, b, ldb):
+    """
+    Solve positive definite linear system with Cholesky factorization.
+
+    """
+
+    status = _libcula.culaDeviceZposv(upio, n, nrhs, int(a), lda, int(b),
+                                      ldb)
+    culaCheckStatus(status)
+
+try:
     _libcula.culaDeviceSpotrf.restype = \
     _libcula.culaDeviceCpotrf.restype = \
     _libcula.culaDeviceDpotrf.restype = \
@@ -346,18 +597,40 @@ if _libcula_toolkit == 'premium':
                                           ctypes.c_int,
                                           ctypes.c_void_p,
                                           ctypes.c_int]
-    def culaDeviceSpotrf(uplo, n, a, lda):
-        status = _libcula.culaDeviceSpotrf(uplo, n, int(a), lda)
-        culaCheckStatus(status)
-    def culaDeviceCpotrf(uplo, n, a, lda):
-        status = _libcula.culaDeviceCpotrf(uplo, n, int(a), lda)
-        culaCheckStatus(status)
-    def culaDeviceDpotrf(uplo, n, a, lda):
-        status = _libcula.culaDeviceDpotrf(uplo, n, int(a), lda)
-        culaCheckStatus(status)
-    def culaDeviceZpotrf(uplo, n, a, lda):
-        status = _libcula.culaDeviceZpotrf(uplo, n, int(a), lda)
-        culaCheckStatus(status)
+except AttributeError:
+    pass
+def culaDeviceSpotrf(uplo, n, a, lda):
+    """
+    Cholesky factorization.
+
+    """
+    
+    status = _libcula.culaDeviceSpotrf(uplo, n, int(a), lda)
+    culaCheckStatus(status)
+def culaDeviceCpotrf(uplo, n, a, lda):
+    """
+    Cholesky factorization.
+
+    """
+
+    status = _libcula.culaDeviceCpotrf(uplo, n, int(a), lda)
+    culaCheckStatus(status)
+def culaDeviceDpotrf(uplo, n, a, lda):
+    """
+    Cholesky factorization.
+
+    """
+
+    status = _libcula.culaDeviceDpotrf(uplo, n, int(a), lda)
+    culaCheckStatus(status)
+def culaDeviceZpotrf(uplo, n, a, lda):
+    """
+    Cholesky factorization.
+
+    """
+
+    status = _libcula.culaDeviceZpotrf(uplo, n, int(a), lda)
+    culaCheckStatus(status)
         
 if __name__ == "__main__":
     import doctest
