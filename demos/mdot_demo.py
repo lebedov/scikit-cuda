@@ -12,13 +12,27 @@ import scikits.cuda.linalg as linalg
 
 linalg.init()
 
-a = np.asarray(np.random.rand(8, 4), np.float32)
-b = np.asarray(np.random.rand(4, 4), np.float32)
-c = np.asarray(np.random.rand(4, 4), np.float32)
+# Double precision is only supported by devices with compute
+# capability >= 1.3:
+import string
+demo_types = [np.float32, np.complex64]
+if float(string.join([str(i) for i in pycuda.autoinit.device.compute_capability()],
+                      '.')) >= 1.3:
+    demo_types.extend([np.float64, np.complex128])
 
-print 'Testing multiple matrix multiplication..'
-a_gpu = gpuarray.to_gpu(a)
-b_gpu = gpuarray.to_gpu(b)
-c_gpu = gpuarray.to_gpu(c)
-d_gpu = linalg.mdot(a_gpu, b_gpu, c_gpu)
-print 'Success status: ', np.allclose(np.dot(a, np.dot(b, c)), d_gpu.get())
+for t in demo_types:
+    print 'Testing multiple matrix multiplication for type ' + str(np.dtype(t))
+    if np.iscomplexobj(t()):
+        a = np.asarray(np.random.rand(8, 4)+1j*np.random.rand(8, 4), t)
+        b = np.asarray(np.random.rand(4, 4)+1j*np.random.rand(4, 4), t)
+        c = np.asarray(np.random.rand(4, 4)+1j*np.random.rand(4, 4), t)
+    else:
+        a = np.asarray(np.random.rand(8, 4), t)
+        b = np.asarray(np.random.rand(4, 4), t)
+        c = np.asarray(np.random.rand(4, 4), t)
+
+    a_gpu = gpuarray.to_gpu(a)
+    b_gpu = gpuarray.to_gpu(b)
+    c_gpu = gpuarray.to_gpu(c)
+    d_gpu = linalg.mdot(a_gpu, b_gpu, c_gpu)
+    print 'Success status: ', np.allclose(np.dot(a, np.dot(b, c)), d_gpu.get())

@@ -9,18 +9,31 @@ import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
 import numpy as np
 
-import scikits.cuda.linalg as linalg
-linalg.init()
+import scikits.cuda.linalg as culinalg
+culinalg.init()
 
-print 'Testing real transpose..'
-a = np.array([[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]], np.float32)
-a_gpu = gpuarray.to_gpu(a)
-at_gpu = linalg.transpose(a_gpu, pycuda.autoinit.device)
-print 'Success status: ', np.all(a.T == at_gpu.get())
+# Double precision is only supported by devices with compute
+# capability >= 1.3:
+import string
+demo_types = [np.float32, np.complex64]
+if float(string.join([str(i) for i in pycuda.autoinit.device.compute_capability()],
+                      '.')) >= 1.3:
+    demo_types.extend([np.float64, np.complex128])
 
-print 'Testing conjugate transpose..'
-b = np.array([[1j, 2j, 3j, 4j, 5j, 6j], [7j, 8j, 9j, 10j, 11j, 12j]], np.complex64)
-b_gpu = gpuarray.to_gpu(b)
-bt_gpu = linalg.transpose(b_gpu, pycuda.autoinit.device)
-print 'Success status: ', np.all(np.conj(b.T) == bt_gpu.get())
+for t in demo_types:
+    print 'Testing transpose for type ' + str(np.dtype(t))
+    if np.iscomplexobj(t()):
+        b = np.array([[1j, 2j, 3j, 4j, 5j, 6j],
+                      [7j, 8j, 9j, 10j, 11j, 12j]], t)
+    else:
+        a = np.array([[1, 2, 3, 4, 5, 6],
+                      [7, 8, 9, 10, 11, 12]], t)
+    a_gpu = gpuarray.to_gpu(a)
+    at_gpu = culinalg.transpose(a_gpu, pycuda.autoinit.device)
+    if np.iscomplexobj(t()):
+        print 'Success status: ', np.all(np.conj(a.T) == at_gpu.get())
+    else:
+        print 'Success status: ', np.all(a.T == at_gpu.get())
+
+
 

@@ -12,9 +12,13 @@ import numpy as np
 import scikits.cuda.linalg as culinalg
 culinalg.init()
 
+# Double precision is only supported by devices with compute
+# capability >= 1.3:
 import scikits.cuda.cula as cula
 demo_types = [np.float32, np.complex64]
-if cula._libcula_toolkit == 'premium':
+if cula._libcula_toolkit == 'premium' and \
+       float(string.join([str(i) for i in pycuda.autoinit.device.compute_capability()],
+                         '.')) >= 1.3:
     demo_types.extend([np.float64, np.complex128])
 
 for t in demo_types:

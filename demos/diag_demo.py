@@ -9,17 +9,21 @@ import pycuda.gpuarray as gpuarray
 import pycuda.driver as drv
 import numpy as np
 
-import scikits.cuda.linalg as linalg
-linalg.init()
+import scikits.cuda.linalg as culinalg
+culinalg.init()
 
-print 'Testing real diagonal matrix creation..'
-v = np.array([1, 2, 3, 4, 5, 6], np.float32)
-v_gpu = gpuarray.to_gpu(v)
-d_gpu = linalg.diag(v_gpu, pycuda.autoinit.device);
-print 'Success status: ', np.all(d_gpu.get() == np.diag(v))
+# Double precision is only supported by devices with compute
+# capability >= 1.3:
+import string
+demo_types = [np.float32, np.complex64]
+if float(string.join([str(i) for i in pycuda.autoinit.device.compute_capability()],
+                      '.')) >= 1.3:
+    demo_types.extend([np.float64, np.complex128])
 
-print 'Testing complex diagonal matrix creation..'
-v = np.array([1j, 2j, 3j, 4j, 5j, 6j], np.complex64)
-v_gpu = gpuarray.to_gpu(v)
-d_gpu = linalg.diag(v_gpu, pycuda.autoinit.device);
-print 'Success status: ', np.all(d_gpu.get() == np.diag(v))
+for t in demo_types:
+    print 'Testing real diagonal matrix creation for type ' + str(np.dtype(t))
+    v = np.array([1, 2, 3, 4, 5, 6], t)
+    v_gpu = gpuarray.to_gpu(v)
+    d_gpu = culinalg.diag(v_gpu, pycuda.autoinit.device);
+    print 'Success status: ', np.all(d_gpu.get() == np.diag(v))
+
