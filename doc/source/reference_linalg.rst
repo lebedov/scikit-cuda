@@ -17,4 +17,5 @@ Linear Algebra Routines
    pinv
    svd
    transpose
+   tril
 
