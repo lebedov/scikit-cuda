@@ -840,6 +840,8 @@ def pinv(a_gpu, dev, rcond=1e-15):
     return dot(v_gpu, suh_gpu)
 
 tril_mod_template = Template("""
+#include <cuComplex.h>
+
 #define USE_DOUBLE ${use_double}
 #define USE_COMPLEX ${use_complex}
 #if USE_DOUBLE == 1
@@ -916,23 +918,23 @@ def tril(a_gpu, dev, overwrite=True):
     if a_gpu.dtype == np.float32:
         swap_func = cublas.cublasSswap
         copy_func = cublas.cublasScopy
-        use_double = False
-        use_complex = False
+        use_double = 0
+        use_complex = 0
     elif a_gpu.dtype == np.float64:
         swap_func = cublas.cublasDswap
         copy_func = cublas.cublasDcopy
-        use_double = True
-        use_complex = False
+        use_double = 1
+        use_complex = 0
     elif a_gpu.dtype == np.complex64:
         swap_func = cublas.cublasCswap
         copy_func = cublas.cublasCcopy
-        use_double = False
-        use_complex = True
+        use_double = 0
+        use_complex = 1
     elif a_gpu.dtype == np.complex128:
         swap_func = cublas.cublasZswap
         copy_func = cublas.cublasZcopy
-        use_double = True
-        use_complex = True
+        use_double = 1
+        use_complex = 1
     else:
         raise ValueError('unrecognized type')
 
