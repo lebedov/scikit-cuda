@@ -10,7 +10,7 @@ import numpy as np
 
 import scikits.cuda.fft as cu_fft
 
-# Perform usual forward/reverse transformations:
+print 'Testing fft/ifft..'
 N = 4096*16
 
 x = np.asarray(np.random.rand(N), np.float32)
@@ -29,7 +29,7 @@ cu_fft.ifft(xf_gpu, y_gpu, plan_inverse, True)
 print 'Success status: ', np.allclose(x, x_gpu.get(), atol=1e-6)
 print 'Success status: ', np.allclose(y, y_gpu.get(), atol=1e-6)
 
-# Perform in-place transformations:
+print 'Testing in-place fft..'
 x = np.asarray(np.random.rand(N)+1j*np.random.rand(N), np.complex64)
 xf = np.fft.fft(x)
 y = np.fft.ifft(xf)

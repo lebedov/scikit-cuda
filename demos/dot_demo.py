@@ -20,12 +20,14 @@ a_gpu = gpuarray.to_gpu(a)
 b_gpu = gpuarray.to_gpu(b)
 c_gpu = gpuarray.to_gpu(c)
 
+print 'Testing real matrix multiplication..'
 temp_gpu = linalg.dot(a_gpu, b_gpu)
 d_gpu = linalg.dot(temp_gpu, c_gpu)
 temp_gpu.gpudata.free()
 del(temp_gpu)
 print 'Success status: ', np.allclose(np.dot(np.dot(a, b), c) , d_gpu.get())
 
+print 'Testing complex matrix multiplication..'
 d = np.asarray(np.random.rand(5), np.complex64)
 e = np.asarray(np.random.rand(5), np.complex64)
 
