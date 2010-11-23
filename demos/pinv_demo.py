@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Demonstrates computation of the singular value decomposition on the GPU.
+Demonstrates computation of the pseudoinverse on the GPU.
 """
 
 import pycuda.autoinit
@@ -23,12 +23,12 @@ if cula._libcula_toolkit == 'premium' and \
     demo_types.extend([np.float64, np.complex128])
 
 for t in demo_types:
-    print 'Testing svd for type ' + str(np.dtype(t))
+    print 'Testing pinv for type ' + str(np.dtype(t))
     a = np.asarray((np.random.rand(50, 50)-0.5)/10, t)
     a_gpu = gpuarray.to_gpu(a)
-    u_gpu, s_gpu, vh_gpu = culinalg.svd(a_gpu, pycuda.autoinit.device)
-    a_rec = np.dot(u_gpu.get(), np.dot(np.diag(s_gpu.get()), vh_gpu.get()))
-                                                           
-    print 'Success status: ', np.allclose(a, a_rec, atol=1e-3)
-    print 'Maximum error: ', np.max(np.abs(a-a_rec))
+    a_inv_gpu = culinalg.pinv(a_gpu, pycuda.autoinit.device)
+
+    print 'Success status: ', np.allclose(np.linalg.pinv(a), a_inv_gpu.get(), 
+		                      atol=1e-2)
+    print 'Maximum error: ', np.max(np.abs(np.linalg.pinv(a)-a_inv_gpu.get()))
     print ''
