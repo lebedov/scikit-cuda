@@ -10,6 +10,7 @@ Library Wrapper Routines
    :maxdepth: 2
 
    reference_cublas
+   reference_cula
 
 High-Level Routines
 -------------------
