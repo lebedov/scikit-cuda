@@ -809,9 +809,12 @@ def pinv(a_gpu, dev, rcond=1e-15):
     u_gpu, s_gpu, vh_gpu = svd(a_gpu, 0)
     uh_gpu = hermitian(u_gpu, dev)
 
-    # Get block/grid sizes:
+    # Get block/grid sizes; the number of threads per block is limited
+    # to 512 because the cutoff_invert_s kernel defined above uses too
+    # many registers to be invoked in 1024 threads per block (i.e., on
+    # GPUs with compute capability >= 2.x): 
     max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
-    block_dim, grid_dim = select_block_grid_sizes(dev, s_gpu.shape)
+    block_dim, grid_dim = select_block_grid_sizes(dev, s_gpu.shape, 512)
     max_blocks_per_grid = max(max_grid_dim)
 
     # Suppress very small singular values:
