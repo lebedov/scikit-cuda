@@ -4,11 +4,34 @@
 General PyCUDA utility functions.
 """
 
+import string
 from string import Template
 import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
 from pycuda.compiler import SourceModule
 import numpy as np
+
+def get_compute_capability(dev):
+    """
+    Get the compute capability of the specified device.
+
+    Retrieve the compute capability of the specified CUDA device and
+    return it as a floating point value.
+
+    Parameters
+    ----------
+    d : pycuda.driver.Device
+        Device object to examine.
+
+    Returns
+    -------
+    c : float
+        Compute capability.
+
+    """
+
+    return np.float(string.join([str(i) for i in
+                                 dev.compute_capability()], '.'))
 
 def get_dev_attrs(dev):
     """
