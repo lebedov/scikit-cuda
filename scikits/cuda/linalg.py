@@ -194,6 +194,7 @@ def dot(a_gpu, b_gpu):
     >>> import pycuda.autoinit
     >>> import numpy as np
     >>> import linalg
+    >>> import misc
     >>> linalg.init()
     >>> a = np.asarray(np.random.rand(4, 2), np.float32)
     >>> b = np.asarray(np.random.rand(2, 2), np.float32)
@@ -209,21 +210,6 @@ def dot(a_gpu, b_gpu):
     >>> f = linalg.dot(d_gpu, e_gpu)
     >>> np.allclose(np.dot(d, e), f)
     True
-    >>> p = np.asarray(np.random.rand(4, 2), np.complex64)
-    >>> q = np.asarray(np.random.rand(2, 2), np.complex64)
-    >>> p_gpu = gpuarray.to_gpu(p)
-    >>> q_gpu = gpuarray.to_gpu(q)
-    >>> r_gpu = linalg.dot(p_gpu, q_gpu)
-    >>> np.allclose(np.dot(p, q), r_gpu.get())
-    True
-    >>> s = np.asarray(np.random.rand(5), np.complex128)
-    >>> t = np.asarray(np.random.rand(5), np.complex128)
-    >>> s_gpu = gpuarray.to_gpu(s)
-    >>> t_gpu = gpuarray.to_gpu(t)
-    >>> u = linalg.dot(s_gpu, t_gpu)
-    >>> np.allclose(np.dot(s, t), u)
-    True
-    
     """
 
     if len(a_gpu.shape) == 1 and len(b_gpu.shape) == 1:
@@ -342,23 +328,23 @@ def mdot(*args):
     return out_gpu
 
 transpose_mod_template = Template("""
-#include <cuComplex.h>
+#include <pycuda/pycuda-complex.hpp>
 
 #define HERMITIAN ${hermitian}
 #define USE_DOUBLE ${use_double}
 #define USE_COMPLEX ${use_complex}
 #if USE_DOUBLE == 1
 #if USE_COMPLEX == 1
-#define FLOAT cuDoubleComplex
-#define CONJ(x) cuConj(x)
+#define FLOAT pycuda::complex<double>
+#define CONJ(x) conj(x)
 #else
 #define FLOAT double
 #define CONJ(x) (x)
 #endif
 #else
 #if USE_COMPLEX == 1
-#define FLOAT cuFloatComplex
-#define CONJ(x) cuConjf(x)
+#define FLOAT pycuda::complex<float>
+#define CONJ(x) conj(x)
 #else
 #define FLOAT float
 #define CONJ(x) (x)
@@ -533,15 +519,13 @@ def hermitian(a_gpu, dev):
     return at_gpu
 
 conj_mod_template = Template("""
-#include <cuComplex.h>
+#include <pycuda/pycuda-complex.hpp>
 
 #define USE_DOUBLE ${use_double}
 #if USE_DOUBLE == 1
-#define COMPLEX cuDoubleComplex
-#define CONJ(z) cuConj(z)
+#define COMPLEX pycuda::complex<double>
 #else
-#define COMPLEX cuFloatComplex
-#define CONJ(z) cuConjf(z)
+#define COMPLEX pycuda::complex<float>
 #endif
 
 __global__ void conj(COMPLEX *a, unsigned int N)
@@ -550,7 +534,7 @@ __global__ void conj(COMPLEX *a, unsigned int N)
                        blockIdx.x*${max_threads_per_block}+threadIdx.x;
 
     if (idx < N)                       
-        a[idx] = CONJ(a[idx]);
+        a[idx] = conj(a[idx]);
 }
 """)
 
@@ -622,25 +606,21 @@ def conj(a_gpu, dev):
          grid=grid_dim)
 
 diag_mod_template = Template("""
-#include <cuComplex.h>
+#include <pycuda/pycuda-complex.hpp>
 
 #define USE_DOUBLE ${use_double}
 #define USE_COMPLEX ${use_complex}
 #if USE_DOUBLE == 1
 #if USE_COMPLEX == 1
-#define FLOAT cuDoubleComplex
-#define ZERO make_cuDoubleComplex(0, 0)
+#define FLOAT pycuda::complex<double>
 #else
 #define FLOAT double
-#define ZERO 0.0
 #endif
 #else
 #if USE_COMPLEX == 1
-#define FLOAT cuFloatComplex
-#define ZERO make_cuFloatComplex(0, 0)
+#define FLOAT pycuda::complex<float>
 #else
 #define FLOAT float
-#define ZERO 0.0
 #endif
 #endif
 
@@ -655,7 +635,7 @@ __global__ void diag(FLOAT *v, FLOAT *d, int N) {
         if (ix == iy) {
             d[idx] = v[ix];
         } else {
-            d[idx] = ZERO;
+            d[idx] = 0.0;
         }
 }
 """)
@@ -690,7 +670,7 @@ def diag(v_gpu, dev):
     >>> linalg.init()
     >>> v = np.array([1, 2, 3, 4, 5, 6], np.float32)
     >>> v_gpu = gpuarray.to_gpu(v)
-    >>> d_gpu = diag(v_gpu, pycuda.autoinit.device);
+    >>> d_gpu = diag(v_gpu, pycuda.autoinit.device)
     >>> np.all(d_gpu.get() == np.diag(v))
     True
     >>> v = np.array([1j, 2j, 3j, 4j, 5j, 6j], np.complex64)
@@ -843,25 +823,21 @@ def pinv(a_gpu, dev, rcond=1e-15):
     return dot(v_gpu, suh_gpu)
 
 tril_mod_template = Template("""
-#include <cuComplex.h>
+#include <pycuda/pycuda-complex.hpp>
 
 #define USE_DOUBLE ${use_double}
 #define USE_COMPLEX ${use_complex}
 #if USE_DOUBLE == 1
 #if USE_COMPLEX == 1
-#define FLOAT cuDoubleComplex
-#define ZERO make_cuDoubleComplex(0, 0)
+#define FLOAT pycuda::complex<double>
 #else
 #define FLOAT double
-#define ZERO 0.0
 #endif
 #else
 #if USE_COMPLEX == 1
-#define FLOAT cuFloatComplex
-#define ZERO make_cuFloatComplex(0, 0)
+#define FLOAT pycuda::complex<float>
 #else
 #define FLOAT float
-#define ZERO 0.0
 #endif
 #endif
 
@@ -873,7 +849,7 @@ __global__ void tril(FLOAT *a, unsigned int N) {
 
     if (idx < N) {
         if (ix < iy)
-            a[idx] = ZERO;
+            a[idx] = 0.0;
     }
 }
 """)

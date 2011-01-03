@@ -145,7 +145,7 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
     return (max_threads_per_block, 1, 1), (grid_x, grid_y)
 
 maxabs_mod_template = Template("""
-#include <cuComplex.h>
+#include <pycuda/pycuda-complex.hpp>
 
 #define USE_DOUBLE ${use_double}
 #define USE_COMPLEX ${use_complex}
@@ -153,26 +153,22 @@ maxabs_mod_template = Template("""
 #if USE_DOUBLE == 1
 #define REAL_TYPE double
 #if USE_COMPLEX == 1
-#define TYPE cuDoubleComplex
-#define ABS(z) cuCabs(z)
+#define TYPE pycuda::complex<double>
 #else
 #define TYPE double
-#define ABS(X) abs(x)
 #endif
 #else
 #define REAL_TYPE float
 #if USE_COMPLEX == 1
-#define TYPE cuFloatComplex
-#define ABS(z) cuCabsf(z)
+#define TYPE pycuda::complex<float>
 #else
 #define TYPE float
-#define ABS(x) fabs(x)
 #endif
 #endif
 
 // This kernel is only meant to be run in one thread;
 // N must contain the length of x:
-__global__ void maxabs(TYPE *x, REAL_TYPE *m,
+__global__ void maxabs(TYPE *x, TYPE *m,
                        unsigned int N) {
     unsigned int idx = threadIdx.x;
 
@@ -181,11 +177,11 @@ __global__ void maxabs(TYPE *x, REAL_TYPE *m,
     if (idx == 0) {
         result = 0;
         for (unsigned int i = 0; i < N; i++) {
-           temp = ABS(x[i]);
+           temp = abs(x[i]);
            if (temp >= result)
                result = temp;
         }
-        m[0] = result;
+        m[0] = TYPE(result);
     }
 }                             
 """)
@@ -216,13 +212,9 @@ def maxabs(x_gpu):
     -------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
-    >>> import fft
+    >>> import misc
     >>> x_gpu = gpuarray.to_gpu(np.array([-1, 2, -3], np.float32))
-    >>> m_gpu = fft.maxabs(x_gpu)
-    >>> np.allclose(m_gpu.get(), 3.0)
-    True
-    >>> y_gpu = gpuarray.to_gpu(np.array([-1j, 2, -3j], np.complex64))
-    >>> m_gpu = fft.maxabs(y_gpu)
+    >>> m_gpu = misc.maxabs(x_gpu)
     >>> np.allclose(m_gpu.get(), 3.0)
     True
     

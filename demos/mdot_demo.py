@@ -8,16 +8,16 @@ import pycuda.gpuarray as gpuarray
 import pycuda.driver as drv
 import pycuda.autoinit
 import numpy as np
-import scikits.cuda.linalg as linalg
 
+import scikits.cuda.linalg as linalg
+import scikits.cuda.misc as cumisc
 linalg.init()
 
 # Double precision is only supported by devices with compute
 # capability >= 1.3:
 import string
 demo_types = [np.float32, np.complex64]
-if float(string.join([str(i) for i in pycuda.autoinit.device.compute_capability()],
-                      '.')) >= 1.3:
+if cumisc.get_compute_capability() >= 1.3:
     demo_types.extend([np.float64, np.complex128])
 
 for t in demo_types:

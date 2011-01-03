@@ -113,8 +113,7 @@ def sici(x_gpu, dev):
 
 # Adapted from specfun.f in scipy:
 e1z_mod_template = Template("""
-#include <cuComplex.h>
-#include "cuComplexFuncs.h"
+#include <pycuda/pycuda-complex.hpp>
 
 #define PI 3.1415926535897931
 #define EL 0.5772156649015328
@@ -122,65 +121,39 @@ e1z_mod_template = Template("""
 #define USE_DOUBLE ${use_double}
 #if USE_DOUBLE == 0
 #define FLOAT float
-#define COMPLEX cuFloatComplex
-#define CREAL(z) cuCrealf(z)
-#define CIMAG(z) cuCimagf(z)
-#define CABS(z) cuCabsf(z)
-#define MAKE_COMPLEX(x, y) make_cuFloatComplex(x, y)
-#define POW(x, y) powf(x, y)
-#define CMUL(x, y) cuCmulf(x, y)
-#define CDIV(x, y) cuCdivf(x, y)
-#define CADD(x, y) cuCaddf(x, y)
-#define CSUB(x, y) cuCsubf(x, y)
-#define CLOG(z) cuClogf(z)
-#define CEXP(z) cuCexpf(z)
-#define CNEG(z) make_cuFloatComplex(-z.x, -z.y)
+#define COMPLEX pycuda::complex<float>
 #else
 #define FLOAT double
-#define COMPLEX cuDoubleComplex
-#define CREAL(z) cuCreal(z)
-#define CIMAG(z) cuCimag(z)
-#define CABS(z) cuCabs(z)
-#define MAKE_COMPLEX(x, y) make_cuDoubleComplex(x, y)
-#define POW(x, y) pow(x, y)
-#define CMUL(x, y) cuCmul(x, y)
-#define CDIV(x, y) cuCdiv(x, y)
-#define CADD(x, y) cuCadd(x, y)
-#define CSUB(x, y) cuCsub(x, y)
-#define CLOG(z) cuClog(z)
-#define CEXP(z) cuCexp(z)
-#define CNEG(z) make_cuDoubleComplex(-z.x, -z.y)
+#define COMPLEX pycuda::complex<double>
 #endif
 
 __device__ COMPLEX _e1z(COMPLEX z) {
-    FLOAT x = CREAL(z);
-    FLOAT a0 = CABS(z);
+    FLOAT x = real(z);
+    FLOAT a0 = abs(z);
     COMPLEX ce1, cr, ct0, kc, ct;
     
     if (a0 == 0.0)
-        ce1 = MAKE_COMPLEX(1.0e300, 0.0);
+        ce1 = COMPLEX(1.0e300, 0.0);
     else if ((a0 < 10.0) || (x < 0.0 && a0 < 20.0)) {
-        ce1 = MAKE_COMPLEX(1.0, 0.0);
-        cr = MAKE_COMPLEX(1.0, 0.0);
-        for (unsigned int k = 1; k <= 150; k++) {
-            cr = CDIV(CNEG(CMUL(CMUL(cr, MAKE_COMPLEX(k, 0.0)), z)),
-                     MAKE_COMPLEX(POW(k+1.0, 2.0), 0.0));
-            ce1 = CADD(ce1, cr);
-            if (CABS(cr) <= CABS(ce1)*1.0e-15)
+        ce1 = COMPLEX(1.0, 0.0);
+        cr = COMPLEX(1.0, 0.0);
+        for (int k = 1; k <= 150; k++) {
+            cr = -(cr * float(k) * z)/COMPLEX((k + 1.0) * (k + 1.0), 0.0);
+            ce1 = ce1 + cr;
+            if (abs(cr) <= abs(ce1)*1.0e-15)
                 break;
         }
-        ce1 = CADD(CSUB(MAKE_COMPLEX(-EL, 0.0), CLOG(z)),
-                   CMUL(z, ce1));                   
+        ce1 = COMPLEX(-EL,0.0)-log(z)+(z*ce1);
     } else {
-        ct0 = MAKE_COMPLEX(0.0, 0.0);
-        for (unsigned int k = 120; k >= 1; k--) {
-            kc = MAKE_COMPLEX(k, 0.0);
-            ct0 = CDIV(kc, (CADD(MAKE_COMPLEX(1.0, 0.0), CDIV(kc, CADD(z, ct0)))));
+        ct0 = COMPLEX(0.0, 0.0);
+        for (int k = 120; k >= 1; k--) {
+            kc = COMPLEX(k, 0.0);
+            ct0 = kc/(COMPLEX(1.0,0.0)+(kc/(z+ct0)));
         }
-        ct = CDIV(MAKE_COMPLEX(1.0, 0.0), (CADD(z, ct0)));
-        ce1 = CMUL(CEXP(CNEG(z)), ct);
-        if (x <= 0.0 && CIMAG(z) == 0.0)
-            ce1 = CSUB(ce1, MAKE_COMPLEX(0.0, -PI));
+        ct = COMPLEX(1.0, 0.0)/(z+ct0);
+        ce1 = exp(-z)*ct;
+        if (x <= 0.0 && imag(z) == 0.0)
+            ce1 = ce1-COMPLEX(0.0, -PI);
     }
     return ce1;
 }
@@ -236,9 +209,11 @@ def e1z(z_gpu, dev):
     else:
         raise ValueError('unsupported type')
 
-    # Get block/grid sizes:
+    # Get block/grid sizes; the number of threads per block is limited
+    # to 256 because the e1z kernel defined above uses too many
+    # registers to be invoked more threads per block:
     max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
-    block_dim, grid_dim = select_block_grid_sizes(dev, z_gpu.shape)
+    block_dim, grid_dim = select_block_grid_sizes(dev, z_gpu.shape, 256)
     max_blocks_per_grid = max(max_grid_dim)
 
     # Set this to False when debugging to make sure the compiled kernel is
@@ -248,8 +223,7 @@ def e1z(z_gpu, dev):
              SourceModule(e1z_mod_template.substitute(use_double=use_double,
                           max_threads_per_block=max_threads_per_block,
                           max_blocks_per_grid=max_blocks_per_grid),
-                          cache_dir=cache_dir,
-                          options=["-I", install_headers])
+                          cache_dir=cache_dir)
     e1z_func = e1z_mod.get_function("e1z")
 
     e_gpu = gpuarray.empty_like(z_gpu)
