@@ -168,20 +168,19 @@ maxabs_mod_template = Template("""
 
 // This kernel is only meant to be run in one thread;
 // N must contain the length of x:
-__global__ void maxabs(TYPE *x, TYPE *m,
-                       unsigned int N) {
+__global__ void maxabs(TYPE *x, REAL_TYPE *m, unsigned int N) {                       
     unsigned int idx = threadIdx.x;
 
     REAL_TYPE result, temp;
     
     if (idx == 0) {
-        result = 0;
-        for (unsigned int i = 0; i < N; i++) {
+        result = abs(x[0]);
+        for (unsigned int i = 1; i < N; i++) {
            temp = abs(x[i]);
-           if (temp >= result)
+           if (temp > result)
                result = temp;
         }
-        m[0] = TYPE(result);
+        m[0] = result;
     }
 }                             
 """)
@@ -220,7 +219,7 @@ def maxabs(x_gpu):
     
     """
 
-    if x_gpu.dtype == np.double:
+    if x_gpu.dtype in [np.float64, np.complex128]:
         use_double = 1
         real_type = np.float64
     else:
