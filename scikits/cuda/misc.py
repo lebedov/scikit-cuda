@@ -94,9 +94,15 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
     Using the scheme in this function, all of the threads in the grid can be enumerated
     as `i = blockIdx.y*max_threads_per_block*max_blocks_per_grid+
     blockIdx.x*max_threads_per_block+threadIdx.x`.
-    The indices of the element `data[ix, iy]` where `data.shape == [r, c]`
-    can be computed as `ix = int(floor(i/c))` and `iy = i % c`.
 
+    For 2D shapes, the indices of the element `data[r, c]` where `data.shape == [R, C]`
+    can be computed as `r = i/C` and `c = mod(i,C)`.
+
+    For 3D shapes, the indices of the element `data[r, c, s]` where
+    `data.shape == [R, C, S]` can be computed as
+    `r = i/(C*S)`, `c = mod(i, C*S)/S` and `s = mod(mod(i, C*S), S)`.
+
+    [S,R,C]
     It is advisable that the number of threads per block be a multiple
     of the warp size to fully utilize a device's computing resources.
     
@@ -105,8 +111,8 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
     # Sanity checks:
     if np.isscalar(data_shape):
         data_shape = (data_shape,)
-    if len(data_shape) > 2:
-        raise ValueError('data arrays of dimension > 2 not yet supported')
+    if len(data_shape) > 3:
+        raise ValueError('data arrays of dimension > 3 not yet supported')
 
     # Number of elements to process; we need to cast the result of
     # np.prod to a Python int to prevent PyCUDA's kernel execution
