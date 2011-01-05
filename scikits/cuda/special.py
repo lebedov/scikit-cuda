@@ -138,7 +138,7 @@ __device__ COMPLEX _e1z(COMPLEX z) {
         ce1 = COMPLEX(1.0, 0.0);
         cr = COMPLEX(1.0, 0.0);
         for (int k = 1; k <= 150; k++) {
-            cr = -(cr * float(k) * z)/COMPLEX((k + 1.0) * (k + 1.0), 0.0);
+            cr = -(cr * FLOAT(k) * z)/COMPLEX((k + 1.0) * (k + 1.0), 0.0);
             ce1 = ce1 + cr;
             if (abs(cr) <= abs(ce1)*1.0e-15)
                 break;
