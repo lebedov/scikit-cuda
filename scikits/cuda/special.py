@@ -213,7 +213,8 @@ def e1z(z_gpu, dev):
     # to 256 because the e1z kernel defined above uses too many
     # registers to be invoked more threads per block:
     max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
-    block_dim, grid_dim = select_block_grid_sizes(dev, z_gpu.shape, 256)
+    max_threads_per_block = 256
+    block_dim, grid_dim = select_block_grid_sizes(dev, z_gpu.shape, max_threads_per_block)
     max_blocks_per_grid = max(max_grid_dim)
 
     # Set this to False when debugging to make sure the compiled kernel is

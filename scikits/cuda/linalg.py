@@ -794,7 +794,8 @@ def pinv(a_gpu, dev, rcond=1e-15):
     # many registers to be invoked in 1024 threads per block (i.e., on
     # GPUs with compute capability >= 2.x): 
     max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
-    block_dim, grid_dim = select_block_grid_sizes(dev, s_gpu.shape, 512)
+    max_threads_per_block = 512
+    block_dim, grid_dim = select_block_grid_sizes(dev, s_gpu.shape, max_threads_per_block)
     max_blocks_per_grid = max(max_grid_dim)
 
     # Suppress very small singular values:
