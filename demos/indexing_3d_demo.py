@@ -13,27 +13,36 @@ import numpy as np
 
 import scikits.cuda.misc as misc
 
-R = 3
-C = 4
-S = 5
-N = R*C*S
+A = 3
+B = 4
+C = 5
+N = A*B*C
 
 # Define a 3D array:
 # x_orig = np.arange(0, N, 1, np.float64)
 x_orig = np.asarray(np.random.rand(N), np.float64)
-x = x_orig.reshape((R, C, S))
+x = x_orig.reshape((A, B, C))
 
 # These functions demonstrate how to convert a linear index into subscripts:
-r = lambda i: i/(C*S)
-c = lambda i: np.mod(i, C*S)/S
-s = lambda i: np.mod(np.mod(i, C*S), S)
+a = lambda i: i/(B*C)
+b = lambda i: np.mod(i, B*C)/C
+c = lambda i: np.mod(np.mod(i, B*C), C)
 
-# x[ind(i)] should be equivalent to x.flat[i]:
-ind = lambda i: (r(i), c(i), s(i))
+# Check that x[ind(i)] is equivalent to x.flat[i]:
+subscript = lambda i: (a(i), b(i), c(i))
+for i in xrange(x.size):
+    assert x.flat[i] == x[subscript(i)]
+
+# Check that x[i,j,k] is equivalent to x.flat[index(i,j,k)]:
+index = lambda i,j,k: i*B*C+j*C+k
+for i in xrange(A):
+    for j in xrange(B):
+        for k in xrange(C):
+            assert x[i, j, k] == x.flat[index(i, j, k)]
 
 func_mod_template = Template("""
 // Macro for converting subscripts to linear index:
-#define INDEX(r, c, s) r*${C}*${S}+c*${S}+s
+#define INDEX(a, b, c) a*${B}*${C}+b*${C}+c
 
 __global__ void func(double *x, unsigned int N) {
     // Obtain the linear index corresponding to the current thread:
@@ -41,14 +50,14 @@ __global__ void func(double *x, unsigned int N) {
                        blockIdx.x*${max_threads_per_block}+threadIdx.x;
 
     // Convert the linear index to subscripts:
-    unsigned int r = idx/(${C}*${S});
-    unsigned int c = (idx%(${C}*${S}))/${S};
-    unsigned int s = (idx%(${C}*${S}))%${S};
+    unsigned int a = idx/(${B}*${C});
+    unsigned int b = (idx%(${B}*${C}))/${C};
+    unsigned int c = (idx%(${B}*${C}))%${C};
 
     // Use the subscripts to access the array:
     if (idx < N) {
-        if (c == 0)
-           x[INDEX(r,c,s)] = 100;
+        if (b == 0)
+           x[INDEX(a,b,c)] = 100;
     }
 }
 """)
@@ -60,7 +69,7 @@ max_blocks_per_grid = max(max_grid_dim)
 func_mod = \
          SourceModule(func_mod_template.substitute(max_threads_per_block=max_threads_per_block,
                                                    max_blocks_per_grid=max_blocks_per_grid,
-                                                   R=R, C=C, S=S))
+                                                   A=A, B=B, C=C))
 func = func_mod.get_function('func')
 x_gpu = gpuarray.to_gpu(x)
 func(x_gpu.gpudata, np.uint32(x_gpu.size),
