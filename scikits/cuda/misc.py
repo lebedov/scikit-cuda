@@ -95,14 +95,24 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
     as `i = blockIdx.y*max_threads_per_block*max_blocks_per_grid+
     blockIdx.x*max_threads_per_block+threadIdx.x`.
 
-    For 2D shapes, the indices of the element `data[r, c]` where `data.shape == [R, C]`
-    can be computed as `r = i/C` and `c = mod(i,C)`.
+    For 2D shapes, the subscripts of the element `data[a, b]` where `data.shape == (A, B)`
+    can be computed as
+    `a = i/B`
+    `b = mod(i,B)`.
 
-    For 3D shapes, the indices of the element `data[r, c, s]` where
-    `data.shape == [R, C, S]` can be computed as
-    `r = i/(C*S)`, `c = mod(i, C*S)/S` and `s = mod(mod(i, C*S), S)`.
+    For 3D shapes, the subscripts of the element `data[a, b, c]` where
+    `data.shape == (A, B, C)` can be computed as
+    `a = i/(B*C)`
+    `b = mod(i, B*C)/C`
+    `c = mod(mod(i, B*C), C)`.
 
-    [S,R,C]
+    For 4D shapes, the subscripts of the element `data[a, b, c, d]`
+    where `data.shape == (A, B, C, D)` can be computed as
+    `a = i/(B*C*D)`
+    `b = mod(i, B*C*D)/(C*D)`
+    `c = mod(mod(i, B*C*D)%(C*D))/D`
+    `d = mod(mod(mod(i, B*C*D)%(C*D)), D)`
+
     It is advisable that the number of threads per block be a multiple
     of the warp size to fully utilize a device's computing resources.
     
@@ -111,8 +121,6 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
     # Sanity checks:
     if np.isscalar(data_shape):
         data_shape = (data_shape,)
-    if len(data_shape) > 3:
-        raise ValueError('data arrays of dimension > 3 not yet supported')
 
     # Number of elements to process; we need to cast the result of
     # np.prod to a Python int to prevent PyCUDA's kernel execution
