@@ -19,7 +19,7 @@ import string
 import scikits.cuda.cula as cula
 demo_types = [np.float32, np.complex64]
 if cula._libcula_toolkit == 'premium' and \
-       cumisc.get_compute_capability() >= 1.3:
+       cumisc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
     demo_types.extend([np.float64, np.complex128])
 
 for t in demo_types:
