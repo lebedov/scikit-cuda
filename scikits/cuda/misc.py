@@ -6,10 +6,37 @@ General PyCUDA utility functions.
 
 import string
 from string import Template
+import atexit
+
 import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
 from pycuda.compiler import SourceModule
 import numpy as np
+
+def init_device(n=0):
+    """
+    Initialize PyCUDA using a specified device.
+
+    Initialize PyCUDA using a specified device rather than the default
+    device found by pycuda.autoinit.
+
+    Parameters
+    ----------
+    n : int
+        Device number.
+
+    Returns
+    -------
+    dev : pycuda.driver.Device
+        Initialized device.
+
+    """
+
+    drv.init()
+    dev = drv.Device(n)
+    ctx = dev.make_context()
+    atexit.register(ctx.pop)
+    return dev
 
 def get_compute_capability(dev):
     """
