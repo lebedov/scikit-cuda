@@ -384,8 +384,6 @@ def transpose(a_gpu, dev):
     -------
     at_gpu : pycuda.gpuarray.GPUArray
         Transposed matrix of shape `(n, m)`.
-    dev : pycuda.driver.Device
-        Device object to be used.
     
     Examples
     --------
@@ -460,8 +458,6 @@ def hermitian(a_gpu, dev):
     -------
     at_gpu : pycuda.gpuarray.GPUArray
         Transposed matrix of shape `(n, m)`.
-    dev : pycuda.driver.Device
-        Device object to be used.
     
     Examples
     --------
