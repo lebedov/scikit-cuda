@@ -287,6 +287,102 @@ def maxabs(x_gpu):
 
     return m_gpu
 
+diff_mod_template = Template("""
+#include <pycuda/pycuda-complex.hpp>
+
+#define USE_DOUBLE ${use_double}
+#define USE_COMPLEX ${use_complex}
+
+#if USE_DOUBLE == 1
+#define REAL_TYPE double
+#if USE_COMPLEX == 1
+#define TYPE pycuda::complex<double>
+#else
+#define TYPE double
+#endif
+#else
+#define REAL_TYPE float
+#if USE_COMPLEX == 1
+#define TYPE pycuda::complex<float>
+#else
+#define TYPE float
+#endif
+#endif
+
+__global__ void diff(TYPE *x, TYPE *y, unsigned int N) {
+    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
+                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+
+    if (idx < N-1) {
+        y[idx] = x[idx+1]-x[idx];
+    }
+}
+""")
+
+def diff(x_gpu, dev):
+    """
+    Calculate the discrete difference.
+
+    Calculates the first order difference between the successive
+    entries of a vector.
+
+    Parameters
+    ----------
+    x_gpu : pycuda.gpuarray.GPUArray
+        Input vector.
+    dev : pycuda.driver.Device
+        Device object to be used.
+
+    Returns
+    -------
+    y_gpu : pycuda.gpuarray.GPUArray
+        Discrete difference.
+
+    Examples
+    --------
+    >>> import pycuda.driver as drv
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import pycuda.autoinit
+    >>> import numpy as np
+    >>> import misc
+    >>> x = np.asarray(np.random.rand(5), np.float32)
+    >>> x_gpu = gpuarray.to_gpu(x)
+    >>> y_gpu = diff(x_gpu, pycuda.autoinit.device)
+    >>> np.allclose(np.diff(x), y_gpu.get())
+    True
+    
+    """
+
+    if len(x_gpu.shape) > 1:
+        raise ValueError('input must be 1D vector')
+
+    use_double = int(x_gpu.dtype in [np.float64, np.complex128])
+    use_complex = int(x_gpu.dtype in [np.complex64, np.complex128])
+
+    # Get block/grid sizes:
+    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
+    block_dim, grid_dim = select_block_grid_sizes(dev, x_gpu.shape)
+    max_blocks_per_grid = max(max_grid_dim)
+    
+    # Set this to False when debugging to make sure the compiled kernel is
+    # not cached:
+    cache_dir=None
+    diff_mod = \
+             SourceModule(diff_mod_template.substitute(use_double=use_double,
+                                                       use_complex=use_complex,
+                          max_threads_per_block=max_threads_per_block,
+                          max_blocks_per_grid=max_blocks_per_grid),
+                          cache_dir=cache_dir)
+    diff = diff_mod.get_function("diff")
+
+    N = x_gpu.size
+    y_gpu = gpuarray.empty((N-1,), x_gpu.dtype)
+    diff(x_gpu.gpudata, y_gpu.gpudata, np.uint32(N),
+         block=block_dim,
+         grid=grid_dim)
+
+    return y_gpu
+         
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
