@@ -13,6 +13,40 @@ import pycuda.gpuarray as gpuarray
 from pycuda.compiler import SourceModule
 import numpy as np
 
+isdoubletype = lambda x : True if x == np.float64 or \
+               x == np.complex128 else False
+isdoubletype.__doc__ = """
+Check whether a type has double precision.
+
+Parameters
+----------
+t : numpy float type
+    Type to test.
+
+Returns
+-------
+result : bool
+    Result.
+
+"""
+
+iscomplextype = lambda x : True if x == np.complex64 or \
+                x == np.complex128 else False
+iscomplextype.__doc__ = """
+Check whether a type is complex.
+
+Parameters
+----------
+t : numpy float type
+    Type to test.
+
+Returns
+-------
+result : bool
+    Result.
+
+"""
+
 def init_device(n=0):
     """
     Initialize PyCUDA using a specified device.
@@ -382,128 +416,6 @@ def diff(x_gpu, dev):
          grid=grid_dim)
 
     return y_gpu
-
-### unfinished ###
-trapz2d_mod_template = Template("""
-#include <pycuda/pycuda-complex.hpp>
-
-#define USE_DOUBLE ${use_double}
-#define USE_COMPLEX ${use_complex}
-
-#if USE_DOUBLE == 1
-#define REAL_TYPE double
-#if USE_COMPLEX == 1
-#define TYPE pycuda::complex<double>
-#else
-#define TYPE double
-#endif
-#else
-#define REAL_TYPE float
-#if USE_COMPLEX == 1
-#define TYPE pycuda::complex<float>
-#else
-#define TYPE float
-#endif
-#endif
-
-#define INDEX(row, col) row*${cols}+col
-// N contains the number of rows in x
-__global__ void trapz2d(TYPE *x, TYPE *z, TYPE *work,
-                        TYPE dx, TYPE dy, unsigned int N) {
-    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
-                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
-
-    if (idx < N) {
-        for (unsigned int col = 0; col < ${cols}-1; col++) {
-            work[idx] += x[INDEX(idx, col)]+x[INDEX(idx, col+1)];
-        }
-    }
-    
-    __syncthreads();
-    
-    if (idx == 0) {
-        for (unsigned int row = 0; row < N-1; row++)
-            z[0] += work[row]+work[row+1];
-        z[0] *= dx*dy/TYPE(4.0);
-    }
-}
-""")
-
-def trapz2d(x_gpu, dev, dx=1.0, dy=1.0):
-    """
-    2D trapezoidal integration.
-
-    Calculates the trapezoidal double integral of the specified vector.
-
-    Parameters
-    ----------
-    x_gpu : pycuda.gpuarray.GPUArray
-        Input vector.
-    dev : pycuda.driver.Device
-        Device object to be used.
-    dx : float
-        X-axis spacing (default is 1).
-    dy : float
-        Y-axis spacing (default is 1).    
-
-    Returns
-    -------
-    y_gpu : pycuda.gpuarray.GPUArray
-        Trapezoidal integral.
-
-    Examples
-    --------
-    >>> import pycuda.driver as drv
-    >>> import pycuda.gpuarray as gpuarray
-    >>> import pycuda.autoinit
-    >>> import numpy as np
-    >>> import misc
-    >>> x = np.asarray(np.random.rand(5, 5), np.float32)
-    >>> x_gpu = gpuarray.to_gpu(x)
-    >>> z_gpu = trapz2d(x_gpu, pycuda.autoinit.device, np.float32(1.0), np.float32(1.0))
-    >>> np.allclose(np.trapz(np.trapz(x)), z_gpu.get())
-    True
-
-    Notes
-    -----
-    This function could be made much faster using optimized reductions.
-    
-    """
-
-    if len(x_gpu.shape) != 2:
-        raise ValueError('input must be 2D array')
-    if x_gpu.dtype != type(dx) or x_gpu.dtype != type(dy):
-        raise ValueError('x_gpu, dx, and dy must contain the same type')
-    
-    use_double = int(x_gpu.dtype in [np.float64, np.complex128])
-    use_complex = int(x_gpu.dtype in [np.complex64, np.complex128])
-
-    # Get block/grid sizes:
-    (rows, cols) = x_gpu.shape
-    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
-    block_dim, grid_dim = select_block_grid_sizes(dev, (rows,))
-    max_blocks_per_grid = max(max_grid_dim)
-    
-    # Set this to False when debugging to make sure the compiled kernel is
-    # not cached:
-    cache_dir=None
-    trapz2d_mod = \
-                SourceModule(trapz2d_mod_template.substitute(use_double=use_double,
-                                                           use_complex=use_complex,
-                             max_threads_per_block=max_threads_per_block,
-                             max_blocks_per_grid=max_blocks_per_grid,
-                             cols=cols),
-                             cache_dir=cache_dir)
-    trapz2d = trapz2d_mod.get_function("trapz2d")
-
-    work_gpu = gpuarray.zeros((rows,), x_gpu.dtype)
-    z_gpu = gpuarray.zeros((1,), x_gpu.dtype)
-    trapz2d(x_gpu.gpudata, z_gpu.gpudata, work_gpu.gpudata,
-            dx, dy, np.uint32(rows),
-            block=block_dim,
-            grid=grid_dim)
-
-    return z_gpu
 
 if __name__ == "__main__":
     import doctest
