@@ -166,7 +166,7 @@ def svd(a_gpu, full_matrices=1, compute_uv=1):
 
 def dot(a_gpu, b_gpu):
     """
-    Matrix product of two arrays.
+    Dot product of two arrays.
 
     For 1D arrays, this function computes the inner product. For 2D
     arrays of shapes `(m, k)` and `(k, n)`, it computes the matrix
@@ -181,8 +181,9 @@ def dot(a_gpu, b_gpu):
         
     Returns
     -------
-    c_gpu : pycuda.gpuarray.GPUArray
-        Dot product of `a_gpu` and `b_gpu`.
+    c_gpu : pycuda.gpuarray.GPUArray, float{32,64}, or complex{64,128}
+        Dot product of `a_gpu` and `b_gpu`. When the inputs are 1D
+        arrays, the result will be returned as a scalar.
     
     Notes
     -----
@@ -210,6 +211,7 @@ def dot(a_gpu, b_gpu):
     >>> f = linalg.dot(d_gpu, e_gpu)
     >>> np.allclose(np.dot(d, e), f)
     True
+    
     """
 
     if len(a_gpu.shape) == 1 and len(b_gpu.shape) == 1:
