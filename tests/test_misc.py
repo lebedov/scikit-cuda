@@ -61,45 +61,17 @@ class test_misc(TestCase):
         y_gpu = misc.diff(x_gpu, pycuda.autoinit.device)
         assert np.allclose(y_gpu.get(), np.diff(x))
 
-    def test_trapz2d_float32(self):
-        x = np.asarray(np.random.rand(5, 5), np.float32)
-        x_gpu = gpuarray.to_gpu(x)
-        z_gpu = misc.trapz2d(x_gpu, pycuda.autoinit.device, np.float32(1.0), np.float32(1.0))
-        assert np.allclose(np.trapz(np.trapz(x)), z_gpu.get())
-
-    def test_trapz2d_float64(self):
-        x = np.asarray(np.random.rand(5, 5), np.float64)
-        x_gpu = gpuarray.to_gpu(x)
-        z_gpu = misc.trapz2d(x_gpu, pycuda.autoinit.device, np.float64(1.0), np.float64(1.0))
-        assert np.allclose(np.trapz(np.trapz(x)), z_gpu.get())
-
-    def test_trapz2d_complex64(self):
-        x = np.asarray(np.random.rand(5, 5)+1j*np.random.rand(5, 5), np.complex64)
-        x_gpu = gpuarray.to_gpu(x)
-        z_gpu = misc.trapz2d(x_gpu, pycuda.autoinit.device, np.complex64(1.0), np.complex64(1.0))
-        assert np.allclose(np.trapz(np.trapz(x)), z_gpu.get())
-
-    def test_trapz2d_complex128(self):
-        x = np.asarray(np.random.rand(5, 5)+1j*np.random.rand(5, 5), np.complex128)
-        x_gpu = gpuarray.to_gpu(x)
-        z_gpu = misc.trapz2d(x_gpu, pycuda.autoinit.device, np.complex128(1.0), np.complex128(1.0))
-        assert np.allclose(np.trapz(np.trapz(x)), z_gpu.get())
-
 def suite():
     s = TestSuite()
     s.addTest(test_misc('test_maxabs_float32'))
     s.addTest(test_misc('test_maxabs_complex64'))
     s.addTest(test_misc('test_diff_float32'))
     s.addTest(test_misc('test_diff_complex64'))
-    s.addTest(test_misc('test_trapz2d_float32'))
-    s.addTest(test_misc('test_trapz2d_complex64'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_misc('test_maxabs_float64'))
         s.addTest(test_misc('test_maxabs_complex128'))
         s.addTest(test_misc('test_diff_float64'))
         s.addTest(test_misc('test_diff_complex128'))
-        s.addTest(test_misc('test_trapz2d_float64'))
-        s.addTest(test_misc('test_trapz2d_complex128'))
     return s
 
 if __name__ == '__main__':
