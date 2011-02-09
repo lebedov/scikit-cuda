@@ -15,29 +15,10 @@ import cuda
 import cublas
 import cula
 
-from misc import get_dev_attrs, select_block_grid_sizes
+from misc import get_dev_attrs, select_block_grid_sizes, init
 
 # Get installation location of C headers:
 from __info__ import install_headers
-
-def init():
-    """
-    Initialize CUDA utilities.
-        
-    Notes
-    -----
-    This function does not initialize PyCUDA; it uses whatever device
-    was initialized in the current host thread.
-    
-    """
-
-    # CUBLAS uses whatever device is being used by the host thread:
-    cublas.cublasInit()
-
-    # culaSelectDevice() need not (and, in fact, cannot) be called
-    # here because the host thread has already been bound to a GPU
-    # device:
-    cula.culaInitialize()
     
 def svd(a_gpu, full_matrices=1, compute_uv=1):
     """

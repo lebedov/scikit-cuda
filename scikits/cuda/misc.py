@@ -13,6 +13,9 @@ import pycuda.gpuarray as gpuarray
 from pycuda.compiler import SourceModule
 import numpy as np
 
+import cublas
+import cula
+
 isdoubletype = lambda x : True if x == np.float64 or \
                x == np.complex128 else False
 isdoubletype.__doc__ = """
@@ -71,6 +74,27 @@ def init_device(n=0):
     ctx = dev.make_context()
     atexit.register(ctx.pop)
     return dev
+
+def init():
+    """
+    Initialize scikits.cuda utilities.
+
+    Initializes libraries used by scikits.cuda.
+    
+    Notes
+    -----
+    This function does not initialize PyCUDA; it uses whatever device
+    and context were initialized in the current host thread.
+    
+    """
+
+    # CUBLAS uses whatever device is being used by the host thread:
+    cublas.cublasInit()
+
+    # culaSelectDevice() need not (and, in fact, cannot) be called
+    # here because the host thread has already been bound to a GPU
+    # device:
+    cula.culaInitialize()
 
 def get_compute_capability(dev):
     """
