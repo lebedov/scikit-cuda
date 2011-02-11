@@ -310,7 +310,7 @@ def mdot(*args):
         del(temp_gpu)
     return out_gpu
 
-transpose_mod_template = Template("""
+transpose_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
 #define HERMITIAN ${hermitian}
@@ -405,7 +405,7 @@ def transpose(a_gpu, dev):
     # not cached:
     cache_dir=None            
     transpose_mod = \
-                  SourceModule(transpose_mod_template.substitute(use_double=use_double,
+                  SourceModule(transpose_template.substitute(use_double=use_double,
                                                                  use_complex=use_complex,
                                                                  hermitian=0,
                                max_threads_per_block=max_threads_per_block,
@@ -479,7 +479,7 @@ def hermitian(a_gpu, dev):
     # not cached:
     cache_dir=None            
     transpose_mod = \
-                  SourceModule(transpose_mod_template.substitute(use_double=use_double,
+                  SourceModule(transpose_template.substitute(use_double=use_double,
                                                                  use_complex=use_complex,
                                                                  hermitian=1,
                                max_threads_per_block=max_threads_per_block,
@@ -497,7 +497,7 @@ def hermitian(a_gpu, dev):
                     
     return at_gpu
 
-conj_mod_template = Template("""
+conj_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
 #define USE_DOUBLE ${use_double}
@@ -573,7 +573,7 @@ def conj(a_gpu, dev):
     # not cached:
     cache_dir=None
     conj_mod = \
-             SourceModule(conj_mod_template.substitute(use_double=use_double,
+             SourceModule(conj_template.substitute(use_double=use_double,
                           max_threads_per_block=max_threads_per_block,
                           max_blocks_per_grid=max_blocks_per_grid),
                           cache_dir=cache_dir)
@@ -584,7 +584,7 @@ def conj(a_gpu, dev):
          block=block_dim,
          grid=grid_dim)
 
-diag_mod_template = Template("""
+diag_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
 #define USE_DOUBLE ${use_double}
@@ -682,7 +682,7 @@ def diag(v_gpu, dev):
     # not cached:
     cache_dir=None
     diag_mod = \
-             SourceModule(diag_mod_template.substitute(use_double=use_double,
+             SourceModule(diag_template.substitute(use_double=use_double,
                                                        use_complex=use_complex,
                           max_threads_per_block=max_threads_per_block,
                           max_blocks_per_grid=max_blocks_per_grid,
@@ -696,7 +696,7 @@ def diag(v_gpu, dev):
     
     return d_gpu
 
-cutoff_invert_s_mod_template = Template("""
+cutoff_invert_s_template = Template("""
 #define USE_DOUBLE ${use_double}
 #if USE_DOUBLE == 1
 #define FLOAT double
@@ -780,7 +780,7 @@ def pinv(a_gpu, dev, rcond=1e-15):
     # Suppress very small singular values:
     use_double = 1 if s_gpu.dtype == np.float64 else 0
     cutoff_invert_s_mod = \
-        SourceModule(cutoff_invert_s_mod_template.substitute( 
+        SourceModule(cutoff_invert_s_template.substitute( 
         max_threads_per_block=max_threads_per_block,
         max_blocks_per_grid=max_blocks_per_grid,
         use_double=use_double))
@@ -802,7 +802,7 @@ def pinv(a_gpu, dev, rcond=1e-15):
     suh_gpu = dot(s_diag_gpu, uh_gpu)
     return dot(v_gpu, suh_gpu)
 
-tril_mod_template = Template("""
+tril_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
 #define USE_DOUBLE ${use_double}
@@ -908,7 +908,7 @@ def tril(a_gpu, dev, overwrite=True):
     # not cached:
     cache_dir=None
     tril_mod = \
-             SourceModule(tril_mod_template.substitute(use_double=use_double,
+             SourceModule(tril_template.substitute(use_double=use_double,
                                                        use_complex=use_complex,
                           max_threads_per_block=max_threads_per_block,
                           max_blocks_per_grid=max_blocks_per_grid,
@@ -931,7 +931,7 @@ def tril(a_gpu, dev, overwrite=True):
         # Restore original contents of a_gpu:
         swap_func(a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
         return a_orig_gpu
-                         
+    
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
