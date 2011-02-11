@@ -378,12 +378,12 @@ def transpose(a_gpu, dev):
     >>> linalg.init()
     >>> a = np.array([[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]], np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
-    >>> at_gpu = transpose(a_gpu, pycuda.autoinit.device)
+    >>> at_gpu = linalg.transpose(a_gpu, pycuda.autoinit.device)
     >>> np.all(a.T == at_gpu.get())
     True
     >>> b = np.array([[1j, 2j, 3j, 4j, 5j, 6j], [7j, 8j, 9j, 10j, 11j, 12j]], np.complex64)
     >>> b_gpu = gpuarray.to_gpu(b)
-    >>> bt_gpu = transpose(b_gpu, pycuda.autoinit.device)
+    >>> bt_gpu = linalg.transpose(b_gpu, pycuda.autoinit.device)
     >>> np.all(b.T == bt_gpu.get())
     True
 
@@ -452,12 +452,12 @@ def hermitian(a_gpu, dev):
     >>> linalg.init()
     >>> a = np.array([[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]], np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
-    >>> at_gpu = hermitian(a_gpu, pycuda.autoinit.device)
+    >>> at_gpu = linalg.hermitian(a_gpu, pycuda.autoinit.device)
     >>> np.all(a.T == at_gpu.get())
     True
     >>> b = np.array([[1j, 2j, 3j, 4j, 5j, 6j], [7j, 8j, 9j, 10j, 11j, 12j]], np.complex64)
     >>> b_gpu = gpuarray.to_gpu(b)
-    >>> bt_gpu = hermitian(b_gpu, pycuda.autoinit.device)
+    >>> bt_gpu = linalg.hermitian(b_gpu, pycuda.autoinit.device)
     >>> np.all(np.conj(b.T) == bt_gpu.get())
     True
 
@@ -547,7 +547,7 @@ def conj(a_gpu, dev):
     >>> linalg.init()
     >>> a = np.array([[1+1j, 2-2j, 3+3j, 4-4j], [5+5j, 6-6j, 7+7j, 8-8j]], np.complex64)
     >>> a_gpu = gpuarray.to_gpu(a)
-    >>> conj(a_gpu, pycuda.autoinit.device)
+    >>> linalg.conj(a_gpu, pycuda.autoinit.device)
     >>> np.all(a == np.conj(a_gpu.get()))
     True
     
@@ -649,12 +649,12 @@ def diag(v_gpu, dev):
     >>> linalg.init()
     >>> v = np.array([1, 2, 3, 4, 5, 6], np.float32)
     >>> v_gpu = gpuarray.to_gpu(v)
-    >>> d_gpu = diag(v_gpu, pycuda.autoinit.device)
+    >>> d_gpu = linalg.diag(v_gpu, pycuda.autoinit.device)
     >>> np.all(d_gpu.get() == np.diag(v))
     True
     >>> v = np.array([1j, 2j, 3j, 4j, 5j, 6j], np.complex64)
     >>> v_gpu = gpuarray.to_gpu(v)
-    >>> d_gpu = diag(v_gpu, pycuda.autoinit.device);
+    >>> d_gpu = linalg.diag(v_gpu, pycuda.autoinit.device);
     >>> np.all(d_gpu.get() == np.diag(v))
     True
     
@@ -753,12 +753,12 @@ def pinv(a_gpu, dev, rcond=1e-15):
     >>> linalg.init()
     >>> a = np.asarray(np.random.rand(8, 4), np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
-    >>> a_inv_gpu = pinv(a_gpu, pycuda.autoinit.device)
+    >>> a_inv_gpu = linalg.pinv(a_gpu, pycuda.autoinit.device)
     >>> np.allclose(np.linalg.pinv(a), a_inv_gpu.get(), 1e-4)
     True
     >>> b = np.asarray(np.random.rand(8, 4)+1j*np.random.rand(8, 4), np.complex64)
     >>> b_gpu = gpuarray.to_gpu(b)
-    >>> b_inv_gpu = pinv(b_gpu, pycuda.autoinit.device)
+    >>> b_inv_gpu = linalg.pinv(b_gpu, pycuda.autoinit.device)
     >>> np.allclose(np.linalg.pinv(b), b_inv_gpu.get(), 1e-4)
     True
 
@@ -865,7 +865,7 @@ def tril(a_gpu, dev, overwrite=True):
     >>> linalg.init()
     >>> a = np.asarray(np.random.rand(4, 4), np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
-    >>> l_gpu = tril(a_gpu, pycuda.autoinit.device, False)
+    >>> l_gpu = linalg.tril(a_gpu, pycuda.autoinit.device, False)
     >>> np.allclose(np.tril(a), l_gpu.get())
     True
     
@@ -931,7 +931,123 @@ def tril(a_gpu, dev, overwrite=True):
         # Restore original contents of a_gpu:
         swap_func(a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
         return a_orig_gpu
+
+multiply_template = Template("""
+#include <pycuda/pycuda-complex.hpp>
+
+#define USE_DOUBLE ${use_double}
+#define USE_COMPLEX ${use_complex}
+#if USE_DOUBLE == 1
+#if USE_COMPLEX == 1
+#define FLOAT pycuda::complex<double>
+#else
+#define FLOAT double
+#endif
+#else
+#if USE_COMPLEX == 1
+#define FLOAT pycuda::complex<float>
+#else
+#define FLOAT float
+#endif
+#endif
+
+// Stores result in y
+__global__ void multiply_inplace(FLOAT *x, FLOAT *y,
+                                 unsigned int N) {
+    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
+                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    if (idx < N) {
+        y[idx] *= x[idx];
+    }
+}
+
+// Stores result in z
+__global__ void multiply(FLOAT *x, FLOAT *y, FLOAT *z,
+                         unsigned int N) {
+    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
+                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    if (idx < N) {
+        z[idx] = x[idx]*y[idx];
+    }    
+}
+""")
+
+def multiply(x_gpu, y_gpu, dev, overwrite=True):
+    """
+    Multiply arguments element-wise.
+
+    Parameters
+    ----------
+    x_gpu, y_gpu : pycuda.gpuarray.GPUArray
+        Input arrays to be multiplied.
+    dev : pycuda.driver.Device
+        Device object to be used.
+    overwrite : bool
+        If true (default), return the result in `y_gpu`.
+        is false, return the result in a newly allocated array.
+        
+    Returns
+    -------
+    z_gpu : pycuda.gpuarray.GPUArray
+        The element-wise product of the input arrays.
+
+    Examples
+    --------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import numpy as np
+    >>> import linalg
+    >>> linalg.init()
+    >>> x = np.asarray(np.random.rand(4, 4), np.float32)
+    >>> y = np.asarray(np.random.rand(4, 4), np.float32)
+    >>> x_gpu = gpuarray.to_gpu(x)
+    >>> y_gpu = gpuarray.to_gpu(y)
+    >>> z_gpu = linalg.multiply(x_gpu, y_gpu, pycuda.autoinit.device)
+    >>> np.allclose(x*y, z_gpu.get())
+    True
     
+    """
+
+    if x_gpu.shape != y_gpu.shape:
+        raise ValueError('input arrays must have the same shape')
+
+    if x_gpu.dtype not in [np.float32, np.float64, np.complex64,
+                           np.complex128]:
+        raise ValueError('unrecognized type')
+
+    use_double = int(x_gpu.dtype in [np.float64, np.complex128])
+    use_complex = int(x_gpu.dtype in [np.complex64, np.complex128])
+
+    # Get block/grid sizes:
+    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
+    block_dim, grid_dim = select_block_grid_sizes(dev, x_gpu.shape)
+    max_blocks_per_grid = max(max_grid_dim)
+
+    # Set this to False when debugging to make sure the compiled kernel is
+    # not cached:
+    cache_dir=None
+    multiply_mod = \
+             SourceModule(multiply_template.substitute(use_double=use_double,
+                                                       use_complex=use_complex,
+                          max_threads_per_block=max_threads_per_block,
+                          max_blocks_per_grid=max_blocks_per_grid),
+                          cache_dir=cache_dir)
+    if overwrite:
+        multiply = multiply_mod.get_function("multiply_inplace")
+        multiply(x_gpu.gpudata, y_gpu.gpudata, np.uint32(x_gpu.size),
+                 block=block_dim,
+                 grid=grid_dim)
+        return y_gpu
+    else:
+        multiply = multiply_mod.get_function("multiply")
+        z_gpu = gpuarray.empty(x_gpu.shape, x_gpu.dtype)
+        multiply(x_gpu.gpudata, y_gpu.gpudata,
+                 z_gpu.gpudata, np.uint32(x_gpu.size),
+                 block=block_dim,
+                 grid=grid_dim)
+        return z_gpu
+
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

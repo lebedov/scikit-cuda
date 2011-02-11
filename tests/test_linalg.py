@@ -317,6 +317,39 @@ class test_linalg(TestCase):
         l_gpu = linalg.tril(a_gpu, pycuda.autoinit.device, False)
         assert np.allclose(np.tril(a), l_gpu.get())   
 
+    def test_multiply_float32(self):
+        x = np.asarray(np.random.rand(4, 4), np.float32)
+        y = np.asarray(np.random.rand(4, 4), np.float32)
+        x_gpu = gpuarray.to_gpu(x)
+        y_gpu = gpuarray.to_gpu(y)
+        z_gpu = linalg.multiply(x_gpu, y_gpu, pycuda.autoinit.device)
+        assert np.allclose(x*y, z_gpu.get())   
+
+    def test_multiply_float64(self):
+        x = np.asarray(np.random.rand(4, 4), np.float64)
+        y = np.asarray(np.random.rand(4, 4), np.float64)
+        x_gpu = gpuarray.to_gpu(x)
+        y_gpu = gpuarray.to_gpu(y)
+        z_gpu = linalg.multiply(x_gpu, y_gpu, pycuda.autoinit.device)
+        assert np.allclose(x*y, z_gpu.get())   
+
+    def test_multiply_complex64(self):
+        x = np.asarray(np.random.rand(4, 4) + 1j*np.random.rand(4, 4), np.complex64)
+        y = np.asarray(np.random.rand(4, 4) + 1j*np.random.rand(4, 4), np.complex64)
+        x_gpu = gpuarray.to_gpu(x)
+        y_gpu = gpuarray.to_gpu(y)
+        z_gpu = linalg.multiply(x_gpu, y_gpu, pycuda.autoinit.device)
+        assert np.allclose(x*y, z_gpu.get())   
+
+    def test_multiply_complex128(self):
+        x = np.asarray(np.random.rand(4, 4) + 1j*np.random.rand(4, 4), np.complex128)
+        y = np.asarray(np.random.rand(4, 4) + 1j*np.random.rand(4, 4), np.complex128)
+        x_gpu = gpuarray.to_gpu(x)
+        y_gpu = gpuarray.to_gpu(y)
+        z_gpu = linalg.multiply(x_gpu, y_gpu, pycuda.autoinit.device)
+        assert np.allclose(x*y, z_gpu.get())   
+
+
 def suite():
     s = TestSuite()
     s.addTest(test_linalg('test_svd_float32'))
@@ -338,6 +371,8 @@ def suite():
     s.addTest(test_linalg('test_pinv_complex64'))
     s.addTest(test_linalg('test_tril_float32'))
     s.addTest(test_linalg('test_tril_complex64'))
+    s.addTest(test_linalg('test_multiply_float32'))
+    s.addTest(test_linalg('test_multiply_complex64'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_linalg('test_svd_float64'))
         s.addTest(test_linalg('test_svd_complex128'))
@@ -358,6 +393,8 @@ def suite():
         s.addTest(test_linalg('test_pinv_complex128'))        
         s.addTest(test_linalg('test_tril_float64'))
         s.addTest(test_linalg('test_tril_complex128'))
+        s.addTest(test_linalg('test_multiply_float64'))
+        s.addTest(test_linalg('test_multiply_complex128'))
     return s
 
 if __name__ == '__main__':
