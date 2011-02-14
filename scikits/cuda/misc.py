@@ -243,6 +243,25 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
 
     return (max_threads_per_block, 1, 1), (grid_x, grid_y)
 
+def ones(shape, dtype, allocator=drv.mem_alloc):
+    """
+    Return an array of the given shape and dtype filled with ones.
+    """
+
+    result = gpuarray.GPUArray(shape, dtype, allocator)
+    result.fill(1)
+    return result
+
+def ones_like(other):
+    """
+    Return an array of ones with the same shape and type as a given array.
+    """
+    
+    result = gpuarray.GPUArray(other.shape, other.dtype,
+                               other.allocator)
+    result.fill(1)
+    return result
+            
 maxabs_mod_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
