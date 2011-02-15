@@ -4,7 +4,6 @@
 Unit tests for scikits.cuda.linalg
 """
 
-
 from unittest import main, makeSuite, TestCase, TestSuite
 
 import pycuda.autoinit

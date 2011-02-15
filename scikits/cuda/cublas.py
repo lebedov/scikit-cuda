@@ -277,7 +277,7 @@ def cublasSasum(n, x, incx):
     >>> x = np.random.rand(5).astype(np.float32)
     >>> x_gpu = gpuarray.to_gpu(x)
     >>> s = cublasSasum(x_gpu.size, x_gpu.gpudata, 1)
-    >>> np.allclose(s, np.sum(x))
+    >>> np.allclose(s, np.sum(np.abs(x)))
     True
 
     Returns
