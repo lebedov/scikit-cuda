@@ -14,7 +14,7 @@ import cublas
 
 from misc import get_dev_attrs, select_block_grid_sizes, init
 
-gen_trapz_mult_mod_template = Template("""
+gen_trapz_mult_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
 #define USE_DOUBLE ${use_double}
@@ -37,10 +37,12 @@ __global__ void gen_trapz_mult(TYPE *mult, unsigned int N) {
     unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
                        blockIdx.x*${max_threads_per_block}+threadIdx.x;
 
-    if ((idx == 0) || (idx == N-1)) {                      
-        mult[idx] = TYPE(0.5);
-    } else {
-        mult[idx] = TYPE(1.0);
+    if (idx < N) {
+        if ((idx == 0) || (idx == N-1)) {                      
+            mult[idx] = TYPE(0.5);
+        } else {
+            mult[idx] = TYPE(1.0);
+        }
     }
 }
 """)
@@ -88,8 +90,8 @@ def gen_trapz_mult(N, mult_type, dev):
     # not cached:
     cache_dir=None
     gen_trapz_mult_mod = \
-                       SourceModule(gen_trapz_mult_mod_template.substitute(use_double=use_double,
-                                                                           use_complex=use_complex,
+                       SourceModule(gen_trapz_mult_template.substitute(use_double=use_double,
+                                                                       use_complex=use_complex,
                                     max_threads_per_block=max_threads_per_block,
                                     max_blocks_per_grid=max_blocks_per_grid),
                                     cache_dir=cache_dir)
@@ -163,7 +165,7 @@ def trapz(x_gpu, dev, dx=1.0):
     else:
         return np.float64(result)*dx
 
-gen_trapz2d_mult_mod_template = Template("""
+gen_trapz2d_mult_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
 #define USE_DOUBLE ${use_double}
@@ -189,13 +191,15 @@ __global__ void gen_trapz2d_mult(TYPE *mult,
     unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
                        blockIdx.x*${max_threads_per_block}+threadIdx.x;
 
-    if (idx == 0 || idx == Nx-1 || idx == Nx*(Ny-1) || idx == Nx*Ny-1)
-        mult[idx] = TYPE(0.25);
-    else if ((idx > 0 && idx < Nx-1) || (idx % Nx == 0) ||
-            (((idx + 1) % Nx) == 0) || (idx > Nx*(Ny-1) && idx < Nx*Ny-1))
-        mult[idx] = TYPE(0.5);
-    else
-        mult[idx] = TYPE(1.0);
+    if (idx < Nx*Ny) {
+        if (idx == 0 || idx == Nx-1 || idx == Nx*(Ny-1) || idx == Nx*Ny-1)
+            mult[idx] = TYPE(0.25);
+        else if ((idx > 0 && idx < Nx-1) || (idx % Nx == 0) ||
+                (((idx + 1) % Nx) == 0) || (idx > Nx*(Ny-1) && idx < Nx*Ny-1))
+            mult[idx] = TYPE(0.5);
+        else 
+            mult[idx] = TYPE(1.0);
+    }
 }
 """)
 
@@ -236,14 +240,14 @@ def gen_trapz2d_mult(mat_shape, mult_type, dev):
 
     # Get block/grid sizes:
     max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
-    block_dim, grid_dim = select_block_grid_sizes(dev, Ny*Nx)
+    block_dim, grid_dim = select_block_grid_sizes(dev, mat_shape)
     max_blocks_per_grid = max(max_grid_dim)
-
+    
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
     cache_dir=None
     gen_trapz2d_mult_mod = \
-                       SourceModule(gen_trapz2d_mult_mod_template.substitute(use_double=use_double,
+                         SourceModule(gen_trapz2d_mult_template.substitute(use_double=use_double,
                                                                            use_complex=use_complex,
                                     max_threads_per_block=max_threads_per_block,
                                     max_blocks_per_grid=max_blocks_per_grid),
@@ -308,7 +312,7 @@ def trapz2d(x_gpu, dev, dx=1.0, dy=1.0):
                                             
     trapz_mult_gpu = gen_trapz2d_mult(x_gpu.shape, float_type, dev)
     result = cublas_func(x_gpu.size, int(x_gpu.gpudata), 1,
-                         int(trapz_mult_gpu.gpudata), 1)
+                        int(trapz_mult_gpu.gpudata), 1)
 
     dxdy = float_type(dx)*float_type(dy)
     if float_type == np.complex64:
