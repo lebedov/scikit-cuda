@@ -23,3 +23,10 @@ High-Level Routines
    reference_linalg
    reference_special
 
+Other Routines
+--------------
+
+.. toctree::
+   :maxdepth: 2
+
+   reference_misc

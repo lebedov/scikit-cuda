@@ -339,8 +339,8 @@ def maxabs(x_gpu):
     This implementation could be made faster by computing the absolute
     values of the input array in parallel.
     
-    Example
-    -------
+    Examples
+    --------
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import misc
