@@ -29,7 +29,7 @@ for t in demo_types:
         a = np.array([[1, 2, 3, 4, 5, 6],
                       [7, 8, 9, 10, 11, 12]], t)
     a_gpu = gpuarray.to_gpu(a)
-    at_gpu = culinalg.transpose(a_gpu, pycuda.autoinit.device)
+    at_gpu = culinalg.transpose(a_gpu)
     if np.iscomplexobj(t()):
         print 'Success status: ', np.all(np.conj(a.T) == at_gpu.get())
     else:

@@ -12,7 +12,7 @@ import numpy as np
 import ctypes
 import cublas
 
-from misc import get_dev_attrs, select_block_grid_sizes, init
+from misc import get_dev_attrs, select_block_grid_sizes, init, get_current_device
 
 gen_trapz_mult_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
@@ -47,7 +47,7 @@ __global__ void gen_trapz_mult(TYPE *mult, unsigned int N) {
 }
 """)
 
-def gen_trapz_mult(N, mult_type, dev):
+def gen_trapz_mult(N, mult_type):
     """
     Generate multiplication array for 1D trapezoidal integration.
 
@@ -61,8 +61,6 @@ def gen_trapz_mult(N, mult_type, dev):
         Length of array.
     mult_type : float type
         Floating point type to use when generating the array.
-    dev : pycuda.driver.Device
-        Device object to be used.
 
     Returns
     -------
@@ -75,6 +73,8 @@ def gen_trapz_mult(N, mult_type, dev):
                          np.complex128]:
         raise ValueError('unrecognized type')
 
+    dev = get_current_device()
+    
     use_double = int(mult_type in [np.float64, np.complex128])
     use_complex = int(mult_type in [np.complex64, np.complex128])
 
@@ -103,7 +103,7 @@ def gen_trapz_mult(N, mult_type, dev):
     
     return mult_gpu
 
-def trapz(x_gpu, dev, dx=1.0):
+def trapz(x_gpu, dx=1.0):
     """
     1D trapezoidal integration.
 
@@ -128,7 +128,7 @@ def trapz(x_gpu, dev, dx=1.0):
     >>> integrate.init()
     >>> x = np.asarray(np.random.rand(10), np.float32)
     >>> x_gpu = gpuarray.to_gpu(x)
-    >>> z = integrate.trapz(x_gpu, pycuda.autoinit.device)
+    >>> z = integrate.trapz(x_gpu)
     >>> np.allclose(np.trapz(x), z)
     True
     
@@ -151,7 +151,7 @@ def trapz(x_gpu, dev, dx=1.0):
     else:
         raise ValueError('unsupported input type')
 
-    trapz_mult_gpu = gen_trapz_mult(x_gpu.size, float_type, dev)
+    trapz_mult_gpu = gen_trapz_mult(x_gpu.size, float_type)
     result = cublas_func(x_gpu.size, int(x_gpu.gpudata), 1,
                          int(trapz_mult_gpu.gpudata), 1)
 
@@ -203,7 +203,7 @@ __global__ void gen_trapz2d_mult(TYPE *mult,
 }
 """)
 
-def gen_trapz2d_mult(mat_shape, mult_type, dev):
+def gen_trapz2d_mult(mat_shape, mult_type):
     """
     Generate multiplication matrix for 2D trapezoidal integration.
 
@@ -217,8 +217,6 @@ def gen_trapz2d_mult(mat_shape, mult_type, dev):
         Shape of matrix.
     mult_type : float type
         Floating point type to use when generating the array.
-    dev : pycuda.driver.Device
-        Device object to be used.
 
     Returns
     -------
@@ -231,6 +229,8 @@ def gen_trapz2d_mult(mat_shape, mult_type, dev):
                          np.complex128]:
         raise ValueError('unrecognized type')
 
+    dev = get_current_device()
+    
     use_double = int(mult_type in [np.float64, np.complex128])
     use_complex = int(mult_type in [np.complex64, np.complex128])
 
@@ -260,7 +260,7 @@ def gen_trapz2d_mult(mat_shape, mult_type, dev):
     
     return mult_gpu
 
-def trapz2d(x_gpu, dev, dx=1.0, dy=1.0):
+def trapz2d(x_gpu, dx=1.0, dy=1.0):
     """
     2D trapezoidal integration.
 
@@ -287,7 +287,7 @@ def trapz2d(x_gpu, dev, dx=1.0, dy=1.0):
     >>> integrate.init()
     >>> x = np.asarray(np.random.rand(10, 10), np.float32)
     >>> x_gpu = gpuarray.to_gpu(x)
-    >>> z = integrate.trapz2d(x_gpu, pycuda.autoinit.device)
+    >>> z = integrate.trapz2d(x_gpu)
     >>> np.allclose(np.trapz(np.trapz(x)), z)
     True
 
@@ -310,7 +310,7 @@ def trapz2d(x_gpu, dev, dx=1.0, dy=1.0):
     else:
         raise ValueError('unsupported input type')
                                             
-    trapz_mult_gpu = gen_trapz2d_mult(x_gpu.shape, float_type, dev)
+    trapz_mult_gpu = gen_trapz2d_mult(x_gpu.shape, float_type)
     result = cublas_func(x_gpu.size, int(x_gpu.gpudata), 1,
                         int(trapz_mult_gpu.gpudata), 1)
 
@@ -323,3 +323,7 @@ def trapz2d(x_gpu, dev, dx=1.0, dy=1.0):
         return np.float32(result)*dxdy
     else:
         return np.float64(result)*dxdy
+
+if __name__ == "__main__":
+    import doctest
+    doctest.testmod()

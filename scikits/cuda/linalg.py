@@ -15,7 +15,7 @@ import cuda
 import cublas
 import cula
 
-from misc import get_dev_attrs, select_block_grid_sizes, init
+from misc import get_dev_attrs, select_block_grid_sizes, init, get_current_device
 
 # Get installation location of C headers:
 from __info__ import install_headers
@@ -349,7 +349,7 @@ __global__ void transpose(FLOAT *odata, FLOAT *idata, unsigned int N)
 }
 """)
 
-def transpose(a_gpu, dev):
+def transpose(a_gpu):
     """
     Matrix transpose.
     
@@ -360,8 +360,6 @@ def transpose(a_gpu, dev):
     ----------
     a_gpu : pycuda.gpuarray.GPUArray
         Input matrix of shape `(m, n)`.
-    dev : pycuda.driver.Device
-        Device object to be used.
 
     Returns
     -------
@@ -378,12 +376,12 @@ def transpose(a_gpu, dev):
     >>> linalg.init()
     >>> a = np.array([[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]], np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
-    >>> at_gpu = linalg.transpose(a_gpu, pycuda.autoinit.device)
+    >>> at_gpu = linalg.transpose(a_gpu)
     >>> np.all(a.T == at_gpu.get())
     True
     >>> b = np.array([[1j, 2j, 3j, 4j, 5j, 6j], [7j, 8j, 9j, 10j, 11j, 12j]], np.complex64)
     >>> b_gpu = gpuarray.to_gpu(b)
-    >>> bt_gpu = linalg.transpose(b_gpu, pycuda.autoinit.device)
+    >>> bt_gpu = linalg.transpose(b_gpu)
     >>> np.all(b.T == bt_gpu.get())
     True
 
@@ -393,6 +391,8 @@ def transpose(a_gpu, dev):
                            np.complex128]:
         raise ValueError('unrecognized type')
 
+    dev = get_current_device()
+    
     use_double = int(a_gpu.dtype in [np.float64, np.complex128])
     use_complex = int(a_gpu.dtype in [np.complex64, np.complex128])
 
@@ -422,7 +422,7 @@ def transpose(a_gpu, dev):
                     
     return at_gpu
 
-def hermitian(a_gpu, dev):
+def hermitian(a_gpu):
     """
     Hermitian (conjugate) matrix transpose.
     
@@ -433,8 +433,6 @@ def hermitian(a_gpu, dev):
     ----------
     a_gpu : pycuda.gpuarray.GPUArray
         Input matrix of shape `(m, n)`.
-    dev : pycuda.driver.Device
-        Device object to be used.
 
     Returns
     -------
@@ -451,12 +449,12 @@ def hermitian(a_gpu, dev):
     >>> linalg.init()
     >>> a = np.array([[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]], np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
-    >>> at_gpu = linalg.hermitian(a_gpu, pycuda.autoinit.device)
+    >>> at_gpu = linalg.hermitian(a_gpu)
     >>> np.all(a.T == at_gpu.get())
     True
     >>> b = np.array([[1j, 2j, 3j, 4j, 5j, 6j], [7j, 8j, 9j, 10j, 11j, 12j]], np.complex64)
     >>> b_gpu = gpuarray.to_gpu(b)
-    >>> bt_gpu = linalg.hermitian(b_gpu, pycuda.autoinit.device)
+    >>> bt_gpu = linalg.hermitian(b_gpu)
     >>> np.all(np.conj(b.T) == bt_gpu.get())
     True
 
@@ -466,6 +464,8 @@ def hermitian(a_gpu, dev):
                            np.complex128]:
         raise ValueError('unrecognized type')
 
+    dev = get_current_device()
+    
     use_double = int(a_gpu.dtype in [np.float64, np.complex128])
     use_complex = int(a_gpu.dtype in [np.complex64, np.complex128])
 
@@ -515,7 +515,7 @@ __global__ void conj(COMPLEX *a, unsigned int N)
 }
 """)
 
-def conj(a_gpu, dev):
+def conj(a_gpu):
     """
     Complex conjugate.
     
@@ -525,8 +525,6 @@ def conj(a_gpu, dev):
     ----------
     a_gpu : pycuda.gpuarray.GPUArray
         Input matrix of shape `(m, n)`.
-    dev : pycuda.driver.Device
-        Device object to be used.
 
     Notes
     -----
@@ -545,7 +543,7 @@ def conj(a_gpu, dev):
     >>> linalg.init()
     >>> a = np.array([[1+1j, 2-2j, 3+3j, 4-4j], [5+5j, 6-6j, 7+7j, 8-8j]], np.complex64)
     >>> a_gpu = gpuarray.to_gpu(a)
-    >>> linalg.conj(a_gpu, pycuda.autoinit.device)
+    >>> linalg.conj(a_gpu)
     >>> np.all(a == np.conj(a_gpu.get()))
     True
     
@@ -562,6 +560,8 @@ def conj(a_gpu, dev):
     else:
         raise ValueError('unsupported type')
 
+    dev = get_current_device()
+    
     # Get block/grid sizes:
     max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
     block_dim, grid_dim = select_block_grid_sizes(dev, a_gpu.shape)
@@ -616,7 +616,7 @@ __global__ void diag(FLOAT *v, FLOAT *d, int N) {
 }
 """)
 
-def diag(v_gpu, dev):
+def diag(v_gpu):
     """
     Construct a diagonal matrix.
 
@@ -628,8 +628,6 @@ def diag(v_gpu, dev):
     ----------
     v_obj : pycuda.gpuarray.GPUArray
         Input array of length `n`.
-    dev : pycuda.driver.Device
-        Device object to be used.
 
     Returns
     -------
@@ -646,12 +644,12 @@ def diag(v_gpu, dev):
     >>> linalg.init()
     >>> v = np.array([1, 2, 3, 4, 5, 6], np.float32)
     >>> v_gpu = gpuarray.to_gpu(v)
-    >>> d_gpu = linalg.diag(v_gpu, pycuda.autoinit.device)
+    >>> d_gpu = linalg.diag(v_gpu)
     >>> np.all(d_gpu.get() == np.diag(v))
     True
     >>> v = np.array([1j, 2j, 3j, 4j, 5j, 6j], np.complex64)
     >>> v_gpu = gpuarray.to_gpu(v)
-    >>> d_gpu = linalg.diag(v_gpu, pycuda.autoinit.device);
+    >>> d_gpu = linalg.diag(v_gpu)
     >>> np.all(d_gpu.get() == np.diag(v))
     True
     
@@ -663,6 +661,8 @@ def diag(v_gpu, dev):
 
     if len(v_gpu.shape) > 1:
         raise ValueError('input array cannot be multidimensional')
+
+    dev = get_current_device()
     
     use_double = int(v_gpu.dtype in [np.float64, np.complex128])
     use_complex = int(v_gpu.dtype in [np.complex64, np.complex128])
@@ -714,7 +714,7 @@ __global__ void cutoff_invert_s(FLOAT *s, FLOAT *cutoff, unsigned int N) {
 }
 """)
 
-def pinv(a_gpu, dev, rcond=1e-15):
+def pinv(a_gpu, rcond=1e-15):
     """
     Moore-Penrose pseudoinverse.
 
@@ -724,8 +724,6 @@ def pinv(a_gpu, dev, rcond=1e-15):
     ----------
     a_gpu : pycuda.gpuarray.GPUArray
         Input matrix of shape `(m, n)`.
-    dev : pycuda.driver.Device
-        Device object to be used.
     rcond : float
         Singular values smaller than `rcond`*max(singular_values)`
         are set to zero.
@@ -750,20 +748,22 @@ def pinv(a_gpu, dev, rcond=1e-15):
     >>> linalg.init()
     >>> a = np.asarray(np.random.rand(8, 4), np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
-    >>> a_inv_gpu = linalg.pinv(a_gpu, pycuda.autoinit.device)
+    >>> a_inv_gpu = linalg.pinv(a_gpu)
     >>> np.allclose(np.linalg.pinv(a), a_inv_gpu.get(), 1e-4)
     True
     >>> b = np.asarray(np.random.rand(8, 4)+1j*np.random.rand(8, 4), np.complex64)
     >>> b_gpu = gpuarray.to_gpu(b)
-    >>> b_inv_gpu = linalg.pinv(b_gpu, pycuda.autoinit.device)
+    >>> b_inv_gpu = linalg.pinv(b_gpu)
     >>> np.allclose(np.linalg.pinv(b), b_inv_gpu.get(), 1e-4)
     True
 
     """
 
+    dev = get_current_device()
+    
     # Compute SVD:
     u_gpu, s_gpu, vh_gpu = svd(a_gpu, 0)
-    uh_gpu = hermitian(u_gpu, dev)
+    uh_gpu = hermitian(u_gpu)
 
     # Get block/grid sizes; the number of threads per block is limited
     # to 512 because the cutoff_invert_s kernel defined above uses too
@@ -790,12 +790,12 @@ def pinv(a_gpu, dev, rcond=1e-15):
     
     # The singular values must data type is in uh_gpu:
     if s_gpu.dtype == uh_gpu.dtype:
-        s_diag_gpu = diag(s_gpu, dev)
+        s_diag_gpu = diag(s_gpu)
     else:
-        s_diag_gpu = diag(s_gpu.astype(uh_gpu.dtype), dev)
+        s_diag_gpu = diag(s_gpu.astype(uh_gpu.dtype))
 
     # Finish pinv computation:
-    v_gpu = hermitian(vh_gpu, dev)
+    v_gpu = hermitian(vh_gpu)
     suh_gpu = dot(s_diag_gpu, uh_gpu)
     return dot(v_gpu, suh_gpu)
 
@@ -831,7 +831,7 @@ __global__ void tril(FLOAT *a, unsigned int N) {
 }
 """)
 
-def tril(a_gpu, dev, overwrite=True):
+def tril(a_gpu, overwrite=True):
     """
     Lower triangle of a matrix.
 
@@ -841,8 +841,6 @@ def tril(a_gpu, dev, overwrite=True):
     ----------
     a_gpu : pycuda.gpuarray.GPUArray
         Input matrix of shape `(m, m)`
-    dev : pycuda.driver.Device
-        Device object to be used.
     overwrite : boolean
         If true (default), zero out the upper triangle of the matrix.
         If false, return the result in a newly allocated matrix.
@@ -862,7 +860,7 @@ def tril(a_gpu, dev, overwrite=True):
     >>> linalg.init()
     >>> a = np.asarray(np.random.rand(4, 4), np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
-    >>> l_gpu = linalg.tril(a_gpu, pycuda.autoinit.device, False)
+    >>> l_gpu = linalg.tril(a_gpu, False)
     >>> np.allclose(np.tril(a), l_gpu.get())
     True
     
@@ -871,6 +869,8 @@ def tril(a_gpu, dev, overwrite=True):
     if len(a_gpu.shape) != 2 or a_gpu.shape[0] != a_gpu.shape[1]:
         raise ValueError('matrix must be square')
 
+    dev = get_current_device()
+    
     if a_gpu.dtype == np.float32:
         swap_func = cublas.cublasSswap
         copy_func = cublas.cublasScopy
@@ -969,7 +969,7 @@ __global__ void multiply(FLOAT *x, FLOAT *y, FLOAT *z,
 }
 """)
 
-def multiply(x_gpu, y_gpu, dev, overwrite=True):
+def multiply(x_gpu, y_gpu, overwrite=True):
     """
     Multiply arguments element-wise.
 
@@ -999,7 +999,7 @@ def multiply(x_gpu, y_gpu, dev, overwrite=True):
     >>> y = np.asarray(np.random.rand(4, 4), np.float32)
     >>> x_gpu = gpuarray.to_gpu(x)
     >>> y_gpu = gpuarray.to_gpu(y)
-    >>> z_gpu = linalg.multiply(x_gpu, y_gpu, pycuda.autoinit.device)
+    >>> z_gpu = linalg.multiply(x_gpu, y_gpu)
     >>> np.allclose(x*y, z_gpu.get())
     True
     
@@ -1015,6 +1015,8 @@ def multiply(x_gpu, y_gpu, dev, overwrite=True):
     use_double = int(x_gpu.dtype in [np.float64, np.complex128])
     use_complex = int(x_gpu.dtype in [np.complex64, np.complex128])
 
+    dev = get_current_device()
+    
     # Get block/grid sizes:
     max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
     block_dim, grid_dim = select_block_grid_sizes(dev, x_gpu.shape)
@@ -1042,7 +1044,6 @@ def multiply(x_gpu, y_gpu, dev, overwrite=True):
                  block=block_dim,
                  grid=grid_dim)
         return z_gpu
-
 
 if __name__ == "__main__":
     import doctest

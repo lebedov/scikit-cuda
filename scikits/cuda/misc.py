@@ -410,7 +410,7 @@ __global__ void diff(TYPE *x, TYPE *y, unsigned int N) {
 }
 """)
 
-def diff(x_gpu, dev):
+def diff(x_gpu):
     """
     Calculate the discrete difference.
 
@@ -421,8 +421,6 @@ def diff(x_gpu, dev):
     ----------
     x_gpu : pycuda.gpuarray.GPUArray
         Input vector.
-    dev : pycuda.driver.Device
-        Device object to be used.
 
     Returns
     -------
@@ -438,7 +436,7 @@ def diff(x_gpu, dev):
     >>> import misc
     >>> x = np.asarray(np.random.rand(5), np.float32)
     >>> x_gpu = gpuarray.to_gpu(x)
-    >>> y_gpu = diff(x_gpu, pycuda.autoinit.device)
+    >>> y_gpu = misc.diff(x_gpu)
     >>> np.allclose(np.diff(x), y_gpu.get())
     True
     
@@ -447,6 +445,8 @@ def diff(x_gpu, dev):
     if len(x_gpu.shape) > 1:
         raise ValueError('input must be 1D vector')
 
+    dev = get_current_device()
+    
     use_double = int(x_gpu.dtype in [np.float64, np.complex128])
     use_complex = int(x_gpu.dtype in [np.complex64, np.complex128])
 

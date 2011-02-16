@@ -26,7 +26,7 @@ for t in demo_types:
     print 'Testing pinv for type ' + str(np.dtype(t))
     a = np.asarray((np.random.rand(50, 50)-0.5)/10, t)
     a_gpu = gpuarray.to_gpu(a)
-    a_inv_gpu = culinalg.pinv(a_gpu, pycuda.autoinit.device)
+    a_inv_gpu = culinalg.pinv(a_gpu)
 
     print 'Success status: ', np.allclose(np.linalg.pinv(a), a_inv_gpu.get(), 
 		                      atol=1e-2)

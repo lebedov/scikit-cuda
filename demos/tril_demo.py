@@ -28,5 +28,5 @@ for t in demo_types:
     else:
         a = np.asarray(np.random.rand(N, N)+1j*np.random.rand(N, N), t)
     a_gpu = gpuarray.to_gpu(a)
-    b_gpu = culinalg.tril(a_gpu, pycuda.autoinit.device, False)
+    b_gpu = culinalg.tril(a_gpu, False)
     print 'Success status: ', np.allclose(b_gpu.get(), np.tril(a))

@@ -10,7 +10,7 @@ import pycuda.gpuarray as gpuarray
 from pycuda.compiler import SourceModule
 import numpy as np
 
-from misc import get_dev_attrs, select_block_grid_sizes
+from misc import get_dev_attrs, select_block_grid_sizes, init, get_current_device
 
 # Get installation location of C headers:
 from __info__ import install_headers
@@ -42,7 +42,7 @@ __global__ void sici_array(FLOAT *x, FLOAT *si,
 }
 """)
 
-def sici(x_gpu, dev):
+def sici(x_gpu):
     """
     Sine/Cosine integral.
 
@@ -53,8 +53,6 @@ def sici(x_gpu, dev):
     ----------
     x_gpu : GPUArray
         Input matrix of shape `(m, n)`.
-    dev : pycuda.driver.Device
-        Device object to be used.
         
     Returns
     -------
@@ -87,6 +85,8 @@ def sici(x_gpu, dev):
     else:
         raise ValueError('unsupported type')
 
+    dev = get_current_device()
+    
     # Get block/grid sizes:
     max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
     block_dim, grid_dim = select_block_grid_sizes(dev, x_gpu.shape)
@@ -169,7 +169,7 @@ __global__ void e1z(COMPLEX *z, COMPLEX *e,
 
 """)
 
-def e1z(z_gpu, dev):
+def e1z(z_gpu):
     """
     Exponential integral with `n = 1` of complex arguments.
 
@@ -177,8 +177,6 @@ def e1z(z_gpu, dev):
     ----------
     x_gpu : GPUArray
         Input matrix of shape `(m, n)`.
-    dev : pycuda.driver.Device
-        Device object to be used.
         
     Returns
     -------
@@ -209,6 +207,8 @@ def e1z(z_gpu, dev):
     else:
         raise ValueError('unsupported type')
 
+    dev = get_current_device()
+    
     # Get block/grid sizes; the number of threads per block is limited
     # to 256 because the e1z kernel defined above uses too many
     # registers to be invoked more threads per block:
@@ -233,7 +233,6 @@ def e1z(z_gpu, dev):
               block=block_dim,
               grid=grid_dim)
     return e_gpu
-
     
 if __name__ == "__main__":
     import doctest
