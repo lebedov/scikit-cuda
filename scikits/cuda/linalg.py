@@ -505,7 +505,7 @@ conj_template = Template("""
 #define COMPLEX pycuda::complex<float>
 #endif
 
-__global__ void conj(COMPLEX *a, unsigned int N)
+__global__ void conj_inplace(COMPLEX *a, unsigned int N)
 {
     unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
                        blockIdx.x*${max_threads_per_block}+threadIdx.x;
@@ -513,26 +513,37 @@ __global__ void conj(COMPLEX *a, unsigned int N)
     if (idx < N)                       
         a[idx] = conj(a[idx]);
 }
+
+__global__ void conj(COMPLEX *a, COMPLEX *ac, unsigned int N)
+{
+    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
+                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+
+    if (idx < N)                       
+        ac[idx] = conj(a[idx]);
+}
 """)
 
-def conj(a_gpu):
+def conj(a_gpu, overwrite=True):
     """
     Complex conjugate.
     
-    Compute the complex conjugate of the matrix in device memory.
+    Compute the complex conjugate of the array in device memory.
 
     Parameters
     ----------
     a_gpu : pycuda.gpuarray.GPUArray
-        Input matrix of shape `(m, n)`.
+        Input array of shape `(m, n)`.
+    overwrite : bool
+        If true (default), save the result in the specified array.
+        If false, return the result in a newly allocated array.
+        
+    Returns
+    -------
+    ac_gpu : pycuda.gpuarray.GPUArray    
+        Conjugate of the input array. If `overwrite` is true, the
+        returned matrix is the same as the input array.
 
-    Notes
-    -----
-    The input matrix is modified in place.
-
-    This function assumes that the input matrix contains complex
-    numbers; undefined behavior may occur for other types.
-    
     Examples
     --------
     >>> import pycuda.driver as drv
@@ -576,11 +587,20 @@ def conj(a_gpu):
                           max_blocks_per_grid=max_blocks_per_grid),
                           cache_dir=cache_dir)
 
-    conj = conj_mod.get_function("conj")
-    conj(a_gpu, np.uint32(a_gpu.size),         
-         block=block_dim,
-         grid=grid_dim)
-
+    if overwrite:
+        conj_inplace = conj_mod.get_function("conj_inplace")
+        conj_inplace(a_gpu, np.uint32(a_gpu.size),         
+                     block=block_dim,
+                     grid=grid_dim)
+        return a_gpu
+    else:
+        conj = conj_mod.get_function("conj")
+        ac_gpu = gpuarray.empty_like(a_gpu)
+        conj(a_gpu, ac_gpu, np.uint32(a_gpu.size),         
+             block=block_dim,
+             grid=grid_dim)
+        return ac_gpu
+        
 diag_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
