@@ -13,6 +13,7 @@ import pycuda.gpuarray as gpuarray
 from pycuda.compiler import SourceModule
 import numpy as np
 
+import cuda
 import cublas
 import cula
 
@@ -117,6 +118,19 @@ def get_compute_capability(dev):
 
     return np.float(string.join([str(i) for i in
                                  dev.compute_capability()], '.'))
+
+def get_current_device():
+    """
+    Get the device in use by the current context.
+
+    Returns
+    -------
+    d : pycuda.driver.Device
+        Device in use by current context.
+
+    """
+
+    return drv.Device(cuda.cudaGetDevice())
 
 def get_dev_attrs(dev):
     """
