@@ -97,7 +97,7 @@ def gen_trapz_mult(N, mult_type, dev):
                                     cache_dir=cache_dir)
 
     gen_trapz_mult = gen_trapz_mult_mod.get_function("gen_trapz_mult")    
-    gen_trapz_mult(mult_gpu.gpudata, np.uint32(N),
+    gen_trapz_mult(mult_gpu, np.uint32(N),
                    block=block_dim,
                    grid=grid_dim)
     
@@ -254,7 +254,7 @@ def gen_trapz2d_mult(mat_shape, mult_type, dev):
                                     cache_dir=cache_dir)
 
     gen_trapz2d_mult = gen_trapz2d_mult_mod.get_function("gen_trapz2d_mult")    
-    gen_trapz2d_mult(mult_gpu.gpudata, np.uint32(Ny), np.uint32(Nx),
+    gen_trapz2d_mult(mult_gpu, np.uint32(Ny), np.uint32(Nx),
                      block=block_dim,
                      grid=grid_dim)
     

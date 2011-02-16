@@ -416,8 +416,7 @@ def transpose(a_gpu, dev):
     
     transpose = transpose_mod.get_function("transpose")
     at_gpu = gpuarray.empty(a_gpu.shape[::-1], a_gpu.dtype)
-    transpose(at_gpu.gpudata, a_gpu.gpudata,
-              np.uint32(a_gpu.size),
+    transpose(at_gpu, a_gpu, np.uint32(a_gpu.size),              
               block=block_dim,
               grid=grid_dim)
                     
@@ -490,8 +489,7 @@ def hermitian(a_gpu, dev):
     
     transpose = transpose_mod.get_function("transpose")
     at_gpu = gpuarray.empty(a_gpu.shape[::-1], a_gpu.dtype)
-    transpose(at_gpu.gpudata, a_gpu.gpudata,
-              np.uint32(a_gpu.size),
+    transpose(at_gpu, a_gpu, np.uint32(a_gpu.size),              
               block=block_dim,
               grid=grid_dim)
                     
@@ -579,8 +577,7 @@ def conj(a_gpu, dev):
                           cache_dir=cache_dir)
 
     conj = conj_mod.get_function("conj")
-    conj(a_gpu.gpudata,
-         np.uint32(a_gpu.size),
+    conj(a_gpu, np.uint32(a_gpu.size),         
          block=block_dim,
          grid=grid_dim)
 
@@ -690,7 +687,7 @@ def diag(v_gpu, dev):
                           cache_dir=cache_dir)
 
     diag = diag_mod.get_function("diag")    
-    diag(v_gpu.gpudata, d_gpu.gpudata, np.uint32(d_gpu.size),
+    diag(v_gpu, d_gpu, np.uint32(d_gpu.size),
          block=block_dim,
          grid=grid_dim)
     
@@ -787,7 +784,7 @@ def pinv(a_gpu, dev, rcond=1e-15):
     cutoff_invert_s = \
                     cutoff_invert_s_mod.get_function('cutoff_invert_s')
     cutoff_gpu = gpuarray.max(s_gpu)*rcond
-    cutoff_invert_s(s_gpu.gpudata, cutoff_gpu.gpudata,
+    cutoff_invert_s(s_gpu, cutoff_gpu,
                     np.uint32(s_gpu.size),
                     block=block_dim, grid=grid_dim)
     
@@ -920,7 +917,7 @@ def tril(a_gpu, dev, overwrite=True):
         a_orig_gpu = gpuarray.empty(a_gpu.shape, a_gpu.dtype)
         copy_func(a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
 
-    tril(a_gpu.gpudata, np.uint32(a_gpu.size),
+    tril(a_gpu, np.uint32(a_gpu.size),
          block=block_dim,
          grid=grid_dim)
 
@@ -1034,15 +1031,14 @@ def multiply(x_gpu, y_gpu, dev, overwrite=True):
                           cache_dir=cache_dir)
     if overwrite:
         multiply = multiply_mod.get_function("multiply_inplace")
-        multiply(x_gpu.gpudata, y_gpu.gpudata, np.uint32(x_gpu.size),
+        multiply(x_gpu, y_gpu, np.uint32(x_gpu.size),
                  block=block_dim,
                  grid=grid_dim)
         return y_gpu
     else:
         multiply = multiply_mod.get_function("multiply")
         z_gpu = gpuarray.empty(x_gpu.shape, x_gpu.dtype)
-        multiply(x_gpu.gpudata, y_gpu.gpudata,
-                 z_gpu.gpudata, np.uint32(x_gpu.size),
+        multiply(x_gpu, y_gpu, z_gpu, np.uint32(x_gpu.size),                 
                  block=block_dim,
                  grid=grid_dim)
         return z_gpu

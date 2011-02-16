@@ -105,7 +105,7 @@ def sici(x_gpu, dev):
 
     si_gpu = gpuarray.empty_like(x_gpu)
     ci_gpu = gpuarray.empty_like(x_gpu)
-    sici_func(x_gpu.gpudata, si_gpu.gpudata, ci_gpu.gpudata,
+    sici_func(x_gpu, si_gpu, ci_gpu,
               np.uint32(x_gpu.size),
               block=block_dim,
               grid=grid_dim)
@@ -228,7 +228,7 @@ def e1z(z_gpu, dev):
     e1z_func = e1z_mod.get_function("e1z")
 
     e_gpu = gpuarray.empty_like(z_gpu)
-    e1z_func(z_gpu.gpudata, e_gpu.gpudata,
+    e1z_func(z_gpu, e_gpu,
               np.uint32(z_gpu.size),
               block=block_dim,
               grid=grid_dim)

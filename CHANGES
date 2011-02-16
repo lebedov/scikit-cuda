@@ -8,6 +8,7 @@ Release 0.04 - (January ?, 2011)
 * Fix bug in cutoff_invert kernel.
 * Add get_compute_capability function to misc module.
 * Use pycuda-complex.hpp to improve kernel readability.
+* Add integrate module.
 * Add unit tests.
 
 Release 0.03 - (November 22, 2010)

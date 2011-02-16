@@ -359,7 +359,7 @@ def maxabs(x_gpu):
 
     maxabs = maxabs_mod.get_function("maxabs")
     m_gpu = gpuarray.empty(1, real_type)
-    maxabs(x_gpu.gpudata, m_gpu.gpudata, np.uint32(x_gpu.size),
+    maxabs(x_gpu, m_gpu, np.uint32(x_gpu.size),
            block=(1, 1, 1), grid=(1, 1))
 
     return m_gpu
@@ -454,7 +454,7 @@ def diff(x_gpu, dev):
 
     N = x_gpu.size
     y_gpu = gpuarray.empty((N-1,), x_gpu.dtype)
-    diff(x_gpu.gpudata, y_gpu.gpudata, np.uint32(N),
+    diff(x_gpu, y_gpu, np.uint32(N),
          block=block_dim,
          grid=grid_dim)
 
