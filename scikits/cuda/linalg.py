@@ -620,20 +620,15 @@ diag_template = Template("""
 #endif
 #endif
 
-// N must contain the number of elements in d:
+// Assumes that d already contains zeros in all positions.
+// N must contain the number of elements in v.
 __global__ void diag(FLOAT *v, FLOAT *d, int N) {
     unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
                        blockIdx.x*${max_threads_per_block}+threadIdx.x;
-    unsigned int ix = idx/${cols};
-    unsigned int iy = idx%${cols};
-    
     if (idx < N)
-        if (ix == iy) {
-            d[idx] = v[ix];
-        } else {
-            d[idx] = 0.0;
-        }
+        d[idx*(N+1)] = v[idx];
 }
+
 """)
 
 def diag(v_gpu):
@@ -687,9 +682,9 @@ def diag(v_gpu):
     use_double = int(v_gpu.dtype in [np.float64, np.complex128])
     use_complex = int(v_gpu.dtype in [np.complex64, np.complex128])
 
-    # Allocate output matrix:
-    d_gpu = gpuarray.empty((v_gpu.size, v_gpu.size), v_gpu.dtype)
-    
+    # Initialize output matrix:
+    d_gpu = gpuarray.zeros((v_gpu.size, v_gpu.size), v_gpu.dtype)
+
     # Get block/grid sizes:
     max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
     block_dim, grid_dim = select_block_grid_sizes(dev, d_gpu.shape)
@@ -700,14 +695,13 @@ def diag(v_gpu):
     cache_dir=None
     diag_mod = \
              SourceModule(diag_template.substitute(use_double=use_double,
-                                                       use_complex=use_complex,
+                                                   use_complex=use_complex,
                           max_threads_per_block=max_threads_per_block,
-                          max_blocks_per_grid=max_blocks_per_grid,
-                          cols=v_gpu.size),
+                          max_blocks_per_grid=max_blocks_per_grid),
                           cache_dir=cache_dir)
 
     diag = diag_mod.get_function("diag")    
-    diag(v_gpu, d_gpu, np.uint32(d_gpu.size),
+    diag(v_gpu, d_gpu, np.uint32(v_gpu.size),
          block=block_dim,
          grid=grid_dim)
     
