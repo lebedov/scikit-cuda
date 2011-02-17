@@ -707,6 +707,108 @@ def diag(v_gpu):
     
     return d_gpu
 
+eye_template = Template("""
+#include <pycuda/pycuda-complex.hpp>
+
+#define USE_DOUBLE ${use_double}
+#define USE_COMPLEX ${use_complex}
+#if USE_DOUBLE == 1
+#if USE_COMPLEX == 1
+#define FLOAT pycuda::complex<double>
+#else
+#define FLOAT double
+#endif
+#else
+#if USE_COMPLEX == 1
+#define FLOAT pycuda::complex<float>
+#else
+#define FLOAT float
+#endif
+#endif
+
+// Assumes that d already contains zeros in all positions.
+// N must contain the number of rows or columns in the matrix.
+__global__ void eye(FLOAT *d, int N) {
+    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
+                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    if (idx < N)
+        d[idx*(N+1)] = FLOAT(1.0);
+}
+
+""")
+
+def eye(N, dtype=np.float32):
+    """
+    Construct a 2D matrix with ones on the diagonal and zeros elsewhere.
+
+    Constructs a matrix in device memory whose diagonal elements
+    are set to 1 and non-diagonal elements are set to 0.
+
+    Parameters
+    ----------
+    N : int
+        Number of rows or columns in the output matrix.
+
+    Returns
+    -------
+    e_gpu : pycuda.gpuarray.GPUArray
+        Diagonal matrix of dimensions `[N, N]` with diagonal values
+        set to 1.
+        
+    Examples
+    --------
+    >>> import pycuda.driver as drv
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import pycuda.autoinit
+    >>> import numpy as np
+    >>> import linalg
+    >>> linalg.init()
+    >>> N = 5
+    >>> e_gpu = linalg.eye(N)
+    >>> np.all(e_gpu.get() == np.eye(N))
+    True
+    >>> e_gpu = linalg.eye(v_gpu, np.complex64)
+    >>> np.all(e_gpu.get() == np.eye(N, np.complex64))
+    True
+    
+    """
+
+    if dtype not in [np.float32, np.float64, np.complex64,
+                     np.complex128]:
+        raise ValueError('unrecognized type')
+    if N <= 0:
+        raise ValueError('N must be greater than 0')
+    
+    dev = get_current_device()
+    
+    use_double = int(dtype in [np.float64, np.complex128])
+    use_complex = int(dtype in [np.complex64, np.complex128])
+
+    # Initialize output matrix:
+    e_gpu = gpuarray.zeros((N, N), dtype)
+
+    # Get block/grid sizes:
+    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
+    block_dim, grid_dim = select_block_grid_sizes(dev, e_gpu.shape)
+    max_blocks_per_grid = max(max_grid_dim)
+
+    # Set this to False when debugging to make sure the compiled kernel is
+    # not cached:
+    cache_dir=None
+    eye_mod = \
+             SourceModule(eye_template.substitute(use_double=use_double,
+                                                   use_complex=use_complex,
+                          max_threads_per_block=max_threads_per_block,
+                          max_blocks_per_grid=max_blocks_per_grid),
+                          cache_dir=cache_dir)
+
+    eye = eye_mod.get_function("eye")    
+    eye(e_gpu, np.uint32(N),
+        block=block_dim,
+        grid=grid_dim)
+    
+    return e_gpu
+
 cutoff_invert_s_template = Template("""
 #define USE_DOUBLE ${use_double}
 #if USE_DOUBLE == 1
