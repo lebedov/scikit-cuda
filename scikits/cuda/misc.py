@@ -336,7 +336,7 @@ def maxabs(x_gpu):
 
     Notes
     -----
-    This implementation could be made faster by computing the absolute
+    This function could be made faster by computing the absolute
     values of the input array in parallel.
     
     Examples
@@ -351,17 +351,9 @@ def maxabs(x_gpu):
     
     """
 
-    if x_gpu.dtype in [np.float64, np.complex128]:
-        use_double = 1
-        real_type = np.float64
-    else:
-        use_double = 0
-        real_type = np.float32
-    
-    if x_gpu.dtype in [np.complex64, np.complex128]:
-        use_complex = 1
-    else:
-        use_complex = 0
+    use_double = int(x_gpu.dtype in [np.float64, np.complex128])
+    use_complex = int(x_gpu.dtype in [np.complex64, np.complex128])
+    real_type = np.float64 if use_double else np.float32
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
@@ -378,6 +370,88 @@ def maxabs(x_gpu):
 
     return m_gpu
 
+cumsum_template = Template("""
+#include <pycuda/pycuda-complex.hpp>
+
+#define USE_DOUBLE ${use_double}
+#define USE_COMPLEX ${use_complex}
+
+#if USE_DOUBLE == 1
+#define REAL_TYPE double
+#if USE_COMPLEX == 1
+#define TYPE pycuda::complex<double>
+#else
+#define TYPE double
+#endif
+#else
+#define REAL_TYPE float
+#if USE_COMPLEX == 1
+#define TYPE pycuda::complex<float>
+#else
+#define TYPE float
+#endif
+#endif
+
+// This kernel should only be invoked on a single thread:
+__global__ void cumsum(TYPE *x, TYPE *c, unsigned int N) {
+    unsigned int idx = threadIdx.x;
+
+    if (idx == 0) {
+        TYPE sum_curr = 0;
+        for (unsigned i = 0; i < N; i++) {
+            sum_curr += x[i];
+            c[i] = sum_curr;
+        }
+    }
+}
+""")
+
+def cumsum(x_gpu):
+    """
+    Cumulative sum.
+
+    Return the cumulative sum of the elements in the specified array.
+    
+    Parameters
+    ----------
+    x_gpu : pycuda.gpuarray.GPUArray
+        Input array.
+
+    Returns
+    -------
+    c_gpu : pycuda.gpuarray.GPUArray
+        Output array containing cumulative sum of `x_gpu`.
+        
+    Notes
+    -----
+    This function could be made faster by using a parallel prefix sum.
+
+    Examples
+    --------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import misc
+    >>> x_gpu = gpuarray.to_gpu(np.random.rand(5).astype(np.float32))
+    >>> c_gpu = misc.cumsum(x_gpu)
+    >>> np.allclose(c_gpu.get(), np.cumsum(x_gpu.get()))
+    True
+    
+    """
+
+    use_double = int(x_gpu.dtype in [np.float64, np.complex128])
+    use_complex = int(x_gpu.dtype in [np.complex64, np.complex128])
+    
+    cumsum_mod = \
+                SourceModule(cumsum_template.substitute(use_double=use_double,
+                                                        use_complex=use_complex))
+
+    cumsum = cumsum_mod.get_function("cumsum")
+    c_gpu = gpuarray.empty_like(x_gpu)
+    cumsum(x_gpu, c_gpu, np.uint32(x_gpu.size),
+           block=(1, 1, 1), grid=(1, 1))
+
+    return c_gpu
+    
 diff_mod_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
