@@ -3,7 +3,7 @@
 Change Log
 ==========
 
-Release 0.04 - (January ?, 2011)
+Release 0.04 - (March ?, 2011)
 --------------------------------
 * Fix bug in cutoff_invert kernel.
 * Add get_compute_capability function and other goodies to misc module.
@@ -11,6 +11,7 @@ Release 0.04 - (January ?, 2011)
 * Add integrate module.
 * Add unit tests for high-level functions.
 * Automatically determine device used by current context.
+* Support batched and multidimensional FFT operations.
 
 Release 0.03 - (November 22, 2010)
 ----------------------------------

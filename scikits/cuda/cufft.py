@@ -143,6 +143,28 @@ def cufftPlan3d(nx, ny, nz, fft_type):
     cufftCheckStatus(status)
     return plan
 
+_libcufft.cufftPlanMany.restype = int
+_libcufft.cufftPlanMany.argtypes = [ctypes.c_void_p,
+                                    ctypes.c_int,
+                                    ctypes.c_void_p,
+                                    ctypes.c_void_p,
+                                    ctypes.c_int,
+                                    ctypes.c_int,
+                                    ctypes.c_void_p,
+                                    ctypes.c_int,
+                                    ctypes.c_int,
+                                    ctypes.c_int,
+                                    ctypes.c_int]                                    
+def cufftPlanMany(rank, n, fft_type, batch):
+    """Create batched FFT plan configuration."""
+
+    plan = ctypes.c_void_p()
+    status = _libcufft.cufftPlanMany(ctypes.byref(plan), rank, n,
+                                     None, 1, 0, None, 1, 0, fft_type,
+                                     batch)
+    cufftCheckStatus(status)
+    return plan
+    
 _libcufft.cufftDestroy.restype = int
 _libcufft.cufftDestroy.argtypes = [ctypes.c_void_p]
 def cufftDestroy(plan):

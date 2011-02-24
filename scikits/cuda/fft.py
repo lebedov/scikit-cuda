@@ -23,16 +23,12 @@ class Plan:
         Type of input data.
     out_dtype : { numpy.float32, numpy.float64, numpy.complex64, numpy.complex128 }
         Type of output data.
-
-    Notes
-    -----
-    Transform plan configurations of dimensions higher than 3 are
-    supported by CUFFT, but have not yet been exposed in this
-    function.
-    
+    batch : int
+        Number of FFTs to configure in parallel (default is 1).
+            
     """
     
-    def __init__(self, shape, in_dtype, out_dtype):
+    def __init__(self, shape, in_dtype, out_dtype, batch=1):
 
         if np.isscalar(shape):
             self.shape = (shape, )
@@ -41,6 +37,10 @@ class Plan:
 
         self.in_dtype = in_dtype
         self.out_dtype = out_dtype
+
+        if batch <= 0:
+            raise ValueError('batch size must be greater than 0')
+        self.batch = batch
         
         # Determine type of transformation:
         if in_dtype == np.float32 and out_dtype == np.complex64:
@@ -65,17 +65,12 @@ class Plan:
             raise ValueError('unsupported input/output type combination')
 
         # Set up plan:
-        if len(self.shape) == 1:
-            self.handle = cufft.cufftPlan1d(self.shape[0],
-                                            self.fft_type, 1)
-        elif len(self.shape) == 2:
-            self.handle = cufft.cufftPlan2d(self.shape[0], self.shape[1],
-                                            self.fft_type)
-        elif len(self.shape) == 3:
-            self.handle = cufft.cufftPlan3d(self.shape[0], self.shape[1],
-                                            self.shape[2], self.fft_type)
+        if len(self.shape) > 0:
+            n = np.asarray(self.shape, np.int32)
+            self.handle = cufft.cufftPlanMany(len(self.shape), n.ctypes.data,
+                                              self.fft_type, self.batch)
         else:
-            raise ValueError('transforms of dimension > 3 not yet supported')
+            raise ValueError('invalid transform size')
                                             
     def __del__(self):
         cufft.cufftDestroy(self.handle)
@@ -178,7 +173,7 @@ def fft(x_gpu, y_gpu, plan, scale=False):
     """
 
     if scale == True:
-        return _fft(x_gpu, y_gpu, plan, cufft.CUFFT_FORWARD, x_gpu.size)
+        return _fft(x_gpu, y_gpu, plan, cufft.CUFFT_FORWARD, x_gpu.size/plan.batch)
     else:
         return _fft(x_gpu, y_gpu, plan, cufft.CUFFT_FORWARD)
     
@@ -225,7 +220,7 @@ def ifft(x_gpu, y_gpu, plan, scale=False):
     """
 
     if scale == True:
-        return _fft(x_gpu, y_gpu, plan, cufft.CUFFT_INVERSE, y_gpu.size)
+        return _fft(x_gpu, y_gpu, plan, cufft.CUFFT_INVERSE, y_gpu.size/plan.batch)
     else:
         return _fft(x_gpu, y_gpu, plan, cufft.CUFFT_INVERSE)
 
