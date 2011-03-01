@@ -260,22 +260,74 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
 def ones(shape, dtype, allocator=drv.mem_alloc):
     """
     Return an array of the given shape and dtype filled with ones.
+
+    Parameters
+    ----------
+    shape : tuple
+        Array shape.
+    dtype : data-type
+        Data type for the array.
+    allocator : callable
+        Returns an object that represents the memory allocated for
+        the requested array.
+
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray
+        Array of ones with the given shape and dtype.
+        
     """
 
-    result = gpuarray.GPUArray(shape, dtype, allocator)
-    result.fill(1)
-    return result
+    out = gpuarray.GPUArray(shape, dtype, allocator)
+    out.fill(1)
+    return out
 
 def ones_like(other):
     """
     Return an array of ones with the same shape and type as a given array.
+
+    Parameters
+    ----------
+    other : pycuda.gpuarray.GPUArray
+        Array whose shape and dtype are to be used to allocate a new array.
+ 
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray
+        Array of ones with the shape and dtype of `other`.
+
     """
     
-    result = gpuarray.GPUArray(other.shape, other.dtype,
-                               other.allocator)
-    result.fill(1)
-    return result
-            
+    out = gpuarray.GPUArray(other.shape, other.dtype,
+                            other.allocator)
+    out.fill(1)
+    return out
+
+def inf(shape, dtype, allocator=drv.mem_alloc):
+    """
+    Return an array of the given shape and dtype filled with infs.
+
+    Parameters
+    ----------
+    shape : tuple
+        Array shape.
+    dtype : data-type
+        Data type for the array.
+    allocator : callable
+        Returns an object that represents the memory allocated for
+        the requested array.
+
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray
+        Array of infs with the given shape and dtype.
+        
+    """
+
+    out = gpuarray.GPUArray(shape, dtype, allocator)
+    out.fill(np.inf)
+    return out
+
 maxabs_mod_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
