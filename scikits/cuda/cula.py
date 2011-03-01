@@ -39,7 +39,20 @@ else:
 _libcula.culaGetStatusString.restype = ctypes.c_char_p
 _libcula.culaGetStatusString.argtypes = [ctypes.c_int]
 def culaGetStatusString(e):
-    """Get string associated with the specified CULA error status code."""
+    """
+    Get string associated with the specified CULA status code.
+
+    Parameters
+    ----------
+    e : int
+        Status code.
+
+    Returns
+    -------
+    s : str
+        Status string.
+        
+    """
 
     return _libcula.culaGetStatusString(e)
 
@@ -112,45 +125,122 @@ culaExceptions = {
     }
 
 # CULA functions:
-def culaCheckStatus(status):
-    """Raise an exception corresponding to the specified CULA status
-    code."""
-    
-    if status != 0:
-        try:
-            raise culaExceptions[status]
-        except KeyError:
-            raise culaError
-
 _libcula.culaGetErrorInfo.restype = int
-_libcula.culaGetErrorInfo.argtype = [ctypes.c_int]
-def culaGetErrorInfo(e):
-    """Returns extended information about the last CULA error."""
+def culaGetErrorInfo():
+    """
+    Returns extended information code for the last CULA error.
 
-    return _libcula.culaGetErrorInfo(e)
+    Returns
+    -------
+    err : int
+        Extended information code.
+        
+    """
 
+    return _libcula.culaGetErrorInfo()
+
+_libcula.culaGetErrorInfoString.restype = int
+_libcula.culaGetErrorInfoString.argtypes = [ctypes.c_int,
+                                            ctypes.c_void_p,
+                                            ctypes.c_void_p,
+                                            ctypes.c_int]
+def culaGetErrorInfoString(e, i, bufsize=100):
+    """
+    Returns a readable CULA error string.
+
+    Returns a readable error string corresponding to a given CULA
+    error code and extended error information code.
+
+    Parameters
+    ----------
+    e : int
+        CULA error code.
+    i : int
+        Extended information code.
+    bufsize : int
+        Length of string to return.
+
+    Returns
+    -------
+    s : str
+        Error string.
+        
+    """
+
+    buf = ctypes.create_string_buffer(bufsize)
+    status = _libcula.culaGetErrorInfoString(e, i, buf, bufsize)
+    culaCheckStatus(status)
+    return buf.value
+    
 def culaGetLastStatus():
-    """Returns the last status code returned from a CULA function."""
+    """
+    Returns the last status code returned from a CULA function.
+
+    Returns
+    -------
+    s : int
+        Status code.
+        
+    """
     
     return _libcula.culaGetLastStatus()
+
+def culaCheckStatus(status):
+    """
+    Raise an exception corresponding to the specified CULA status
+    code.
+
+    Parameters
+    ----------
+    status : int
+        CULA status code.
+        
+    """
+    
+    if status != 0:
+        error = culaGetErrorInfo()
+        try:
+            raise culaExceptions[status](error)
+        except KeyError:
+            raise culaError(error)
 
 _libcula.culaSelectDevice.restype = int
 _libcula.culaSelectDevice.argtype = [ctypes.c_int]
 def culaSelectDevice(dev):
-    """Selects a device with which CULA will operate. Must be called
-    before culaInitialize()."""
+    """
+    Selects a device with which CULA will operate.
+
+    Parameters
+    ----------
+    dev : int
+        GPU device number.
+        
+    Notes
+    -----
+    Must be called before `culaInitialize`.
+    
+    """
 
     status = _libcula.culaSelectDevice(dev)
     culaCheckStatus(status)
 
 def culaInitialize():
-    """Must be called before using any other CULA function."""
+    """
+    Initialize CULA.
+
+    Notes
+    -----
+    Must be called before using any other CULA functions.
+
+    """
     
     status = _libcula.culaInitialize()
     culaCheckStatus(status)
 
 def culaShutdown():
-    """Shuts down CULA."""
+    """
+    Shuts down CULA.
+    """
     
     status = _libcula.culaShutdown()
     culaCheckStatus(status)
