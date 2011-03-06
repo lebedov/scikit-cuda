@@ -18,7 +18,7 @@ class Plan:
     Parameters
     ----------
     shape : tuple of ints
-        Transform size. Must contain no more than 3 elements.
+        Transform shape. May contain more than 3 elements.
     in_dtype : { numpy.float32, numpy.float64, numpy.complex64, numpy.complex128 }
         Type of input data.
     out_dtype : { numpy.float32, numpy.float64, numpy.complex64, numpy.complex128 }
