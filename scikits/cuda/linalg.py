@@ -247,8 +247,8 @@ def dot(a_gpu, b_gpu):
         m = b_gpu.shape[1]
         n = a_gpu.shape[0]
         k = b_gpu.shape[0]
-        lda = m
-        ldb = k
+        lda = max(1, m)
+        ldb = max(1, k)
         ldc = max(1, m)
 
         c_gpu = gpuarray.empty((a_gpu.shape[0], b_gpu.shape[1]), a_gpu.dtype)
