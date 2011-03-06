@@ -66,6 +66,10 @@ class cufftInvalidSize(cufftError):
     """The user specified an unsupported FFT size."""
     pass
 
+class cufftUnalignedData(cufftError):
+    """Input or output does not satisfy texture alignment requirements."""
+    pass
+
 cufftExceptions = {
     0x1: cufftInvalidPlan,
     0x2: cufftAllocFailed,
@@ -75,6 +79,7 @@ cufftExceptions = {
     0x6: cufftExecFailed,
     0x7: cufftSetupFailed,
     0x8: cufftInvalidSize,
+    0x9: cufftUnalignedData
     }
 
 def cufftCheckStatus(status):
