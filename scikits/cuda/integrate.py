@@ -17,16 +17,14 @@ from misc import get_dev_attrs, select_block_grid_sizes, init, get_current_devic
 gen_trapz_mult_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
-#define USE_DOUBLE ${use_double}
-#define USE_COMPLEX ${use_complex}
-#if USE_DOUBLE == 1
-#if USE_COMPLEX == 1
+#if ${use_double}
+#if ${use_complex}
 #define TYPE pycuda::complex<double>
 #else
 #define TYPE double
 #endif
 #else
-#if USE_COMPLEX == 1
+#if ${use_complex}
 #define TYPE pycuda::complex<float>
 #else
 #define TYPE float
@@ -168,16 +166,14 @@ def trapz(x_gpu, dx=1.0):
 gen_trapz2d_mult_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
-#define USE_DOUBLE ${use_double}
-#define USE_COMPLEX ${use_complex}
-#if USE_DOUBLE == 1
-#if USE_COMPLEX == 1
+#if ${use_double}
+#if ${use_complex}
 #define TYPE pycuda::complex<double>
 #else
 #define TYPE double
 #endif
 #else
-#if USE_COMPLEX == 1
+#if ${use_complex}
 #define TYPE pycuda::complex<float>
 #else
 #define TYPE float

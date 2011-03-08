@@ -331,19 +331,16 @@ def inf(shape, dtype, allocator=drv.mem_alloc):
 maxabs_mod_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
-#define USE_DOUBLE ${use_double}
-#define USE_COMPLEX ${use_complex}
-
-#if USE_DOUBLE == 1
+#if ${use_double}
 #define REAL_TYPE double
-#if USE_COMPLEX == 1
+#if ${use_complex}
 #define TYPE pycuda::complex<double>
 #else
 #define TYPE double
 #endif
 #else
 #define REAL_TYPE float
-#if USE_COMPLEX == 1
+#if ${use_complex}
 #define TYPE pycuda::complex<float>
 #else
 #define TYPE float
@@ -425,19 +422,16 @@ def maxabs(x_gpu):
 cumsum_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
-#define USE_DOUBLE ${use_double}
-#define USE_COMPLEX ${use_complex}
-
-#if USE_DOUBLE == 1
+#if ${use_double}
 #define REAL_TYPE double
-#if USE_COMPLEX == 1
+#if ${use_complex}
 #define TYPE pycuda::complex<double>
 #else
 #define TYPE double
 #endif
 #else
 #define REAL_TYPE float
-#if USE_COMPLEX == 1
+#if ${use_complex}
 #define TYPE pycuda::complex<float>
 #else
 #define TYPE float
@@ -507,19 +501,16 @@ def cumsum(x_gpu):
 diff_mod_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
-#define USE_DOUBLE ${use_double}
-#define USE_COMPLEX ${use_complex}
-
-#if USE_DOUBLE == 1
+#if ${use_double}
 #define REAL_TYPE double
-#if USE_COMPLEX == 1
+#if ${use_complex}
 #define TYPE pycuda::complex<double>
 #else
 #define TYPE double
 #endif
 #else
 #define REAL_TYPE float
-#if USE_COMPLEX == 1
+#if ${use_complex}
 #define TYPE pycuda::complex<float>
 #else
 #define TYPE float

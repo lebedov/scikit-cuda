@@ -19,13 +19,12 @@ from __info__ import install_headers
 sici_mod_template = Template("""
 #include "cuSpecialFuncs.h"
 
-#define USE_DOUBLE ${use_double}
-#if USE_DOUBLE == 0
-#define FLOAT float
-#define SICI(x, si, ci) sicif(x, si, ci)
-#else
+#if ${use_double}
 #define FLOAT double
 #define SICI(x, si, ci) sici(x, si, ci)
+#else
+#define FLOAT float
+#define SICI(x, si, ci) sicif(x, si, ci)
 #endif
 
 __global__ void sici_array(FLOAT *x, FLOAT *si,
@@ -118,13 +117,12 @@ e1z_mod_template = Template("""
 #define PI 3.1415926535897931
 #define EL 0.5772156649015328
 
-#define USE_DOUBLE ${use_double}
-#if USE_DOUBLE == 0
-#define FLOAT float
-#define COMPLEX pycuda::complex<float>
-#else
+#if ${use_double}
 #define FLOAT double
 #define COMPLEX pycuda::complex<double>
+#else
+#define FLOAT float
+#define COMPLEX pycuda::complex<float>
 #endif
 
 __device__ COMPLEX _e1z(COMPLEX z) {

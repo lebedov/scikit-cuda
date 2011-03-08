@@ -345,11 +345,8 @@ def mdot(*args):
 transpose_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
-#define HERMITIAN ${hermitian}
-#define USE_DOUBLE ${use_double}
-#define USE_COMPLEX ${use_complex}
-#if USE_DOUBLE == 1
-#if USE_COMPLEX == 1
+#if ${use_double}
+#if ${use_complex}
 #define FLOAT pycuda::complex<double>
 #define CONJ(x) conj(x)
 #else
@@ -357,7 +354,7 @@ transpose_template = Template("""
 #define CONJ(x) (x)
 #endif
 #else
-#if USE_COMPLEX == 1
+#if ${use_complex}
 #define FLOAT pycuda::complex<float>
 #define CONJ(x) conj(x)
 #else
@@ -374,7 +371,7 @@ __global__ void transpose(FLOAT *odata, FLOAT *idata, unsigned int N)
     unsigned int iy = idx%${cols};
 
     if (idx < N)
-        if (HERMITIAN == 1)
+        if (${hermitian})
             odata[iy*${rows}+ix] = CONJ(idata[ix*${cols}+iy]);
         else
             odata[iy*${rows}+ix] = idata[ix*${cols}+iy];
@@ -530,8 +527,7 @@ def hermitian(a_gpu):
 conj_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
-#define USE_DOUBLE ${use_double}
-#if USE_DOUBLE == 1
+#if ${use_double}
 #define COMPLEX pycuda::complex<double>
 #else
 #define COMPLEX pycuda::complex<float>
@@ -636,16 +632,14 @@ def conj(a_gpu, overwrite=True):
 diag_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
-#define USE_DOUBLE ${use_double}
-#define USE_COMPLEX ${use_complex}
-#if USE_DOUBLE == 1
-#if USE_COMPLEX == 1
+#if ${use_double}
+#if ${use_complex}
 #define FLOAT pycuda::complex<double>
 #else
 #define FLOAT double
 #endif
 #else
-#if USE_COMPLEX == 1
+#if ${use_complex}
 #define FLOAT pycuda::complex<float>
 #else
 #define FLOAT float
@@ -742,16 +736,14 @@ def diag(v_gpu):
 eye_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
-#define USE_DOUBLE ${use_double}
-#define USE_COMPLEX ${use_complex}
-#if USE_DOUBLE == 1
-#if USE_COMPLEX == 1
+#if ${use_double}
+#if ${use_complex}
 #define FLOAT pycuda::complex<double>
 #else
 #define FLOAT double
 #endif
 #else
-#if USE_COMPLEX == 1
+#if ${use_complex}
 #define FLOAT pycuda::complex<float>
 #else
 #define FLOAT float
@@ -842,8 +834,7 @@ def eye(N, dtype=np.float32):
     return e_gpu
 
 cutoff_invert_s_template = Template("""
-#define USE_DOUBLE ${use_double}
-#if USE_DOUBLE == 1
+#if ${use_double}
 #define FLOAT double
 #else
 #define FLOAT float
@@ -948,16 +939,14 @@ def pinv(a_gpu, rcond=1e-15):
 tril_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
-#define USE_DOUBLE ${use_double}
-#define USE_COMPLEX ${use_complex}
-#if USE_DOUBLE == 1
-#if USE_COMPLEX == 1
+#if ${use_double}
+#if ${use_complex}
 #define FLOAT pycuda::complex<double>
 #else
 #define FLOAT double
 #endif
 #else
-#if USE_COMPLEX == 1
+#if ${use_complex}
 #define FLOAT pycuda::complex<float>
 #else
 #define FLOAT float
@@ -1078,16 +1067,14 @@ def tril(a_gpu, overwrite=True):
 multiply_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
-#define USE_DOUBLE ${use_double}
-#define USE_COMPLEX ${use_complex}
-#if USE_DOUBLE == 1
-#if USE_COMPLEX == 1
+#if ${use_double}
+#if ${use_complex}
 #define FLOAT pycuda::complex<double>
 #else
 #define FLOAT double
 #endif
 #else
-#if USE_COMPLEX == 1
+#if ${use_complex}
 #define FLOAT pycuda::complex<float>
 #else
 #define FLOAT float
