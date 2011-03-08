@@ -5,7 +5,7 @@ PyCUDA-based linear algebra functions.
 """
 
 from pprint import pprint
-from string import Template
+from string import Template, lower
 from pycuda.compiler import SourceModule
 import pycuda.gpuarray as gpuarray
 import pycuda.driver as drv
@@ -135,9 +135,15 @@ def svd(a_gpu, full_matrices=1, compute_uv=1):
         vt_gpu = gpuarray.empty((1, 1), a_gpu.dtype)
 
     # Compute SVD and check error status:
+    #print 'before cula call'
+    print 'jobu: %c, jobvt: %c, m: %d, n: %d, a_gpu: %d, lda: %d, s_gpu: %d, u_gpu: %d, ldu: %d, vt_gpu: %d, ldvt: %d' % (jobu, jobvt, m, n, int(a_gpu.gpudata),
+                                                            lda, int(s_gpu.gpudata), int(u_gpu.gpudata),
+                                                            ldu, int(vt_gpu.gpudata), ldvt)
+    
     status = cula_func(jobu, jobvt, m, n, int(a_gpu.gpudata),
                        lda, int(s_gpu.gpudata), int(u_gpu.gpudata),
                        ldu, int(vt_gpu.gpudata), ldvt)
+    #print 'after cula call'
     cula.culaCheckStatus(status)
 
     if compute_uv:
@@ -145,7 +151,7 @@ def svd(a_gpu, full_matrices=1, compute_uv=1):
     else:
         return s_gpu
 
-def dot(a_gpu, b_gpu):
+def dot(x_gpu, y_gpu, transa='N', transb='N'):
     """
     Dot product of two arrays.
 
@@ -155,15 +161,21 @@ def dot(a_gpu, b_gpu):
 
     Parameters
     ----------
-    a_gpu : pycuda.gpuarray.GPUArray
+    x_gpu : pycuda.gpuarray.GPUArray
         Input array.
-    b_gpu : pycuda.gpuarray.GPUArray
+    y_gpu : pycuda.gpuarray.GPUArray
         Input array.
-        
+    transa : char
+        If 'T', compute the product of the transpose of `x_gpu`.
+        If 'C', compute the product of the Hermitian of `x_gpu`.
+    transb : char
+        If 'T', compute the product of the transpose of `y_gpu`.
+        If 'C', compute the product of the Hermitian of `y_gpu`.
+
     Returns
     -------
     c_gpu : pycuda.gpuarray.GPUArray, float{32,64}, or complex{64,128}
-        Dot product of `a_gpu` and `b_gpu`. When the inputs are 1D
+        Inner product of `x_gpu` and `y_gpu`. When the inputs are 1D
         arrays, the result will be returned as a scalar.
     
     Notes
@@ -195,65 +207,87 @@ def dot(a_gpu, b_gpu):
     
     """
 
-    if len(a_gpu.shape) == 1 and len(b_gpu.shape) == 1:
+    if len(x_gpu.shape) == 1 and len(y_gpu.shape) == 1:
 
         # Compute inner product for 1D arrays:
-        if (a_gpu.dtype == np.complex64 and b_gpu.dtype == np.complex64):
+        if (x_gpu.dtype == np.complex64 and y_gpu.dtype == np.complex64):
             cublas_func = cublas._libcublas.cublasCdotu
-        elif (a_gpu.dtype == np.float32 and b_gpu.dtype == np.float32):
+        elif (x_gpu.dtype == np.float32 and y_gpu.dtype == np.float32):
             cublas_func = cublas._libcublas.cublasSdot
-        elif (a_gpu.dtype == np.complex128 and b_gpu.dtype == np.complex128):
+        elif (x_gpu.dtype == np.complex128 and y_gpu.dtype == np.complex128):
             cublas_func = cublas._libcublas.cublasZdotu
-        elif (a_gpu.dtype == np.float64 and b_gpu.dtype == np.float64):
+        elif (x_gpu.dtype == np.float64 and y_gpu.dtype == np.float64):
             cublas_func = cublas._libcublas.cublasDdot
         else:
             raise ValueError('unsupported combination of input types')
 
-        result = cublas_func(a_gpu.size, int(a_gpu.gpudata), 1,
-                             int(b_gpu.gpudata), 1)
+        result = cublas_func(x_gpu.size, int(x_gpu.gpudata), 1,
+                             int(y_gpu.gpudata), 1)
 
-        if a_gpu.dtype == np.complex64:
+        if x_gpu.dtype == np.complex64:
             return np.float32(result.x)+1j*np.float32(result.y)
-        elif a_gpu.dtype == np.complex128:
+        elif x_gpu.dtype == np.complex128:
             return np.float64(result.x)+1j*np.float64(result.y)
-        elif a_gpu.dtype == np.float32:
+        elif x_gpu.dtype == np.float32:
             return np.float32(result)
         else:
             return np.float64(result)
     else:
 
         # Perform matrix multiplication for 2D arrays:
-        if (a_gpu.dtype == np.complex64 and b_gpu.dtype == np.complex64):
+        if (x_gpu.dtype == np.complex64 and y_gpu.dtype == np.complex64):
             cublas_func = cublas._libcublas.cublasCgemm        
             alpha = cuda.cuFloatComplex(1, 0)
             beta = cuda.cuFloatComplex(0, 0)
-        elif (a_gpu.dtype == np.float32 and b_gpu.dtype == np.float32):
+        elif (x_gpu.dtype == np.float32 and y_gpu.dtype == np.float32):
             cublas_func = cublas._libcublas.cublasSgemm
             alpha = np.float32(1.0)
             beta = np.float32(0.0)
-        elif (a_gpu.dtype == np.complex128 and b_gpu.dtype == np.complex128):
+        elif (x_gpu.dtype == np.complex128 and y_gpu.dtype == np.complex128):
             cublas_func = cublas._libcublas.cublasZgemm        
             alpha = cuda.cuDoubleComplex(1, 0)
             beta = cuda.cuDoubleComplex(0, 0)
-        elif (a_gpu.dtype == np.float64 and b_gpu.dtype == np.float64):
+        elif (x_gpu.dtype == np.float64 and y_gpu.dtype == np.float64):
             cublas_func = cublas._libcublas.cublasDgemm
             alpha = np.float64(1.0)
             beta = np.float64(0.0)
         else:
             raise ValueError('unsupported combination of input types')
 
-        transa = 'N'
-        transb = 'N'
-        m = b_gpu.shape[1]
-        n = a_gpu.shape[0]
-        k = b_gpu.shape[0]
-        lda = max(1, m)
-        ldb = max(1, k)
+        transa = lower(transa)
+        transb = lower(transb)        
+
+        if transb in ['t', 'c']:
+            m, k = y_gpu.shape
+        elif transb in ['n']:
+            k, m = y_gpu.shape
+        else:
+            raise ValueError('invalid value for transb')
+
+        if transa in ['t', 'c']:
+            n = x_gpu.shape[1]
+        elif transa in ['n']:
+            n = x_gpu.shape[0]
+        else:
+            raise ValueError('invalid value for transa')
+
+        if transb == 'n':
+            lda = max(1, m)
+        else:
+            lda = max(1, k)
+            
+        if transa == 'n':
+            ldb = max(1, k)
+        else:
+            ldb = max(1, n)
+
         ldc = max(1, m)
 
-        c_gpu = gpuarray.empty((a_gpu.shape[0], b_gpu.shape[1]), a_gpu.dtype)
-        cublas_func(transb, transa, m, n, k, alpha, int(b_gpu.gpudata),
-                    lda, int(a_gpu.gpudata), ldb, beta, int(c_gpu.gpudata), ldc)
+        # Note that the desired shape of the output matrix is the transpose
+        # of what CUBLAS assumes:
+        c_gpu = gpuarray.empty((n, ldc), x_gpu.dtype)
+        cublas_func(transb, transa, m, n, k, alpha, int(y_gpu.gpudata),
+                    lda, int(x_gpu.gpudata), ldb, beta, int(c_gpu.gpudata), ldc)
 
         status = cublas.cublasGetError()
         cublas.cublasCheckStatus(status)
@@ -879,8 +913,10 @@ def pinv(a_gpu, rcond=1e-15):
     
     # Compute SVD:
     u_gpu, s_gpu, vh_gpu = svd(a_gpu, 0)
+    print 'pinv: svd computed'
     uh_gpu = hermitian(u_gpu)
-
+    print 'pinv: uh_gpu computed'
+    
     # Get block/grid sizes; the number of threads per block is limited
     # to 512 because the cutoff_invert_s kernel defined above uses too
     # many registers to be invoked in 1024 threads per block (i.e., on
@@ -903,16 +939,20 @@ def pinv(a_gpu, rcond=1e-15):
     cutoff_invert_s(s_gpu, cutoff_gpu,
                     np.uint32(s_gpu.size),
                     block=block_dim, grid=grid_dim)
+    print 'pinv: cutoff_gpu computed'
     
     # The singular values must data type is in uh_gpu:
     if s_gpu.dtype == uh_gpu.dtype:
         s_diag_gpu = diag(s_gpu)
     else:
         s_diag_gpu = diag(s_gpu.astype(uh_gpu.dtype))
-
+    print 'pinv: s_diag_gpu computed'
+    
     # Finish pinv computation:
     v_gpu = hermitian(vh_gpu)
+    print 'pinv: v_gpu computed'
     suh_gpu = dot(s_diag_gpu, uh_gpu)
+    print 'pinv: suh_gpu computed'
     return dot(v_gpu, suh_gpu)
 
 tril_template = Template("""
