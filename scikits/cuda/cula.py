@@ -205,7 +205,7 @@ def culaCheckStatus(status):
             raise culaError(error)
 
 _libcula.culaSelectDevice.restype = int
-_libcula.culaSelectDevice.argtype = [ctypes.c_int]
+_libcula.culaSelectDevice.argtypes = [ctypes.c_int]
 def culaSelectDevice(dev):
     """
     Selects a device with which CULA will operate.
@@ -223,6 +223,24 @@ def culaSelectDevice(dev):
 
     status = _libcula.culaSelectDevice(dev)
     culaCheckStatus(status)
+
+_libcula.culaGetExecutingDevice.restype = int
+_libcula.culaGetExecutingDevice.argtypes = [ctypes.c_void_p]
+def culaGetExecutingDevice():
+    """
+    Reports the id of the GPU device used by CULA.
+
+    Returns
+    -------
+    dev : int
+       Device id.
+
+    """
+
+    dev = ctypes.c_int()
+    status = _libcula.culaGetExecutingDevice(ctypes.byref(dev))
+    culaCheckStatus(status)
+    return dev.value
 
 def culaInitialize():
     """
