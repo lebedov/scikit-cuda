@@ -37,6 +37,30 @@ class test_misc(TestCase):
         m_gpu = misc.maxabs(x_gpu)
         assert np.allclose(m_gpu.get(), np.max(np.abs(x)))
 
+    def test_cumsum_float32(self):
+        x = np.array([1, 4, 3, 2, 8], np.float32)
+        x_gpu = gpuarray.to_gpu(x)
+        c_gpu = misc.cumsum(x_gpu)
+        assert np.allclose(c_gpu.get(), np.cumsum(x))
+
+    def test_cumsum_float64(self):
+        x = np.array([1, 4, 3, 2, 8], np.float64)
+        x_gpu = gpuarray.to_gpu(x)
+        c_gpu = misc.cumsum(x_gpu)
+        assert np.allclose(c_gpu.get(), np.cumsum(x))
+
+    def test_cumsum_complex64(self):
+        x = np.array([1, 4j, 3, 2j, 8], np.complex64)
+        x_gpu = gpuarray.to_gpu(x)
+        c_gpu = misc.cumsum(x_gpu)
+        assert np.allclose(c_gpu.get(), np.cumsum(x))
+
+    def test_cumsum_complex128(self):
+        x = np.array([1, 4j, 3, 2j, 8], np.complex128)
+        x_gpu = gpuarray.to_gpu(x)
+        c_gpu = misc.cumsum(x_gpu)
+        assert np.allclose(c_gpu.get(), np.cumsum(x))
+
     def test_diff_float32(self):
         x = np.array([1.3, 2.7, 4.9, 5.1], np.float32)
         x_gpu = gpuarray.to_gpu(x)
@@ -65,11 +89,15 @@ def suite():
     s = TestSuite()
     s.addTest(test_misc('test_maxabs_float32'))
     s.addTest(test_misc('test_maxabs_complex64'))
+    s.addTest(test_misc('test_cumsum_float32'))
+    s.addTest(test_misc('test_cumsum_complex64'))
     s.addTest(test_misc('test_diff_float32'))
     s.addTest(test_misc('test_diff_complex64'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_misc('test_maxabs_float64'))
         s.addTest(test_misc('test_maxabs_complex128'))
+        s.addTest(test_misc('test_cumsum_float64'))
+        s.addTest(test_misc('test_cumsum_complex128'))
         s.addTest(test_misc('test_diff_float64'))
         s.addTest(test_misc('test_diff_complex128'))
     return s
