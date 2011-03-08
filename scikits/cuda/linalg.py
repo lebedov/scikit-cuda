@@ -73,33 +73,36 @@ def svd(a_gpu, full_matrices=1, compute_uv=1):
     True
 
     """
-
+    
     # The free version of CULA only supports single precision floating
     # point numbers:
-    real_dtype = np.dtype(np.float32)
-    if a_gpu.dtype == np.complex64:
+    data_type = a_gpu.dtype.type
+    real_type = np.float32
+    if data_type == np.complex64:
         cula_func = cula._libcula.culaDeviceCgesvd        
-    elif a_gpu.dtype == np.float32:
+    elif data_type == np.float32:
         cula_func = cula._libcula.culaDeviceSgesvd
     else:
         if cula._libcula_toolkit == 'premium':
-            if a_gpu.dtype == np.complex128:
+            if data_type == np.complex128:
                 cula_func = cula._libcula.culaDeviceZgesvd
-            elif a_gpu.dtype == np.float64:
+            elif data_type == np.float64:
                 cula_func = cula._libcula.culaDeviceDgesvd
             else:
                 raise ValueError('unsupported type')
-            real_dtype = np.dtype(np.float64)
-            
-    # Transpose shape because CUDA assumes arrays are stored in
-    # column-major format:
-    (m, n) = a_gpu.shape[::-1]
+            real_type = np.float64
+        else:
+            raise ValueError('double precision not supported')
+        
+    # Flip the shape of the input because CUDA assumes arrays are
+    # stored in column-major format:
+    n, m = a_gpu.shape
     
     # Set LDA:
     lda = max(1, m)
 
     # Set S:
-    s_gpu = gpuarray.empty(min(m, n), real_dtype)
+    s_gpu = gpuarray.empty(min(m, n), real_type)
     
     # Set JOBU and JOBVT:
     if compute_uv:
@@ -116,34 +119,29 @@ def svd(a_gpu, full_matrices=1, compute_uv=1):
     # Set LDU and transpose of U:
     ldu = m
     if jobu == 'A':
-        u_gpu = gpuarray.empty((ldu, m), a_gpu.dtype)
+        u_gpu = gpuarray.empty((ldu, m), data_type)
     elif jobu == 'S':
-        u_gpu = gpuarray.empty((min(m, n), ldu), a_gpu.dtype)
+        u_gpu = gpuarray.empty((min(m, n), ldu), data_type)
     else:
         ldu = 1
-        u_gpu = gpuarray.empty((1, 1), a_gpu.dtype)
+        u_gpu = gpuarray.empty((1, 1), data_type)
         
     # Set LDVT and transpose of VT:
     if jobvt == 'A':
         ldvt = n
-        vt_gpu = gpuarray.empty((n, n), a_gpu.dtype)
+        vt_gpu = gpuarray.empty((n, n), data_type)
     elif jobvt == 'S':
         ldvt = min(m, n)
-        vt_gpu = gpuarray.empty((n, ldvt), a_gpu.dtype)
+        vt_gpu = gpuarray.empty((n, ldvt), data_type)
     else:
         ldvt = 1
-        vt_gpu = gpuarray.empty((1, 1), a_gpu.dtype)
+        vt_gpu = gpuarray.empty((1, 1), data_type)
 
     # Compute SVD and check error status:
-    #print 'before cula call'
-    print 'jobu: %c, jobvt: %c, m: %d, n: %d, a_gpu: %d, lda: %d, s_gpu: %d, u_gpu: %d, ldu: %d, vt_gpu: %d, ldvt: %d' % (jobu, jobvt, m, n, int(a_gpu.gpudata),
-                                                            lda, int(s_gpu.gpudata), int(u_gpu.gpudata),
-                                                            ldu, int(vt_gpu.gpudata), ldvt)
-    
     status = cula_func(jobu, jobvt, m, n, int(a_gpu.gpudata),
                        lda, int(s_gpu.gpudata), int(u_gpu.gpudata),
                        ldu, int(vt_gpu.gpudata), ldvt)
-    #print 'after cula call'
+
     cula.culaCheckStatus(status)
 
     if compute_uv:
@@ -908,19 +906,15 @@ def pinv(a_gpu, rcond=1e-15):
     True
 
     """
-
-    dev = get_current_device()
     
     # Compute SVD:
     u_gpu, s_gpu, vh_gpu = svd(a_gpu, 0)
-    print 'pinv: svd computed'
-    uh_gpu = hermitian(u_gpu)
-    print 'pinv: uh_gpu computed'
     
     # Get block/grid sizes; the number of threads per block is limited
     # to 512 because the cutoff_invert_s kernel defined above uses too
     # many registers to be invoked in 1024 threads per block (i.e., on
     # GPUs with compute capability >= 2.x): 
+    dev = get_current_device()
     max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
     max_threads_per_block = 512
     block_dim, grid_dim = select_block_grid_sizes(dev, s_gpu.shape, max_threads_per_block)
@@ -939,21 +933,17 @@ def pinv(a_gpu, rcond=1e-15):
     cutoff_invert_s(s_gpu, cutoff_gpu,
                     np.uint32(s_gpu.size),
                     block=block_dim, grid=grid_dim)
-    print 'pinv: cutoff_gpu computed'
     
-    # The singular values must data type is in uh_gpu:
-    if s_gpu.dtype == uh_gpu.dtype:
+    # The diagonal matrix of singular values must have the same data
+    # type as u_gpu in order to compute the dot product below:
+    if s_gpu.dtype == u_gpu.dtype:
         s_diag_gpu = diag(s_gpu)
     else:
-        s_diag_gpu = diag(s_gpu.astype(uh_gpu.dtype))
-    print 'pinv: s_diag_gpu computed'
+        s_diag_gpu = diag(s_gpu.astype(u_gpu.dtype))
     
     # Finish pinv computation:
-    v_gpu = hermitian(vh_gpu)
-    print 'pinv: v_gpu computed'
-    suh_gpu = dot(s_diag_gpu, uh_gpu)
-    print 'pinv: suh_gpu computed'
-    return dot(v_gpu, suh_gpu)
+    suh_gpu = dot(s_diag_gpu, u_gpu, 'n', 'c')
+    return dot(vh_gpu, suh_gpu, 'c')
 
 tril_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
