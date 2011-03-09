@@ -242,6 +242,14 @@ def culaGetExecutingDevice():
     culaCheckStatus(status)
     return dev.value
 
+def culaFreeBuffers():
+    """
+    Releases any memory buffers stored internally by CULA.
+
+    """
+
+    _libcula.culaFreeBuffers()
+    
 def culaInitialize():
     """
     Initialize CULA.
