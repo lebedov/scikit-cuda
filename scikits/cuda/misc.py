@@ -53,10 +53,10 @@ result : bool
 
 def init_device(n=0):
     """
-    Initialize PyCUDA using a specified device.
+    Initialize a GPU device.
 
-    Initialize PyCUDA using a specified device rather than the default
-    device found by pycuda.autoinit.
+    Initialize a specified GPU device rather than the default device
+    found by `pycuda.autoinit`.
 
     Parameters
     ----------
@@ -72,10 +72,49 @@ def init_device(n=0):
 
     drv.init()
     dev = drv.Device(n)
-    ctx = dev.make_context()
-    atexit.register(ctx.pop)
     return dev
 
+def init_context(dev):
+    """
+    Create a context that will be cleaned up properly.
+
+    Create a context on the specified device and register its pop()
+    method with atexit.
+
+    Parameters
+    ----------
+    dev : pycuda.driver.Device
+        GPU device.
+
+    Returns
+    -------
+    ctx : pycuda.driver.Context
+        Created context.
+        
+    """
+
+    ctx = dev.make_context()
+    atexit.register(ctx.pop)
+    return ctx
+
+def done_context(ctx):
+    """
+    Detach from a context cleanly.
+
+    Detach from a context and remove its pop() from atexit.
+
+    Parameters
+    ----------
+    ctx : pycuda.driver.Context
+        Context from which to detach.
+        
+    """
+
+    for i in xrange(len(atexit._exithandlers)):
+        if atexit._exithandlers[i][0] == ctx.pop:
+            del atexit._exithandlers[i]
+    ctx.detach()
+    
 def init():
     """
     Initialize libraries used by scikits.cuda.
@@ -94,12 +133,6 @@ def init():
     # here because the host thread has already been bound to a GPU
     # device:
     cula.culaInitialize()
-
-    # For some reason, invoking CULA functions via ctypes can
-    # sometimes cause Python to crash if CULA has already been
-    # initialized. Calling this function seems to prevent the problem
-    # from occuring:
-    cula.culaFreeBuffers()
     
 def get_compute_capability(dev):
     """
