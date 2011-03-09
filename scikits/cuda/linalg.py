@@ -144,6 +144,9 @@ def svd(a_gpu, full_matrices=1, compute_uv=1):
 
     cula.culaCheckStatus(status)
 
+    # Free internal CULA memory:
+    cula.culaFreeBuffers()
+    
     if compute_uv:
         return vt_gpu, s_gpu, u_gpu
     else:
