@@ -876,6 +876,8 @@ def pinv(a_gpu, rcond=1e-15):
     -----
     Double precision is only supported if the premium version of the
     CULA toolkit is installed.
+
+    This function destroys the contents of the input matrix.
     
     Examples
     --------
