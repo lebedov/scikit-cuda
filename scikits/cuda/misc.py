@@ -78,9 +78,7 @@ def init_device(n=0):
 
 def init():
     """
-    Initialize scikits.cuda utilities.
-
-    Initializes libraries used by scikits.cuda.
+    Initialize libraries used by scikits.cuda.
     
     Notes
     -----
@@ -97,6 +95,12 @@ def init():
     # device:
     cula.culaInitialize()
 
+    # For some reason, invoking CULA functions via ctypes can
+    # sometimes cause Python to crash if CULA has already been
+    # initialized. Calling this function seems to prevent the problem
+    # from occuring:
+    cula.culaFreeBuffers()
+    
 def get_compute_capability(dev):
     """
     Get the compute capability of the specified device.
