@@ -524,6 +524,29 @@ def cudaMemcpy_dtoh(dst, src, count):
                                    cudaMemcpyDeviceToHost)
     cudaCheckStatus(status)
 
+_libcudart.cudaMemGetInfo.restype = int
+_libcudart.cudaMemGetInfo.argtypes = [ctypes.c_void_p,
+                                      ctypes.c_void_p]
+def cudaMemGetInfo():
+    """
+    Return the amount of free and total device memory.
+
+    Returns
+    -------
+    free : long
+        Free memory in bytes.
+    total : long
+        Total memory in bytes.
+
+    """
+
+    free = ctypes.c_size_t()
+    total = ctypes.c_size_t()
+    status = _libcudart.cudaMemGetInfo(ctypes.byref(free),
+                                       ctypes.byref(total))
+    cudaCheckStatus(status)
+    return free.value, total.value
+
 _libcudart.cudaSetDevice.restype = int
 _libcudart.cudaSetDevice.argtypes = [ctypes.c_int]
 def cudaSetDevice(dev):
