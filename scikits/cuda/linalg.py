@@ -18,7 +18,7 @@ import cula
 from misc import get_dev_attrs, select_block_grid_sizes, init, get_current_device
 
 # Get installation location of C headers:
-from __info__ import install_headers
+from __init__ import install_headers
     
 def svd(a_gpu, full_matrices=1, compute_uv=1):
     """

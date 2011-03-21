@@ -4,6 +4,8 @@ __path__ = extend_path(__path__, __name__)
 from info import __doc__
 from version import __version__
 
-# Make the path of the CUDA header installation directory available:
-from __info__ import install_headers
+# Installation location of C headers:
+import os
+install_headers = __file__.replace(os.path.basename(__file__), '') + 'include'
+
 

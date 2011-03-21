@@ -13,7 +13,7 @@ import numpy as np
 from misc import get_dev_attrs, select_block_grid_sizes, init, get_current_device
 
 # Get installation location of C headers:
-from __info__ import install_headers
+from __init__ import install_headers
 
 # Adapted from Cephes library:
 sici_mod_template = Template("""
