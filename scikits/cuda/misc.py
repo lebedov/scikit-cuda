@@ -276,19 +276,19 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
 
     # Assume that the maximum X and Y dimensions of a grid are the
     # same:
-    max_blocks_per_grid = max(max_grid_dim)
-    assert max_blocks_per_grid == max_grid_dim[0]
-    assert max_blocks_per_grid == max_grid_dim[1]
+    max_blocks_per_grid_dim = max(max_grid_dim)
+    assert max_blocks_per_grid_dim == max_grid_dim[0]
+    assert max_blocks_per_grid_dim == max_grid_dim[1]
 
     # Actual number of thread blocks needed:
     blocks_needed = N/max_threads_per_block+1
     
-    if blocks_needed*max_threads_per_block < max_threads_per_block*max_blocks_per_grid:
+    if blocks_needed*max_threads_per_block < max_threads_per_block*max_blocks_per_grid_dim:
         grid_x = blocks_needed
         grid_y = 1
-    elif blocks_needed*max_threads_per_block < max_threads_per_block*max_blocks_per_grid**2:
-        grid_x = max_blocks_per_grid
-        grid_y = blocks_needed/max_blocks_per_grid+1
+    elif blocks_needed*max_threads_per_block < max_threads_per_block*max_blocks_per_grid_dim**2:
+        grid_x = max_blocks_per_grid_dim
+        grid_y = blocks_needed/max_blocks_per_grid_dim+1
     else:
         raise ValueError('array size too large')
 
@@ -555,8 +555,8 @@ diff_mod_template = Template("""
 #endif
 
 __global__ void diff(TYPE *x, TYPE *y, unsigned int N) {
-    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
-                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
+                       blockIdx.x*blockDim.x+threadIdx.x;
 
     if (idx < N-1) {
         y[idx] = x[idx+1]-x[idx];
@@ -605,18 +605,14 @@ def diff(x_gpu):
     use_complex = int(x_gpu.dtype in [np.complex64, np.complex128])
 
     # Get block/grid sizes:
-    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
     block_dim, grid_dim = select_block_grid_sizes(dev, x_gpu.shape)
-    max_blocks_per_grid = max(max_grid_dim)
     
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
     cache_dir=None
     diff_mod = \
              SourceModule(diff_mod_template.substitute(use_double=use_double,
-                                                       use_complex=use_complex,
-                          max_threads_per_block=max_threads_per_block,
-                          max_blocks_per_grid=max_blocks_per_grid),
+                                                       use_complex=use_complex),
                           cache_dir=cache_dir)
     diff = diff_mod.get_function("diff")
 

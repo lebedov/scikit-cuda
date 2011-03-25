@@ -368,8 +368,8 @@ transpose_template = Template("""
 
 __global__ void transpose(FLOAT *odata, FLOAT *idata, unsigned int N)
 {
-    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
-                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
+                       blockIdx.x*blockDim.x+threadIdx.x;
     unsigned int ix = idx/${cols};
     unsigned int iy = idx%${cols};
 
@@ -429,19 +429,15 @@ def transpose(a_gpu):
     use_complex = int(a_gpu.dtype in [np.complex64, np.complex128])
 
     # Get block/grid sizes:
-    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
     block_dim, grid_dim = select_block_grid_sizes(dev, a_gpu.shape)
-    max_blocks_per_grid = max(max_grid_dim)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
     cache_dir=None            
     transpose_mod = \
                   SourceModule(transpose_template.substitute(use_double=use_double,
-                                                                 use_complex=use_complex,
-                                                                 hermitian=0,
-                               max_threads_per_block=max_threads_per_block,
-                               max_blocks_per_grid=max_blocks_per_grid,
+                                                             use_complex=use_complex,
+                                                             hermitian=0,
                                cols=a_gpu.shape[1],
                                rows=a_gpu.shape[0]),
                                cache_dir=cache_dir)
@@ -502,19 +498,15 @@ def hermitian(a_gpu):
     use_complex = int(a_gpu.dtype in [np.complex64, np.complex128])
 
     # Get block/grid sizes:
-    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
     block_dim, grid_dim = select_block_grid_sizes(dev, a_gpu.shape)
-    max_blocks_per_grid = max(max_grid_dim)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
     cache_dir=None            
     transpose_mod = \
                   SourceModule(transpose_template.substitute(use_double=use_double,
-                                                                 use_complex=use_complex,
-                                                                 hermitian=1,
-                               max_threads_per_block=max_threads_per_block,
-                               max_blocks_per_grid=max_blocks_per_grid,
+                                                             use_complex=use_complex,
+                                                             hermitian=1,
                                cols=a_gpu.shape[1],
                                rows=a_gpu.shape[0]),
                                cache_dir=cache_dir)
@@ -538,8 +530,8 @@ conj_template = Template("""
 
 __global__ void conj_inplace(COMPLEX *a, unsigned int N)
 {
-    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
-                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
+                       blockIdx.x*blockDim.x+threadIdx.x;
 
     if (idx < N)                       
         a[idx] = conj(a[idx]);
@@ -547,8 +539,8 @@ __global__ void conj_inplace(COMPLEX *a, unsigned int N)
 
 __global__ void conj(COMPLEX *a, COMPLEX *ac, unsigned int N)
 {
-    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
-                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
+                       blockIdx.x*blockDim.x+threadIdx.x;
 
     if (idx < N)                       
         ac[idx] = conj(a[idx]);
@@ -605,17 +597,13 @@ def conj(a_gpu, overwrite=True):
     dev = get_current_device()
     
     # Get block/grid sizes:
-    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
     block_dim, grid_dim = select_block_grid_sizes(dev, a_gpu.shape)
-    max_blocks_per_grid = max(max_grid_dim)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
     cache_dir=None
     conj_mod = \
-             SourceModule(conj_template.substitute(use_double=use_double,
-                          max_threads_per_block=max_threads_per_block,
-                          max_blocks_per_grid=max_blocks_per_grid),
+             SourceModule(conj_template.substitute(use_double=use_double),
                           cache_dir=cache_dir)
 
     if overwrite:
@@ -652,8 +640,8 @@ diag_template = Template("""
 // Assumes that d already contains zeros in all positions.
 // N must contain the number of elements in v.
 __global__ void diag(FLOAT *v, FLOAT *d, int N) {
-    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
-                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
+                       blockIdx.x*blockDim.x+threadIdx.x;
     if (idx < N)
         d[idx*(N+1)] = v[idx];
 }
@@ -715,18 +703,14 @@ def diag(v_gpu):
     d_gpu = gpuarray.zeros((v_gpu.size, v_gpu.size), v_gpu.dtype)
 
     # Get block/grid sizes:
-    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
     block_dim, grid_dim = select_block_grid_sizes(dev, d_gpu.shape)
-    max_blocks_per_grid = max(max_grid_dim)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
     cache_dir=None
     diag_mod = \
              SourceModule(diag_template.substitute(use_double=use_double,
-                                                   use_complex=use_complex,
-                          max_threads_per_block=max_threads_per_block,
-                          max_blocks_per_grid=max_blocks_per_grid),
+                                                   use_complex=use_complex),
                           cache_dir=cache_dir)
 
     diag = diag_mod.get_function("diag")    
@@ -756,8 +740,8 @@ eye_template = Template("""
 // Assumes that d already contains zeros in all positions.
 // N must contain the number of rows or columns in the matrix.
 __global__ void eye(FLOAT *d, int N) {
-    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
-                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
+                       blockIdx.x*blockDim.x+threadIdx.x;
     if (idx < N)
         d[idx*(N+1)] = FLOAT(1.0);
 }
@@ -815,18 +799,14 @@ def eye(N, dtype=np.float32):
     e_gpu = gpuarray.zeros((N, N), dtype)
 
     # Get block/grid sizes:
-    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
     block_dim, grid_dim = select_block_grid_sizes(dev, e_gpu.shape)
-    max_blocks_per_grid = max(max_grid_dim)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
     cache_dir=None
     eye_mod = \
              SourceModule(eye_template.substitute(use_double=use_double,
-                                                   use_complex=use_complex,
-                          max_threads_per_block=max_threads_per_block,
-                          max_blocks_per_grid=max_blocks_per_grid),
+                                                   use_complex=use_complex),
                           cache_dir=cache_dir)
 
     eye = eye_mod.get_function("eye")    
@@ -845,8 +825,8 @@ cutoff_invert_s_template = Template("""
 
 // N must equal the length of s:
 __global__ void cutoff_invert_s(FLOAT *s, FLOAT *cutoff, unsigned int N) {
-    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
-                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
+                       blockIdx.x*blockDim.x+threadIdx.x;
 
     if (idx < N) 
         if (s[idx] > cutoff[0])
@@ -911,18 +891,13 @@ def pinv(a_gpu, rcond=1e-15):
     # many registers to be invoked in 1024 threads per block (i.e., on
     # GPUs with compute capability >= 2.x): 
     dev = get_current_device()
-    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
     max_threads_per_block = 512
     block_dim, grid_dim = select_block_grid_sizes(dev, s_gpu.shape, max_threads_per_block)
-    max_blocks_per_grid = max(max_grid_dim)
 
     # Suppress very small singular values:
     use_double = 1 if s_gpu.dtype == np.float64 else 0
     cutoff_invert_s_mod = \
-        SourceModule(cutoff_invert_s_template.substitute( 
-        max_threads_per_block=max_threads_per_block,
-        max_blocks_per_grid=max_blocks_per_grid,
-        use_double=use_double))
+        SourceModule(cutoff_invert_s_template.substitute(use_double=use_double))
     cutoff_invert_s = \
                     cutoff_invert_s_mod.get_function('cutoff_invert_s')
     cutoff_gpu = gpuarray.max(s_gpu)*rcond
@@ -959,8 +934,8 @@ tril_template = Template("""
 #endif
 
 __global__ void tril(FLOAT *a, unsigned int N) {
-    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
-                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
+                       blockIdx.x*blockDim.x+threadIdx.x;
     unsigned int ix = idx/${cols};
     unsigned int iy = idx%${cols};
 
@@ -1037,19 +1012,15 @@ def tril(a_gpu, overwrite=True):
     N = a_gpu.shape[0]
 
     # Get block/grid sizes:
-    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
     block_dim, grid_dim = select_block_grid_sizes(dev, a_gpu.shape)
-    max_blocks_per_grid = max(max_grid_dim)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
     cache_dir=None
     tril_mod = \
              SourceModule(tril_template.substitute(use_double=use_double,
-                                                       use_complex=use_complex,
-                          max_threads_per_block=max_threads_per_block,
-                          max_blocks_per_grid=max_blocks_per_grid,
-                          cols=N),
+                                                   use_complex=use_complex,
+                                                   cols=N),
                           cache_dir=cache_dir)
     tril = tril_mod.get_function("tril")
 
@@ -1089,8 +1060,8 @@ multiply_template = Template("""
 // Stores result in y
 __global__ void multiply_inplace(FLOAT *x, FLOAT *y,
                                  unsigned int N) {
-    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
-                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
+                       blockIdx.x*blockDim.x+threadIdx.x;
     if (idx < N) {
         y[idx] *= x[idx];
     }
@@ -1099,8 +1070,8 @@ __global__ void multiply_inplace(FLOAT *x, FLOAT *y,
 // Stores result in z
 __global__ void multiply(FLOAT *x, FLOAT *y, FLOAT *z,
                          unsigned int N) {
-    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
-                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
+                       blockIdx.x*blockDim.x+threadIdx.x;
     if (idx < N) {
         z[idx] = x[idx]*y[idx];
     }    
@@ -1156,18 +1127,14 @@ def multiply(x_gpu, y_gpu, overwrite=True):
     dev = get_current_device()
     
     # Get block/grid sizes:
-    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
     block_dim, grid_dim = select_block_grid_sizes(dev, x_gpu.shape)
-    max_blocks_per_grid = max(max_grid_dim)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
     cache_dir=None
     multiply_mod = \
              SourceModule(multiply_template.substitute(use_double=use_double,
-                                                       use_complex=use_complex,
-                          max_threads_per_block=max_threads_per_block,
-                          max_blocks_per_grid=max_blocks_per_grid),
+                                                       use_complex=use_complex),
                           cache_dir=cache_dir)
     if overwrite:
         multiply = multiply_mod.get_function("multiply_inplace")

@@ -29,8 +29,8 @@ sici_mod_template = Template("""
 
 __global__ void sici_array(FLOAT *x, FLOAT *si,
                            FLOAT *ci, unsigned int N) {
-    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
-                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
+                       blockIdx.x*blockDim.x+threadIdx.x;
     FLOAT si_temp, ci_temp;
 
     if (idx < N) {         
@@ -87,17 +87,13 @@ def sici(x_gpu):
     dev = get_current_device()
     
     # Get block/grid sizes:
-    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
     block_dim, grid_dim = select_block_grid_sizes(dev, x_gpu.shape)
-    max_blocks_per_grid = max(max_grid_dim)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
     cache_dir=None
     sici_mod = \
-             SourceModule(sici_mod_template.substitute(use_double=use_double,
-                          max_threads_per_block=max_threads_per_block,
-                          max_blocks_per_grid=max_blocks_per_grid),
+             SourceModule(sici_mod_template.substitute(use_double=use_double),
                           cache_dir=cache_dir,
                           options=["-I", install_headers])
     sici_func = sici_mod.get_function("sici_array")
@@ -158,8 +154,8 @@ __device__ COMPLEX _e1z(COMPLEX z) {
 
 __global__ void e1z(COMPLEX *z, COMPLEX *e,
                     unsigned int N) {
-    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
-                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
+                       blockIdx.x*blockDim.x+threadIdx.x;
 
     if (idx < N) 
         e[idx] = _e1z(z[idx]);
@@ -210,18 +206,14 @@ def e1z(z_gpu):
     # Get block/grid sizes; the number of threads per block is limited
     # to 256 because the e1z kernel defined above uses too many
     # registers to be invoked more threads per block:
-    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
     max_threads_per_block = 256
     block_dim, grid_dim = select_block_grid_sizes(dev, z_gpu.shape, max_threads_per_block)
-    max_blocks_per_grid = max(max_grid_dim)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
     cache_dir=None
     e1z_mod = \
-             SourceModule(e1z_mod_template.substitute(use_double=use_double,
-                          max_threads_per_block=max_threads_per_block,
-                          max_blocks_per_grid=max_blocks_per_grid),
+             SourceModule(e1z_mod_template.substitute(use_double=use_double),
                           cache_dir=cache_dir)
     e1z_func = e1z_mod.get_function("e1z")
 

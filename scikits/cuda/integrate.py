@@ -12,7 +12,7 @@ import numpy as np
 import ctypes
 import cublas
 
-from misc import get_dev_attrs, select_block_grid_sizes, init, get_current_device
+from misc import select_block_grid_sizes, init, get_current_device
 
 gen_trapz_mult_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
@@ -32,8 +32,8 @@ gen_trapz_mult_template = Template("""
 #endif
 
 __global__ void gen_trapz_mult(TYPE *mult, unsigned int N) {
-    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
-                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
+                       blockIdx.x*blockDim.x+threadIdx.x;
 
     if (idx < N) {
         if ((idx == 0) || (idx == N-1)) {                      
@@ -80,18 +80,14 @@ def gen_trapz_mult(N, mult_type):
     mult_gpu = gpuarray.empty(N, mult_type)
 
     # Get block/grid sizes:
-    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
     block_dim, grid_dim = select_block_grid_sizes(dev, N)
-    max_blocks_per_grid = max(max_grid_dim)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
     cache_dir=None
     gen_trapz_mult_mod = \
                        SourceModule(gen_trapz_mult_template.substitute(use_double=use_double,
-                                                                       use_complex=use_complex,
-                                    max_threads_per_block=max_threads_per_block,
-                                    max_blocks_per_grid=max_blocks_per_grid),
+                                                                       use_complex=use_complex),
                                     cache_dir=cache_dir)
 
     gen_trapz_mult = gen_trapz_mult_mod.get_function("gen_trapz_mult")    
@@ -184,8 +180,8 @@ gen_trapz2d_mult_template = Template("""
 // Nx: number of columns
 __global__ void gen_trapz2d_mult(TYPE *mult,
                                  unsigned int Ny, unsigned int Nx) {
-    unsigned int idx = blockIdx.y*${max_threads_per_block}*${max_blocks_per_grid}+
-                       blockIdx.x*${max_threads_per_block}+threadIdx.x;
+    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
+                       blockIdx.x*blockDim.x+threadIdx.x;
 
     if (idx < Nx*Ny) {
         if (idx == 0 || idx == Nx-1 || idx == Nx*(Ny-1) || idx == Nx*Ny-1)
@@ -235,19 +231,15 @@ def gen_trapz2d_mult(mat_shape, mult_type):
     mult_gpu = gpuarray.empty(mat_shape, mult_type)
 
     # Get block/grid sizes:
-    max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
     block_dim, grid_dim = select_block_grid_sizes(dev, mat_shape)
-    max_blocks_per_grid = max(max_grid_dim)
     
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
     cache_dir=None
     gen_trapz2d_mult_mod = \
                          SourceModule(gen_trapz2d_mult_template.substitute(use_double=use_double,
-                                                                           use_complex=use_complex,
-                                    max_threads_per_block=max_threads_per_block,
-                                    max_blocks_per_grid=max_blocks_per_grid),
-                                    cache_dir=cache_dir)
+                                                                           use_complex=use_complex),
+                                      cache_dir=cache_dir)
 
     gen_trapz2d_mult = gen_trapz2d_mult_mod.get_function("gen_trapz2d_mult")    
     gen_trapz2d_mult(mult_gpu, np.uint32(Ny), np.uint32(Nx),
