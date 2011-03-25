@@ -70,8 +70,6 @@ def gen_trapz_mult(N, mult_type):
     if mult_type not in [np.float32, np.float64, np.complex64,
                          np.complex128]:
         raise ValueError('unrecognized type')
-
-    dev = get_current_device()
     
     use_double = int(mult_type in [np.float64, np.complex128])
     use_complex = int(mult_type in [np.complex64, np.complex128])
@@ -80,6 +78,7 @@ def gen_trapz_mult(N, mult_type):
     mult_gpu = gpuarray.empty(N, mult_type)
 
     # Get block/grid sizes:
+    dev = get_current_device()
     block_dim, grid_dim = select_block_grid_sizes(dev, N)
 
     # Set this to False when debugging to make sure the compiled kernel is
@@ -220,8 +219,6 @@ def gen_trapz2d_mult(mat_shape, mult_type):
     if mult_type not in [np.float32, np.float64, np.complex64,
                          np.complex128]:
         raise ValueError('unrecognized type')
-
-    dev = get_current_device()
     
     use_double = int(mult_type in [np.float64, np.complex128])
     use_complex = int(mult_type in [np.complex64, np.complex128])
@@ -231,6 +228,7 @@ def gen_trapz2d_mult(mat_shape, mult_type):
     mult_gpu = gpuarray.empty(mat_shape, mult_type)
 
     # Get block/grid sizes:
+    dev = get_current_device()
     block_dim, grid_dim = select_block_grid_sizes(dev, mat_shape)
     
     # Set this to False when debugging to make sure the compiled kernel is

@@ -83,10 +83,9 @@ def sici(x_gpu):
         use_double = 1
     else:
         raise ValueError('unsupported type')
-
-    dev = get_current_device()
     
     # Get block/grid sizes:
+    dev = get_current_device()
     block_dim, grid_dim = select_block_grid_sizes(dev, x_gpu.shape)
 
     # Set this to False when debugging to make sure the compiled kernel is
@@ -201,11 +200,11 @@ def e1z(z_gpu):
     else:
         raise ValueError('unsupported type')
 
-    dev = get_current_device()
     
     # Get block/grid sizes; the number of threads per block is limited
     # to 256 because the e1z kernel defined above uses too many
     # registers to be invoked more threads per block:
+    dev = get_current_device()
     max_threads_per_block = 256
     block_dim, grid_dim = select_block_grid_sizes(dev, z_gpu.shape, max_threads_per_block)
 

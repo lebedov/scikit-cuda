@@ -598,13 +598,12 @@ def diff(x_gpu):
 
     if len(x_gpu.shape) > 1:
         raise ValueError('input must be 1D vector')
-
-    dev = get_current_device()
     
     use_double = int(x_gpu.dtype in [np.float64, np.complex128])
     use_complex = int(x_gpu.dtype in [np.complex64, np.complex128])
 
     # Get block/grid sizes:
+    dev = get_current_device()
     block_dim, grid_dim = select_block_grid_sizes(dev, x_gpu.shape)
     
     # Set this to False when debugging to make sure the compiled kernel is

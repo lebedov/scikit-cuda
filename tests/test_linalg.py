@@ -310,6 +310,26 @@ class test_linalg(TestCase):
         d_gpu = linalg.diag(v_gpu)
         assert np.all(np.diag(v) == d_gpu.get())
 
+    def test_eye_float32(self):
+        N = 10
+        e_gpu = linalg.eye(N, dtype=np.float32)
+        assert np.all(np.eye(N, dtype=np.float32) == e_gpu.get())
+
+    def test_eye_float64(self):
+        N = 10
+        e_gpu = linalg.eye(N, dtype=np.float64)
+        assert np.all(np.eye(N, dtype=np.float64) == e_gpu.get())
+
+    def test_eye_complex64(self):
+        N = 10
+        e_gpu = linalg.eye(N, dtype=np.complex64)
+        assert np.all(np.eye(N, dtype=np.complex64) == e_gpu.get())
+
+    def test_eye_complex128(self):
+        N = 10
+        e_gpu = linalg.eye(N, dtype=np.complex128)
+        assert np.all(np.eye(N, dtype=np.complex128) == e_gpu.get())
+
     def test_pinv_float32(self):
         a = np.asarray(np.random.rand(8, 4), np.float32)
         a_gpu = gpuarray.to_gpu(a)
@@ -417,6 +437,8 @@ def suite():
     s.addTest(test_linalg('test_conj_complex64'))
     s.addTest(test_linalg('test_diag_float32'))
     s.addTest(test_linalg('test_diag_complex64'))
+    s.addTest(test_linalg('test_eye_float32'))
+    s.addTest(test_linalg('test_eye_complex64'))
     s.addTest(test_linalg('test_pinv_float32'))
     s.addTest(test_linalg('test_pinv_complex64'))
     s.addTest(test_linalg('test_tril_float32'))
@@ -442,6 +464,8 @@ def suite():
         s.addTest(test_linalg('test_conj_complex128'))
         s.addTest(test_linalg('test_diag_float64'))
         s.addTest(test_linalg('test_diag_complex128'))
+        s.addTest(test_linalg('test_eye_float64'))
+        s.addTest(test_linalg('test_eye_complex128'))
         s.addTest(test_linalg('test_pinv_float64'))
         s.addTest(test_linalg('test_pinv_complex128'))        
         s.addTest(test_linalg('test_tril_float64'))

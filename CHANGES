@@ -13,6 +13,7 @@ Release 0.04 - (March ?, 2011)
 * Automatically determine device used by current context.
 * Support batched and multidimensional FFT operations.
 * Extended dot() function to support implicit transpose/Hermitian.
+* Simplify kernel launch setup.
 
 Release 0.03 - (November 22, 2010)
 ----------------------------------

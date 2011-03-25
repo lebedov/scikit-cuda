@@ -422,13 +422,12 @@ def transpose(a_gpu):
     if a_gpu.dtype not in [np.float32, np.float64, np.complex64,
                            np.complex128]:
         raise ValueError('unrecognized type')
-
-    dev = get_current_device()
     
     use_double = int(a_gpu.dtype in [np.float64, np.complex128])
     use_complex = int(a_gpu.dtype in [np.complex64, np.complex128])
 
     # Get block/grid sizes:
+    dev = get_current_device()
     block_dim, grid_dim = select_block_grid_sizes(dev, a_gpu.shape)
 
     # Set this to False when debugging to make sure the compiled kernel is
@@ -491,13 +490,12 @@ def hermitian(a_gpu):
     if a_gpu.dtype not in [np.float32, np.float64, np.complex64,
                            np.complex128]:
         raise ValueError('unrecognized type')
-
-    dev = get_current_device()
     
     use_double = int(a_gpu.dtype in [np.float64, np.complex128])
     use_complex = int(a_gpu.dtype in [np.complex64, np.complex128])
 
     # Get block/grid sizes:
+    dev = get_current_device()
     block_dim, grid_dim = select_block_grid_sizes(dev, a_gpu.shape)
 
     # Set this to False when debugging to make sure the compiled kernel is
@@ -593,10 +591,9 @@ def conj(a_gpu, overwrite=True):
         use_double = 1
     else:
         raise ValueError('unsupported type')
-
-    dev = get_current_device()
     
     # Get block/grid sizes:
+    dev = get_current_device()
     block_dim, grid_dim = select_block_grid_sizes(dev, a_gpu.shape)
 
     # Set this to False when debugging to make sure the compiled kernel is
@@ -693,8 +690,6 @@ def diag(v_gpu):
 
     if len(v_gpu.shape) > 1:
         raise ValueError('input array cannot be multidimensional')
-
-    dev = get_current_device()
     
     use_double = int(v_gpu.dtype in [np.float64, np.complex128])
     use_complex = int(v_gpu.dtype in [np.complex64, np.complex128])
@@ -703,6 +698,7 @@ def diag(v_gpu):
     d_gpu = gpuarray.zeros((v_gpu.size, v_gpu.size), v_gpu.dtype)
 
     # Get block/grid sizes:
+    dev = get_current_device()
     block_dim, grid_dim = select_block_grid_sizes(dev, d_gpu.shape)
 
     # Set this to False when debugging to make sure the compiled kernel is
@@ -790,8 +786,6 @@ def eye(N, dtype=np.float32):
     if N <= 0:
         raise ValueError('N must be greater than 0')
     
-    dev = get_current_device()
-    
     use_double = int(dtype in [np.float64, np.complex128])
     use_complex = int(dtype in [np.complex64, np.complex128])
 
@@ -799,6 +793,7 @@ def eye(N, dtype=np.float32):
     e_gpu = gpuarray.zeros((N, N), dtype)
 
     # Get block/grid sizes:
+    dev = get_current_device()
     block_dim, grid_dim = select_block_grid_sizes(dev, e_gpu.shape)
 
     # Set this to False when debugging to make sure the compiled kernel is
@@ -983,8 +978,6 @@ def tril(a_gpu, overwrite=True):
 
     if len(a_gpu.shape) != 2 or a_gpu.shape[0] != a_gpu.shape[1]:
         raise ValueError('matrix must be square')
-
-    dev = get_current_device()
     
     if a_gpu.dtype == np.float32:
         swap_func = cublas.cublasSswap
@@ -1012,6 +1005,7 @@ def tril(a_gpu, overwrite=True):
     N = a_gpu.shape[0]
 
     # Get block/grid sizes:
+    dev = get_current_device()
     block_dim, grid_dim = select_block_grid_sizes(dev, a_gpu.shape)
 
     # Set this to False when debugging to make sure the compiled kernel is
@@ -1123,10 +1117,9 @@ def multiply(x_gpu, y_gpu, overwrite=True):
 
     use_double = int(x_gpu.dtype in [np.float64, np.complex128])
     use_complex = int(x_gpu.dtype in [np.complex64, np.complex128])
-
-    dev = get_current_device()
     
     # Get block/grid sizes:
+    dev = get_current_device()
     block_dim, grid_dim = select_block_grid_sizes(dev, x_gpu.shape)
 
     # Set this to False when debugging to make sure the compiled kernel is
