@@ -208,6 +208,38 @@ class test_linalg(TestCase):
         d_gpu = linalg.mdot(a_gpu, b_gpu, c_gpu)
         assert np.allclose(np.dot(a, np.dot(b, c)), d_gpu.get())
 
+    def test_dot_diag_float32(self):
+        d = np.asarray(np.random.rand(5), np.float32)
+        a = np.asarray(np.random.rand(5, 3), np.float32)
+        d_gpu = gpuarray.to_gpu(d)
+        a_gpu = gpuarray.to_gpu(a)
+        r_gpu = linalg.dot_diag(d_gpu, a_gpu)
+        assert np.allclose(np.dot(np.diag(d), a), r_gpu.get())
+
+    def test_dot_diag_float64(self):
+        d = np.asarray(np.random.rand(5), np.float64)
+        a = np.asarray(np.random.rand(5, 3), np.float64)
+        d_gpu = gpuarray.to_gpu(d)
+        a_gpu = gpuarray.to_gpu(a)
+        r_gpu = linalg.dot_diag(d_gpu, a_gpu)
+        assert np.allclose(np.dot(np.diag(d), a), r_gpu.get())
+
+    def test_dot_diag_complex64(self):
+        d = np.asarray(np.random.rand(5)+1j*np.random.rand(5), np.complex64)
+        a = np.asarray(np.random.rand(5, 3)+1j*np.random.rand(5, 3), np.complex64)
+        d_gpu = gpuarray.to_gpu(d)
+        a_gpu = gpuarray.to_gpu(a)
+        r_gpu = linalg.dot_diag(d_gpu, a_gpu)
+        assert np.allclose(np.dot(np.diag(d), a), r_gpu.get())
+
+    def test_dot_diag_complex128(self):
+        d = np.asarray(np.random.rand(5)+1j*np.random.rand(5), np.complex128)
+        a = np.asarray(np.random.rand(5, 3)+1j*np.random.rand(5, 3), np.complex128)
+        d_gpu = gpuarray.to_gpu(d)
+        a_gpu = gpuarray.to_gpu(a)
+        r_gpu = linalg.dot_diag(d_gpu, a_gpu)
+        assert np.allclose(np.dot(np.diag(d), a), r_gpu.get())
+                           
     def test_transpose_float32(self):
         a = np.array([[1, 2, 3, 4, 5, 6],
                       [7, 8, 9, 10, 11, 12]],
@@ -430,6 +462,8 @@ def suite():
     s.addTest(test_linalg('test_dot_vector_complex64'))
     s.addTest(test_linalg('test_mdot_matrix_float32'))
     s.addTest(test_linalg('test_mdot_matrix_complex64'))
+    s.addTest(test_linalg('test_dot_diag_float32'))
+    s.addTest(test_linalg('test_dot_diag_complex64'))
     s.addTest(test_linalg('test_transpose_float32'))
     s.addTest(test_linalg('test_transpose_complex64'))
     s.addTest(test_linalg('test_hermitian_float32'))
@@ -457,6 +491,8 @@ def suite():
         s.addTest(test_linalg('test_dot_vector_complex128'))
         s.addTest(test_linalg('test_mdot_matrix_float64'))
         s.addTest(test_linalg('test_mdot_matrix_complex128'))
+        s.addTest(test_linalg('test_dot_diag_float64'))
+        s.addTest(test_linalg('test_dot_diag_complex128'))
         s.addTest(test_linalg('test_transpose_float64'))
         s.addTest(test_linalg('test_transpose_complex128'))
         s.addTest(test_linalg('test_hermitian_float64'))

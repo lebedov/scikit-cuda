@@ -345,6 +345,84 @@ def mdot(*args):
         del(temp_gpu)
     return out_gpu
 
+def dot_diag(d_gpu, a_gpu, overwrite=True):
+    """
+    Dot product of diagonal and non-diagonal arrays.
+
+    Computes the matrix product of a diagonal array represented as a
+    vector and a non-diagonal array.
+
+    Parameters
+    ----------
+    d_gpu : pycuda.gpuarray.GPUArray
+        Array of length `N` corresponding to the diagonal of the multiplier.
+    a_gpu : pycuda.gpuarray.GPUArray
+        Multiplicand array with shape `(N, M)`.
+    overwrite : bool
+        If true (default), save the result in `a_gpu`.
+        
+    Returns
+    -------
+    r_gpu : pycuda.gpuarray.GPUArray
+        The computed matrix product.
+
+    Examples
+    --------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import numpy as np
+    >>> import linalg
+    >>> linalg.init()
+    >>> d = np.random.rand(4)
+    >>> a = np.random.rand(4, 4)
+    >>> d_gpu = gpuarray.to_gpu(d)
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> r_gpu = linalg.dot_diag(d_gpu, a_gpu)
+    >>> np.allclose(np.dot(np.diag(d), a), r_gpu.get())
+    True
+    
+    """
+
+    if len(d_gpu.shape) != 1:
+        raise ValueError('d_gpu must be a vector')
+    if len(a_gpu.shape) != 2:
+        raise ValueError('a_gpu must be a matrix')
+    N = d_gpu.size
+    cols = a_gpu.shape[1]
+    if N != a_gpu.shape[0]:
+        raise ValueError('incompatible dimensions')
+    float_type = d_gpu.dtype.type
+    if a_gpu.dtype != float_type:
+        raise ValueError('argument types must be the same')
+
+    if float_type == np.float32:
+        scal_func = cublas.cublasSscal
+        copy_func = cublas.cublasScopy
+    elif float_type == np.float64:
+        scal_func = cublas.cublasDscal
+        copy_func = cublas.cublasDcopy
+    elif float_type == np.complex64:
+        scal_func = cublas.cublasCscal
+        copy_func = cublas.cublasCcopy
+    elif float_type == np.complex128:
+        scal_func = cublas.cublasZscal
+        copy_func = cublas.cublasZcopy
+    else:
+        raise ValueError('unrecognized type')
+
+    d = d_gpu.get()
+    bytes_step = cols*float_type().itemsize
+    if overwrite:
+        r_gpu = a_gpu
+    else:
+        r_gpu = gpuarray.empty_like(a_gpu)
+        copy_func(a_gpu.size, int(a_gpu.gpudata), 1,
+                  int(r_gpu.gpudata), 1)
+        
+    for i in xrange(N):
+        scal_func(cols, d[i], int(r_gpu.gpudata)+i*bytes_step, 1) 
+    return r_gpu
+
 transpose_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
