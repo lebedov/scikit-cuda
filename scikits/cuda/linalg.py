@@ -210,6 +210,9 @@ def dot(x_gpu, y_gpu, transa='N', transb='N'):
 
     if len(x_gpu.shape) == 1 and len(y_gpu.shape) == 1:
 
+        if x_gpu.size != y_gpu.size:
+            raise ValueError('arrays must be of same length')
+        
         # Compute inner product for 1D arrays:
         if (x_gpu.dtype == np.complex64 and y_gpu.dtype == np.complex64):
             cublas_func = cublas._libcublas.cublasCdotu
@@ -266,12 +269,15 @@ def dot(x_gpu, y_gpu, transa='N', transb='N'):
             raise ValueError('invalid value for transb')
 
         if transa in ['t', 'c']:
-            n = x_gpu.shape[1]
+            l, n = x_gpu.shape
         elif transa in ['n']:
-            n = x_gpu.shape[0]
+            n, l = x_gpu.shape
         else:
             raise ValueError('invalid value for transa')
 
+        if l != k:
+            raise ValueError('objects are not aligned')
+        
         if transb == 'n':
             lda = max(1, m)
         else:
@@ -360,7 +366,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True):
     a_gpu : pycuda.gpuarray.GPUArray
         Multiplicand array with shape `(N, M)`. 
     trans : char
-        If `T`, assume that `a_gpu` contains the transpose the multiplicand.
+        If 'T', compute the product of the transpose of `a_gpu`.
     overwrite : bool
         If true (default), save the result in `a_gpu`.
         
@@ -1020,7 +1026,7 @@ def pinv(a_gpu, rcond=1e-15):
     # Finish pinv computation:
     suh_gpu = dot(s_diag_gpu, u_gpu, 'n', 'c')
     return dot(vh_gpu, suh_gpu, 'c')
-               
+
 tril_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
