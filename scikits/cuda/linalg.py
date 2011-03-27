@@ -349,16 +349,16 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True):
     """
     Dot product of diagonal and non-diagonal arrays.
 
-    Computes the matrix product of a real diagonal array represented
-    as a vector and a non-diagonal array.
+    Computes the matrix product of a diagonal array represented as a
+    vector and a non-diagonal array.
 
     Parameters
     ----------
     d_gpu : pycuda.gpuarray.GPUArray
-        Real array of length `N` corresponding to the
-        diagonal of the multiplier.
+        Array of length `N` corresponding to the diagonal of the
+        multiplier. 
     a_gpu : pycuda.gpuarray.GPUArray
-        Multiplicand array with shape `(N, M)`.
+        Multiplicand array with shape `(N, M)`. 
     trans : char
         If `T`, assume that `a_gpu` contains the transpose the multiplicand.
     overwrite : bool
@@ -369,6 +369,12 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True):
     r_gpu : pycuda.gpuarray.GPUArray
         The computed matrix product.
 
+    Notes
+    -----
+    `d_gpu` and `a_gpu` must have the same precision data
+    type. `d_gpu` may be real and `a_gpu` may be complex, but not
+    vice-versa.
+    
     Examples
     --------
     >>> import pycuda.autoinit
@@ -401,26 +407,34 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True):
 
     float_type = a_gpu.dtype.type
     if float_type == np.float32:
-        real_type = np.float32
+        if d_gpu.dtype != np.float32:
+            raise ValueError('precision of argument types must be the same')
         scal_func = cublas.cublasSscal
         copy_func = cublas.cublasScopy
     elif float_type == np.float64:
-        real_type = np.float64
+        if d_gpu.dtype != np.float64:
+            raise ValueError('precision of argument types must be the same')
         scal_func = cublas.cublasDscal
         copy_func = cublas.cublasDcopy
     elif float_type == np.complex64:
-        real_type = np.float32
-        scal_func = cublas.cublasCscal
+        if d_gpu.dtype == np.complex64:            
+            scal_func = cublas.cublasCscal
+        elif d_gpu.dtype == np.float32:
+            scal_func = cublas.cublasCsscal
+        else:
+            raise ValueError('precision of argument types must be the same')
         copy_func = cublas.cublasCcopy
     elif float_type == np.complex128:
-        real_type = np.float64
+        if d_gpu.dtype == np.complex128:
+            scal_func = cublas.cublasZscal
+        elif d_gpu.dtype == np.float64:
+            scal_func = cublas.cublasZdscal
+        else:
+            raise ValueError('precision of argument types must be the same')
         scal_func = cublas.cublasZscal
         copy_func = cublas.cublasZcopy
     else:
         raise ValueError('unrecognized type')
-
-    if d_gpu.dtype != real_type:
-        raise ValueError('precision of argument types must be the same')
     
     d = d_gpu.get()
     if overwrite:
@@ -436,6 +450,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True):
     else:
         incx = rows
         bytes_step = float_type().itemsize
+
     for i in xrange(N):
         scal_func(cols, d[i], int(r_gpu.gpudata)+i*bytes_step, incx)
     return r_gpu
@@ -1005,7 +1020,7 @@ def pinv(a_gpu, rcond=1e-15):
     # Finish pinv computation:
     suh_gpu = dot(s_diag_gpu, u_gpu, 'n', 'c')
     return dot(vh_gpu, suh_gpu, 'c')
-
+               
 tril_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
