@@ -929,7 +929,7 @@ def cublasCsrot(n, x, incx, y, incy, sc, ss):
     
 _libcublas.cublasCsscal.restype = None
 _libcublas.cublasCsscal.argtypes = [ctypes.c_int,
-                                    cuda.cuFloatComplex,
+                                    ctypes.c_float,
                                     ctypes.c_void_p,
                                     ctypes.c_int]
 def cublasCsscal(n, alpha, x, incx):
