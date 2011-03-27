@@ -437,7 +437,6 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True):
             scal_func = cublas.cublasZdscal
         else:
             raise ValueError('precision of argument types must be the same')
-        scal_func = cublas.cublasZscal
         copy_func = cublas.cublasZcopy
     else:
         raise ValueError('unrecognized type')
@@ -1015,17 +1014,9 @@ def pinv(a_gpu, rcond=1e-15):
     cutoff_invert_s(s_gpu, cutoff_gpu,
                     np.uint32(s_gpu.size),
                     block=block_dim, grid=grid_dim)
-    
-    # The diagonal matrix of singular values must have the same data
-    # type as u_gpu in order to compute the dot product below:
-    if s_gpu.dtype == u_gpu.dtype:
-        s_diag_gpu = diag(s_gpu)
-    else:
-        s_diag_gpu = diag(s_gpu.astype(u_gpu.dtype))
-    
-    # Finish pinv computation:
-    suh_gpu = dot(s_diag_gpu, u_gpu, 'n', 'c')
-    return dot(vh_gpu, suh_gpu, 'c')
+
+    # Compute the pseudoinverse without allocating a new diagonal matrix:
+    return dot(vh_gpu, dot_diag(s_gpu, u_gpu, 't'), 'c', 'c')
 
 tril_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
