@@ -113,6 +113,7 @@ def done_context(ctx):
     for i in xrange(len(atexit._exithandlers)):
         if atexit._exithandlers[i][0] == ctx.pop:
             del atexit._exithandlers[i]
+            break
     ctx.detach()
     
 def init():
