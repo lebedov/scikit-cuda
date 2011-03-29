@@ -133,7 +133,7 @@ def svd(a_gpu, jobu='A', jobvt='A'):
             raise ValueError('in-place computation of singular vectors '+
                              'of non-square matrix not allowed')
         ldu = 1
-        u_gpu = gpuarray.empty((), data_type)
+        u_gpu = a_gpu
     else:
         ldu = 1
         u_gpu = gpuarray.empty((), data_type)
@@ -152,7 +152,7 @@ def svd(a_gpu, jobu='A', jobvt='A'):
             raise ValueError('in-place computation of singular vectors '+
                              'of non-square matrix not allowed')
         ldvt = 1
-        vh_gpu = gpuarray.empty((), data_type)
+        vh_gpu = a_gpu
     else:
         ldvt = 1
         vh_gpu = gpuarray.empty((), data_type)
