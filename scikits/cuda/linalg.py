@@ -5,7 +5,7 @@ PyCUDA-based linear algebra functions.
 """
 
 from pprint import pprint
-from string import Template, lower
+from string import Template, lower, upper
 from pycuda.compiler import SourceModule
 import pycuda.gpuarray as gpuarray
 import pycuda.driver as drv
@@ -20,7 +20,7 @@ from misc import get_dev_attrs, select_block_grid_sizes, init, get_current_devic
 # Get installation location of C headers:
 from . import install_headers
     
-def svd(a_gpu, full_matrices=1, compute_uv=1):
+def svd(a_gpu, jobu='A', jobvt='A'):
     """
     Singular Value Decomposition.
 
@@ -32,31 +32,41 @@ def svd(a_gpu, full_matrices=1, compute_uv=1):
     ----------
     a : pycuda.gpuarray.GPUArray
         Input matrix of shape `(m, n)` to decompose.
-    full_matrices : bool, optional
-        If True (default), `u` and `vh` have the shapes
-        `(m, m)` and `(n, n)`, respectively.  Otherwise, the shapes
-        are `(m, k)` and `(k, n)`, resp., where `k = min(m, n)`.
-    compute_uv : bool, optional
-        If True (default), compute `u` and `vh` in addition to `s`.
+    jobu : {'A', 'S', 'O', 'N'}
+        If 'A', return the full `u` matrix with shape `(m, m)`.
+        If 'S', return the `u` matrix with shape `(m, k)`.
+        If 'O', return the `u` matrix with shape `(m, k) without
+        allocating a new matrix.
+        If 'N', don't return `u`.
+    jobvt : {'A', 'S', 'O', 'N'}
+        If 'A', return the full `vh` matrix with shape `(n, n)`.
+        If 'S', return the `vh` matrix with shape `(k, n)`.
+        If 'O', return the `vh` matrix with shape `(k, n) without
+        allocating a new matrix.
+        If 'N', don't return `vh`.
 
     Returns
     -------
     u : pycuda.gpuarray.GPUArray
         Unitary matrix of shape `(m, m)` or `(m, k)` depending on
-        value of `full_matrices`.
+        value of `jobu`.
     s : pycuda.gpuarray.GPUArray
         Array containing the singular values, sorted such that `s[i] >= s[i+1]`.
         `s` is of length `min(m, n)`.
     vh : pycuda.gpuarray.GPUArray
         Unitary matrix of shape `(n, n)` or `(k, n)`, depending
-        on `full_matrices`. 
+        on `jobvt`. 
 
     Notes
     -----
     Double precision is only supported if the premium version of the
     CULA toolkit is installed.
 
-    This function destroys the contents of the input matrix.
+    This function destroys the contents of the input matrix regardless
+    of the values of `jobu` and `jobvt`.
+
+    Only one of `jobu` or `jobvt` may be set to `O`, and then only for
+    a square matrix.
     
     Examples
     --------
@@ -68,7 +78,7 @@ def svd(a_gpu, full_matrices=1, compute_uv=1):
     >>> a = np.random.randn(9, 6) + 1j*np.random.randn(9, 6)
     >>> a = np.asarray(a, np.complex64)
     >>> a_gpu = gpuarray.to_gpu(a)
-    >>> u_gpu, s_gpu, vh_gpu = linalg.svd(a_gpu, 0)
+    >>> u_gpu, s_gpu, vh_gpu = linalg.svd(a_gpu, 'S', 'S')
     >>> np.allclose(a, np.dot(u_gpu.get(), np.dot(np.diag(s_gpu.get()), vh_gpu.get())), 1e-4)
     True
 
@@ -93,62 +103,79 @@ def svd(a_gpu, full_matrices=1, compute_uv=1):
             real_type = np.float64
         else:
             raise ValueError('double precision not supported')
-        
-    # Flip the shape of the input because CUDA assumes arrays are
-    # stored in column-major format:
+
+    # Since CUDA assumes that arrays are stored in column-major
+    # format, the input matrix is assumed to be transposed:
     n, m = a_gpu.shape
+    square = (n == m)
     
-    # Set LDA:
+    # Since the input matrix is transposed, jobu and jobvt must also
+    # be switched because the computed matrices will be returned in
+    # reversed order:
+    jobvt, jobu = jobu, jobvt
+    
+    # Set the leading dimension of the input matrix:
     lda = max(1, m)
 
-    # Set S:
+    # Allocate the array of singular values:
     s_gpu = gpuarray.empty(min(m, n), real_type)
     
-    # Set JOBU and JOBVT:
-    if compute_uv:
-        if full_matrices:
-            jobu = 'A'
-            jobvt = 'A'
-        else:
-            jobu = 'S'
-            jobvt = 'S'
-    else:
-        jobu = 'N'
-        jobvt = 'N'
-
-    # Set LDU and transpose of U:
+    # Set the leading dimension and allocate u:
+    jobu = upper(jobu)
+    jobvt = upper(jobvt)
     ldu = m
     if jobu == 'A':
         u_gpu = gpuarray.empty((ldu, m), data_type)
     elif jobu == 'S':
         u_gpu = gpuarray.empty((min(m, n), ldu), data_type)
+    elif jobu == 'O':
+        if not square:
+            raise ValueError('in-place computation of singular vectors '+
+                             'of non-square matrix not allowed')
+        ldu = 1
+        u_gpu = gpuarray.empty((), data_type)
     else:
         ldu = 1
-        u_gpu = gpuarray.empty((1, 1), data_type)
+        u_gpu = gpuarray.empty((), data_type)
         
-    # Set LDVT and transpose of VT:
+    # Set the leading dimension and allocate vh:
     if jobvt == 'A':
         ldvt = n
-        vt_gpu = gpuarray.empty((n, n), data_type)
+        vh_gpu = gpuarray.empty((n, n), data_type)
     elif jobvt == 'S':
         ldvt = min(m, n)
-        vt_gpu = gpuarray.empty((n, ldvt), data_type)
+        vh_gpu = gpuarray.empty((n, ldvt), data_type)
+    elif jobvt == 'O':        
+        if jobu == 'O':
+            raise ValueError('jobu and jobvt cannot both be O')
+        if not square:
+            raise ValueError('in-place computation of singular vectors '+
+                             'of non-square matrix not allowed')
+        ldvt = 1
+        vh_gpu = gpuarray.empty((), data_type)
     else:
         ldvt = 1
-        vt_gpu = gpuarray.empty((1, 1), data_type)
+        vh_gpu = gpuarray.empty((), data_type)
 
     # Compute SVD and check error status:
+    
     status = cula_func(jobu, jobvt, m, n, int(a_gpu.gpudata),
                        lda, int(s_gpu.gpudata), int(u_gpu.gpudata),
-                       ldu, int(vt_gpu.gpudata), ldvt)
+                       ldu, int(vh_gpu.gpudata), ldvt)
 
     cula.culaCheckStatus(status)
-
+        
     # Free internal CULA memory:
     cula.culaFreeBuffers()
-    
-    if compute_uv:
-        return vt_gpu, s_gpu, u_gpu
+        
+    # Since the input is assumed to be transposed, it is necessary to
+    # return the computed matrices in reverse order:
+    if jobu in ['A', 'S', 'O'] and jobvt in ['A', 'S', 'O']:
+        return vh_gpu, s_gpu, u_gpu
+    elif jobu == 'N' and jobvt != 'N':
+        return vh_gpu, s_gpu
+    elif jobu != 'N' and jobvt == 'N':
+        return s_gpu, u_gpu
     else:
         return s_gpu
 
@@ -971,6 +998,8 @@ def pinv(a_gpu, rcond=1e-15):
     CULA toolkit is installed.
 
     This function destroys the contents of the input matrix.
+
+    If the input matrix is square, the pseudoinverse uses less memory.
     
     Examples
     --------
@@ -993,8 +1022,11 @@ def pinv(a_gpu, rcond=1e-15):
 
     """
     
-    # Compute SVD:
-    u_gpu, s_gpu, vh_gpu = svd(a_gpu, 0)
+    # Perform in-place SVD if the matrix is square to save memory:
+    if a_gpu.shape[0] == a_gpu.shape[1]:
+        u_gpu, s_gpu, vh_gpu = svd(a_gpu, 's', 'o')
+    else:
+        u_gpu, s_gpu, vh_gpu = svd(a_gpu, 's', 's')
     
     # Get block/grid sizes; the number of threads per block is limited
     # to 512 because the cutoff_invert_s kernel defined above uses too
