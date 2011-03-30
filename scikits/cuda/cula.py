@@ -294,6 +294,7 @@ def culaDeviceSgesv(n, nrhs, a, lda, ipiv, b, ldb):
     status = _libcula.culaDeviceSgesv(n, nrhs, int(a), lda, int(ipiv),
                                       int(b), ldb)
     culaCheckStatus(status)
+
 def culaDeviceCgesv(n, nrhs, a, lda, ipiv, b, ldb):
     """
     Solve linear system with LU factorization.
@@ -320,6 +321,7 @@ def culaDeviceSgetrf(m, n, a, lda, ipiv):
     
     status = _libcula.culaDeviceSgetrf(m, n, int(a), lda, int(ipiv))
     culaCheckStatus(status)
+
 def culaDeviceCgetrf(m, n, a, lda, ipiv):
     """
     LU factorization.
@@ -345,6 +347,7 @@ def culaDeviceSgeqrf(m, n, a, lda, tau):
     
     status = _libcula.culaDeviceSgeqrf(m, n, int(a), lda, int(tau))
     culaCheckStatus(status)
+
 def culaDeviceCgeqrf(m, n, a, lda, tau):
     """
     QR factorization.
@@ -374,6 +377,7 @@ def culaDeviceSgels(trans, m, n, nrhs, a, lda, b, ldb):
     status = _libcula.culaDeviceSgels(trans, m, n, nrhs, int(a),
                                       lda, int(b), ldb)
     culaCheckStatus(status)
+
 def culaDeviceCgels(trans, m, n, nrhs, a, lda, b, ldb):
     """
     Solve linear system with QR or LQ factorization.
@@ -406,6 +410,7 @@ def culaDeviceSgglse(m, n, p, a, lda, b, ldb, c, d, x):
     status = _libcula.culaDeviceSgglse(m, n, p, int(a), lda, int(b),
                                        ldb, int(c), int(d), int(x))
     culaCheckStatus(status)
+
 def culaDeviceCgglse(m, n, p, a, lda, b, ldb, c, d, x):
     """
     Solve linear equality-constrained least squares problem.
@@ -440,6 +445,7 @@ def culaDeviceSgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
                                        int(s), int(u), ldu, int(vt),
                                        ldvt)
     culaCheckStatus(status)
+
 def culaDeviceCgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
     """
     SVD decomposition.
@@ -474,6 +480,7 @@ def culaDeviceDgesv(n, nrhs, a, lda, ipiv, b, ldb):
     status = _libcula.culaDeviceDgesv(n, nrhs, int(a), lda, int(ipiv),
                                       int(b), ldb)
     culaCheckStatus(status)
+
 def culaDeviceZgesv(n, nrhs, a, lda, ipiv, b, ldb):
     """
     Solve linear system with LU factorization.
@@ -503,6 +510,7 @@ def culaDeviceDgetrf(m, n, a, lda, ipiv):
     
     status = _libcula.culaDeviceDgetrf(m, n, int(a), lda, int(ipiv))
     culaCheckStatus(status)
+
 def culaDeviceZgetrf(m, n, a, lda, ipiv):
     """
     LU factorization.
@@ -531,6 +539,7 @@ def culaDeviceDgeqrf(m, n, a, lda, tau):
     
     status = _libcula.culaDeviceDgeqrf(m, n, int(a), lda, int(tau))
     culaCheckStatus(status)
+
 def culaDeviceZgeqrf(m, n, a, lda, tau):
     """
     QR factorization.
@@ -563,6 +572,7 @@ def culaDeviceDgels(trans, m, n, nrhs, a, lda, b, ldb):
     status = _libcula.culaDeviceDgels(trans, m, n, nrhs, int(a),
                                       lda, int(b), ldb)
     culaCheckStatus(status)
+
 def culaDeviceZgels(trans, m, n, nrhs, a, lda, b, ldb):
     """
     Solve linear system with QR or LQ factorization.
@@ -598,6 +608,7 @@ def culaDeviceDgglse(m, n, p, a, lda, b, ldb, c, d, x):
     status = _libcula.culaDeviceDgglse(m, n, p, int(a), lda, int(b),
                                        ldb, int(c), int(d), int(x))
     culaCheckStatus(status)
+
 def culaDeviceZgglse(m, n, p, a, lda, b, ldb, c, d, x):
     """
     Solve linear equality-constrained least squares problem.
@@ -635,6 +646,7 @@ def culaDeviceDgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
                                        int(s), int(u), ldu, int(vt),
                                        ldvt)
     culaCheckStatus(status)
+
 def culaDeviceZgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
     """
     SVD decomposition.
@@ -673,6 +685,7 @@ def culaDeviceSposv(upio, n, nrhs, a, lda, b, ldb):
     status = _libcula.culaDeviceSposv(upio, n, nrhs, int(a), lda, int(b),
                                       ldb)
     culaCheckStatus(status)
+
 def culaDeviceCposv(upio, n, nrhs, a, lda, b, ldb):
     """
     Solve positive definite linear system with Cholesky factorization.
@@ -682,6 +695,7 @@ def culaDeviceCposv(upio, n, nrhs, a, lda, b, ldb):
     status = _libcula.culaDeviceCposv(upio, n, nrhs, int(a), lda, int(b),
                                       ldb)
     culaCheckStatus(status)
+
 def culaDeviceDposv(upio, n, nrhs, a, lda, b, ldb):
     """
     Solve positive definite linear system with Cholesky factorization.
@@ -691,6 +705,7 @@ def culaDeviceDposv(upio, n, nrhs, a, lda, b, ldb):
     status = _libcula.culaDeviceDposv(upio, n, nrhs, int(a), lda, int(b),
                                       ldb)
     culaCheckStatus(status)
+
 def culaDeviceZposv(upio, n, nrhs, a, lda, b, ldb):
     """
     Solve positive definite linear system with Cholesky factorization.
@@ -723,6 +738,7 @@ def culaDeviceSpotrf(uplo, n, a, lda):
     
     status = _libcula.culaDeviceSpotrf(uplo, n, int(a), lda)
     culaCheckStatus(status)
+
 def culaDeviceCpotrf(uplo, n, a, lda):
     """
     Cholesky factorization.
@@ -731,6 +747,7 @@ def culaDeviceCpotrf(uplo, n, a, lda):
 
     status = _libcula.culaDeviceCpotrf(uplo, n, int(a), lda)
     culaCheckStatus(status)
+
 def culaDeviceDpotrf(uplo, n, a, lda):
     """
     Cholesky factorization.
@@ -739,6 +756,7 @@ def culaDeviceDpotrf(uplo, n, a, lda):
 
     status = _libcula.culaDeviceDpotrf(uplo, n, int(a), lda)
     culaCheckStatus(status)
+
 def culaDeviceZpotrf(uplo, n, a, lda):
     """
     Cholesky factorization.
@@ -746,6 +764,276 @@ def culaDeviceZpotrf(uplo, n, a, lda):
     """
 
     status = _libcula.culaDeviceZpotrf(uplo, n, int(a), lda)
+    culaCheckStatus(status)
+
+try:
+    _libcula.culaDeviceSsyev.restype = \
+    _libcula.culaDeviceDsyev.restype = \
+    _libcula.culaDeviceCheev.restype = \
+    _libcula.culaDeviceZheev.restype = int
+    _libcula.culaDeviceSsyev.argtypes = \
+    _libcula.culaDeviceDsyev.argtypes = \
+    _libcula.culaDeviceCheev.argtypes = \
+    _libcula.culaDeviceZheev.argtypes = [ctypes.c_char,
+                                         ctypes.c_char,
+                                         ctypes.c_int,
+                                         ctypes.c_void_p,
+                                         ctypes.c_int,
+                                         ctypes.c_void_p]
+except AttributeError:
+    pass
+def culaDeviceSsyev(jobz, uplo, n, a, lda, w):
+    """
+    Symmetric eigenvalue decomposition.
+
+    """
+
+    status = _libcula.culaDeviceSsyev(jobz, uplo, n, int(a), lda, int(w))
+    culaCheckStatus(status)
+
+def culaDeviceDsyev(jobz, uplo, n, a, lda, w):
+    """
+    Symmetric eigenvalue decomposition.
+
+    """
+
+    status = _libcula.culaDeviceDsyev(jobz, uplo, n, int(a), lda, int(w))
+    culaCheckStatus(status)
+
+def culaDeviceCheev(jobz, uplo, n, a, lda, w):
+    """
+    Hermitian eigenvalue decomposition.
+
+    """
+
+    status = _libcula.culaDeviceCheev(jobz, uplo, n, int(a), lda, int(w))
+    culaCheckStatus(status)
+
+def culaDeviceZheev(jobz, uplo, n, a, lda, w):
+    """
+    Hermitian eigenvalue decomposition.
+
+    """
+
+    status = _libcula.culaDeviceZheev(jobz, uplo, n, int(a), lda, int(w))
+    culaCheckStatus(status)
+
+
+# BLAS routines provided by CULA:
+_libcula.culaDeviceSgemm.restype = \
+_libcula.culaDeviceDgemm.restype = \
+_libcula.culaDeviceCgemm.restype = \
+_libcula.culaDeviceZgemm.restype = int
+
+_libcula.culaDeviceSgemm.argtypes = [ctypes.c_char,
+                                     ctypes.c_char,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     ctypes.c_float,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int,
+                                     ctypes.c_float,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int]
+
+_libcula.culaDeviceDgemm.argtypes = [ctypes.c_char,
+                                     ctypes.c_char,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     ctypes.c_double,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int,
+                                     ctypes.c_double,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int]
+
+_libcula.culaDeviceCgemm.argtypes = [ctypes.c_char,
+                                     ctypes.c_char,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     cuda.cuFloatComplex,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int,
+                                     cuda.cuFloatComplex,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int]
+
+_libcula.culaDeviceZgemm.argtypes = [ctypes.c_char,
+                                     ctypes.c_char,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     cuda.cuDoubleComplex,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int,
+                                     cuda.cuDoubleComplex,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int]
+
+def culaDeviceSgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
+    """
+    Matrix-matrix product for general matrix.
+
+    """
+    
+    status = _libcula.culaDeviceSgemm(transa, transb, m, n, k, alpha,
+                           int(A), lda, int(B), ldb, beta, int(C), ldc)
+    culaCheckStatus(status)
+
+def culaDeviceDgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
+    """
+    Matrix-matrix product for general matrix.
+
+    """
+    
+    status = _libcula.culaDeviceDgemm(transa, transb, m, n, k, alpha,
+                           int(A), lda, int(B), ldb, beta, int(C), ldc)
+    culaCheckStatus(status)
+
+def culaDeviceCgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
+    """
+    Matrix-matrix product for complex general matrix.
+
+    """
+    
+    status = _libcula.culaDeviceCgemm(transa, transb, m, n, k,
+                                      cuda.cuFloatComplex(alpha.real,
+                                                        alpha.imag),
+                                      int(A), lda, int(B), ldb,
+                                      cuda.cuFloatComplex(beta.real,
+                                                        beta.imag),
+                                      int(C), ldc)
+    culaCheckStatus(status)
+
+def culaDeviceZgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
+    """
+    Matrix-matrix product for complex general matrix.
+
+    """
+    
+    status = _libcula.culaDeviceZgemm(transa, transb, m, n, k,
+                                      cuda.cuDoubleComplex(alpha.real,
+                                                        alpha.imag),
+                                      int(A), lda, int(B), ldb,
+                                      cuda.cuDoubleComplex(beta.real,
+                                                        beta.imag),
+                                      int(C), ldc)
+    culaCheckStatus(status)
+
+
+_libcula.culaDeviceSgemv.restype = \
+_libcula.culaDeviceDgemv.restype = \
+_libcula.culaDeviceCgemv.restype = \
+_libcula.culaDeviceZgemv.restype = int
+
+_libcula.culaDeviceSgemv.argtypes = [ctypes.c_char,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     ctypes.c_float,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int,
+                                     ctypes.c_float,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int]
+
+_libcula.culaDeviceDgemv.argtypes = [ctypes.c_char,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     ctypes.c_double,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int,
+                                     ctypes.c_double,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int]
+
+_libcula.culaDeviceCgemv.argtypes = [ctypes.c_char,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     cuda.cuFloatComplex,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int,
+                                     cuda.cuFloatComplex,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int]
+
+_libcula.culaDeviceZgemv.argtypes = [ctypes.c_char,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     cuda.cuDoubleComplex,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int,
+                                     cuda.cuDoubleComplex,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int]
+
+def culaDeviceSgemv(trans, m, n, alpha, A, lda, x, incx, beta, y, incy):
+    """
+    Matrix-vector product for real general matrix.
+
+    """
+    
+    status = _libcula.culaDeviceSgemv(trans, m, n, alpha, int(A), lda,
+                           int(x), incx, beta, int(y), incy)
+    culaCheckStatus(status)
+
+def culaDeviceDgemv(trans, m, n, alpha, A, lda, x, incx, beta, y, incy):
+    """
+    Matrix-vector product for real general matrix.
+
+    """
+    
+    status = _libcula.culaDeviceDgemv(trans, m, n, alpha, int(A), lda,
+                           int(x), incx, beta, int(y), incy)
+    culaCheckStatus(status)
+    
+
+def culaDeviceCgemv(trans, m, n, alpha, A, lda, x, incx, beta, y, incy):
+    """
+    Matrix-vector product for complex general matrix.
+
+    """
+    
+    status = _libcula.culaDeviceCgemv(trans, m, n,
+                           cuda.cuFloatComplex(alpha.real,
+                                               alpha.imag),
+                           int(A), lda, int(x), incx,
+                           cuda.cuFloatComplex(beta.real,
+                                               beta.imag),
+                           int(y), incy)
+    culaCheckStatus(status)
+
+def culaDeviceZgemv(trans, m, n, alpha, A, lda, x, incx, beta, y, incy):
+    """
+    Matrix-vector product for complex general matrix.
+
+    """
+    
+    status = _libcula.culaDeviceZgemv(trans, m, n,
+                           cuda.cuDoubleComplex(alpha.real,
+                                               alpha.imag),
+                           int(A), lda, int(x), incx,
+                           cuda.cuDoubleComplex(beta.real,
+                                               beta.imag),
+                           int(y), incy)
     culaCheckStatus(status)
         
 if __name__ == "__main__":
