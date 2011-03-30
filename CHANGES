@@ -13,7 +13,9 @@ Release 0.04 - (March ?, 2011)
 * Automatically determine device used by current context.
 * Support batched and multidimensional FFT operations.
 * Extended dot() function to support implicit transpose/Hermitian.
+* Support for in-place computation of singular vectors in svd() function.
 * Simplify kernel launch setup.
+* More CULA routine wrappers.
 
 Release 0.03 - (November 22, 2010)
 ----------------------------------
