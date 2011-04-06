@@ -1035,6 +1035,284 @@ def culaDeviceZgemv(trans, m, n, alpha, A, lda, x, incx, beta, y, incy):
                                                beta.imag),
                            int(y), incy)
     culaCheckStatus(status)
+    
+    
+try:
+    _libcula.culaDeviceSgeTranspose.restype = \
+    _libcula.culaDeviceDgeTranspose.restype = \
+    _libcula.culaDeviceCgeTranspose.restype = \
+    _libcula.culaDeviceZgeTranspose.restype = int
+    _libcula.culaDeviceSgeTranspose.argtypes = \
+    _libcula.culaDeviceDgeTranspose.argtypes = \
+    _libcula.culaDeviceCgeTranspose.argtypes = \
+    _libcula.culaDeviceZgeTranspose.argtypes = [ctypes.c_int,
+                                                ctypes.c_int,
+                                                ctypes.c_void_p,
+                                                ctypes.c_int,
+                                                ctypes.c_void_p,
+                                                ctypes.c_int]
+except AttributeError:
+    pass
+
+def culaDeviceSgeTranspose(m, n, A, lda, B, ldb):
+    """
+    Transpose of real general matrix.
+
+    """
+    status = _libcula.culaDeviceSgeTranspose(m, n, int(A), lda, int(B), ldb)
+    culaCheckStatus(status)
+    
+def culaDeviceDgeTranspose(m, n, A, lda, B, ldb):
+    """
+    Transpose of real general matrix.
+
+    """
+    status = _libcula.culaDeviceDgeTranspose(m, n, int(A), lda, int(B), ldb)
+    culaCheckStatus(status)
+    
+def culaDeviceCgeTranspose(m, n, A, lda, B, ldb):
+    """
+    Transpose of complex general matrix.
+
+    """
+    status = _libcula.culaDeviceCgeTranspose(m, n, int(A), lda, int(B), ldb)
+    culaCheckStatus(status)
+
+def culaDeviceZgeTranspose(m, n, A, lda, B, ldb):
+    """
+    Transpose of complex general matrix.
+
+    """
+    status = _libcula.culaDeviceZgeTranspose(m, n, int(A), lda, int(B), ldb)
+    culaCheckStatus(status)
+    
+    
+try:
+    _libcula.culaDeviceSgeTransposeInplace.restype = \
+    _libcula.culaDeviceDgeTransposeInplace.restype = \
+    _libcula.culaDeviceCgeTransposeInplace.restype = \
+    _libcula.culaDeviceZgeTransposeInplace.restype = int
+    _libcula.culaDeviceSgeTransposeInplace.argtypes = \
+    _libcula.culaDeviceDgeTransposeInplace.argtypes = \
+    _libcula.culaDeviceCgeTransposeInplace.argtypes = \
+    _libcula.culaDeviceZgeTransposeInplace.argtypes = [ctypes.c_int,
+                                                    ctypes.c_void_p,
+                                                    ctypes.c_int]
+except AttributeError:
+    pass
+
+def culaDeviceSgeTransposeInplace(n, A, lda):
+    """
+    Inplace transpose of real square matrix.
+
+    """
+    status = _libcula.culaDeviceSgeTransposeInplace(n, int(A), lda)
+    culaCheckStatus(status)
+    
+def culaDeviceDgeTransposeInplace(n, A, lda):
+    """
+    Inplace transpose of real square matrix.
+
+    """
+    status = _libcula.culaDeviceDgeTransposeInplace(n, int(A), lda)
+    culaCheckStatus(status)
+
+def culaDeviceCgeTransposeInplace(n, A, lda):
+    """
+    Inplace transpose of complex square matrix.
+
+    """
+    status = _libcula.culaDeviceCgeTransposeInplace(n, int(A), lda)
+    culaCheckStatus(status)
+
+def culaDeviceZgeTransposeInplace(n, A, lda):
+    """
+    Inplace transpose of complex square matrix.
+
+    """
+    status = _libcula.culaDeviceZgeTransposeInplace(n, int(A), lda)
+    culaCheckStatus(status)
+
+
+try:
+
+    _libcula.culaDeviceCgeTransposeConjugate.restype = \
+    _libcula.culaDeviceZgeTransposeConjugate.restype = int
+    _libcula.culaDeviceCgeTransposeConjugate.argtypes = \
+    _libcula.culaDeviceZgeTransposeConjugate.argtypes = [ctypes.c_int,
+                                                        ctypes.c_int,
+                                                        ctypes.c_void_p,
+                                                        ctypes.c_int,
+                                                        ctypes.c_void_p,
+                                                        ctypes.c_int]
+except AttributeError:
+    pass
+
+def culaDeviceCgeTransposeConjugate(m, n, A, lda, B, ldb):
+    """
+    Conjugate transpose of complex general matrix.
+
+    """
+    status = _libcula.culaDeviceCgeTransposeConjugate(m, n, int(A), lda, int(B), ldb)
+    culaCheckStatus(status)
+
+def culaDeviceZgeTransposeConjugate(m, n, A, lda, B, ldb):
+    """
+    Conjugate transpose of complex general matrix.
+
+    """
+    status = _libcula.culaDeviceZgeTransposeConjugate(m, n, int(A), lda, int(B), ldb)
+    culaCheckStatus(status)
+
+try:
+    _libcula.culaDeviceCgeTransposeConjugateInplace.restype = \
+    _libcula.culaDeviceZgeTransposeConjugateInplace.restype = int
+    _libcula.culaDeviceCgeTransposeConjugateInplace.argtypes = \
+    _libcula.culaDeviceZgeTransposeConjugateInplace.argtypes = [ctypes.c_int,
+                                                                ctypes.c_void_p,
+                                                                ctypes.c_int]
+except AttributeError:
+    pass
+
+
+def culaDeviceCgeTransposeConjugateInplace(n, A, lda):
+    """
+    Inplace conjugate transpose of complex square matrix.
+
+    """
+    status = _libcula.culaDeviceCgeTransposeConjugateInplace(n, int(A), lda)
+    culaCheckStatus(status)
+
+def culaDeviceZgeTransposeConjugateInplace(n, A, lda):
+    """
+    Inplace conjugate transpose of complex square matrix.
+
+    """
+    status = _libcula.culaDeviceZgeTransposeConjugateInplace(n, int(A), lda)
+    culaCheckStatus(status)
+
+try:
+    _libcula.culaDeviceCgeConjugate.restype = \
+    _libcula.culaDeviceZgeConjugate.restype = int
+    _libcula.culaDeviceCgeConjugate.argtypes = \
+    _libcula.culaDeviceZgeConjugate.argtypes = [ctypes.c_int,
+                                                ctypes.c_int,
+                                                ctypes.c_void_p,
+                                                ctypes.c_int]
+except AttributeError:
+    pass
+
+
+def culaDeviceCgeConjugate(m, n, A, lda):
+    """
+    Conjugate of complex general matrix.
+
+    """
+    status = _libcula.culaDeviceCgeConjugate(m, n, int(A), lda)
+    culaCheckStatus(status)
+
+def culaDeviceZgeConjugate(m, n, A, lda):
+    """
+    Conjugate of complex general matrix.
+
+    """
+    status = _libcula.culaDeviceZgeConjugate(m, n, int(A), lda)
+    culaCheckStatus(status)
+
+
+try:
+    _libcula.culaDeviceCtrConjugate.restype = \
+    _libcula.culaDeviceZtrConjugate.restype = int
+    _libcula.culaDeviceCtrConjugate.argtypes = \
+    _libcula.culaDeviceZtrConjugate.argtypes = [ctypes.c_char,
+                                                ctypes.c_char,
+                                                ctypes.c_int,
+                                                ctypes.c_int,
+                                                ctypes.c_void_p,
+                                                ctypes.c_int]
+except AttributeError:
+    pass
+
+def culaDeviceCtrConjugate(uplo, diag, m, n, A, lda):
+    """
+    Conjugate of complex upper or lower triangle matrix.
+
+    """
+    status = _libcula.culaDeviceCtrConjugate(uplo, diag, m, n, int(A), lda)
+    culaCheckStatus(status)
+
+def culaDeviceZtrConjugate(uplo, diag, m, n, A, lda):
+    """
+    Conjugate of complex upper or lower triangle matrix.
+
+    """
+    status = _libcula.culaDeviceZtrConjugate(uplo, diag, m, n, int(A), lda)
+    culaCheckStatus(status)
+
+
+try:
+    _libcula.culaDeviceSgeNancheck.restype = \
+    _libcula.culaDeviceDgeNancheck.restype = \
+    _libcula.culaDeviceCgeNancheck.restype = \
+    _libcula.culaDeviceZgeNancheck.restype = int
+    _libcula.culaDeviceSgeNancheck.argtypes = \
+    _libcula.culaDeviceDgeNancheck.argtypes = \
+    _libcula.culaDeviceCgeNancheck.argtypes = \
+    _libcula.culaDeviceZgeNancheck.argtypes = [ctypes.c_int,
+                                                ctypes.c_int,
+                                                ctypes.c_void_p,
+                                                ctypes.c_int]
+except AttributeError:
+    pass
+
+def culaDeviceSgeNancheck(m, n, A, lda):
+    """
+    Check a real general matrix for invalid entries
+
+    """
+    status = _libcula.culaDeviceSgeNancheck(m, n, int(A), lda)
+    try:
+        culaCheckStatus(status)
+    except culaDataError:
+        return True
+    return False
+
+def culaDeviceDgeNancheck(m, n, A, lda):
+    """
+    Check a real general matrix for invalid entries
+
+    """
+    status = _libcula.culaDeviceDgeNancheck(m, n, int(A), lda)
+    try:
+        culaCheckStatus(status)
+    except culaDataError:
+        return True
+    return False
+
+def culaDeviceCgeNancheck(m, n, A, lda):
+    """
+    Check a complex general matrix for invalid entries
+
+    """
+    status = _libcula.culaDeviceCgeNancheck(m, n, int(A), lda)
+    try:
+        culaCheckStatus(status)
+    except culaDataError:
+        return True
+    return False
+
+def culaDeviceZgeNancheck(m, n, A, lda):
+    """
+    Check a complex general matrix for invalid entries
+
+    """
+    status = _libcula.culaDeviceZgeNancheck(m, n, int(A), lda)
+    try:
+        culaCheckStatus(status)
+    except culaDataError:
+        return True
+    return False
+
         
 if __name__ == "__main__":
     import doctest

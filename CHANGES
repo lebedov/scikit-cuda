@@ -3,7 +3,7 @@
 Change Log
 ==========
 
-Release 0.04 - (March ?, 2011)
+Release 0.04 - (April ?, 2011)
 --------------------------------
 * Fix bug in cutoff_invert kernel.
 * Add get_compute_capability function and other goodies to misc module.
@@ -16,6 +16,7 @@ Release 0.04 - (March ?, 2011)
 * Support for in-place computation of singular vectors in svd() function.
 * Simplify kernel launch setup.
 * More CULA routine wrappers.
+* Wrappers for CULA R11 auxiliary routines.
 
 Release 0.03 - (November 22, 2010)
 ----------------------------------
