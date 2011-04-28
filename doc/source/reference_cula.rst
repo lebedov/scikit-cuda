@@ -5,22 +5,113 @@
 CULA Routines
 =============
 
-Helper Routines
----------------
+Framework Routines
+------------------
 .. autosummary::
    :toctree: generated/
    :nosignatures:
 
    culaCheckStatus
+   culaFreeBuffers
    culaGetErrorInfo
+   culaGetErrorInfoString
+   culaGetExecutingDevice
    culaGetLastStatus
    culaGetStatusString
    culaInitialize
    culaSelectDevice
    culaShutdown
 
-Linear Algebra Routines
------------------------
+Auxiliary Routines
+------------------
+
+Single Precision Real
+^^^^^^^^^^^^^^^^^^^^^
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   culaDeviceSgeNancheck
+   culaDeviceSgeTranspose
+   culaDeviceSgeTransposeInplace
+
+Single Precision Complex
+^^^^^^^^^^^^^^^^^^^^^^^^
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   culaDeviceCgeConjugate
+   culaDeviceCgeNancheck
+   culaDeviceCgeTranspose
+   culaDeviceCgeTransposeConjugate
+   culaDeviceCgeTransposeInplace
+   culaDeviceCgeTransposeConjugateInplace
+
+Double Precision Real
+^^^^^^^^^^^^^^^^^^^^^
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   culaDeviceDgeNancheck
+   culaDeviceDgeTranspose
+   culaDeviceDgeTransposeInplace
+
+Double Precision Complex
+^^^^^^^^^^^^^^^^^^^^^^^^
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   culaDeviceZgeConjugate
+   culaDeviceZgeNancheck
+   culaDeviceZgeTranspose
+   culaDeviceZgeTransposeConjugate
+   culaDeviceZgeTransposeInplace
+   culaDeviceZgeTransposeConjugateInplace
+    
+BLAS Routines
+-------------
+
+Single Precision Real
+^^^^^^^^^^^^^^^^^^^^^
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   culaDeviceSgemm
+   culaDeviceSgemv
+
+Single Precision Complex
+^^^^^^^^^^^^^^^^^^^^^^^^
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   culaDeviceCgemm
+   culaDeviceCgemv
+
+Double Precision Real
+^^^^^^^^^^^^^^^^^^^^^
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   culaDeviceDgemm
+   culaDeviceDgemv
+
+Double Precision Complex
+^^^^^^^^^^^^^^^^^^^^^^^^
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   culaDeviceZgemm
+   culaDeviceZgemv
+
+LAPACK Routines
+---------------
 
 Single Precision Real
 ^^^^^^^^^^^^^^^^^^^^^
