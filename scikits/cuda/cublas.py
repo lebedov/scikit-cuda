@@ -161,14 +161,14 @@ def cublasIsamax(n, x, incx):
     Index of maximum absolute value.
 
     Finds the smallest index of the maximum magnitude element of a
-    single-precision vector.
+    single-precision real vector.
 
     Parameters
     ----------
     n : int
         Number of elements in input vector.
     x : ctypes.c_void_p
-        Pointer to single-precision input vector.
+        Pointer to single-precision real input vector.
     incx : int
         Storage spacing between elements of `x`.
 
@@ -209,14 +209,14 @@ def cublasIsamin(n, x, incx):
     Index of minimum absolute value.
 
     Finds the smallest index of the minimum magnitude element of a
-    single-precision vector.
+    single-precision real vector.
 
     Parameters
     ----------
     n : int
         Number of elements in input vector.
     x : ctypes.c_void_p
-        Pointer to single-precision input vector.
+        Pointer to single-precision real input vector.
     incx : int
         Storage spacing between elements of `x`.
 
@@ -258,7 +258,7 @@ def cublasSasum(n, x, incx):
     Sum of absolute values of real vector.
 
     Computes the sum of the absolute values of the elements of a
-    single-precision vector.
+    single-precision real vector.
 
     Parameters
     ----------
@@ -673,7 +673,7 @@ def cublasSscal(n, alpha, x, incx):
     alpha : numpy.float32
         Scalar multiplier.
     x : ctypes.c_void_p
-        Pointer to single-precision input/output vector.
+        Pointer to single-precision real input/output vector.
     incx : int
         Storage spacing between elements of `x`.
 
@@ -903,6 +903,32 @@ def cublasCscal(n, alpha, x, incx):
     """
     Scale a complex vector by a complex scalar.
 
+    Replaces a single-precision vector `x` with
+    `alpha * x`.
+    
+    Parameters
+    ----------
+    n : int
+        Number of elements in input vectors.
+    alpha : numpy.complex64
+        Scalar multiplier.
+    x : ctypes.c_void_p
+        Pointer to single-precision complex input/output vector.
+    incx : int
+        Storage spacing between elements of `x`.
+
+    Examples
+    --------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import numpy as np
+    >>> x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)
+    >>> x_gpu = gpuarray.to_gpu(x)
+    >>> alpha = np.complex64(np.random.rand()+1j*np.random.rand())
+    >>> cublasCscal(x.size, alpha, x_gpu.gpudata, 1)
+    >>> np.allclose(x_gpu.get(), alpha*x)
+    True
+
     """
     
     _libcublas.cublasCscal(n, cuda.cuFloatComplex(alpha.real, alpha.imag), int(x), incx)
@@ -936,6 +962,32 @@ def cublasCsscal(n, alpha, x, incx):
     """
     Scale a complex vector by a real scalar.
 
+    Replaces a single-precision vector `x` with
+    `alpha * x`.
+    
+    Parameters
+    ----------
+    n : int
+        Number of elements in input vectors.
+    alpha : numpy.float32
+        Scalar multiplier.
+    x : ctypes.c_void_p
+        Pointer to single-precision complex input/output vector.
+    incx : int
+        Storage spacing between elements of `x`.
+
+    Examples
+    --------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import numpy as np
+    >>> x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)
+    >>> x_gpu = gpuarray.to_gpu(x)
+    >>> alpha = np.float32(np.random.rand())
+    >>> cublasCsscal(x.size, alpha, x_gpu.gpudata, 1)
+    >>> np.allclose(x_gpu.get(), alpha*x)
+    True
+
     """
     
     _libcublas.cublasCsscal(n, alpha, int(x), incx)
@@ -966,6 +1018,38 @@ def cublasIcamax(n, x, incx):
     """
     Index of maximum absolute value.
 
+    Finds the smallest index of the maximum magnitude element of a
+    single-precision complex vector.
+
+    Parameters
+    ----------
+    n : int
+        Number of elements in input vector.
+    x : ctypes.c_void_p
+        Pointer to single-precision complex input vector.
+    incx : int
+        Storage spacing between elements of `x`.
+
+    Returns
+    -------
+    idx : int
+        Index of maximum magnitude element.
+
+    Examples
+    --------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import numpy as np
+    >>> x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)
+    >>> x_gpu = gpuarray.to_gpu(x)
+    >>> m = cublasIcamax(x_gpu.size, x_gpu.gpudata, 1)
+    >>> np.allclose(m, np.argmax(np.abs(x)))
+    True
+    
+    Notes
+    -----
+    This function returns a 0-based index.
+
     """
     
     a = _libcublas.cublasIcamax(n, int(x), incx)
@@ -980,6 +1064,38 @@ _libcublas.cublasIcamin.argtypes = [ctypes.c_int,
 def cublasIcamin(n, x, incx):
     """
     Index of minimum absolute value.
+
+    Finds the smallest index of the minimum magnitude element of a
+    single-precision complex vector.
+
+    Parameters
+    ----------
+    n : int
+        Number of elements in input vector.
+    x : ctypes.c_void_p
+        Pointer to single-precision complex input vector.
+    incx : int
+        Storage spacing between elements of `x`.
+
+    Returns
+    -------
+    idx : int
+        Index of minimum magnitude element.
+
+    Examples
+    --------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import numpy as np
+    >>> x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)
+    >>> x_gpu = gpuarray.to_gpu(x)
+    >>> m = cublasIcamin(x_gpu.size, x_gpu.gpudata, 1)
+    >>> np.allclose(m, np.argmin(np.abs(x)))
+    True
+
+    Notes
+    -----
+    This function returns a 0-based index.
     
     """
 
@@ -1029,14 +1145,14 @@ def cublasIdamax(n, x, incx):
     Index of maximum absolute value.
 
     Finds the smallest index of the maximum magnitude element of a
-    double-precision vector.
+    double-precision real vector.
 
     Parameters
     ----------
     n : int
         Number of elements in input vector.
     x : ctypes.c_void_p
-        Pointer to double-precision input vector.
+        Pointer to double-precision real input vector.
     incx : int
         Storage spacing between elements of `x`.
 
@@ -1501,7 +1617,7 @@ def cublasDscal(n, alpha, x, incx):
     alpha : numpy.float64
         Scalar multiplier.
     x : ctypes.c_void_p
-        Pointer to double-precision input/output vector.
+        Pointer to double-precision real input/output vector.
     incx : int
         Storage spacing between elements of `x`.
 
@@ -1614,6 +1730,34 @@ def cublasIzamax(n, x, incx):
     """
     Index of maximum absolute value.
 
+    Finds the smallest index of the maximum magnitude element of a
+    double-precision complex vector.
+
+    Parameters
+    ----------
+    n : int
+        Number of elements in input vector.
+    x : ctypes.c_void_p
+        Pointer to double-precision complex input vector.
+    incx : int
+        Storage spacing between elements of `x`.
+
+    Returns
+    -------
+    idx : int
+        Index of maximum magnitude element.
+
+    Examples
+    --------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import numpy as np
+    >>> x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)
+    >>> x_gpu = gpuarray.to_gpu(x)
+    >>> m = cublasIzamax(x_gpu.size, x_gpu.gpudata, 1)
+    >>> np.allclose(m, np.argmax(np.abs(x)))
+    True
+    
     Notes
     -----
     This function returns a 0-based index.
@@ -1633,6 +1777,34 @@ _libcublas.cublasIzamin.argtypes = [ctypes.c_int,
 def cublasIzamin(n, x, incx):
     """
     Index of minimum absolute value.
+
+    Finds the smallest index of the minimum magnitude element of a
+    double-precision complex vector.
+
+    Parameters
+    ----------
+    n : int
+        Number of elements in input vector.
+    x : ctypes.c_void_p
+        Pointer to double-precision complex input vector.
+    incx : int
+        Storage spacing between elements of `x`.
+
+    Returns
+    -------
+    idx : int
+        Index of minimum magnitude element.
+
+    Examples
+    --------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import numpy as np
+    >>> x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)
+    >>> x_gpu = gpuarray.to_gpu(x)
+    >>> m = cublasIzamin(x_gpu.size, x_gpu.gpudata, 1)
+    >>> np.allclose(m, np.argmin(np.abs(x)))
+    True
 
     Notes
     -----
@@ -1780,6 +1952,32 @@ def cublasZdscal(n, alpha, x, incx):
     """
     Scale a complex vector by a real scalar.
 
+    Replaces a double-precision vector `x` with
+    `alpha * x`.
+    
+    Parameters
+    ----------
+    n : int
+        Number of elements in input vectors.
+    alpha : numpy.float64
+        Scalar multiplier.
+    x : ctypes.c_void_p
+        Pointer to double-precision complex input/output vector.
+    incx : int
+        Storage spacing between elements of `x`.
+
+    Examples
+    --------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import numpy as np
+    >>> x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)
+    >>> x_gpu = gpuarray.to_gpu(x)
+    >>> alpha = np.float64(np.random.rand())
+    >>> cublasZdscal(x.size, alpha, x_gpu.gpudata, 1)
+    >>> np.allclose(x_gpu.get(), alpha*x)
+    True
+
     """
     
     _libcublas.cublasZdscal(n, alpha, int(x), incx)
@@ -1833,6 +2031,32 @@ _libcublas.cublasZscal.argtypes = [ctypes.c_int,
 def cublasZscal(n, alpha, x, incx):
     """
     Scale a complex vector by a complex scalar.
+
+    Replaces a double-precision vector `x` with
+    `alpha * x`.
+    
+    Parameters
+    ----------
+    n : int
+        Number of elements in input vectors.
+    alpha : numpy.complex128
+        Scalar multiplier.
+    x : ctypes.c_void_p
+        Pointer to double-precision complex input/output vector.
+    incx : int
+        Storage spacing between elements of `x`.
+
+    Examples
+    --------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import numpy as np
+    >>> x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)
+    >>> x_gpu = gpuarray.to_gpu(x)
+    >>> alpha = np.complex128(np.random.rand()+1j*np.random.rand())
+    >>> cublasZscal(x.size, alpha, x_gpu.gpudata, 1)
+    >>> np.allclose(x_gpu.get(), alpha*x)
+    True
 
     """
     
@@ -1901,6 +2125,57 @@ def cublasSgemv(trans, m, n, alpha, A, lda, x, incx, beta, y, incy):
     """
     Matrix-vector product for real general matrix.
 
+    Computes the product `alpha*op(A)*x+beta*y`, where `op(A)` == `A`
+    or `op(A)` == `A.T`, and stores it in `y`.
+        
+    Parameters
+    ----------
+    trans : char
+        If `upper(trans)` in `['T', 'C']`, assume that `A` is
+        transposed.
+    m : int
+        Number of rows in `A`.
+    n : int
+        Number of columns in `A`.
+    alpha : numpy.float32
+        `A` is multiplied by this quantity. 
+    A : ctypes.c_void_p
+        Pointer to single-precision matrix. The matrix has
+        shape `(lda, n)` if `upper(trans)` == 'N', `(lda, m)`
+        otherwise.
+    lda : int
+        Leading dimension of `A`.
+    x : ctypes.c_void_p
+        Pointer to single-precision array of length at least
+        `(1+(n-1)*abs(incx))` if `upper(trans) == 'N',
+        `(1+(m+1)*abs(incx))` otherwise.
+    incx : int
+        Spacing between elements of `x`. Must be nonzero.
+    beta : numpy.float32
+        `y` is multiplied by this quantity. If zero, `y` is ignored.
+    y : ctypes.c_void_p
+        Pointer to single-precision array of length at least
+        `(1+(m+1)*abs(incy))` if `upper(trans)` == `N`,
+        `(1+(n+1)*abs(incy))` otherwise.
+    incy : int
+        Spacing between elements of `y`. Must be nonzero.
+
+    Examples
+    --------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import numpy as np
+    >>> a = np.random.rand(2, 3).astype(np.float32)
+    >>> x = np.random.rand(3, 1).astype(np.float32)
+    >>> a_gpu = gpuarray.to_gpu(a.T.copy())
+    >>> x_gpu = gpuarray.to_gpu(x)
+    >>> y_gpu = gpuarray.empty((2, 1), np.float32)
+    >>> alpha = np.float32(1.0)
+    >>> beta = np.float32(0)
+    >>> cublasSgemv('n', 2, 3, alpha, a_gpu.gpudata, 2, x_gpu.gpudata, 1, beta, y_gpu.gpudata, 1)
+    >>> np.allclose(y_gpu.get(), np.dot(a, x))
+    True
+    
     """
     
     _libcublas.cublasSgemv(trans, m, n, alpha, int(A), lda,
