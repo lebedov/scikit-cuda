@@ -31,9 +31,10 @@ To run the unit tests, the following packages are also required:
 * `SciPy <http://www.scipy.org>`_ 0.7.0 or later.
 
 Some of the linear algebra functionality relies on the CULA toolkit; the single
-precision of the toolkit is free of charge, but requires registration:
+precision of the toolkit is free of charge, but requires registration. Depending
+on the version of CULA installed, some functions may not be available:
 
-* `CULA <http://www.culatools.com/get-cula/>`_ 1.3 or later.
+* `CULA <http://www.culatools.com/get-cula/>`_ 2.0 or later.
 
 To build the documentation, the following packages are also required:
 
@@ -81,3 +82,4 @@ Getting Started
 Sample code demonstrating how to use different parts of the toolbox is
 located in the ``demos/`` subdirectory. Many of the high-level
 functions also contain doctests that describe their usage.
+

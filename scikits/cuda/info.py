@@ -18,7 +18,9 @@ provide high-level functions comparable to those in the NumPy package
 High-level modules
 ------------------
 
+- autoinit	 Import this module to automatically initialize CUBLAS and CULA.
 - fft            Fast Fourier Transform functions.
+- integrate	 Numerical integration functions.
 - linalg         Linear algebra functions.
 - misc           Miscellaneous support functions.
 - special        Special math functions.
