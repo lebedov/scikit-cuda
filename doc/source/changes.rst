@@ -1,1 +1,39 @@
-../../CHANGES
+.. -*- rst -*-
+
+Change Log
+==========
+
+Release 0.04 - (May 11, 2011)
+-----------------------------
+* Fix bug in cutoff_invert kernel.
+* Add get_compute_capability function and other goodies to misc module.
+* Use pycuda-complex.hpp to improve kernel readability.
+* Add integrate module.
+* Add unit tests for high-level functions.
+* Automatically determine device used by current context.
+* Support batched and multidimensional FFT operations.
+* Extended dot() function to support implicit transpose/Hermitian.
+* Support for in-place computation of singular vectors in svd() function.
+* Simplify kernel launch setup.
+* More CULA routine wrappers.
+* Wrappers for CULA R11 auxiliary routines.
+
+Release 0.03 - (November 22, 2010)
+----------------------------------
+* Add support for some functions in the premium version of CULA toolkit.
+* Add wrappers for all lapack functions in basic CULA toolkit.
+* Fix pinv() to properly invert complex matrices.
+* Add Hermitian transpose.
+* Add tril function.
+* Fix missing library detection.
+* Include missing CUDA headers in package.
+
+Release 0.02 - (September 21, 2010)
+------------------------------------
+* Add documentation.
+* Update copyright information.
+
+Release 0.01 - (September 17, 2010)
+-----------------------------------
+* First public release.
+

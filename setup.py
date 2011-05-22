@@ -7,7 +7,7 @@ from distutils.command.install import INSTALL_SCHEMES
 from distutils.command.install_headers import install_headers
 from setuptools import find_packages
 from setuptools import setup
-from version import __version__
+from scikits.cuda.version import __version__
 
 NAME =               'scikits.cuda'
 VERSION =            __version__
