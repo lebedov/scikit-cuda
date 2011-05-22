@@ -3,6 +3,10 @@
 Change Log
 ==========
 
+Release 0.041 - (May 22, 2011)
+------------------------------
+* Fix bug preventing installation with pip.
+
 Release 0.04 - (May 11, 2011)
 -----------------------------
 * Fix bug in cutoff_invert kernel.
