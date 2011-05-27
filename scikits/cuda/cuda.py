@@ -12,8 +12,8 @@ import atexit
 
 # Load CUDA libraries:
 if sys.platform == 'linux2':
-    _libcuda_libname_list = ['libcuda.so', 'libcuda.so.3']
-    _libcudart_libname_list = ['libcudart.so', 'libcudart.so.3']
+    _libcuda_libname_list = ['libcuda.so', 'libcuda.so.3', 'libcuda.so.4']
+    _libcudart_libname_list = ['libcudart.so', 'libcudart.so.3', 'libcudart.so.4']
 elif sys.platform == 'darwin':
     _libcuda_libname_list = ['libcuda.dylib']
     _libcudart_libname_list = ['libcudart.dylib']

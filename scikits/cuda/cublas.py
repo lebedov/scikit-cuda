@@ -14,7 +14,8 @@ import numpy as np
 import cuda
 
 if sys.platform == 'linux2':
-    _libcublas_libname_list = ['libcublas.so', 'libcublas.so.3']
+    _libcublas_libname_list = ['libcublas.so', 'libcublas.so.3',
+                               'libcublas.so.4']
 elif sys.platform == 'darwin':
     _libcublas_libname_list = ['libcublas.dylib']
 else:
