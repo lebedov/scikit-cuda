@@ -28,7 +28,7 @@ installed:
 To run the unit tests, the following packages are also required:
 
 * `nose <http://code.google.com/p/python-nose/>` 0.11 or later.
-* `SciPy <http://www.scipy.org>`_ 0.7.0 or later.
+* `SciPy <http://www.scipy.org>`_ 0.8.0 or later.
 
 Some of the linear algebra functionality relies on the CULA toolkit; the single
 precision of the toolkit is free of charge, but requires registration. Depending

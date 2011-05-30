@@ -16,7 +16,7 @@ from misc import get_dev_attrs, select_block_grid_sizes, init, get_current_devic
 from . import install_headers
 
 # Adapted from Cephes library:
-sici_mod_template = Template("""
+sici_template = Template("""
 #include "cuSpecialFuncs.h"
 
 #if ${use_double}
@@ -92,7 +92,7 @@ def sici(x_gpu):
     # not cached:
     cache_dir=None
     sici_mod = \
-             SourceModule(sici_mod_template.substitute(use_double=use_double),
+             SourceModule(sici_template.substitute(use_double=use_double),
                           cache_dir=cache_dir,
                           options=["-I", install_headers])
     sici_func = sici_mod.get_function("sici_array")
@@ -106,7 +106,7 @@ def sici(x_gpu):
     return (si_gpu, ci_gpu)
 
 # Adapted from specfun.f in scipy:
-e1z_mod_template = Template("""
+ei_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 
 #define PI 3.1415926535897931
@@ -160,15 +160,30 @@ __global__ void e1z(COMPLEX *z, COMPLEX *e,
         e[idx] = _e1z(z[idx]);
 }
 
+__device__ COMPLEX _eixz(COMPLEX z) {
+    COMPLEX cei = _e1z(-z);
+    cei = -cei+(log(z)-log(COMPLEX(1.0)/z))/COMPLEX(2.0)-log(-z);
+    return cei;
+}
+
+__global__ void eixz(COMPLEX *z, COMPLEX *e,
+                    unsigned int N) {
+    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
+                       blockIdx.x*blockDim.x+threadIdx.x;
+
+    if (idx < N) 
+        e[idx] = _eixz(z[idx]);
+}
+
 """)
 
-def e1z(z_gpu):
+def exp1(z_gpu):
     """
     Exponential integral with `n = 1` of complex arguments.
 
     Parameters
     ----------
-    x_gpu : GPUArray
+    z_gpu : GPUArray
         Input matrix of shape `(m, n)`.
         
     Returns
@@ -186,7 +201,7 @@ def e1z(z_gpu):
     >>> import special
     >>> z = np.asarray(np.random.rand(4, 4)+1j*np.random.rand(4, 4), np.complex64)
     >>> z_gpu = gpuarray.to_gpu(z)
-    >>> e_gpu = e1z(z_gpu, pycuda.autoinit.device)
+    >>> e_gpu = exp1(z_gpu, pycuda.autoinit.device)
     >>> e_sp = scipy.special.exp1(z)
     >>> np.allclose(e_sp, e_gpu.get())
     True
@@ -202,22 +217,85 @@ def e1z(z_gpu):
 
     
     # Get block/grid sizes; the number of threads per block is limited
-    # to 256 because the e1z kernel defined above uses too many
+    # to 256 because the kernel defined above uses too many
     # registers to be invoked more threads per block:
     dev = get_current_device()
     max_threads_per_block = 256
-    block_dim, grid_dim = select_block_grid_sizes(dev, z_gpu.shape, max_threads_per_block)
+    block_dim, grid_dim = \
+               select_block_grid_sizes(dev, z_gpu.shape, max_threads_per_block)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
     cache_dir=None
-    e1z_mod = \
-             SourceModule(e1z_mod_template.substitute(use_double=use_double),
+    ei_mod = \
+             SourceModule(ei_template.substitute(use_double=use_double),
                           cache_dir=cache_dir)
-    e1z_func = e1z_mod.get_function("e1z")
+    e1z_func = ei_mod.get_function("e1z")
 
     e_gpu = gpuarray.empty_like(z_gpu)
     e1z_func(z_gpu, e_gpu,
+              np.uint32(z_gpu.size),
+              block=block_dim,
+              grid=grid_dim)
+    return e_gpu
+
+def expi(z_gpu):
+    """
+    Exponential integral of complex arguments.
+
+    Parameters
+    ----------
+    z_gpu : GPUArray
+        Input matrix of shape `(m, n)`.
+        
+    Returns
+    -------
+    e_gpu : GPUArray
+        GPUarrays containing the exponential integrals of
+        the entries of `z_gpu`.
+
+    Examples
+    --------
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import pycuda.autoinit
+    >>> import numpy as np
+    >>> import scipy.special
+    >>> import special
+    >>> z = np.asarray(np.random.rand(4, 4)+1j*np.random.rand(4, 4), np.complex64)
+    >>> z_gpu = gpuarray.to_gpu(z)
+    >>> e_gpu = expi(z_gpu, pycuda.autoinit.device)
+    >>> e_sp = scipy.special.expi(z)
+    >>> np.allclose(e_sp, e_gpu.get())
+    True
+
+    """
+
+    if z_gpu.dtype == np.complex64:
+        use_double = 0
+    elif z_gpu.dtype == np.complex128:
+        use_double = 1
+    else:
+        raise ValueError('unsupported type')
+
+    
+    # Get block/grid sizes; the number of threads per block is limited
+    # to 128 because the kernel defined above uses too many
+    # registers to be invoked more threads per block:
+    dev = get_current_device()
+    max_threads_per_block = 128
+    block_dim, grid_dim = \
+               select_block_grid_sizes(dev, z_gpu.shape, max_threads_per_block)
+
+    # Set this to False when debugging to make sure the compiled kernel is
+    # not cached:
+    cache_dir=None
+    ei_mod = \
+             SourceModule(ei_template.substitute(use_double=use_double),
+                          cache_dir=cache_dir)
+    eixz_func = ei_mod.get_function("eixz")
+
+    e_gpu = gpuarray.empty_like(z_gpu)
+    eixz_func(z_gpu, e_gpu,
               np.uint32(z_gpu.size),
               block=block_dim,
               grid=grid_dim)

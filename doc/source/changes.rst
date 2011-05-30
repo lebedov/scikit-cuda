@@ -3,6 +3,10 @@
 Change Log
 ==========
 
+Release 0.042 - ()
+------------------
+* Add complex exponential integral.
+
 Release 0.041 - (May 22, 2011)
 ------------------------------
 * Fix bug preventing installation with pip.

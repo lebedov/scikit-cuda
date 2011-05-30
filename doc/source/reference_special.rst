@@ -9,5 +9,6 @@ Special Math Functions
    :toctree: generated/
    :nosignatures:
 
-   e1z
+   exp1
+   expi
    sici
