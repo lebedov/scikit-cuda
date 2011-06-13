@@ -6,6 +6,8 @@ Change Log
 Release 0.042 - ()
 ------------------
 * Add complex exponential integral.
+* Fix typo in cublasCgbmv.
+* Correctly load BLAS symbols on MacOSX.
 
 Release 0.041 - (May 22, 2011)
 ------------------------------
