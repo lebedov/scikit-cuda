@@ -16,8 +16,10 @@ import cuda
 if sys.platform == 'linux2':
     _libcublas_libname_list = ['libcublas.so', 'libcublas.so.3',
                                'libcublas.so.4']
+    symbol_suffix = ''
 elif sys.platform == 'darwin':
     _libcublas_libname_list = ['libcublas.dylib']
+    symbol_suffix = "_v2"
 else:
     raise RuntimeError('unsupported platform')
 
@@ -32,6 +34,65 @@ for _libcublas_libname in _libcublas_libname_list:
         break
 if _libcublas == None:
     raise OSError('cublas library not found')
+
+# For some reason, the BLAS function names in the cublas library for
+# MacOSX differ slightly from those in the corresponding library for
+# Linux; the following code makes sure that the appropriate symbols
+# are accessible regardless of the platform:
+cublas_func_list = ['cublasIsamax', 'cublasIsamin', 'cublasSasum',
+                    'cublasSaxpy', 'cublasScopy', 'cublasSdot',
+                    'cublasSnrm2', 'cublasSrot', 'cublasSrotg',
+                    'cublasSrotm', 'cublasSrotmg', 'cublasSscal',
+                    'cublasSswap', 'cublasCaxpy', 'cublasCcopy',
+                    'cublasCdotc', 'cublasCdotu', 'cublasCrot',
+                    'cublasCrotg', 'cublasCscal', 'cublasCsrot',
+                    'cublasCrotg', 'cublasCscal', 'cublasCsrot',
+                    'cublasCsscal', 'cublasCswap', 'cublasIcamax',
+                    'cublasIcamin', 'cublasScasum', 'cublasScnrm2',
+                    'cublasIdamax', 'cublasIdamin', 'cublasDasum',
+                    'cublasDaxpy', 'cublasDcopy', 'cublasDdot',
+                    'cublasDnrm2', 'cublasDrot', 'cublasDrotg',
+                    'cublasDrotm', 'cublasDrotmg', 'cublasDscal',
+                    'cublasDswap', 'cublasDzasum', 'cublasDznrm2',
+                    'cublasIzamax', 'cublasIzamin', 'cublasZaxpy',
+                    'cublasZcopy', 'cublasZdotc', 'cublasZdotu',
+                    'cublasZdrot', 'cublasZdscal', 'cublasZrot',
+                    'cublasZrotg', 'cublasZscal', 'cublasZswap',
+                    'cublasSgbmv', 'cublasSgemv', 'cublasSger',
+                    'cublasSsbmv', 'cublasSspmv', 'cublasSspr',
+                    'cublasSspr2', 'cublasSsymv', 'cublasSsyr',
+                    'cublasSsyr2', 'cublasStbmv', 'cublasStbsv',
+                    'cublasStpmv', 'cublasStpsv', 'cublasStrmv',
+                    'cublasStrsv', 'cublasCgbmv', 'cublasCgemv',
+                    'cublasCgerc', 'cublasCgeru', 'cublasChbmv',
+                    'cublasChemv', 'cublasCher', 'cublasCher2',
+                    'cublasChpmv', 'cublasChpr', 'cublasChpr2',
+                    'cublasCtbmv', 'cublasCtbsv', 'cublasCtpmv',
+                    'cublasCtpsv', 'cublasCtrmv', 'cublasCtrsv',
+                    'cublasDgbmv', 'cublasDgemv', 'cublasDger',
+                    'cublasDsbmv', 'cublasDspmv', 'cublasDspr',
+                    'cublasDspr2', 'cublasDsymv', 'cublasDsyr',
+                    'cublasDsyr2', 'cublasDtbmv', 'cublasDtbsv',
+                    'cublasDtpmv', 'cublasDtpsv', 'cublasDtrmv',
+                    'cublasDtrsv', 'cublasZgbmv', 'cublasZgemv',
+                    'cublasZgerc', 'cublasZgeru', 'cublasZhbmv',
+                    'cublasZhemv', 'cublasZher', 'cublasZher2',
+                    'cublasZhpmv', 'cublasZhpr', 'cublasZhpr2',
+                    'cublasZtbmv', 'cublasZtbsv', 'cublasZtpmv',
+                    'cublasZtpsv', 'cublasZtrmv', 'cublasZtrsv',
+                    'cublasSgemm', 'cublasSsymm', 'cublasSsyrk',
+                    'cublasSsyr2k', 'cublasStrmm', 'cublasStrsm',
+                    'cublasCgemm', 'cublasChemm', 'cublasCherk',
+                    'cublasCher2k', 'cublasCsymm', 'cublasCsyrk',
+                    'cublasCsyr2k', 'cublasCtrmm', 'cublasCtrsm',
+                    'cublasDgemm', 'cublasDsymm', 'cublasDsyrk',
+                    'cublasDsyr2k', 'cublasDtrmm', 'cublasDtrsm',
+                    'cublasZgemm', 'cublasZhemm', 'cublasZherk',
+                    'cublasZher2k', 'cublasZsymm', 'cublasZsyrk',
+                    'cublasZsyr2k', 'cublasZtrmm', 'cublasZtrsm']
+if symbol_suffix:
+    for func_name in cublas_func_list:
+        setattr(_libcublas, func_name, getattr(_libcublas, func_name+symbol_suffix))
 
 # Generic CUBLAS error:
 class cublasError(Exception):
@@ -2494,7 +2555,7 @@ _libcublas.cublasCgbmv.argtypes = [ctypes.c_char,
                                    cuda.cuFloatComplex,
                                    ctypes.c_void_p,
                                    ctypes.c_int]
-def cublasCgvmv(trans, m, n, kl, ku, alpha, A, lda,
+def cublasCgbmv(trans, m, n, kl, ku, alpha, A, lda,
                 x, incx, beta, y, incy):
     """
     Matrix-vector product for complex general banded matrix.

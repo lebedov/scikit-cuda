@@ -111,7 +111,7 @@ Single Precision BLAS2 Routines
    cublasStpsv
    cublasStrmv
    cublasStrsv
-   cublasCgvmv
+   cublasCgbmv
    cublasCgemv
    cublasCgerc
    cublasCgeru
