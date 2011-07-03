@@ -105,76 +105,39 @@ def sici(x_gpu):
               grid=grid_dim)
     return (si_gpu, ci_gpu)
 
-# Adapted from specfun.f in scipy:
 ei_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
-
-#define PI 3.1415926535897931
-#define EL 0.5772156649015328
+#include "cuSpecialFuncs.h"
 
 #if ${use_double}
 #define FLOAT double
 #define COMPLEX pycuda::complex<double>
+#define E1Z(z) e1z(z)
+#define EIXZ(z) eixz(z)
 #else
 #define FLOAT float
 #define COMPLEX pycuda::complex<float>
+#define E1Z(z) e1zf(z)
+#define EIXZ(z) eixzf(z)
 #endif
 
-__device__ COMPLEX _e1z(COMPLEX z) {
-    FLOAT x = real(z);
-    FLOAT a0 = abs(z);
-    COMPLEX ce1, cr, ct0, kc, ct;
-    
-    if (a0 == 0.0)
-        ce1 = COMPLEX(1.0e300, 0.0);
-    else if ((a0 < 10.0) || (x < 0.0 && a0 < 20.0)) {
-        ce1 = COMPLEX(1.0, 0.0);
-        cr = COMPLEX(1.0, 0.0);
-        for (int k = 1; k <= 150; k++) {
-            cr = -(cr * FLOAT(k) * z)/COMPLEX((k + 1.0) * (k + 1.0), 0.0);
-            ce1 = ce1 + cr;
-            if (abs(cr) <= abs(ce1)*1.0e-15)
-                break;
-        }
-        ce1 = COMPLEX(-EL,0.0)-log(z)+(z*ce1);
-    } else {
-        ct0 = COMPLEX(0.0, 0.0);
-        for (int k = 120; k >= 1; k--) {
-            kc = COMPLEX(k, 0.0);
-            ct0 = kc/(COMPLEX(1.0,0.0)+(kc/(z+ct0)));
-        }
-        ct = COMPLEX(1.0, 0.0)/(z+ct0);
-        ce1 = exp(-z)*ct;
-        if (x <= 0.0 && imag(z) == 0.0)
-            ce1 = ce1-COMPLEX(0.0, -PI);
-    }
-    return ce1;
-}
-
-__global__ void e1z(COMPLEX *z, COMPLEX *e,
-                    unsigned int N) {
+__global__ void e1z_array(COMPLEX *z, COMPLEX *e,
+                          unsigned int N) {
     unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
                        blockIdx.x*blockDim.x+threadIdx.x;
 
     if (idx < N) 
-        e[idx] = _e1z(z[idx]);
+        e[idx] = E1Z(z[idx]);
 }
 
-__device__ COMPLEX _eixz(COMPLEX z) {
-    COMPLEX cei = _e1z(-z);
-    cei = -cei+(log(z)-log(COMPLEX(1.0)/z))/COMPLEX(2.0)-log(-z);
-    return cei;
-}
-
-__global__ void eixz(COMPLEX *z, COMPLEX *e,
-                    unsigned int N) {
+__global__ void eixz_array(COMPLEX *z, COMPLEX *e,
+                           unsigned int N) {
     unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
                        blockIdx.x*blockDim.x+threadIdx.x;
 
     if (idx < N) 
-        e[idx] = _eixz(z[idx]);
+        e[idx] = EIXZ(z[idx]);
 }
-
 """)
 
 def exp1(z_gpu):
@@ -229,8 +192,9 @@ def exp1(z_gpu):
     cache_dir=None
     ei_mod = \
              SourceModule(ei_template.substitute(use_double=use_double),
-                          cache_dir=cache_dir)
-    e1z_func = ei_mod.get_function("e1z")
+                          cache_dir=cache_dir,
+                          options=["-I", install_headers])
+    e1z_func = ei_mod.get_function("e1z_array")
 
     e_gpu = gpuarray.empty_like(z_gpu)
     e1z_func(z_gpu, e_gpu,
@@ -276,8 +240,7 @@ def expi(z_gpu):
         use_double = 1
     else:
         raise ValueError('unsupported type')
-
-    
+   
     # Get block/grid sizes; the number of threads per block is limited
     # to 128 because the kernel defined above uses too many
     # registers to be invoked more threads per block:
@@ -291,8 +254,9 @@ def expi(z_gpu):
     cache_dir=None
     ei_mod = \
              SourceModule(ei_template.substitute(use_double=use_double),
-                          cache_dir=cache_dir)
-    eixz_func = ei_mod.get_function("eixz")
+                          cache_dir=cache_dir,
+                          options=["-I", install_headers])
+    eixz_func = ei_mod.get_function("eixz_array")
 
     e_gpu = gpuarray.empty_like(z_gpu)
     eixz_func(z_gpu, e_gpu,

@@ -1,12 +1,18 @@
 // Special functions for CUDA
 
-// Some of these functions are adapted from the Cephes library:
+// Some of these functions are adapted from the Cephes and specfun
+// libraries included in scipy:
 // http://www.netlib.org/cephes/
+// http://www.netlib.org/specfun/
 
+#include <pycuda/pycuda-complex.hpp>
 #include "cuConstants.h"
 
 #if !defined(CU_SPECIAL_FUNCS_H_)
 #define CU_SPECIAL_FUNCS_H_
+
+#define CFLOAT pycuda::complex<float>
+#define CDOUBLE pycuda::complex<double>
 
 /* Sinc function. */
 __device__ float sincf(float x) {
@@ -432,6 +438,81 @@ asympt:
         *si = -(*si);
     *ci = f*s - g*c;
     return;
+}
+
+/* exponential integrals */
+__device__ CFLOAT e1zf(CFLOAT z) {
+    float x = real(z);
+    float a0 = abs(z);
+    CFLOAT ce1, cr, ct0, kc, ct;
+    
+    if (a0 == 0.0)
+        ce1 = CFLOAT(1.0e300, 0.0);
+    else if ((a0 < 10.0) || (x < 0.0 && a0 < 20.0)) {
+        ce1 = CFLOAT(1.0, 0.0);
+        cr = CFLOAT(1.0, 0.0);
+        for (int k = 1; k <= 150; k++) {
+            cr = -(cr * float(k) * z)/CFLOAT((k + 1.0) * (k + 1.0), 0.0);
+            ce1 = ce1 + cr;
+            if (abs(cr) <= abs(ce1)*1.0e-15)
+                break;
+        }
+        ce1 = CFLOAT(-EUL,0.0)-log(z)+(z*ce1);
+    } else {
+        ct0 = CFLOAT(0.0, 0.0);
+        for (int k = 120; k >= 1; k--) {
+            kc = CFLOAT(k, 0.0);
+            ct0 = kc/(CFLOAT(1.0,0.0)+(kc/(z+ct0)));
+        }
+        ct = CFLOAT(1.0, 0.0)/(z+ct0);
+        ce1 = exp(-z)*ct;
+        if (x <= 0.0 && imag(z) == 0.0)
+            ce1 = ce1-CFLOAT(0.0, -PI);
+    }
+    return ce1;
+}
+
+__device__ CFLOAT eixzf(CFLOAT z) {
+    CFLOAT cei = e1zf(-z);
+    cei = -cei+(log(z)-log(CFLOAT(1.0)/z))/CFLOAT(2.0)-log(-z);
+    return cei;
+}
+
+__device__ CDOUBLE e1z(CDOUBLE z) {
+    double x = real(z);
+    double a0 = abs(z);
+    CDOUBLE ce1, cr, ct0, kc, ct;
+    
+    if (a0 == 0.0)
+        ce1 = CDOUBLE(1.0e300, 0.0);
+    else if ((a0 < 10.0) || (x < 0.0 && a0 < 20.0)) {
+        ce1 = CDOUBLE(1.0, 0.0);
+        cr = CDOUBLE(1.0, 0.0);
+        for (int k = 1; k <= 150; k++) {
+            cr = -(cr * double(k) * z)/CDOUBLE((k + 1.0) * (k + 1.0), 0.0);
+            ce1 = ce1 + cr;
+            if (abs(cr) <= abs(ce1)*1.0e-15)
+                break;
+        }
+        ce1 = CDOUBLE(-EUL,0.0)-log(z)+(z*ce1);
+    } else {
+        ct0 = CDOUBLE(0.0, 0.0);
+        for (int k = 120; k >= 1; k--) {
+            kc = CDOUBLE(k, 0.0);
+            ct0 = kc/(CDOUBLE(1.0,0.0)+(kc/(z+ct0)));
+        }
+        ct = CDOUBLE(1.0, 0.0)/(z+ct0);
+        ce1 = exp(-z)*ct;
+        if (x <= 0.0 && imag(z) == 0.0)
+            ce1 = ce1-CDOUBLE(0.0, -PI);
+    }
+    return ce1;
+}
+
+__device__ CDOUBLE eixz(CDOUBLE z) {
+    CDOUBLE cei = e1z(-z);
+    cei = -cei+(log(z)-log(CDOUBLE(1.0)/z))/CDOUBLE(2.0)-log(-z);
+    return cei;
 }
 
 #endif /* !defined(CU_SPECIAL_FUNCS_H_) */
