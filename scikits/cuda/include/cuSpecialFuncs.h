@@ -441,7 +441,7 @@ asympt:
 }
 
 /* exponential integrals */
-__device__ CFLOAT e1zf(CFLOAT z) {
+__device__ CFLOAT exp1f(CFLOAT z) {
     float x = real(z);
     float a0 = abs(z);
     CFLOAT ce1, cr, ct0, kc, ct;
@@ -472,13 +472,13 @@ __device__ CFLOAT e1zf(CFLOAT z) {
     return ce1;
 }
 
-__device__ CFLOAT eixzf(CFLOAT z) {
-    CFLOAT cei = e1zf(-z);
+__device__ CFLOAT expif(CFLOAT z) {
+    CFLOAT cei = exp1f(-z);
     cei = -cei+(log(z)-log(CFLOAT(1.0)/z))/CFLOAT(2.0)-log(-z);
     return cei;
 }
 
-__device__ CDOUBLE e1z(CDOUBLE z) {
+__device__ CDOUBLE exp1(CDOUBLE z) {
     double x = real(z);
     double a0 = abs(z);
     CDOUBLE ce1, cr, ct0, kc, ct;
@@ -509,8 +509,8 @@ __device__ CDOUBLE e1z(CDOUBLE z) {
     return ce1;
 }
 
-__device__ CDOUBLE eixz(CDOUBLE z) {
-    CDOUBLE cei = e1z(-z);
+__device__ CDOUBLE expi(CDOUBLE z) {
+    CDOUBLE cei = exp1(-z);
     cei = -cei+(log(z)-log(CDOUBLE(1.0)/z))/CDOUBLE(2.0)-log(-z);
     return cei;
 }

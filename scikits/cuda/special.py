@@ -105,38 +105,38 @@ def sici(x_gpu):
               grid=grid_dim)
     return (si_gpu, ci_gpu)
 
-ei_template = Template("""
+expi_template = Template("""
 #include <pycuda/pycuda-complex.hpp>
 #include "cuSpecialFuncs.h"
 
 #if ${use_double}
 #define FLOAT double
 #define COMPLEX pycuda::complex<double>
-#define E1Z(z) e1z(z)
-#define EIXZ(z) eixz(z)
+#define EXP1(z) exp1(z)
+#define EXPI(z) expi(z)
 #else
 #define FLOAT float
 #define COMPLEX pycuda::complex<float>
-#define E1Z(z) e1zf(z)
-#define EIXZ(z) eixzf(z)
+#define EXP1(z) exp1(z)
+#define EXPI(z) expi(z)
 #endif
 
-__global__ void e1z_array(COMPLEX *z, COMPLEX *e,
+__global__ void exp1_array(COMPLEX *z, COMPLEX *e,
                           unsigned int N) {
     unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
                        blockIdx.x*blockDim.x+threadIdx.x;
 
     if (idx < N) 
-        e[idx] = E1Z(z[idx]);
+        e[idx] = EXP1(z[idx]);
 }
 
-__global__ void eixz_array(COMPLEX *z, COMPLEX *e,
+__global__ void expi_array(COMPLEX *z, COMPLEX *e,
                            unsigned int N) {
     unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
                        blockIdx.x*blockDim.x+threadIdx.x;
 
     if (idx < N) 
-        e[idx] = EIXZ(z[idx]);
+        e[idx] = EXPI(z[idx]);
 }
 """)
 
@@ -190,14 +190,14 @@ def exp1(z_gpu):
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
     cache_dir=None
-    ei_mod = \
-             SourceModule(ei_template.substitute(use_double=use_double),
+    expi_mod = \
+             SourceModule(expi_template.substitute(use_double=use_double),
                           cache_dir=cache_dir,
                           options=["-I", install_headers])
-    e1z_func = ei_mod.get_function("e1z_array")
+    exp1_func = expi_mod.get_function("exp1_array")
 
     e_gpu = gpuarray.empty_like(z_gpu)
-    e1z_func(z_gpu, e_gpu,
+    exp1_func(z_gpu, e_gpu,
               np.uint32(z_gpu.size),
               block=block_dim,
               grid=grid_dim)
@@ -252,14 +252,14 @@ def expi(z_gpu):
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
     cache_dir=None
-    ei_mod = \
-             SourceModule(ei_template.substitute(use_double=use_double),
+    expi_mod = \
+             SourceModule(expi_template.substitute(use_double=use_double),
                           cache_dir=cache_dir,
                           options=["-I", install_headers])
-    eixz_func = ei_mod.get_function("eixz_array")
+    expi_func = expi_mod.get_function("expi_array")
 
     e_gpu = gpuarray.empty_like(z_gpu)
-    eixz_func(z_gpu, e_gpu,
+    expi_func(z_gpu, e_gpu,
               np.uint32(z_gpu.size),
               block=block_dim,
               grid=grid_dim)
