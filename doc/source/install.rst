@@ -27,7 +27,7 @@ installed:
 
 To run the unit tests, the following packages are also required:
 
-* `nose <http://code.google.com/p/python-nose/>` 0.11 or later.
+* `nose <http://code.google.com/p/python-nose/>`_ 0.11 or later.
 * `SciPy <http://www.scipy.org>`_ 0.8.0 or later.
 
 Some of the linear algebra functionality relies on the CULA toolkit; the single
@@ -80,6 +80,6 @@ directly.
 Getting Started
 ---------------
 Sample code demonstrating how to use different parts of the toolbox is
-located in the ``demos/`` subdirectory. Many of the high-level
-functions also contain doctests that describe their usage.
+located in the ``demos/`` subdirectory of the source release. Most of 
+the high-level functions also contain doctests that describe their usage.
 
