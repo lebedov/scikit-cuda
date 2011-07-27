@@ -8,18 +8,18 @@ Note: this module does not explicitly depend on PyCUDA.
 
 import sys
 import ctypes
+import ctypes.util
 import atexit
 import numpy as np
 
 import cuda
 
+symbol_suffix = '_v2'
 if sys.platform == 'linux2':
     _libcublas_libname_list = ['libcublas.so', 'libcublas.so.3',
                                'libcublas.so.4']
-    symbol_suffix = ''
 elif sys.platform == 'darwin':
     _libcublas_libname_list = ['libcublas.dylib']
-    symbol_suffix = "_v2"
 else:
     raise RuntimeError('unsupported platform')
 
@@ -36,9 +36,10 @@ if _libcublas == None:
     raise OSError('cublas library not found')
 
 # For some reason, the BLAS function names in the cublas library for
-# MacOSX differ slightly from those in the corresponding library for
-# Linux; the following code makes sure that the appropriate symbols
-# are accessible regardless of the platform:
+# CUDA 3.0+ on MacOSX and CUDA 4.0+ on Linux differ slightly from
+# those in earlier versions; the following code makes sure that the
+# appropriate symbols are accessible regardless of the platform or
+# CUDA version:
 cublas_func_list = ['cublasIsamax', 'cublasIsamin', 'cublasSasum',
                     'cublasSaxpy', 'cublasScopy', 'cublasSdot',
                     'cublasSnrm2', 'cublasSrot', 'cublasSrotg',
@@ -90,9 +91,11 @@ cublas_func_list = ['cublasIsamax', 'cublasIsamin', 'cublasSasum',
                     'cublasZgemm', 'cublasZhemm', 'cublasZherk',
                     'cublasZher2k', 'cublasZsymm', 'cublasZsyrk',
                     'cublasZsyr2k', 'cublasZtrmm', 'cublasZtrsm']
-if symbol_suffix:
-    for func_name in cublas_func_list:
-        setattr(_libcublas, func_name, getattr(_libcublas, func_name+symbol_suffix))
+
+for func_name in cublas_func_list:
+    func_name_with_suffix = func_name+symbol_suffix
+    if hasattr(_libcublas, func_name_with_suffix):
+        setattr(_libcublas, func_name, getattr(_libcublas, func_name_with_suffix))
 
 # Generic CUBLAS error:
 class cublasError(Exception):

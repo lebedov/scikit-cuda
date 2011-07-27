@@ -7,7 +7,7 @@ Release 0.042 - ()
 ------------------
 * Add complex exponential integral.
 * Fix typo in cublasCgbmv.
-* Correctly load BLAS symbols on MacOSX.
+* Correctly load BLAS symbols on MacOSX and with CUDA 4.0.
 
 Release 0.041 - (May 22, 2011)
 ------------------------------
