@@ -295,6 +295,38 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
 
     return (max_threads_per_block, 1, 1), (grid_x, grid_y)
 
+def zeros(shape, dtype, allocator=drv.mem_alloc):
+    """
+    Return an array of the given shape and dtype filled with zeros.
+
+    Parameters
+    ----------
+    shape : tuple
+        Array shape.
+    dtype : data-type
+        Data type for the array.
+    allocator : callable
+        Returns an object that represents the memory allocated for
+        the requested array.
+
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray
+        Array of zeros with the given shape and dtype.
+
+    Notes
+    -----
+    This function exists to work around the following numpy bug that
+    prevents pycuda.gpuarray.zeros() from working properly with
+    complex types in pycuda 2011.1.2:
+    http://projects.scipy.org/numpy/ticket/1898
+    
+    """
+
+    out = gpuarray.GPUArray(shape, dtype, allocator)
+    out.fill(0)
+    return out
+    
 def ones(shape, dtype, allocator=drv.mem_alloc):
     """
     Return an array of the given shape and dtype filled with ones.
@@ -367,7 +399,7 @@ def inf(shape, dtype, allocator=drv.mem_alloc):
     return out
 
 maxabs_mod_template = Template("""
-#include <pycuda/pycuda-complex.hpp>
+#include <pycuda-complex.hpp>
 
 #if ${use_double}
 #define REAL_TYPE double
@@ -458,7 +490,7 @@ def maxabs(x_gpu):
     return m_gpu
 
 cumsum_template = Template("""
-#include <pycuda/pycuda-complex.hpp>
+#include <pycuda-complex.hpp>
 
 #if ${use_double}
 #define REAL_TYPE double
@@ -537,7 +569,7 @@ def cumsum(x_gpu):
     return c_gpu
     
 diff_mod_template = Template("""
-#include <pycuda/pycuda-complex.hpp>
+#include <pycuda-complex.hpp>
 
 #if ${use_double}
 #define REAL_TYPE double

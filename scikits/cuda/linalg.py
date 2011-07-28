@@ -14,8 +14,9 @@ import numpy as np
 import cuda
 import cublas
 import cula
+import misc
 
-from misc import get_dev_attrs, select_block_grid_sizes, init, get_current_device
+from misc import init
 
 # Get installation location of C headers:
 from . import install_headers
@@ -488,7 +489,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True):
     return r_gpu
 
 transpose_template = Template("""
-#include <pycuda/pycuda-complex.hpp>
+#include <pycuda-complex.hpp>
 
 #if ${use_double}
 #if ${use_complex}
@@ -569,8 +570,8 @@ def transpose(a_gpu):
     use_complex = int(a_gpu.dtype in [np.complex64, np.complex128])
 
     # Get block/grid sizes:
-    dev = get_current_device()
-    block_dim, grid_dim = select_block_grid_sizes(dev, a_gpu.shape)
+    dev = misc.get_current_device()
+    block_dim, grid_dim = misc.select_block_grid_sizes(dev, a_gpu.shape)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
@@ -637,8 +638,8 @@ def hermitian(a_gpu):
     use_complex = int(a_gpu.dtype in [np.complex64, np.complex128])
 
     # Get block/grid sizes:
-    dev = get_current_device()
-    block_dim, grid_dim = select_block_grid_sizes(dev, a_gpu.shape)
+    dev = misc.get_current_device()
+    block_dim, grid_dim = misc.select_block_grid_sizes(dev, a_gpu.shape)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
@@ -660,7 +661,7 @@ def hermitian(a_gpu):
     return at_gpu
 
 conj_template = Template("""
-#include <pycuda/pycuda-complex.hpp>
+#include <pycuda-complex.hpp>
 
 #if ${use_double}
 #define COMPLEX pycuda::complex<double>
@@ -735,8 +736,8 @@ def conj(a_gpu, overwrite=True):
         raise ValueError('unsupported type')
     
     # Get block/grid sizes:
-    dev = get_current_device()
-    block_dim, grid_dim = select_block_grid_sizes(dev, a_gpu.shape)
+    dev = misc.get_current_device()
+    block_dim, grid_dim = misc.select_block_grid_sizes(dev, a_gpu.shape)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
@@ -760,7 +761,7 @@ def conj(a_gpu, overwrite=True):
         return ac_gpu
         
 diag_template = Template("""
-#include <pycuda/pycuda-complex.hpp>
+#include <pycuda-complex.hpp>
 
 #if ${use_double}
 #if ${use_complex}
@@ -837,11 +838,11 @@ def diag(v_gpu):
     use_complex = int(v_gpu.dtype in [np.complex64, np.complex128])
 
     # Initialize output matrix:
-    d_gpu = gpuarray.zeros((v_gpu.size, v_gpu.size), v_gpu.dtype)
+    d_gpu = misc.zeros((v_gpu.size, v_gpu.size), v_gpu.dtype)
 
     # Get block/grid sizes:
-    dev = get_current_device()
-    block_dim, grid_dim = select_block_grid_sizes(dev, d_gpu.shape)
+    dev = misc.get_current_device()
+    block_dim, grid_dim = misc.select_block_grid_sizes(dev, d_gpu.shape)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
@@ -859,7 +860,7 @@ def diag(v_gpu):
     return d_gpu
 
 eye_template = Template("""
-#include <pycuda/pycuda-complex.hpp>
+#include <pycuda-complex.hpp>
 
 #if ${use_double}
 #if ${use_complex}
@@ -932,11 +933,11 @@ def eye(N, dtype=np.float32):
     use_complex = int(dtype in [np.complex64, np.complex128])
 
     # Initialize output matrix:
-    e_gpu = gpuarray.zeros((N, N), dtype)
+    e_gpu = misc.zeros((N, N), dtype)
 
     # Get block/grid sizes:
-    dev = get_current_device()
-    block_dim, grid_dim = select_block_grid_sizes(dev, e_gpu.shape)
+    dev = misc.get_current_device()
+    block_dim, grid_dim = misc.select_block_grid_sizes(dev, e_gpu.shape)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
@@ -1032,9 +1033,9 @@ def pinv(a_gpu, rcond=1e-15):
     # to 512 because the cutoff_invert_s kernel defined above uses too
     # many registers to be invoked in 1024 threads per block (i.e., on
     # GPUs with compute capability >= 2.x): 
-    dev = get_current_device()
+    dev = misc.get_current_device()
     max_threads_per_block = 512
-    block_dim, grid_dim = select_block_grid_sizes(dev, s_gpu.shape, max_threads_per_block)
+    block_dim, grid_dim = misc.select_block_grid_sizes(dev, s_gpu.shape, max_threads_per_block)
 
     # Suppress very small singular values:
     use_double = 1 if s_gpu.dtype == np.float64 else 0
@@ -1051,7 +1052,7 @@ def pinv(a_gpu, rcond=1e-15):
     return dot(vh_gpu, dot_diag(s_gpu, u_gpu, 't'), 'c', 'c')
 
 tril_template = Template("""
-#include <pycuda/pycuda-complex.hpp>
+#include <pycuda-complex.hpp>
 
 #if ${use_double}
 #if ${use_complex}
@@ -1144,8 +1145,8 @@ def tril(a_gpu, overwrite=True):
     N = a_gpu.shape[0]
 
     # Get block/grid sizes:
-    dev = get_current_device()
-    block_dim, grid_dim = select_block_grid_sizes(dev, a_gpu.shape)
+    dev = misc.get_current_device()
+    block_dim, grid_dim = misc.select_block_grid_sizes(dev, a_gpu.shape)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
@@ -1174,7 +1175,7 @@ def tril(a_gpu, overwrite=True):
         return a_orig_gpu
 
 multiply_template = Template("""
-#include <pycuda/pycuda-complex.hpp>
+#include <pycuda-complex.hpp>
 
 #if ${use_double}
 #if ${use_complex}
@@ -1258,8 +1259,8 @@ def multiply(x_gpu, y_gpu, overwrite=True):
     use_complex = int(x_gpu.dtype in [np.complex64, np.complex128])
     
     # Get block/grid sizes:
-    dev = get_current_device()
-    block_dim, grid_dim = select_block_grid_sizes(dev, x_gpu.shape)
+    dev = misc.get_current_device()
+    block_dim, grid_dim = misc.select_block_grid_sizes(dev, x_gpu.shape)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:

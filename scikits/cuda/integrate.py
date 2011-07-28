@@ -11,11 +11,12 @@ import numpy as np
 
 import ctypes
 import cublas
+import misc
 
-from misc import select_block_grid_sizes, init, get_current_device
+from misc import init
 
 gen_trapz_mult_template = Template("""
-#include <pycuda/pycuda-complex.hpp>
+#include <pycuda-complex.hpp>
 
 #if ${use_double}
 #if ${use_complex}
@@ -78,8 +79,8 @@ def gen_trapz_mult(N, mult_type):
     mult_gpu = gpuarray.empty(N, mult_type)
 
     # Get block/grid sizes:
-    dev = get_current_device()
-    block_dim, grid_dim = select_block_grid_sizes(dev, N)
+    dev = misc.get_current_device()
+    block_dim, grid_dim = misc.select_block_grid_sizes(dev, N)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
@@ -159,7 +160,7 @@ def trapz(x_gpu, dx=1.0):
         return np.float64(result)*dx
 
 gen_trapz2d_mult_template = Template("""
-#include <pycuda/pycuda-complex.hpp>
+#include <pycuda-complex.hpp>
 
 #if ${use_double}
 #if ${use_complex}
@@ -228,8 +229,8 @@ def gen_trapz2d_mult(mat_shape, mult_type):
     mult_gpu = gpuarray.empty(mat_shape, mult_type)
 
     # Get block/grid sizes:
-    dev = get_current_device()
-    block_dim, grid_dim = select_block_grid_sizes(dev, mat_shape)
+    dev = misc.get_current_device()
+    block_dim, grid_dim = misc.select_block_grid_sizes(dev, mat_shape)
     
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:

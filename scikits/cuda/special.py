@@ -10,7 +10,9 @@ import pycuda.gpuarray as gpuarray
 from pycuda.compiler import SourceModule
 import numpy as np
 
-from misc import get_dev_attrs, select_block_grid_sizes, init, get_current_device
+import misc
+
+from misc import init
 
 # Get installation location of C headers:
 from . import install_headers
@@ -85,8 +87,8 @@ def sici(x_gpu):
         raise ValueError('unsupported type')
     
     # Get block/grid sizes:
-    dev = get_current_device()
-    block_dim, grid_dim = select_block_grid_sizes(dev, x_gpu.shape)
+    dev = misc.get_current_device()
+    block_dim, grid_dim = misc.select_block_grid_sizes(dev, x_gpu.shape)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
@@ -106,7 +108,7 @@ def sici(x_gpu):
     return (si_gpu, ci_gpu)
 
 expi_template = Template("""
-#include <pycuda/pycuda-complex.hpp>
+#include <pycuda-complex.hpp>
 #include "cuSpecialFuncs.h"
 
 #if ${use_double}
@@ -182,10 +184,10 @@ def exp1(z_gpu):
     # Get block/grid sizes; the number of threads per block is limited
     # to 256 because the kernel defined above uses too many
     # registers to be invoked more threads per block:
-    dev = get_current_device()
+    dev = misc.get_current_device()
     max_threads_per_block = 256
     block_dim, grid_dim = \
-               select_block_grid_sizes(dev, z_gpu.shape, max_threads_per_block)
+               misc.select_block_grid_sizes(dev, z_gpu.shape, max_threads_per_block)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
@@ -244,10 +246,10 @@ def expi(z_gpu):
     # Get block/grid sizes; the number of threads per block is limited
     # to 128 because the kernel defined above uses too many
     # registers to be invoked more threads per block:
-    dev = get_current_device()
+    dev = misc.get_current_device()
     max_threads_per_block = 128
     block_dim, grid_dim = \
-               select_block_grid_sizes(dev, z_gpu.shape, max_threads_per_block)
+               misc.select_block_grid_sizes(dev, z_gpu.shape, max_threads_per_block)
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
