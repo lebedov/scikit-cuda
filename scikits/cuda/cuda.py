@@ -585,3 +585,24 @@ def cudaGetDevice():
     status = _libcudart.cudaGetDevice(ctypes.byref(dev))
     cudaCheckStatus(status)
     return dev.value
+
+_libcudart.cudaDriverGetVersion.restype = int
+_libcudart.cudaDriverGetVersion.argtypes = [ctypes.POINTER(ctypes.c_int)]
+def cudaDriverGetVersion():
+    """
+    Get installed CUDA driver version.
+
+    Return the version of the installed CUDA driver as an integer. If
+    no driver is detected, 0 is returned.
+
+    Returns
+    -------
+    version : int
+        Driver version.
+
+    """
+
+    version = ctypes.c_int()
+    status = _libcudart.cudaDriverGetVersion(ctypes.byref(version))
+    cudaCheckStatus(status)
+    return version.value
