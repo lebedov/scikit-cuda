@@ -9,6 +9,7 @@ Note: this module does not explicitly depend on PyCUDA.
 import sys
 import ctypes
 import atexit
+import numpy as np
 
 # Load CUDA libraries:
 if sys.platform == 'linux2':
@@ -74,11 +75,19 @@ class float2(ctypes.Structure):
         ('y', ctypes.c_float)
         ]
 
+    @property
+    def value(self):
+        return complex(self.x, self.y)
+    
 class double2(ctypes.Structure):
     _fields_ = [
         ('x', ctypes.c_double),
         ('y', ctypes.c_double)
         ]
+
+    @property
+    def value(self):
+        return complex(self.x, self.y)
 
 cuFloatComplex = float2
 cuDoubleComplex = double2
