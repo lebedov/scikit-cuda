@@ -196,7 +196,7 @@ cublasCreate.__doc__ = \
     """
 
 if cuda.cudaDriverGetVersion() < 4000:
-    def cublasDestroy():
+    def cublasDestroy(handle):
         raise NotImplementedError(
             'cublasDestroy() is only available in CUDA 4.0 and later')
 else:
@@ -255,7 +255,7 @@ I_AMAX_doc = Template(
     Index of maximum magnitude element.
 
     Finds the smallest index of the maximum magnitude element of a
-    ${precision} %{real} vector.
+    ${precision} ${real} vector.
 
     Parameters
     ----------
@@ -276,7 +276,7 @@ I_AMAX_doc = Template(
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> x = %{data} 
+    >>> x = ${data} 
     >>> x_gpu = gpuarray.to_gpu(x)
     >>> m = ${func}(x_gpu.size, x_gpu.gpudata, 1)
     >>> np.allclose(m, np.argmax(np.abs(x)))
@@ -401,7 +401,7 @@ else:
                                            ctypes.c_void_p,
                                            ctypes.c_int,
                                            ctypes.c_void_p]
-    def cublasIcamax(n, x, incx):
+    def cublasIzamax(n, x, incx):
         handle = cublasGetCurrentCtx()
         result = ctypes.c_int()
         status = \
@@ -414,7 +414,7 @@ cublasIzamax.__doc__ = \
                      I_AMAX_doc.substitute(precision='double precision',
                                            real='complex',
                                            data='(np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)',
-                                           func='cublasIamax')
+                                           func='cublasIzamax')
 
 # ISAMIN, IDAMIN, ICAMIN, IZAMIN
 I_AMIN_doc = Template(
@@ -587,7 +587,7 @@ cublasIzamin.__doc__ = \
 # SASUM, DASUM, SCASUM, DZASUM
 _ASUM_doc = Template(                    
 """
-    Sum of absolute values of %{precision} %{real} vector.
+    Sum of absolute values of ${precision} ${real} vector.
 
     Computes the sum of the absolute values of the elements of a
     ${precision} ${real} vector.
@@ -824,7 +824,7 @@ else:
 cublasSaxpy.__doc__ = \
                     _AXPY_doc.substitute(precision='single-precision',
                                          real='real',
-                                         type='numpy.float32'
+                                         type='numpy.float32',
                                          alpha='np.float32(np.random.rand())',
                                          data='np.random.rand(5).astype(np.float32)',
                                          func='cublasSaxpy')
@@ -861,7 +861,7 @@ else:
 cublasDaxpy.__doc__ = \
                     _AXPY_doc.substitute(precision='double-precision',
                                          real='real',
-                                         type='numpy.float64'
+                                         type='numpy.float64',
                                          alpha='np.float64(np.random.rand())',
                                          data='np.random.rand(5).astype(np.float64)',
                                          func='cublasDaxpy')
@@ -899,7 +899,7 @@ else:
 cublasCaxpy.__doc__ = \
                     _AXPY_doc.substitute(precision='single-precision',
                                          real='complex',
-                                         type='numpy.complex64'
+                                         type='numpy.complex64',
                                          alpha='(np.random.rand()+1j*np.random.rand()).astype(np.complex64)',
                                          data='(np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)',             
                                          func='cublasCaxpy')
@@ -937,7 +937,7 @@ else:
 cublasZaxpy.__doc__ = \
                     _AXPY_doc.substitute(precision='double-precision',
                                          real='complex',
-                                         type='numpy.complex128'
+                                         type='numpy.complex128',
                                          alpha='(np.random.rand()+1j*np.random.rand()).astype(np.complex128)',
                                          data='(np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)',             
                                          func='cublasZaxpy')
@@ -994,7 +994,7 @@ if cuda.cudaDriverGetVersion() < 4000:
         cublasCheckStatus(status)
 else:
     _libcublas.cublasScopy_v2.restype = int
-    _libculbas.cublasScopy_v2.argtypes = [ctypes.c_int,
+    _libcublas.cublasScopy_v2.argtypes = [ctypes.c_int,
                                           ctypes.c_int,
                                           ctypes.c_void_p,
                                           ctypes.c_int,
@@ -1026,7 +1026,7 @@ if cuda.cudaDriverGetVersion() < 4000:
         cublasCheckStatus(status)
 else:
     _libcublas.cublasDcopy_v2.restype = int
-    _libculbas.cublasDcopy_v2.argtypes = [ctypes.c_int,
+    _libcublas.cublasDcopy_v2.argtypes = [ctypes.c_int,
                                           ctypes.c_int,
                                           ctypes.c_void_p,
                                           ctypes.c_int,
@@ -1058,7 +1058,7 @@ if cuda.cudaDriverGetVersion() < 4000:
         cublasCheckStatus(status)
 else:
     _libcublas.cublasCcopy_v2.restype = int
-    _libculbas.cublasCcopy_v2.argtypes = [ctypes.c_int,
+    _libcublas.cublasCcopy_v2.argtypes = [ctypes.c_int,
                                           ctypes.c_int,
                                           ctypes.c_void_p,
                                           ctypes.c_int,
@@ -1090,7 +1090,7 @@ if cuda.cudaDriverGetVersion() < 4000:
         cublasCheckStatus(status)
 else:
     _libcublas.cublasZcopy_v2.restype = int
-    _libculbas.cublasZcopy_v2.argtypes = [ctypes.c_int,
+    _libcublas.cublasZcopy_v2.argtypes = [ctypes.c_int,
                                           ctypes.c_int,
                                           ctypes.c_void_p,
                                           ctypes.c_int,
@@ -1110,7 +1110,7 @@ cublasZcopy.__doc__ = \
                                          func='cublasZcopy')
 
 # SDOT, DDOT, CDOT, ZDOT
-_DOC_doc = Template(
+_DOT_doc = Template(
 """
     Vector dot product (${precision} ${real})
 
@@ -1179,7 +1179,7 @@ else:
     def cublasSdot(n, x, incx, y, incy):
         handle = cublasGetCurrentCtx()
         result = ctypes.c_float()
-        status = _libcublas.cublasSdot_v2(handle, n
+        status = _libcublas.cublasSdot_v2(handle, n,
                                           int(x), incx, int(y),
                                           ctypes.byref(result))
         cublasCheckStatus(status)
@@ -1188,7 +1188,7 @@ else:
 cublasSdot.__doc__ = _DOT_doc.substitute(precision='single-precision',
                                          real='real',
                                          data='np.float32(np.random.rand(5))',
-                                         ret_type='np.float32'
+                                         ret_type='np.float32',
                                          func='cublasSdot',
                                          check='np.allclose(d, np.dot(x, y))')
 
@@ -1216,7 +1216,7 @@ else:
     def cublasDdot(n, x, incx, y, incy):
         handle = cublasGetCurrentCtx()
         result = ctypes.c_double()
-        status = _libcublas.cublasDdot_v2(handle, n
+        status = _libcublas.cublasDdot_v2(handle, n,
                                           int(x), incx, int(y),
                                           ctypes.byref(result))
         cublasCheckStatus(status)
@@ -1253,7 +1253,7 @@ else:
     def cublasCdotu(n, x, incx, y, incy):
         handle = cublasGetCurrentCtx()
         result = cuda.cuFloatComplex()
-        status = _libcublas.cublasCdotu_v2(handle, n
+        status = _libcublas.cublasCdotu_v2(handle, n,
                                            int(x), incx, int(y),
                                            ctypes.byref(result))
         cublasCheckStatus(status)
@@ -1290,7 +1290,7 @@ else:
     def cublasCdotc(n, x, incx, y, incy):
         handle = cublasGetCurrentCtx()
         result = cuda.cuFloatComplex()
-        status = _libcublas.cublasCdotc_v2(handle, n
+        status = _libcublas.cublasCdotc_v2(handle, n,
                                            int(x), incx, int(y),
                                            ctypes.byref(result))
         cublasCheckStatus(status)
@@ -1327,7 +1327,7 @@ else:
     def cublasZdotu(n, x, incx, y, incy):
         handle = cublasGetCurrentCtx()
         result = cuda.cuDoubleComplex()
-        status = _libcublas.cublasZdotu_v2(handle, n
+        status = _libcublas.cublasZdotu_v2(handle, n,
                                            int(x), incx, int(y),
                                            ctypes.byref(result))
         cublasCheckStatus(status)
@@ -1364,7 +1364,7 @@ else:
     def cublasZdotc(n, x, incx, y, incy):
         handle = cublasGetCurrentCtx()
         result = cuda.cuDoubleComplex()
-        status = _libcublas.cublasZdotc_v2(handle, n
+        status = _libcublas.cublasZdotc_v2(handle, n,
                                            int(x), incx, int(y),
                                            ctypes.byref(result))
         cublasCheckStatus(status)
@@ -1578,7 +1578,7 @@ _ROT_doc = Template(
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> s = ${s_val}; c = %{c_val};
+    >>> s = ${s_val}; c = ${c_val};
     >>> x = ${data}
     >>> y = ${data}
     >>> x_gpu = gpuarray.to_gpu(x)
@@ -1629,7 +1629,8 @@ cublasSrot.__doc__ = _ROT_doc.substitute(precision='single-precision',
                                          s_type='numpy.float32',
                                          c_val='np.float32(np.random.rand())',
                                          s_val='np.float32(np.random.rand())',
-                                         data='np.random.rand(5).astype(np.float32)')
+                                         data='np.random.rand(5).astype(np.float32)',
+                                         func='cublasSrot')
 
 if cuda.cudaDriverGetVersion() < 4000:
     _libcublas.cublasDrot.restype = None
@@ -1669,7 +1670,8 @@ cublasDrot.__doc__ = _ROT_doc.substitute(precision='double-precision',
                                          s_type='numpy.float64',
                                          c_val='np.float64(np.random.rand())',
                                          s_val='np.float64(np.random.rand())',
-                                         data='np.random.rand(5).astype(np.float64)')
+                                         data='np.random.rand(5).astype(np.float64)',
+                                         func='cublasDrot')
 
 if cuda.cudaDriverGetVersion() < 4000:
     _libcublas.cublasCrot.restype = None
@@ -1712,7 +1714,8 @@ cublasCrot.__doc__ = _ROT_doc.substitute(precision='single-precision',
                                          s_type='numpy.complex64',
                                          c_val='np.float32(np.random.rand())',
                                          s_val='np.complex64(np.random.rand()+1j*np.random.rand())',
-                                         data='(np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)')
+                                         data='(np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)',
+                                         func='cublasCrot')
 
 if cuda.cudaDriverGetVersion() < 4000:
     _libcublas.cublasCsrot.restype = None
@@ -1752,7 +1755,8 @@ cublasCsrot.__doc__ = _ROT_doc.substitute(precision='single-precision',
                                           s_type='numpy.float32',
                                           c_val='np.float32(np.random.rand())',
                                           s_val='np.float32(np.random.rand())',
-                                          data='(np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)')
+                                          data='(np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)',
+                                          func='cublasCsrot')
 
 if cuda.cudaDriverGetVersion() < 4000:
     _libcublas.cublasZrot.restype = None
@@ -1788,12 +1792,13 @@ else:
         cublasCheckStatus(status)
         
 cublasZrot.__doc__ = _ROT_doc.substitute(precision='double-precision',
-                                          real='complex',
-                                          c_type='numpy.float64',
-                                          s_type='numpy.complex128',
-                                          c_val='np.float64(np.random.rand())',
-                                          s_val='np.complex128(np.random.rand()+1j*np.random.rand())',
-                                          data='(np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)')
+                                         real='complex',
+                                         c_type='numpy.float64',
+                                         s_type='numpy.complex128',
+                                         c_val='np.float64(np.random.rand())',
+                                         s_val='np.complex128(np.random.rand()+1j*np.random.rand())',
+                                         data='(np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)',
+                                         func='cublasZrot')
 
 if cuda.cudaDriverGetVersion() < 4000:
     _libcublas.cublasZdrot.restype = None
@@ -1833,7 +1838,8 @@ cublasZdrot.__doc__ = _ROT_doc.substitute(precision='double-precision',
                                           s_type='numpy.float64',
                                           c_val='np.float64(np.random.rand())',
                                           s_val='np.float64(np.random.rand())',
-                                          data='(np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)')
+                                          data='(np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)',
+                                          func='cublasZdrot')
 
 
 # SROTG, DROTG, CROTG, ZROTG
@@ -1874,6 +1880,7 @@ _ROTG_doc = Template(
     >>> r, c, s = ${func}(a, b)
     >>> np.allclose(np.dot(np.array([[c, s], [-np.conj(s), c]]), np.array([[a], [b]])), np.array([[r], [0.0]]))
     True
+
 """)
 
 if cuda.cudaDriverGetVersion() < 4000:
@@ -1915,6 +1922,8 @@ cublasSrotg.__doc__ = \
                     _ROTG_doc.substitute(precision='single-precision',
                                          real='real',
                                          type='numpy.float32',
+                                         c_type='numpy.float32',
+                                         s_type='numpy.float32',
                                          a_val='np.float32(np.random.rand())',
                                          b_val='np.float32(np.random.rand())',
                                          func='cublasSrotg')
@@ -1958,6 +1967,8 @@ cublasDrotg.__doc__ = \
                     _ROTG_doc.substitute(precision='double-precision',
                                          real='real',
                                          type='numpy.float64',
+                                         c_type='numpy.float64',
+                                         s_type='numpy.float64',
                                          a_val='np.float64(np.random.rand())',
                                          b_val='np.float64(np.random.rand())',
                                          func='cublasDrotg')
@@ -2001,6 +2012,8 @@ cublasCrotg.__doc__ = \
                     _ROTG_doc.substitute(precision='single-precision',
                                          real='complex',
                                          type='numpy.complex64',
+                                         c_type='numpy.float32',
+                                         s_type='numpy.complex64',
                                          a_val='np.complex64(np.random.rand()+1j*np.random.rand())',
                                          b_val='np.complex64(np.random.rand()+1j*np.random.rand())',
                                          func='cublasCrotg')
@@ -2044,6 +2057,8 @@ cublasZrotg.__doc__ = \
                     _ROTG_doc.substitute(precision='double-precision',
                                          real='complex',
                                          type='numpy.complex128',
+                                         c_type='numpy.float64',
+                                         s_type='numpy.complex128',
                                          a_val='np.complex128(np.random.rand()+1j*np.random.rand())',
                                          b_val='np.complex128(np.random.rand()+1j*np.random.rand())',
                                          func='cublasZrotg')
@@ -2116,7 +2131,7 @@ else:
         cublasCheckStatus(status)
 
 cublasSrotm.__doc__ = \
-                    _ROTM_doc.substitue(precision='single-precision')
+                    _ROTM_doc.substitute(precision='single-precision')
 
 if cuda.cudaDriverGetVersion() < 4000:
     _libcublas.cublasDrotm.restype = None
@@ -2148,7 +2163,7 @@ else:
         cublasCheckStatus(status)
 
 cublasDrotm.__doc__ = \
-                    _ROTM_doc.substitue(precision='double-precision')
+                    _ROTM_doc.substitute(precision='double-precision')
                                         
 # SROTMG, DROTMG (need to add example)
 _ROTMG_doc = Template( 
@@ -2232,7 +2247,8 @@ else:
         return sparam
 
 cublasSrotmg.__doc__ = \
-                     _ROTMG_doc.substitute(precision='single-precision')
+                     _ROTMG_doc.substitute(precision='single-precision',
+                                           type='numpy.float32')
 
 if cuda.cudaDriverGetVersion() < 4000:
     _libcublas.cublasDrotmg.restype = None
@@ -2278,7 +2294,8 @@ else:
         return sparam
 
 cublasDrotmg.__doc__ = \
-                     _ROTMG_doc.substitute(precision='double-precision')
+                     _ROTMG_doc.substitute(precision='double-precision',
+                                           type='numpy.float64')
 
 # SSCAL, DSCAL, CSCAL, CSCAL, CSSCAL, ZSCAL, ZDSCAL
 _SCAL_doc = Template(
@@ -4634,17 +4651,18 @@ def cublasDsymm(side, uplo, m, n, alpha, A, lda, B, ldb, beta, C, ldc):
     status = cublasGetError()
     cublasCheckStatus(status)
 
-_libcublas.cublasDsyrk.restype = None
-_libcublas.cublasDsyrk.argtypes = [ctypes.c_char,
-                                   ctypes.c_char,
-                                   ctypes.c_int,
-                                   ctypes.c_int,
-                                   ctypes.c_double,
-                                   ctypes.c_void_p,
-                                   ctypes.c_int,
-                                   ctypes.c_double,
-                                   ctypes.c_void_p,
-                                   ctypes.c_int]
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasDsyrk.restype = None
+    _libcublas.cublasDsyrk.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_double,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_double,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
 def cublasDsyrk(uplo, trans, n, k, alpha, A, lda, beta, C, ldc):
     """
     Rank-k operation on real symmetric matrix.
