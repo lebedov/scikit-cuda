@@ -326,6 +326,28 @@ def zeros(shape, dtype, allocator=drv.mem_alloc):
     out = gpuarray.GPUArray(shape, dtype, allocator)
     out.fill(0)
     return out
+
+def zeros_like(a):
+    """
+    Return an array of zeros with the same shape and type as a given
+    array.
+
+    Parameters
+    ----------
+    a : array_like
+        The shape and data type of `a` determine the corresponding
+        attributes of the returned array.
+
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray
+        Array of zeros with the shape and dtype of `a`.
+
+    """
+    
+    out = gpuarray.GPUArray(a.shape, a.dtype, drv.mem_alloc)
+    out.fill(0)
+    return out
     
 def ones(shape, dtype, allocator=drv.mem_alloc):
     """
