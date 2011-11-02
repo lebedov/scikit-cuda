@@ -135,29 +135,21 @@ def trapz(x_gpu, dx=1.0):
 
     float_type = x_gpu.dtype.type
     if float_type == np.complex64:
-        cublas_func = cublas._libcublas.cublasCdotu        
+        cublas_func = cublas.cublasCdotu        
     elif float_type == np.float32:
-        cublas_func = cublas._libcublas.cublasSdot
+        cublas_func = cublas.cublasSdot
     elif float_type == np.complex128:
-        cublas_func = cublas._libcublas.cublasZdotu
+        cublas_func = cublas.cublasZdotu
     elif float_type == np.float64:
-        cublas_func = cublas._libcublas.cublasDdot
+        cublas_func = cublas.cublasDdot
     else:
         raise ValueError('unsupported input type')
 
     trapz_mult_gpu = gen_trapz_mult(x_gpu.size, float_type)
-    result = cublas_func(x_gpu.size, int(x_gpu.gpudata), 1,
-                         int(trapz_mult_gpu.gpudata), 1)
+    result = cublas_func(x_gpu.size, x_gpu.gpudata, 1,
+                         trapz_mult_gpu.gpudata, 1)
 
-    dx = float_type(dx)
-    if float_type == np.complex64:
-        return (np.float32(result.x)+1j*np.float32(result.y))*dx
-    elif float_type == np.complex128:
-        return (np.float64(result.x)+1j*np.float64(result.y))*dx
-    elif float_type == np.float32:
-        return np.float32(result)*dx
-    else:
-        return np.float64(result)*dx
+    return float_type(dx)*result
 
 gen_trapz2d_mult_template = Template("""
 #include <pycuda-complex.hpp>
@@ -287,29 +279,21 @@ def trapz2d(x_gpu, dx=1.0, dy=1.0):
 
     float_type = x_gpu.dtype.type
     if float_type == np.complex64:
-        cublas_func = cublas._libcublas.cublasCdotu        
+        cublas_func = cublas.cublasCdotu        
     elif float_type == np.float32:
-        cublas_func = cublas._libcublas.cublasSdot
+        cublas_func = cublas.cublasSdot
     elif float_type == np.complex128:
-        cublas_func = cublas._libcublas.cublasZdotu
+        cublas_func = cublas.cublasZdotu
     elif float_type == np.float64:
-        cublas_func = cublas._libcublas.cublasDdot
+        cublas_func = cublas.cublasDdot
     else:
         raise ValueError('unsupported input type')
                                             
     trapz_mult_gpu = gen_trapz2d_mult(x_gpu.shape, float_type)
-    result = cublas_func(x_gpu.size, int(x_gpu.gpudata), 1,
-                        int(trapz_mult_gpu.gpudata), 1)
+    result = cublas_func(x_gpu.size, x_gpu.gpudata, 1,
+                         trapz_mult_gpu.gpudata, 1)
 
-    dxdy = float_type(dx)*float_type(dy)
-    if float_type == np.complex64:
-        return (np.float32(result.x)+1j*np.float32(result.y))*dxdy
-    elif float_type == np.complex128:
-        return (np.float64(result.x)+1j*np.float64(result.y))*dxdy
-    elif float_type == np.float32:
-        return np.float32(result)*dxdy
-    else:
-        return np.float64(result)*dxdy
+    return float_type(dx)*float_type(dy)*result
 
 if __name__ == "__main__":
     import doctest
