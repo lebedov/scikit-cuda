@@ -246,6 +246,10 @@ class cudaErrorMixedDeviceExecution(cudaError):
     __doc__ = _libcudart.cudaGetErrorString(28)
     pass
 
+class cudaErrorCudartUnloading(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(29)
+    pass
+
 class cudaErrorUnknown(cudaError):
     __doc__ = _libcudart.cudaGetErrorString(30)
     pass
@@ -314,6 +318,42 @@ class cudaErrorDevicesUnavailable(cudaError):
     __doc__ = _libcudart.cudaGetErrorString(46)
     pass
 
+class cudaErrorInvalidKernelImage(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(47)
+    pass
+
+class cudaErrorNoKernelImageForDevice(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(48)
+    pass
+
+class cudaErrorPeerAccessAlreadyEnabled(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(50)
+    pass
+
+class cudaErrorPeerAccessNotEnabled(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(51)
+    pass
+
+class cudaErrorDeviceAlreadyInUse(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(54)
+    pass
+
+class cudaErrorProfilerDisabled(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(55)
+    pass
+
+class cudaErrorProfilerNotInitialized(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(56)
+    pass
+
+class cudaErrorProfilerAlreadyStarted(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(57)
+    pass
+
+class cudaErrorProfilerAlreadyStopped(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(58)
+    pass
+
 class cudaErrorStartupFailure(cudaError):
     __doc__ = _libcudart.cudaGetErrorString(127)
     pass
@@ -347,7 +387,7 @@ cudaExceptions = {
     26: cudaErrorInvalidFilterSetting,
     27: cudaErrorInvalidNormSetting,
     28: cudaErrorMixedDeviceExecution,
-    29: cudaError,
+    29: cudaErrorCudartUnloading,
     30: cudaErrorUnknown,
     31: cudaErrorNotYetImplemented,
     32: cudaErrorMemoryValueTooLarge,
@@ -365,8 +405,19 @@ cudaExceptions = {
     44: cudaErrorDuplicateTextureName,
     45: cudaErrorDuplicateSurfaceName,
     46: cudaErrorDevicesUnavailable,
+    47: cudaErrorInvalidKernelImage,
+    48: cudaErrorNoKernelImageForDevice,
+    49: cudaError,
+    50: cudaErrorPeerAccessAlreadyEnabled,
+    51: cudaErrorPeerAccessNotEnabled,
+    52: cudaError,
+    53: cudaError,
+    54: cudaErrorDeviceAlreadyInUse,
+    55: cudaErrorProfilerDisabled,
+    56: cudaErrorProfilerNotInitialized,
+    57: cudaErrorProfilerAlreadyStarted,
+    58: cudaErrorProfilerAlreadyStopped,
     127: cudaErrorStartupFailure
-    # what about cudaErrorApiFailureBase?
     }
 
 def cudaCheckStatus(status):
