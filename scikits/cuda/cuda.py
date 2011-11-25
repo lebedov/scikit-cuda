@@ -536,6 +536,7 @@ cudaMemcpyHostToHost = 0
 cudaMemcpyHostToDevice = 1
 cudaMemcpyDeviceToHost = 2
 cudaMemcpyDeviceToDevice = 3
+cudaMemcpyDefault = 4
 
 _libcudart.cudaMemcpy.restype = int
 _libcudart.cudaMemcpy.argtypes = [ctypes.c_void_p, ctypes.c_void_p,
