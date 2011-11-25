@@ -81,6 +81,29 @@ cublasExceptions = {
     0xe: cublasInternalError,
     }
 
+_CUBLAS_OP = {
+    'n': 0, # CUBLAS_OP_N
+    'N': 0,
+    't': 1, # CUBLAS_OP_T
+    'T': 1,
+    'c': 2, # CUBLAS_OP_C
+    'C': 2,
+    }
+
+_CUBLAS_FILL_MODE = {
+    'l': 0, # CUBLAS_FILL_MODE_LOWER
+    'L': 0,
+    'u': 1, # CUBLAS_FILL_MODE_UPPER
+    'U': 1,
+    }
+
+_CUBLAS_DIAG = {
+    'n': 0, # CUBLAS_DIAG_NON_UNIT,
+    'N': 0,
+    'u': 1, # CUBLAS_DIAG_UNIT
+    'U': 1,
+    }
+
 _libcublas.cublasGetError.restype = int
 _libcublas.cublasGetError.argtypes = []
 def cublasGetError():
@@ -310,7 +333,7 @@ else:
         result = ctypes.c_int()
         status = \
                _libcublas.cublasIsamax_v2(handle,
-                                          n, int(x), incx, result)
+                                          n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
         return result.value-1
 
@@ -342,7 +365,7 @@ else:
         result = ctypes.c_int()
         status = \
                _libcublas.cublasIdamax_v2(handle,
-                                          n, int(x), incx, result)
+                                          n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
         return result.value-1
 
@@ -374,7 +397,7 @@ else:
         result = ctypes.c_int()
         status = \
                _libcublas.cublasIcamax_v2(handle,
-                                          n, int(x), incx, result)
+                                          n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
         return result.value-1
 
@@ -406,7 +429,7 @@ else:
         result = ctypes.c_int()
         status = \
                _libcublas.cublasIzamax_v2(handle,
-                                          n, int(x), incx, result)
+                                          n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
         return result.value-1
     
@@ -478,7 +501,7 @@ else:
         result = ctypes.c_int()
         status = \
                _libcublas.cublasIsamin_v2(handle,
-                                          n, int(x), incx, result)
+                                          n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
         return result.value-1
 
@@ -510,7 +533,7 @@ else:
         result = ctypes.c_int()
         status = \
                _libcublas.cublasIdamin_v2(handle,
-                                          n, int(x), incx, result)
+                                          n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
         return result.value-1
 
@@ -542,7 +565,7 @@ else:
         result = ctypes.c_int()
         status = \
                _libcublas.cublasIcamin_v2(handle,
-                                          n, int(x), incx, result)
+                                          n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
         return result.value-1
 
@@ -574,7 +597,7 @@ else:
         result = ctypes.c_int()
         status = \
                _libcublas.cublasIzamin_v2(handle,
-                                          n, int(x), incx, result)
+                                          n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
         return result.value-1
 
@@ -671,7 +694,7 @@ else:
                                           ctypes.c_void_p]
     def cublasDasum(n, x, incx):
         handle = cublasGetCurrentCtx()
-        result = ctypes.c_float()
+        result = ctypes.c_double()
         status = _libcublas.cublasDasum_v2(handle,
                                            n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
@@ -725,7 +748,7 @@ if cuda.cudaDriverGetVersion() < 4000:
         result = _libcublas.cublasDzasum(n, int(x), incx)
         status = cublasGetError()
         cublasCheckStatus(status)
-        return np.float32(result.value)
+        return np.float64(result.value)
 else:
     _libcublas.cublasDzasum_v2.restype = int
     _libcublas.cublasDzasum_v2.argtypes = [ctypes.c_int,
@@ -735,17 +758,17 @@ else:
                                            ctypes.c_void_p]
     def cublasDzasum(n, x, incx):
         handle = cublasGetCurrentCtx()
-        result = ctypes.c_float()
+        result = ctypes.c_double()
         status = _libcublas.cublasDzasum_v2(handle,
                                             n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
-        return np.float32(result.value)
+        return np.float64(result.value)
 
-cublasScasum.__doc__ = \
+cublasDzasum.__doc__ = \
                      _ASUM_doc.substitute(precision='double-precision',
                                           real='complex',
                                           data='(np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)',
-                                          func='cublasScasum',
+                                          func='cublasDzasum',
                                           ret_type='numpy.float64')
 
 # SAXPY, DAXPY, CAXPY, ZAXPY
@@ -891,8 +914,8 @@ else:
                                           ctypes.c_int]
     def cublasCaxpy(n, alpha, x, incx, y, incy):
         handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasCaxpy_v2(handle,
-                                           n, ctypes.byref(cuda.cuFloatComplex(alpha.real, alpha.imag)),
+        status = _libcublas.cublasCaxpy_v2(handle, n,
+                                           ctypes.byref(cuda.cuFloatComplex(alpha.real, alpha.imag)),
                                            int(x), incx, int(y), incy)
         cublasCheckStatus(status)
 
@@ -929,8 +952,8 @@ else:
                                           ctypes.c_int]
     def cublasZaxpy(n, alpha, x, incx, y, incy):
         handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasZaxpy_v2(handle,
-                                           n, ctypes.byref(cuda.cuDoubleComplex(alpha.real, alpha.imag)),
+        status = _libcublas.cublasZaxpy_v2(handle, n,
+                                           ctypes.byref(cuda.cuDoubleComplex(alpha.real, alpha.imag)),
                                            int(x), incx, int(y), incy)
         cublasCheckStatus(status)
 
@@ -1109,7 +1132,7 @@ cublasZcopy.__doc__ = \
                                          data='(np.random.rand(5)+np.random.rand(5).astype(np.complex128)',
                                          func='cublasZcopy')
 
-# SDOT, DDOT, CDOT, ZDOT
+# SDOT, DDOT, CDOTU, CDOTC, ZDOTU, ZDOTC
 _DOT_doc = Template(
 """
     Vector dot product (${precision} ${real})
@@ -1180,7 +1203,7 @@ else:
         handle = cublasGetCurrentCtx()
         result = ctypes.c_float()
         status = _libcublas.cublasSdot_v2(handle, n,
-                                          int(x), incx, int(y),
+                                          int(x), incx, int(y), incy,
                                           ctypes.byref(result))
         cublasCheckStatus(status)
         return np.float32(result.value)
@@ -1217,7 +1240,7 @@ else:
         handle = cublasGetCurrentCtx()
         result = ctypes.c_double()
         status = _libcublas.cublasDdot_v2(handle, n,
-                                          int(x), incx, int(y),
+                                          int(x), incx, int(y), incy,
                                           ctypes.byref(result))
         cublasCheckStatus(status)
         return np.float64(result.value)
@@ -1254,7 +1277,7 @@ else:
         handle = cublasGetCurrentCtx()
         result = cuda.cuFloatComplex()
         status = _libcublas.cublasCdotu_v2(handle, n,
-                                           int(x), incx, int(y),
+                                           int(x), incx, int(y), incy,
                                            ctypes.byref(result))
         cublasCheckStatus(status)
         return np.complex64(result.value)
@@ -1291,7 +1314,7 @@ else:
         handle = cublasGetCurrentCtx()
         result = cuda.cuFloatComplex()
         status = _libcublas.cublasCdotc_v2(handle, n,
-                                           int(x), incx, int(y),
+                                           int(x), incx, int(y), incy,
                                            ctypes.byref(result))
         cublasCheckStatus(status)
         return np.complex64(result.value)
@@ -1328,7 +1351,7 @@ else:
         handle = cublasGetCurrentCtx()
         result = cuda.cuDoubleComplex()
         status = _libcublas.cublasZdotu_v2(handle, n,
-                                           int(x), incx, int(y),
+                                           int(x), incx, int(y), incy,
                                            ctypes.byref(result))
         cublasCheckStatus(status)
         return np.complex128(result.value)
@@ -1365,7 +1388,7 @@ else:
         handle = cublasGetCurrentCtx()
         result = cuda.cuDoubleComplex()
         status = _libcublas.cublasZdotc_v2(handle, n,
-                                           int(x), incx, int(y),
+                                           int(x), incx, int(y), incy,
                                            ctypes.byref(result))
         cublasCheckStatus(status)
         return np.complex128(result.value)
@@ -1431,7 +1454,7 @@ else:
     def cublasSnrm2(n, x, incx):
         handle = cublasGetCurrentCtx()
         result = ctypes.c_float()
-        result = _libcublas.cublasSnrm2_v2(handle,
+        status = _libcublas.cublasSnrm2_v2(handle,
                                            n, int(x), incx,
                                            ctypes.byref(result))
         cublasCheckStatus(status)
@@ -1464,7 +1487,7 @@ else:
     def cublasDnrm2(n, x, incx):
         handle = cublasGetCurrentCtx()
         result = ctypes.c_double()
-        result = _libcublas.cublasDnrm2_v2(handle,
+        status = _libcublas.cublasDnrm2_v2(handle,
                                            n, int(x), incx,
                                            ctypes.byref(result))
         cublasCheckStatus(status)
@@ -1497,9 +1520,9 @@ else:
     def cublasScnrm2(n, x, incx):
         handle = cublasGetCurrentCtx()
         result = cuda.cuFloatComplex()
-        result = _libcublas.cublasScnrm2_v2(handle,
-                                           n, int(x), incx,
-                                           ctypes.byref(result))
+        status = _libcublas.cublasScnrm2_v2(handle,
+                                            n, int(x), incx,
+                                            ctypes.byref(result))
         cublasCheckStatus(status)
         return np.complex64(result.value)
     
@@ -1530,7 +1553,7 @@ else:
     def cublasDznrm2(n, x, incx):
         handle = cublasGetCurrentCtx()
         result = cuda.cuDoubleComplex()
-        result = _libcublas.cublasDznrm2_v2(handle,
+        status = _libcublas.cublasDznrm2_v2(handle,
                                             n, int(x), incx,
                                             ctypes.byref(result))
         cublasCheckStatus(status)
@@ -3017,7 +3040,8 @@ if cuda.cudaDriverGetVersion() < 4000:
         cublasCheckStatus(status)
 else:
     _libcublas.cublasSgemv_v2.restype = int
-    _libcublas.cublasSgemv_v2.argtypes = [ctypes.c_char,
+    _libcublas.cublasSgemv_v2.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
                                           ctypes.c_int,
                                           ctypes.c_int,
                                           ctypes.c_void_p,
@@ -3036,9 +3060,10 @@ else:
 
         handle = cublasGetCurrentCtx()        
         status = _libcublas.cublasSgemv_v2(handle,
-                                           trans, m, n,
+                                           _CUBLAS_OP[trans], m, n,
                                            ctypes.byref(ctypes.c_float(alpha)), int(A), lda,
-                                           int(x), incx, beta, int(y), incy)        
+                                           int(x), incx,
+                                           ctypes.byref(ctypes.c_float(beta)), int(y), incy) 
         cublasCheckStatus(status)
     
 if cuda.cudaDriverGetVersion() < 4000:    
@@ -3067,7 +3092,8 @@ if cuda.cudaDriverGetVersion() < 4000:
         cublasCheckStatus(status)
 else:
     _libcublas.cublasDgemv_v2.restype = int
-    _libcublas.cublasDgemv_v2.argtypes = [ctypes.c_char,
+    _libcublas.cublasDgemv_v2.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
                                           ctypes.c_int,
                                           ctypes.c_int,
                                           ctypes.c_void_p,
@@ -3086,8 +3112,10 @@ else:
 
         handle = cublasGetCurrentCtx()        
         status = _libcublas.cublasDgemv_v2(handle,
-                                           trans, m, n, alpha,
-                                           int(A), lda, int(x), incx, beta,
+                                           _CUBLAS_OP[trans], m, n,
+                                           ctypes.byref(ctypes.c_double(alpha)),
+                                           int(A), lda, int(x), incx,
+                                           ctypes.byref(ctypes.c_double(beta)),
                                            int(y), incy)
         cublasCheckStatus(status)
     
@@ -3121,7 +3149,8 @@ if cuda.cudaDriverGetVersion() < 4000:
         cublasCheckStatus(status)
 else:
     _libcublas.cublasCgemv_v2.restype = int
-    _libcublas.cublasCgemv_v2.argtypes = [ctypes.c_char,
+    _libcublas.cublasCgemv_v2.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
                                           ctypes.c_int,
                                           ctypes.c_int,
                                           ctypes.c_void_p,
@@ -3140,14 +3169,13 @@ else:
 
         handle = cublasGetCurrentCtx()        
         status = _libcublas.cublasCgemv_v2(handle,
-                                  trans, m, n,
-                                  ctypes.byref(cuda.cuFloatComplex(alpha.real,
-                                                                   alpha.imag)),
-                                  int(A), lda, int(x), incx,
-                                  ctypes.byref(cuda.cuFloatComplex(beta.real,
-                                                                   beta.imag)),
-                                  int(y), incy)
-        status = cublasGetError()
+                                           _CUBLAS_OP[trans], m, n,
+                                           ctypes.byref(cuda.cuFloatComplex(alpha.real,
+                                                                            alpha.imag)),
+                                           int(A), lda, int(x), incx,
+                                           ctypes.byref(cuda.cuFloatComplex(beta.real,
+                                                                            beta.imag)),
+                                           int(y), incy)
         cublasCheckStatus(status)
     
 if cuda.cudaDriverGetVersion() < 4000:
@@ -3179,8 +3207,9 @@ if cuda.cudaDriverGetVersion() < 4000:
         status = cublasGetError()
         cublasCheckStatus(status)
 else:
-    _libcublas.cublasZgemv_v2.restype = None
-    _libcublas.cublasZgemv_v2.argtypes = [ctypes.c_char,
+    _libcublas.cublasZgemv_v2.restype = int
+    _libcublas.cublasZgemv_v2.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
                                           ctypes.c_int,
                                           ctypes.c_int,
                                           ctypes.c_void_p,        
@@ -3199,7 +3228,7 @@ else:
 
         handle = cublasGetCurrentCtx()        
         status = _libcublas.cublasZgemv_v2(handle,
-                                           trans, m, n,
+                                           _CUBLAS_OP[trans], m, n,
                                            ctypes.byref(cuda.cuDoubleComplex(alpha.real,
                                                                              alpha.imag)),
                                            int(A), lda, int(x), incx,
@@ -3208,7 +3237,7 @@ else:
                                            int(y), incy)
         cublasCheckStatus(status)
 
-###
+# SGER, DGER, CGERU, CGERC, ZGERU, ZGERC
 if cuda.cudaDriverGetVersion() < 4000:    
     _libcublas.cublasSger.restype = None
     _libcublas.cublasSger.argtypes = [ctypes.c_int,
@@ -3220,17 +3249,277 @@ if cuda.cudaDriverGetVersion() < 4000:
                                       ctypes.c_int,
                                       ctypes.c_void_p,
                                       ctypes.c_int]
-def cublasSger(m, n, alpha, x, incx, y, incy, A, lda):
-    """
-    Rank-1 operation on real general matrix.
-    
-    """
-    
-    _libcublas.cublasSger(m, n, alpha, int(x), incx,
-                          int(y), incy, int(A), lda)
-    status = cublasGetError()
-    cublasCheckStatus(status)
+    def cublasSger(m, n, alpha, x, incx, y, incy, A, lda):
+        """
+        Rank-1 operation on real general matrix.
+        
+        """
+        
+        _libcublas.cublasSger(m, n, alpha, int(x), incx,
+                              int(y), incy, int(A), lda)
+        status = cublasGetError()
+        cublasCheckStatus(status)
+else:
+    _libcublas.cublasSger_v2.restype = int
+    _libcublas.cublasSger_v2.argtypes = [ctypes.c_int,
+                                         ctypes.c_int,
+                                         ctypes.c_int,
+                                         ctypes.c_void_p,
+                                         ctypes.c_void_p,
+                                         ctypes.c_int,
+                                         ctypes.c_void_p,
+                                         ctypes.c_int,
+                                         ctypes.c_void_p,
+                                         ctypes.c_int]
+    def cublasSger(m, n, alpha, x, incx, y, incy, A, lda):
+        """
+        Rank-1 operation on real general matrix.
+        
+        """
+        handle = cublasGetCurrentCtx()        
+        status = _libcublas.cublasSger_v2(handle,
+                                          m, n,
+                                          ctypes.byref(ctypes.c_float(alpha)),
+                                          int(x), incx,
+                                          int(y), incy, int(A), lda)
+        cublasCheckStatus(status)
 
+if cuda.cudaDriverGetVersion() < 4000:    
+    _libcublas.cublasDger.restype = None
+    _libcublas.cublasDger.argtypes = [ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_double,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int]
+    def cublasDger(m, n, alpha, x, incx, y, incy, A, lda):
+        """
+        Rank-1 operation on real general matrix.
+        
+        """
+        
+        _libcublas.cublasDger(m, n, alpha, int(x), incx,
+                              int(y), incy, int(A), lda)
+        status = cublasGetError()
+        cublasCheckStatus(status)
+else:
+    _libcublas.cublasDger_v2.restype = int
+    _libcublas.cublasDger_v2.argtypes = [ctypes.c_int,
+                                         ctypes.c_int,
+                                         ctypes.c_int,
+                                         ctypes.c_void_p,
+                                         ctypes.c_void_p,
+                                         ctypes.c_int,
+                                         ctypes.c_void_p,
+                                         ctypes.c_int,
+                                         ctypes.c_void_p,
+                                         ctypes.c_int]
+    def cublasDger(m, n, alpha, x, incx, y, incy, A, lda):
+        """
+        Rank-1 operation on real general matrix.
+        
+        """
+        handle = cublasGetCurrentCtx()        
+        status = _libcublas.cublasDger_v2(handle,
+                                          m, n,
+                                          ctypes.byref(ctypes.c_double(alpha)),
+                                          int(x), incx,
+                                          int(y), incy, int(A), lda)
+        cublasCheckStatus(status)
+    
+if cuda.cudaDriverGetVersion() < 4000:    
+    _libcublas.cublasCgerc.restype = None
+    _libcublas.cublasCgerc.argtypes = [ctypes.c_int,
+                                       ctypes.c_int,
+                                       cuda.cuFloatComplex,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+    def cublasCgerc(m, n, alpha, x, incx, y, incy, A, lda):
+        """
+        Rank-1 operation on complex general matrix.
+        
+        """
+        
+        _libcublas.cublasCgerc(m, n, cuda.cuFloatComplex(alpha.real,
+                                                         alpha.imag),
+                               int(x), incx, int(y), incy, int(A), lda)
+        status = cublasGetError()
+        cublasCheckStatus(status)
+else:
+    _libcublas.cublasCgerc_v2.restype = int
+    _libcublas.cublasCgerc_v2.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int]
+    def cublasCgerc(m, n, alpha, x, incx, y, incy, A, lda):
+        """
+        Rank-1 operation on complex general matrix.
+        
+        """
+        
+        handle = cublasGetCurrentCtx()        
+        status = _libcublas.cublasCgerc_v2(handle,
+                                           m, n, ctypes.byref(cuda.cuFloatComplex(alpha.real,
+                                                                                alpha.imag)),
+                                           int(x), incx, int(y), incy, int(A), lda)
+        cublasCheckStatus(status)
+    
+if cuda.cudaDriverGetVersion() < 4000:    
+    _libcublas.cublasCgeru.restype = None
+    _libcublas.cublasCgeru.argtypes = [ctypes.c_int,
+                                       ctypes.c_int,
+                                       cuda.cuFloatComplex,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+    def cublasCgeru(m, n, alpha, x, incx, y, incy, A, lda):
+        """
+        Rank-1 operation on complex general matrix.
+        
+        """
+        
+        _libcublas.cublasCgeru(m, n, cuda.cuFloatComplex(alpha.real,
+                                                         alpha.imag),
+                               int(x), incx, int(y), incy, int(A), lda)
+        status = cublasGetError()
+        cublasCheckStatus(status)
+else:
+    _libcublas.cublasCgeru_v2.restype = int
+    _libcublas.cublasCgeru_v2.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int]
+    def cublasCgeru(m, n, alpha, x, incx, y, incy, A, lda):
+        """
+        Rank-1 operation on complex general matrix.
+        
+        """
+
+        handle = cublasGetCurrentCtx()        
+        status = _libcublas.cublasCgeru_v2(handle,
+                                           m, n, ctypes.byref(cuda.cuFloatComplex(alpha.real,
+                                                                                  alpha.imag)),
+                                           int(x), incx, int(y), incy, int(A), lda)
+        cublasCheckStatus(status)
+    
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasZgerc.restype = None
+    _libcublas.cublasZgerc.argtypes = [ctypes.c_int,
+                                       ctypes.c_int,
+                                       cuda.cuDoubleComplex,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+    def cublasZgerc(m, n, alpha, x, incx, y, incy, A, lda):
+        """
+        Rank-1 operation on complex general matrix.
+        
+        """
+        
+        _libcublas.cublasZgerc(m, n, cuda.cuDoubleComplex(alpha.real,
+                                                          alpha.imag),
+                               int(x), incx, int(y), incy, int(A), lda)
+        status = cublasGetError()
+        cublasCheckStatus(status)
+else:
+    _libcublas.cublasZgerc_v2.restype = None
+    _libcublas.cublasZgerc_v2.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int]
+    def cublasZgerc(m, n, alpha, x, incx, y, incy, A, lda):
+        """
+        Rank-1 operation on complex general matrix.
+        
+        """
+
+        handle = cublasGetCurrentCtx()        
+        status = _libcublas.cublasZgerc_v2(handle,
+                                           m, n, ctypes.byref(cuda.cuDoubleComplex(alpha.real,
+                                                                                   alpha.imag)),
+                                           int(x), incx, int(y), incy, int(A), lda)
+        cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasZgeru.restype = None
+    _libcublas.cublasZgeru.argtypes = [ctypes.c_int,
+                                       ctypes.c_int,
+                                       cuda.cuDoubleComplex,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+    def cublasZgeru(m, n, alpha, x, incx, y, incy, A, lda):
+        """
+        Rank-1 operation on complex general matrix.
+        
+        """
+        
+        _libcublas.cublasZgeru(m, n, cuda.cuDoubleComplex(alpha.real,
+                                                          alpha.imag),
+                               int(x), incx, int(y), incy, int(A), lda)
+
+        status = cublasGetError()
+        cublasCheckStatus(status)
+else:
+    _libcublas.cublasZgeru_v2.restype = int
+    _libcublas.cublasZgeru_v2.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int]
+    def cublasZgeru(m, n, alpha, x, incx, y, incy, A, lda):
+        """
+        Rank-1 operation on complex general matrix.
+        
+        """
+
+        handle = cublasGetCurrentCtx()        
+        status = _libcublas.cublasZgeru_v2(handle,
+                                           m, n, ctypes.byref(cuda.cuDoubleComplex(alpha.real,
+                                                                                   alpha.imag)),
+                                           int(x), incx, int(y), incy, int(A), lda)
+        cublasCheckStatus(status)
+
+# SSBMV, DSBMV 
 if cuda.cudaDriverGetVersion() < 4000:    
     _libcublas.cublasSsbmv.restype = None
     _libcublas.cublasSsbmv.argtypes = [ctypes.c_char,
@@ -3244,17 +3533,100 @@ if cuda.cudaDriverGetVersion() < 4000:
                                        ctypes.c_float,
                                        ctypes.c_void_p,
                                        ctypes.c_int]
-def cublasSsbmv(uplo, n, k, alpha, A, lda, x, incx, beta, y, incy):
-    """
-    Matrix-vector product for real symmetric-banded matrix.
-
-    """
+    def cublasSsbmv(uplo, n, k, alpha, A, lda, x, incx, beta, y, incy):
+        """
+        Matrix-vector product for real symmetric-banded matrix.
+        
+        """
     
-    _libcublas.cublasSsbmv(uplo, n, k, alpha, int(A), lda,
-                           int(x), incx, beta, int(y), incy)
-    status = cublasGetError()
-    cublasCheckStatus(status)
+        _libcublas.cublasSsbmv(uplo, n, k, alpha, int(A), lda,
+                               int(x), incx, beta, int(y), incy)
+        status = cublasGetError()
+        cublasCheckStatus(status)
+else:
+    _libcublas.cublasSsbmv_v2.restype = int
+    _libcublas.cublasSsbmv_v2.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int]
 
+    def cublasSsbmv(uplo, n, k, alpha, A, lda, x, incx, beta, y, incy):
+        """
+        Matrix-vector product for real symmetric-banded matrix.
+        
+        """
+
+        handle = cublasGetCurrentCtx()
+        status = _libcublas.cublasSsbmv_v2(handle,
+                                           _CUBLAS_FILL_MODE[uplo], n, k,
+                                           ctypes.byref(ctypes.c_float(alpha)),
+                                           int(A), lda, int(x), incx,
+                                           ctypes.byref(ctypes.c_float(beta)),
+                                           int(y), incy)
+        cublasCheckStatus(status)
+        
+if cuda.cudaDriverGetVersion() < 4000:    
+    _libcublas.cublasDsbmv.restype = None
+    _libcublas.cublasDsbmv.argtypes = [ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_double,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_double,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+    def cublasDsbmv(uplo, n, k, alpha, A, lda, x, incx, beta, y, incy):
+        """
+        Matrix-vector product for real symmetric-banded matrix.
+        
+        """
+
+        _libcublas.cublasDsbmv(uplo, n, k, alpha,
+                               int(A), lda, int(x), incx, beta,
+                               int(y), incy)
+        status = cublasGetError()
+        cublasCheckStatus(status)
+else:
+    _libcublas.cublasDsbmv_v2.restype = int
+    _libcublas.cublasDsbmv_v2.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int]
+    def cublasDsbmv(uplo, n, k, alpha, A, lda, x, incx, beta, y, incy):
+        """
+        Matrix-vector product for real symmetric-banded matrix.
+        
+        """
+
+        handle = cublasGetCurrentCtx()
+        status = _libcublas.cublasDsbmv_v2(handle,
+                                           _CUBLAS_FILL_MODE[uplo], n, k,
+                                           ctypes.byref(ctypes.c_double(alpha)),
+                                           int(A), lda, int(x), incx,
+                                           ctypes.byref(ctypes.c_double(beta)),
+                                           int(y), incy)
+        cublasCheckStatus(status)
+        
+# SSPMV, DSPMV (need to make CUDA 4.0 compatible)
 if cuda.cudaDriverGetVersion() < 4000:    
     _libcublas.cublasSspmv.restype = None
     _libcublas.cublasSspmv.argtypes = [ctypes.c_char,
@@ -3277,6 +3649,29 @@ def cublasSspmv(uplo, n, alpha, AP, x, incx, beta, y, incy):
     status = cublasGetError()
     cublasCheckStatus(status)
 
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasDspmv.restype = None
+    _libcublas.cublasDspmv.argtypes = [ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_double,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_double,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasDspmv(uplo, n, alpha, AP, x, incx, beta, y, incy):
+    """
+    Matrix-vector product for real symmetric-packed matrix.
+
+    """
+
+    _libcublas.cublasDspmv(uplo, n, alpha, int(AP),
+                           int(x), incx, beta, int(y), incy)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+# SSPR, DSPR (need to make CUDA 4.0 compatible)
 if cuda.cudaDriverGetVersion() < 4000:    
     _libcublas.cublasSspr.restype = None
     _libcublas.cublasSspr.argtypes = [ctypes.c_char,
@@ -3295,6 +3690,25 @@ def cublasSspr(uplo, n, alpha, x, incx, AP):
     status = cublasGetError()
     cublasCheckStatus(status)
 
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasDspr.restype = None
+    _libcublas.cublasDspr.argtypes = [ctypes.c_char,
+                                      ctypes.c_int,
+                                      ctypes.c_double,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p]
+def cublasDspr(uplo, n, alpha, x, incx, AP):
+    """
+    Rank-1 operation on real symmetric-packed matrix.
+
+    """
+
+    _libcublas.cublasDspr(uplo, n, alpha, int(x), incx, int(AP))
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+# SSPR2, DSPR2 (need to make CUDA 4.0 compatible)
 if cuda.cudaDriverGetVersion() < 4000:    
     _libcublas.cublasSspr2.restype = None
     _libcublas.cublasSspr2.argtypes = [ctypes.c_char,
@@ -3316,6 +3730,27 @@ def cublasSspr2(uplo, n, alpha, x, incx, y, incy, AP):
     status = cublasGetError()
     cublasCheckStatus(status)
 
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasDspr2.restype = None
+    _libcublas.cublasDspr2.argtypes = [ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_double,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p]
+def cublasDspr2(uplo, n, alpha, x, incx, y, incy, AP):
+    """
+    Rank-2 operation on real symmetric-packed matrix.
+
+    """
+
+    _libcublas.cublasDspr2(uplo, n, alpha, int(x), incx, int(y), incy, int(AP))
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+# SSYMV, DSYMV (need to make CUDA 4.0 compatible)
 if cuda.cudaDriverGetVersion() < 4000:    
     _libcublas.cublasSsymv.restype = None
     _libcublas.cublasSsymv.argtypes = [ctypes.c_char,
@@ -3340,6 +3775,30 @@ def cublasSsymv(uplo, n, alpha, A, lda, x, incx, beta, y, incy):
     status = cublasGetError()
     cublasCheckStatus(status)
 
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasDsymv.restype = None
+    _libcublas.cublasDsymv.argtypes = [ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_double,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_double,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasDsymv(uplo, n, alpha, A, lda, x, incx, beta, y, incy):
+    """
+    Matrix-vector product for real symmetric matrix.
+    
+    """
+
+    _libcublas.cublasDsymv(uplo, n, alpha, int(A), lda,
+                           int(x), incx, beta, int(y), incy)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+# SSYR, DSYR (need to make CUDA 4.0 compatible)
 if cuda.cudaDriverGetVersion() < 4000:    
     _libcublas.cublasSsyr.restype = None
     _libcublas.cublasSsyr.argtypes = [ctypes.c_char,
@@ -3360,6 +3819,26 @@ def cublasSsyr(uplo, n, alpha, x, incx, A, lda):
     status = cublasGetError()
     cublasCheckStatus(status)
 
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasDsyr.restype = None
+    _libcublas.cublasDsyr.argtypes = [ctypes.c_char,
+                                      ctypes.c_int,
+                                      ctypes.c_double,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int]
+def cublasDsyr(uplo, n, alpha, x, incx, A, lda):
+    """
+    Rank-1 operation on real symmetric matrix.
+
+    """
+
+    _libcublas.cublasDsyr(uplo, n, alpha, int(x), incx, int(A), lda)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+# SSYR2, DSYR2 (need to make CUDA 4.0 compatible)
 if cuda.cudaDriverGetVersion() < 4000:    
     _libcublas.cublasSsyr2.restype = None
     _libcublas.cublasSsyr2.argtypes = [ctypes.c_char,
@@ -3383,6 +3862,29 @@ def cublasSsyr2(uplo, n, alpha, x, incx, y, incy, A, lda):
     status = cublasGetError()
     cublasCheckStatus(status)
 
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasDsyr2.restype = None
+    _libcublas.cublasDsyr2.argtypes = [ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_double,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasDsyr2(uplo, n, alpha, x, incx, y, incy, A, lda):
+    """
+    Rank-2 operation on real symmetric matrix.
+
+    """
+
+    _libcublas.cublasDsyr2(uplo, n, alpha, int(x), incx,
+                           int(y), incy, int(A),lda)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+# STBMV, DTBMV, CTBMV, ZTBMV (need to make CUDA 4.0 compatible)
 if cuda.cudaDriverGetVersion() < 4000:    
     _libcublas.cublasStbmv.restype = None
     _libcublas.cublasStbmv.argtypes = [ctypes.c_char,
@@ -3405,6 +3907,72 @@ def cublasStbmv(uplo, trans, diag, n, k, A, lda, x, incx):
     status = cublasGetError()
     cublasCheckStatus(status)
 
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasDtbmv.restype = None
+    _libcublas.cublasDtbmv.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasDtbmv(uplo, trans, diag, n, k, A, lda, x, incx):
+    """
+    Matrix-vector product for real triangular-banded matrix.
+
+    """
+
+    _libcublas.cublasDtbmv(uplo, trans, diag, n, k, int(A), lda,
+                           int(x), incx)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:    
+    _libcublas.cublasCtbmv.restype = None
+    _libcublas.cublasCtbmv.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasCtbmv(uplo, trans, diag, n, k, A, lda, x, incx):
+    """
+    Matrix-vector product for complex triangular-banded matrix.
+
+    """
+    
+    _libcublas.cublasCtbmv(uplo, trans, diag, n, k,
+                           int(A), lda, int(x), incx)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasZtbmv.restype = None
+    _libcublas.cublasZtbmv.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasZtbmv(uplo, trans, diag, n, k, A, lda, x, incx):
+    """
+    Matrix-vector product for complex triangular-banded matrix.
+
+    """
+    
+    _libcublas.cublasZtbmv(uplo, trans, diag, n, k, int(A), lda, int(x), incx)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+# STBSV, DTBSV, CTBSV, ZTBSV (need to make CUDA 4.0 compatible)
 if cuda.cudaDriverGetVersion() < 4000:    
     _libcublas.cublasStbsv.restype = None
     _libcublas.cublasStbsv.argtypes = [ctypes.c_char,
@@ -3427,6 +3995,72 @@ def cublasStbsv(uplo, trans, diag, n, k, A, lda, x, incx):
     status = cublasGetError()
     cublasCheckStatus(status)
 
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasDtbsv.restype = None
+    _libcublas.cublasDtbsv.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasDtbsv(uplo, trans, diag, n, k, A, lda, x, incx):
+    """
+    Solve real triangular-banded system with one right-hand side.
+
+    """
+
+    _libcublas.cublasDtbsv(uplo, trans, diag, n, k,
+                           int(A), lda, int(x), incx)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:    
+    _libcublas.cublasCtbsv.restype = None
+    _libcublas.cublasCtbsv.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasCtbsv(uplo, trans, diag, n, k, A, lda, x, incx):
+    """
+    Solve complex triangular-banded system with one right-hand side.
+
+    """
+    
+    _libcublas.cublasCtbsv(uplo, trans, diag, n, k,
+                           int(A), lda, int(x), incx)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasZtbsv.restype = None
+    _libcublas.cublasZtbsv.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasZtbsv(uplo, trans, diag, n, k, A, lda, x, incx):
+    """
+    Solve complex triangular-banded system with one right-hand side.
+
+    """
+    
+    _libcublas.cublasZtbsv(uplo, trans, diag, n, k, int(A), lda, int(x), incx)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+# STPMV, DTPMV, CTPMV, ZTPMV (need to make CUDA 4.0 compatible)
 if cuda.cudaDriverGetVersion() < 4000:    
     _libcublas.cublasStpmv.restype = None
     _libcublas.cublasStpmv.argtypes = [ctypes.c_char,
@@ -3448,6 +4082,64 @@ def cublasStpmv(uplo, trans, diag, n, AP, x, incx):
     cublasCheckStatus(status)
 
 if cuda.cudaDriverGetVersion() < 4000:    
+    _libcublas.cublasCtpmv.restype = None
+    _libcublas.cublasCtpmv.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasCtpmv(uplo, trans, diag, n, AP, x, incx):
+    """
+    Matrix-vector product for complex triangular-packed matrix.
+
+    """
+    
+    _libcublas.cublasCtpmv(uplo, trans, diag, n, int(AP), int(x), incx)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasDtpmv.restype = None
+    _libcublas.cublasDtpmv.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasDtpmv(uplo, trans, diag, n, AP, x, incx):
+    """
+    Matrix-vector product for real triangular-packed matrix.
+
+    """
+
+    _libcublas.cublasDtpmv(uplo, trans, diag, n, int(AP), int(x), incx)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasZtpmv.restype = None
+    _libcublas.cublasZtpmv.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasZtpmv(uplo, trans, diag, n, AP, x, incx):
+    """
+    Matrix-vector product for complex triangular-packed matrix.
+
+    """
+    
+    _libcublas.cublasZtpmv(uplo, trans, diag, n, int(AP), int(x), incx)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+# STPSV, DTPSV, CTPSV, ZTPSV (need to convert to CUDA 4.0)
+if cuda.cudaDriverGetVersion() < 4000:    
     _libcublas.cublasStpsv.restype = None
     _libcublas.cublasStpsv.argtypes = [ctypes.c_char,
                                        ctypes.c_char,
@@ -3467,6 +4159,64 @@ def cublasStpsv(uplo, trans, diag, n, AP, x, incx):
     status = cublasGetError()
     cublasCheckStatus(status)
 
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasDtpsv.restype = None
+    _libcublas.cublasDtpsv.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasDtpsv(uplo, trans, diag, n, AP, x, incx):
+    """
+    Solve real triangular-packed system with one right-hand side.
+
+    """
+
+    _libcublas.cublasDtpsv(uplo, trans, diag, n, int(AP), int(x), incx)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:    
+    _libcublas.cublasCtpsv.restype = None
+    _libcublas.cublasCtpsv.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasCtpsv(uplo, trans, diag, n, AP, x, incx):
+    """
+    Solve complex triangular-packed system with one right-hand side.
+    
+    """
+    
+    _libcublas.cublasCtpsv(uplo, trans, diag, n, int(AP), int(x), incx)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasZtpsv.restype = None
+    _libcublas.cublasZtpsv.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasZtpsv(uplo, trans, diag, n, AP, x, incx):
+    """
+    Solve complex triangular-packed system with one right-hand size.
+
+    """
+    
+    _libcublas.cublasZtpsv(uplo, trans, diag, n, int(AP), int(x), incx)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+# STRMV, DTRMV, CTRMV, ZTRMV (need to convert to CUDA 4.0) 
 if cuda.cudaDriverGetVersion() < 4000:    
     _libcublas.cublasStrmv.restype = None
     _libcublas.cublasStrmv.argtypes = [ctypes.c_char,
@@ -3489,6 +4239,67 @@ def cublasStrmv(uplo, trans, diag, n, A, lda, x, inx):
     cublasCheckStatus(status)
 
 if cuda.cudaDriverGetVersion() < 4000:    
+    _libcublas.cublasCtrmv.restype = None
+    _libcublas.cublasCtrmv.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasCtrmv(uplo, trans, diag, n, A, lda, x, incx):
+    """
+    Matrix-vector product for complex triangular matrix.
+
+    """
+    
+    _libcublas.cublasCtrmv(uplo, trans, diag, n, int(A), lda, int(x), incx)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasDtrmv.restype = None
+    _libcublas.cublasDtrmv.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasDtrmv(uplo, trans, diag, n, A, lda, x, inx):
+    """
+    Matrix-vector product for real triangular matrix.
+
+    """
+
+    _libcublas.cublasDtrmv(uplo, trans, diag, n, int(A), lda, int(x), inx)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasZtrmv.restype = None
+    _libcublas.cublasZtrmv.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasZtrmv(uplo, trans, diag, n, A, lda, x, incx):
+    """
+    Matrix-vector product for complex triangular matrix.
+
+    """
+    
+    _libcublas.cublasZtrmv(uplo, trans, diag, n, int(A), lda, int(x), incx)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+# STRSV, DTRSV, CTRSV, ZTRSV (need to convert to CUDA 4.0)
+if cuda.cudaDriverGetVersion() < 4000:    
     _libcublas.cublasStrsv.restype = None
     _libcublas.cublasStrsv.argtypes = [ctypes.c_char,
                                        ctypes.c_char,
@@ -3509,83 +4320,67 @@ def cublasStrsv(uplo, trans, diag, n, A, lda, x, incx):
     status = cublasGetError()
     cublasCheckStatus(status)
 
-# Single precision complex BLAS2 functions:
-
-if cuda.cudaDriverGetVersion() < 4000:    
-    _libcublas.cublasCgerc.restype = None
-    _libcublas.cublasCgerc.argtypes = [ctypes.c_int,
-                                       ctypes.c_int,
-                                       cuda.cuFloatComplex,
-                                       ctypes.c_void_p,
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasDtrsv.restype = None
+    _libcublas.cublasDtrsv.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
                                        ctypes.c_int,
                                        ctypes.c_void_p,
                                        ctypes.c_int,
                                        ctypes.c_void_p,
                                        ctypes.c_int]
-def cublasCgerc(m, n, alpha, x, incx, y, incy, A, lda):
+def cublasDtrsv(uplo, trans, diag, n, A, lda, x, incx):
     """
-    Rank-1 operation on complex general matrix.
-    
+    Solve real triangular system with one right-hand side.
+
     """
-    
-    _libcublas.cublasCgerc(m, n, cuda.cuFloatComplex(alpha.real,
-                                                     alpha.imag),
-                           int(x), incx, int(y), incy, int(A), lda)
+
+    _libcublas.cublasDtrsv(uplo, trans, diag, n, int(A), lda, int(x), incx)
     status = cublasGetError()
     cublasCheckStatus(status)
 
 if cuda.cudaDriverGetVersion() < 4000:    
-    _libcublas.cublasCgeru.restype = None
-    _libcublas.cublasCgeru.argtypes = [ctypes.c_int,
-                                       ctypes.c_int,
-                                       cuda.cuFloatComplex,
-                                       ctypes.c_void_p,
+    _libcublas.cublasCtrsv.restype = None
+    _libcublas.cublasCtrsv.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
                                        ctypes.c_int,
                                        ctypes.c_void_p,
                                        ctypes.c_int,
                                        ctypes.c_void_p,
                                        ctypes.c_int]
-def cublasCgeru(m, n, alpha, x, incx, y, incy, A, lda):
+def cublasCtrsv(uplo, trans, diag, n, A, lda, x, incx):
     """
-    Rank-1 operation on complex general matrix.
-    
-    """
+    Solve complex triangular system with one right-hand side.
 
-    _libcublas.cublasCgeru(m, n, cuda.cuFloatComplex(alpha.real,
-                                                     alpha.imag),
-                           int(x), incx, int(y), incy, int(A), lda)
+    """
+    
+    _libcublas.cublasCtrsv(uplo, trans, diag, n, int(A), lda, int(x), incx)
     status = cublasGetError()
     cublasCheckStatus(status)
 
-if cuda.cudaDriverGetVersion() < 4000:    
-    _libcublas.cublasChbmv.restype = None
-    _libcublas.cublasChbmv.argtypes = [ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       cuda.cuFloatComplex,
-                                       ctypes.c_void_p,
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasZtrsv.restype = None
+    _libcublas.cublasZtrsv.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
                                        ctypes.c_int,
                                        ctypes.c_void_p,
                                        ctypes.c_int,
-                                       cuda.cuFloatComplex,
                                        ctypes.c_void_p,
                                        ctypes.c_int]
-def cublasChbmv(uplo, n, k, alpha, A, lda, x, incx, beta, y, incy):
+def cublasZtrsv(uplo, trans, diag, n, A, lda, x, incx):
     """
-    Matrix-vector product for Hermitian-banded matrix.
+    Solve complex triangular system with one right-hand side.
 
     """
     
-    _libcublas.cublasChbmv(uplo, n, k,
-                           cuda.cuFloatComplex(alpha.real,
-                                               alpha.imag),
-                           int(A), lda, int(x), incx,
-                           cuda.cuFloatComplex(beta.real,
-                                               beta.imag),
-                           int(y), incy)
+    _libcublas.cublasZtrsv(uplo, trans, diag, n, int(A), lda, int(x), incx)
     status = cublasGetError()
     cublasCheckStatus(status)
 
+# CHEMV, ZHEMV (need to convert to CUDA 4.0)
 if cuda.cudaDriverGetVersion() < 4000:    
     _libcublas.cublasChemv.restype = None
     _libcublas.cublasChemv.argtypes = [ctypes.c_char,
@@ -3613,578 +4408,59 @@ def cublasChemv(uplo, n, alpha, A, lda, x, incx, beta, y, incy):
     status = cublasGetError()
     cublasCheckStatus(status)
 
-if cuda.cudaDriverGetVersion() < 4000:    
-    _libcublas.cublasCher.restype = None
-    _libcublas.cublasCher.argtypes = [ctypes.c_char,
-                                      ctypes.c_int,
-                                      ctypes.c_float,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int]
-def cublasCher(uplo, n, alpha, x, incx, A, lda):
-    """
-    Rank-1 operation on Hermitian matrix.
-
-    """
-
-    _libcublas.cublasCher(uplo, n, alpha, int(x), incx, int(A), lda)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:    
-    _libcublas.cublasCher2.restype = None
-    _libcublas.cublasCher2.argtypes = [ctypes.c_char,
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasZhemv.restype = None
+    _libcublas.cublasZhemv.argtypes = [ctypes.c_char,
                                        ctypes.c_int,
-                                       cuda.cuFloatComplex,
+                                       cuda.cuDoubleComplex,
                                        ctypes.c_void_p,
                                        ctypes.c_int,
                                        ctypes.c_void_p,
                                        ctypes.c_int,
+                                       cuda.cuDoubleComplex,
                                        ctypes.c_void_p,
                                        ctypes.c_int]
-def cublasCher2(uplo, n, alpha, x, incx, y, incy, A, lda):
+def cublasZhemv(uplo, n, alpha, A, lda, x, incx, beta, y, incy):
     """
-    Rank-2 operation on Hermitian matrix.
-
+    Matrix-vector product for Hermitian matrix.
 
     """
     
-    _libcublas.cublasCher2(uplo, n, cuda.cuFloatComplex(alpha.real,
-                                                        alpha.imag),
-                           int(x), incx, int(y), incy,
-                           int(A), lda)
+    _libcublas.cublasZhemv(uplo, n, cuda.cuDoubleComplex(alpha.real,
+                                                         alpha.imag),
+                           int(A), lda, int(x), incx,
+                           cuda.cuDoubleComplex(beta.real, beta.imag),
+                           int(y), incy)
     status = cublasGetError()
     cublasCheckStatus(status)
 
+# CHBMV, ZHBMV (need to convert to CUDA 4.0) 
 if cuda.cudaDriverGetVersion() < 4000:    
-    _libcublas.cublasChpmv.restype = None
-    _libcublas.cublasChpmv.argtypes = [ctypes.c_char,
+    _libcublas.cublasChbmv.restype = None
+    _libcublas.cublasChbmv.argtypes = [ctypes.c_char,
+                                       ctypes.c_int,
                                        ctypes.c_int,
                                        cuda.cuFloatComplex,
                                        ctypes.c_void_p,
+                                       ctypes.c_int,
                                        ctypes.c_void_p,
                                        ctypes.c_int,
                                        cuda.cuFloatComplex,
                                        ctypes.c_void_p,
                                        ctypes.c_int]
-def cublasChpmv(uplo, n, alpha, AP, x, incx, beta, y, incy):
+def cublasChbmv(uplo, n, k, alpha, A, lda, x, incx, beta, y, incy):
     """
-    Matrix-vector product for Hermitian-packed matrix.
+    Matrix-vector product for Hermitian-banded matrix.
 
     """
     
-    _libcublas.cublasChpmv(uplo, n, cuda.cuFloatComplex(alpha.real,
-                                                        alpha.imag),
-                           int(AP), int(x), incx,
+    _libcublas.cublasChbmv(uplo, n, k,
+                           cuda.cuFloatComplex(alpha.real,
+                                               alpha.imag),
+                           int(A), lda, int(x), incx,
                            cuda.cuFloatComplex(beta.real,
                                                beta.imag),
                            int(y), incy)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:    
-    _libcublas.cublasChpr.restype = None
-    _libcublas.cublasChpr.argtypes = [ctypes.c_char,
-                                      ctypes.c_int,
-                                      ctypes.c_float,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int,
-                                      ctypes.c_void_p]
-def cublasChpr(uplo, n, alpha, x, incx, AP):
-    """
-    Rank-1 operation on Hermitian-packed matrix.
-    
-    """
-    
-    _libcublas.cublasChpr(uplo, n, alpha, int(x), incx, int(AP))
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:    
-    _libcublas.cublasChpr2.restype = None
-    _libcublas.cublasChpr2.argtypes = [ctypes.c_char,
-                                       ctypes.c_int,
-                                       cuda.cuFloatComplex,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p]
-def cublasChpr2(uplo, n, alpha, x, inx, y, incy, AP):
-    """
-    Rank-2 operation on Hermitian-packed matrix.
-    
-    """
-
-    _libcublas.cublasChpr2(uplo, n, cuda.cuFloatComplex(alpha.real,
-                                                        alpha.imag),
-                           int(x), incx, int(y), incy, int(AP))
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:    
-    _libcublas.cublasCtbmv.restype = None
-    _libcublas.cublasCtbmv.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasCtbmv(uplo, trans, diag, n, k, A, lda, x, incx):
-    """
-    Matrix-vector product for complex triangular-banded matrix.
-
-    """
-    
-    _libcublas.cublasCtbmv(uplo, trans, diag, n, k,
-                           int(A), lda, int(x), incx)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:    
-    _libcublas.cublasCtbsv.restype = None
-    _libcublas.cublasCtbsv.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasCtbsv(uplo, trans, diag, n, k, A, lda, x, incx):
-    """
-    Solve complex triangular-banded system with one right-hand side.
-
-    """
-    
-    _libcublas.cublasCtbsv(uplo, trans, diag, n, k,
-                           int(A), lda, int(x), incx)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:    
-    _libcublas.cublasCtpmv.restype = None
-    _libcublas.cublasCtpmv.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasCtpmv(uplo, trans, diag, n, AP, x, incx):
-    """
-    Matrix-vector product for complex triangular-packed matrix.
-
-    """
-    
-    _libcublas.cublasCtpmv(uplo, trans, diag, n, int(AP), int(x), incx)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:    
-    _libcublas.cublasCtpsv.restype = None
-    _libcublas.cublasCtpsv.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasCtpsv(uplo, trans, diag, n, AP, x, incx):
-    """
-    Solve complex triangular-packed system with one right-hand side.
-    
-    """
-    
-    _libcublas.cublasCtpsv(uplo, trans, diag, n, int(AP), int(x), incx)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:    
-    _libcublas.cublasCtrmv.restype = None
-    _libcublas.cublasCtrmv.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasCtrmv(uplo, trans, diag, n, A, lda, x, incx):
-    """
-    Matrix-vector product for complex triangular matrix.
-
-    """
-    
-    _libcublas.cublasCtrmv(uplo, trans, diag, n, int(A), lda, int(x), incx)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:    
-    _libcublas.cublasCtrsv.restype = None
-    _libcublas.cublasCtrsv.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasCtrsv(uplo, trans, diag, n, A, lda, x, incx):
-    """
-    Solve complex triangular system with one right-hand side.
-
-    """
-    
-    _libcublas.cublasCtrsv(uplo, trans, diag, n, int(A), lda, int(x), incx)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-# Double precision real BLAS2 functions:
-
-if cuda.cudaDriverGetVersion() < 4000:    
-    _libcublas.cublasDger.restype = None
-    _libcublas.cublasDger.argtypes = [ctypes.c_int,
-                                      ctypes.c_int,
-                                      ctypes.c_double,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int]
-def cublasDger(m, n, alpha, x, incx, y, incy, A, lda):
-    """
-    Rank-1 operation on real general matrix.
-    
-    """
-
-    _libcublas.cublasDger(m, n, alpha, int(x), incx,
-                          int(y), incy, int(A), lda)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:    
-    _libcublas.cublasDsbmv.restype = None
-    _libcublas.cublasDsbmv.argtypes = [ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_double,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_double,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasDsbmv(uplo, n, k, alpha, A, lda, x, incx, beta, y, incy):
-    """
-    Matrix-vector product for real symmetric-banded matrix.
-
-    """
-
-    _libcublas.cublasDsbmv(uplo, n, k, alpha,
-                           int(A), lda, int(x), incx, beta,
-                           int(y), incy)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasDspmv.restype = None
-    _libcublas.cublasDspmv.argtypes = [ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_double,
-                                       ctypes.c_void_p,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_double,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasDspmv(uplo, n, alpha, AP, x, incx, beta, y, incy):
-    """
-    Matrix-vector product for real symmetric-packed matrix.
-
-    """
-
-    _libcublas.cublasDspmv(uplo, n, alpha, int(AP),
-                           int(x), incx, beta, int(y), incy)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasDspr.restype = None
-    _libcublas.cublasDspr.argtypes = [ctypes.c_char,
-                                      ctypes.c_int,
-                                      ctypes.c_double,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int,
-                                      ctypes.c_void_p]
-def cublasDspr(uplo, n, alpha, x, incx, AP):
-    """
-    Rank-1 operation on real symmetric-packed matrix.
-
-    """
-
-    _libcublas.cublasDspr(uplo, n, alpha, int(x), incx, int(AP))
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasDspr2.restype = None
-    _libcublas.cublasDspr2.argtypes = [ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_double,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p]
-def cublasDspr2(uplo, n, alpha, x, incx, y, incy, AP):
-    """
-    Rank-2 operation on real symmetric-packed matrix.
-
-    """
-
-    _libcublas.cublasDspr2(uplo, n, alpha, int(x), incx, int(y), incy, int(AP))
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasDsymv.restype = None
-    _libcublas.cublasDsymv.argtypes = [ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_double,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_double,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasDsymv(uplo, n, alpha, A, lda, x, incx, beta, y, incy):
-    """
-    Matrix-vector product for real symmetric matrix.
-    
-    """
-
-    _libcublas.cublasDsymv(uplo, n, alpha, int(A), lda,
-                           int(x), incx, beta, int(y), incy)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasDsyr.restype = None
-    _libcublas.cublasDsyr.argtypes = [ctypes.c_char,
-                                      ctypes.c_int,
-                                      ctypes.c_double,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int]
-def cublasDsyr(uplo, n, alpha, x, incx, A, lda):
-    """
-    Rank-1 operation on real symmetric matrix.
-
-    """
-
-    _libcublas.cublasDsyr(uplo, n, alpha, int(x), incx, int(A), lda)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasDsyr2.restype = None
-    _libcublas.cublasDsyr2.argtypes = [ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_double,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasDsyr2(uplo, n, alpha, x, incx, y, incy, A, lda):
-    """
-    Rank-2 operation on real symmetric matrix.
-
-    """
-
-    _libcublas.cublasDsyr2(uplo, n, alpha, int(x), incx,
-                           int(y), incy, int(A),lda)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasDtbmv.restype = None
-    _libcublas.cublasDtbmv.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasDtbmv(uplo, trans, diag, n, k, A, lda, x, incx):
-    """
-    Matrix-vector product for real triangular-banded matrix.
-
-    """
-
-    _libcublas.cublasDtbmv(uplo, trans, diag, n, k, int(A), lda,
-                           int(x), incx)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasDtbsv.restype = None
-    _libcublas.cublasDtbsv.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasDtbsv(uplo, trans, diag, n, k, A, lda, x, incx):
-    """
-    Solve real triangular-banded system with one right-hand side.
-
-    """
-
-    _libcublas.cublasDtbsv(uplo, trans, diag, n, k,
-                           int(A), lda, int(x), incx)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasDtpmv.restype = None
-    _libcublas.cublasDtpmv.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasDtpmv(uplo, trans, diag, n, AP, x, incx):
-    """
-    Matrix-vector product for real triangular-packed matrix.
-
-    """
-
-    _libcublas.cublasDtpmv(uplo, trans, diag, n, int(AP), int(x), incx)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasDtpsv.restype = None
-    _libcublas.cublasDtpsv.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasDtpsv(uplo, trans, diag, n, AP, x, incx):
-    """
-    Solve real triangular-packed system with one right-hand side.
-
-    """
-
-    _libcublas.cublasDtpsv(uplo, trans, diag, n, int(AP), int(x), incx)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasDtrmv.restype = None
-    _libcublas.cublasDtrmv.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasDtrmv(uplo, trans, diag, n, A, lda, x, inx):
-    """
-    Matrix-vector product for real triangular matrix.
-
-    """
-
-    _libcublas.cublasDtrmv(uplo, trans, diag, n, int(A), lda, int(x), inx)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasDtrsv.restype = None
-    _libcublas.cublasDtrsv.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasDtrsv(uplo, trans, diag, n, A, lda, x, incx):
-    """
-    Solve real triangular system with one right-hand side.
-
-    """
-
-    _libcublas.cublasDtrsv(uplo, trans, diag, n, int(A), lda, int(x), incx)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-# Double precision complex BLAS2 functions:
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasZgerc.restype = None
-    _libcublas.cublasZgerc.argtypes = [ctypes.c_int,
-                                       ctypes.c_int,
-                                       cuda.cuDoubleComplex,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasZgerc(m, n, alpha, x, incx, y, incy, A, lda):
-    """
-    Rank-1 operation on complex general matrix.
-
-    """
-    
-    _libcublas.cublasZgerc(m, n, cuda.cuDoubleComplex(alpha.real,
-                                                      alpha.imag),
-                           int(x), incx, int(y), incy, int(A), lda)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasZgeru.restype = None
-    _libcublas.cublasZgeru.argtypes = [ctypes.c_int,
-                                       ctypes.c_int,
-                                       cuda.cuDoubleComplex,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasZgeru(m, n, alpha, x, incx, y, incy, A, lda):
-    """
-    Rank-1 operation on complex general matrix.
-
-    """
-    
-    _libcublas.cublasZgeru(m, n, cuda.cuDoubleComplex(alpha.real,
-                                                      alpha.imag),
-                           int(x), incx, int(y), incy, int(A), lda)
     status = cublasGetError()
     cublasCheckStatus(status)
 
@@ -4216,71 +4492,30 @@ def cublasZhbmv(uplo, n, k, alpha, A, lda, x, incx, beta, y, incy):
     status = cublasGetError()
     cublasCheckStatus(status)
 
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasZhemv.restype = None
-    _libcublas.cublasZhemv.argtypes = [ctypes.c_char,
+# CHPMV, ZHPMV (need to convert to CUDA 4.0)
+if cuda.cudaDriverGetVersion() < 4000:    
+    _libcublas.cublasChpmv.restype = None
+    _libcublas.cublasChpmv.argtypes = [ctypes.c_char,
                                        ctypes.c_int,
-                                       cuda.cuDoubleComplex,
+                                       cuda.cuFloatComplex,
+                                       ctypes.c_void_p,
                                        ctypes.c_void_p,
                                        ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       cuda.cuDoubleComplex,
+                                       cuda.cuFloatComplex,
                                        ctypes.c_void_p,
                                        ctypes.c_int]
-def cublasZhemv(uplo, n, alpha, A, lda, x, incx, beta, y, incy):
+def cublasChpmv(uplo, n, alpha, AP, x, incx, beta, y, incy):
     """
-    Matrix-vector product for Hermitian matrix.
+    Matrix-vector product for Hermitian-packed matrix.
 
     """
     
-    _libcublas.cublasZhemv(uplo, n, cuda.cuDoubleComplex(alpha.real,
-                                                         alpha.imag),
-                           int(A), lda, int(x), incx,
-                           cuda.cuDoubleComplex(beta.real, beta.imag),
+    _libcublas.cublasChpmv(uplo, n, cuda.cuFloatComplex(alpha.real,
+                                                        alpha.imag),
+                           int(AP), int(x), incx,
+                           cuda.cuFloatComplex(beta.real,
+                                               beta.imag),
                            int(y), incy)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasZher.restype = None
-    _libcublas.cublasZher.argtypes = [ctypes.c_char,
-                                      ctypes.c_int,
-                                      ctypes.c_double,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int]
-def cublasZher(uplo, n, alpha, x, incx, A, lda):
-    """
-    Rank-1 operation on Hermitian matrix.
-
-    """
-    
-    _libcublas.cublasZher(uplo, n, alpha, int(x), incx, int(A), lda)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasZher2.restype = None
-    _libcublas.cublasZher2.argtypes = [ctypes.c_char,
-                                       ctypes.c_int,
-                                       cuda.cuDoubleComplex,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasZher2(uplo, n, alpha, x, incx, y, incy, A, lda):
-    """
-    Rank-2 operation on Hermitian matrix.
-
-    """
-    
-    _libcublas.cublasZher2(uplo, n, cuda.cuDoubleComplex(alpha.real,
-                                                         alpha.imag),
-                           int(x), incx, int(y), incy, int(A), lda)
     status = cublasGetError()
     cublasCheckStatus(status)
 
@@ -4309,6 +4544,115 @@ def cublasZhpmv(uplo, n, alpha, AP, x, incx, beta, y, incy):
     status = cublasGetError()
     cublasCheckStatus(status)
 
+# CHER, ZHER (need to convert to CUDA 4.0) 
+if cuda.cudaDriverGetVersion() < 4000:    
+    _libcublas.cublasCher.restype = None
+    _libcublas.cublasCher.argtypes = [ctypes.c_char,
+                                      ctypes.c_int,
+                                      ctypes.c_float,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int]
+def cublasCher(uplo, n, alpha, x, incx, A, lda):
+    """
+    Rank-1 operation on Hermitian matrix.
+
+    """
+
+    _libcublas.cublasCher(uplo, n, alpha, int(x), incx, int(A), lda)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasZher.restype = None
+    _libcublas.cublasZher.argtypes = [ctypes.c_char,
+                                      ctypes.c_int,
+                                      ctypes.c_double,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int]
+def cublasZher(uplo, n, alpha, x, incx, A, lda):
+    """
+    Rank-1 operation on Hermitian matrix.
+
+    """
+    
+    _libcublas.cublasZher(uplo, n, alpha, int(x), incx, int(A), lda)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+
+# CHER2, ZHER2 (need to convert to CUDA 4.0)
+if cuda.cudaDriverGetVersion() < 4000:    
+    _libcublas.cublasCher2.restype = None
+    _libcublas.cublasCher2.argtypes = [ctypes.c_char,
+                                       ctypes.c_int,
+                                       cuda.cuFloatComplex,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasCher2(uplo, n, alpha, x, incx, y, incy, A, lda):
+    """
+    Rank-2 operation on Hermitian matrix.
+
+
+    """
+    
+    _libcublas.cublasCher2(uplo, n, cuda.cuFloatComplex(alpha.real,
+                                                        alpha.imag),
+                           int(x), incx, int(y), incy,
+                           int(A), lda)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasZher2.restype = None
+    _libcublas.cublasZher2.argtypes = [ctypes.c_char,
+                                       ctypes.c_int,
+                                       cuda.cuDoubleComplex,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasZher2(uplo, n, alpha, x, incx, y, incy, A, lda):
+    """
+    Rank-2 operation on Hermitian matrix.
+
+    """
+    
+    _libcublas.cublasZher2(uplo, n, cuda.cuDoubleComplex(alpha.real,
+                                                         alpha.imag),
+                           int(x), incx, int(y), incy, int(A), lda)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+
+# CHPR, ZHPR (need to convert to CUDA 4.0) 
+if cuda.cudaDriverGetVersion() < 4000:    
+    _libcublas.cublasChpr.restype = None
+    _libcublas.cublasChpr.argtypes = [ctypes.c_char,
+                                      ctypes.c_int,
+                                      ctypes.c_float,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p]
+def cublasChpr(uplo, n, alpha, x, incx, AP):
+    """
+    Rank-1 operation on Hermitian-packed matrix.
+    
+    """
+    
+    _libcublas.cublasChpr(uplo, n, alpha, int(x), incx, int(AP))
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
 if cuda.cudaDriverGetVersion() < 4000:
     _libcublas.cublasZhpr.restype = None
     _libcublas.cublasZhpr.argtypes = [ctypes.c_char,
@@ -4324,6 +4668,29 @@ def cublasZhpr(uplo, n, alpha, x, incx, AP):
     """
     
     _libcublas.cublasZhpr(uplo, n, alpha, int(x), incx, int(AP))
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+# CHPR2, ZHPR2 (need to convert to CUDA 4.0)
+if cuda.cudaDriverGetVersion() < 4000:    
+    _libcublas.cublasChpr2.restype = None
+    _libcublas.cublasChpr2.argtypes = [ctypes.c_char,
+                                       ctypes.c_int,
+                                       cuda.cuFloatComplex,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p]
+def cublasChpr2(uplo, n, alpha, x, inx, y, incy, AP):
+    """
+    Rank-2 operation on Hermitian-packed matrix.
+    
+    """
+
+    _libcublas.cublasChpr2(uplo, n, cuda.cuFloatComplex(alpha.real,
+                                                        alpha.imag),
+                           int(x), incx, int(y), incy, int(AP))
     status = cublasGetError()
     cublasCheckStatus(status)
 
@@ -4349,127 +4716,7 @@ def cublasZhpr2(uplo, n, alpha, x, inx, y, incy, AP):
     status = cublasGetError()
     cublasCheckStatus(status)
 
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasZtbmv.restype = None
-    _libcublas.cublasZtbmv.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasZtbmv(uplo, trans, diag, n, k, A, lda, x, incx):
-    """
-    Matrix-vector product for complex triangular-banded matrix.
-
-    """
-    
-    _libcublas.cublasZtbmv(uplo, trans, diag, n, k, int(A), lda, int(x), incx)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasZtbsv.restype = None
-    _libcublas.cublasZtbsv.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasZtbsv(uplo, trans, diag, n, k, A, lda, x, incx):
-    """
-    Solve complex triangular-banded system with one right-hand side.
-
-    """
-    
-    _libcublas.cublasZtbsv(uplo, trans, diag, n, k, int(A), lda, int(x), incx)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasZtpmv.restype = None
-    _libcublas.cublasZtpmv.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasZtpmv(uplo, trans, diag, n, AP, x, incx):
-    """
-    Matrix-vector product for complex triangular-packed matrix.
-
-    """
-    
-    _libcublas.cublasZtpmv(uplo, trans, diag, n, int(AP), int(x), incx)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasZtpsv.restype = None
-    _libcublas.cublasZtpsv.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasZtpsv(uplo, trans, diag, n, AP, x, incx):
-    """
-    Solve complex triangular-packed system with one right-hand size.
-
-    """
-    
-    _libcublas.cublasZtpsv(uplo, trans, diag, n, int(AP), int(x), incx)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasZtrmv.restype = None
-    _libcublas.cublasZtrmv.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasZtrmv(uplo, trans, diag, n, A, lda, x, incx):
-    """
-    Matrix-vector product for complex triangular matrix.
-
-    """
-    
-    _libcublas.cublasZtrmv(uplo, trans, diag, n, int(A), lda, int(x), incx)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasZtrsv.restype = None
-    _libcublas.cublasZtrsv.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasZtrsv(uplo, trans, diag, n, A, lda, x, incx):
-    """
-    Solve complex triangular system with one right-hand side.
-
-    """
-    
-    _libcublas.cublasZtrsv(uplo, trans, diag, n, int(A), lda, int(x), incx)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-# Single precision real BLAS3:
+# SGEMM, CGEMM, DGEMM, ZGEMM
 if cuda.cudaDriverGetVersion() < 4000:
     _libcublas.cublasSgemm.restype = None
     _libcublas.cublasSgemm.argtypes = [ctypes.c_char,
@@ -4485,17 +4732,234 @@ if cuda.cudaDriverGetVersion() < 4000:
                                        ctypes.c_float,
                                        ctypes.c_void_p,
                                        ctypes.c_int]
-def cublasSgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
-    """
-    Matrix-matrix product for general matrix.
+    def cublasSgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
+        """
+        Matrix-matrix product for general matrix.
+        
+        """
+        
+        _libcublas.cublasSgemm(transa, transb, m, n, k, alpha,
+                               int(A), lda, int(B), ldb, beta, int(C), ldc)
+        status = cublasGetError()
+        cublasCheckStatus(status)
+else:
+    _libcublas.cublasSgemm_v2.restype = int
+    _libcublas.cublasSgemm_v2.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int]
+    def cublasSgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
+        """
+        Matrix-matrix product for real general matrix.
+        
+        """
 
-    """
+        handle = cublasGetCurrentCtx()        
+        status = _libcublas.cublasSgemm_v2(handle,
+                                           _CUBLAS_OP[transa],
+                                           _CUBLAS_OP[transb], m, n, k, 
+                                           ctypes.byref(ctypes.c_float(alpha)),
+                                           int(A), lda, int(B), ldb,
+                                           ctypes.byref(ctypes.c_float(beta)),
+                                           int(C), ldc)
+        cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:    
+    _libcublas.cublasCgemm.restype = None
+    _libcublas.cublasCgemm.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       cuda.cuFloatComplex,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       cuda.cuFloatComplex,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+    def cublasCgemm(transa, transb, m, n, k, alpha, x, lda, y, ldb, beta, C, ldc):
+        """
+        Matrix-matrix product for complex general matrix.
+        
+        """
+        
+        _libcublas.cublasCgemm(transa, transb, m, n, k,
+                               cuda.cuFloatComplex(alpha.real,
+                                                   alpha.imag),
+                               int(x), lda, int(y), ldb,
+                               cuda.cuFloatComplex(beta.real, beta.imag),
+                               int(C), ldc)
+        status = cublasGetError()
+        cublasCheckStatus(status)
+else:
+    _libcublas.cublasCgemm_v2.restype = int
+    _libcublas.cublasCgemm_v2.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int]
+    def cublasCgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
+        """
+        Matrix-matrix product for complex general matrix.
+        
+        """
+
+        handle = cublasGetCurrentCtx()        
+        status = _libcublas.cublasCgemm_v2(handle,
+                                           _CUBLAS_OP[transa],
+                                           _CUBLAS_OP[transb], m, n, k, 
+                                           ctypes.byref(cuda.cuFloatComplex(alpha.real,
+                                                                            alpha.imag)),
+                                           int(A), lda, int(B), ldb,
+                                           ctypes.byref(cuda.cuFloatComplex(beta.real,
+                                                                            beta.imag)),
+                                           int(C), ldc)
+        cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasDgemm.restype = None
+    _libcublas.cublasDgemm.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_double,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_double,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+    def cublasDgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
+        """
+        Matrix-matrix product for real general matrix.
+        
+        """
+        
+        _libcublas.cublasDgemm(transa, transb, m, n, k, alpha,
+                               int(A), lda, int(B), ldb, beta, int(C), ldc)
+        status = cublasGetError()
+        cublasCheckStatus(status)
+else:
+    _libcublas.cublasDgemm_v2.restype = int
+    _libcublas.cublasDgemm_v2.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int]
+    def cublasDgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
+        """
+        Matrix-matrix product for real general matrix.
+        
+        """
+
+        handle = cublasGetCurrentCtx()        
+        status = _libcublas.cublasDgemm_v2(handle,
+                                           _CUBLAS_OP[transa],
+                                           _CUBLAS_OP[transb], m, n, k, 
+                                           ctypes.byref(ctypes.c_double(alpha)),
+                                           int(A), lda, int(B), ldb,
+                                           ctypes.byref(ctypes.c_double(beta)),
+                                           int(C), ldc)
+        cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasZgemm.restype = None
+    _libcublas.cublasZgemm.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       cuda.cuDoubleComplex,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       cuda.cuDoubleComplex,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+    def cublasZgemm(transa, transb, m, n, k,
+                    alpha, x, lda, y, ldb, beta, C, ldc):
+        """
+        Matrix-matrix product for complex general matrix.
+        
+        """
     
-    _libcublas.cublasSgemm(transa, transb, m, n, k, alpha,
-                           int(A), lda, int(B), ldb, beta, int(C), ldc)
-    status = cublasGetError()
-    cublasCheckStatus(status)
+        _libcublas.cublasZgemm(transa, transb, m, n, k,
+                               cuda.cuDoubleComplex(alpha.real,
+                                                    alpha.imag),
+                               int(x), lda, int(y), ldb,
+                               cuda.cuDoubleComplex(beta.real,
+                                                    beta.imag),
+                               int(C), ldc)
+        status = cublasGetError()
+        cublasCheckStatus(status)
+else:
+    _libcublas.cublasZgemm_v2.restype = int
+    _libcublas.cublasZgemm_v2.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int]
+    def cublasZgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
+        """
+        Matrix-matrix product for complex general matrix.
+        
+        """
 
+        handle = cublasGetCurrentCtx()        
+        status = _libcublas.cublasZgemm_v2(handle,
+                                           _CUBLAS_OP[transa],
+                                           _CUBLAS_OP[transb], m, n, k, 
+                                           ctypes.byref(cuda.cuDoubleComplex(alpha.real,
+                                                                             alpha.imag)),
+                                           int(A), lda, int(B), ldb,
+                                           ctypes.byref(cuda.cuDoubleComplex(beta.real,
+                                                                             beta.imag)),
+                                           int(C), ldc)
+        cublasCheckStatus(status)
+    
+# SSYMM, DSYMM, CSYMM, ZSYMM (need to convert to CUDA 4.0) 
 if cuda.cudaDriverGetVersion() < 4000:
     _libcublas.cublasSsymm.restype = None
     _libcublas.cublasSsymm.argtypes = [ctypes.c_char,
@@ -4522,210 +4986,28 @@ def cublasSsymm(side, uplo, m, n, alpha, A, lda, B, ldb, beta, C, ldc):
     cublasCheckStatus(status)
 
 if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasSsyrk.restype = None
-    _libcublas.cublasSsyrk.argtypes = [ctypes.c_char,
+    _libcublas.cublasDsymm.restype = None
+    _libcublas.cublasDsymm.argtypes = [ctypes.c_char,
                                        ctypes.c_char,
                                        ctypes.c_int,
                                        ctypes.c_int,
-                                       ctypes.c_float,
+                                       ctypes.c_double,
                                        ctypes.c_void_p,
                                        ctypes.c_int,
-                                       ctypes.c_float,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_double,
                                        ctypes.c_void_p,
                                        ctypes.c_int]
-def cublasSsyrk(uplo, trans, n, k, alpha, A, lda, beta, C, ldc):
+
+def cublasDsymm(side, uplo, m, n, alpha, A, lda, B, ldb, beta, C, ldc):
     """
-    Rank-k operation on real symmetric matrix.
+    Matrix-matrix product for real symmetric matrix.
 
     """
     
-    _libcublas.cublasSsyrk(uplo, trans, n, k, alpha,
-                           int(A), lda, beta, int(C), ldc)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasSsyr2k.restype = None
-    _libcublas.cublasSsyr2k.argtypes = [ctypes.c_char,
-                                        ctypes.c_char,
-                                        ctypes.c_int,
-                                        ctypes.c_int,
-                                        ctypes.c_float,
-                                        ctypes.c_void_p,
-                                        ctypes.c_int,
-                                        ctypes.c_void_p,
-                                        ctypes.c_int,
-                                        ctypes.c_float,
-                                        ctypes.c_void_p,
-                                        ctypes.c_int]
-def cublasSsyr2k(uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
-    """
-    Rank-2k operation on real symmetric matrix.
-
-    """
-    
-    _libcublas.cublasSsyr2k(uplo, trans, n, k, alpha,
-                            int(A), lda, int(B), ldb, beta, int(C), ldc)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasStrmm.restype = None
-    _libcublas.cublasStrmm.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_float,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasStrmm(side, uplo, transa, diag, m, n, alpha, A, lda, B, ldb):
-    """
-    Matrix-matrix product for real triangular matrix.
-
-    """
-    
-    _libcublas.cublasStrmm(side, uplo, transa, diag, m, n, alpha,
-                           int(A), lda, int(B), ldb)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasStrsm.restype = None
-    _libcublas.cublasStrsm.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_float,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasStrsm(side, uplo, transa, diag, m, n, alpha, A, lda, B, ldb):
-    """
-    Solve a real triangular system with multiple right-hand sides.
-
-    """
-    
-    _libcublas.cublasStrsm(side, uplo, transa, diag, m, n, alpha,
-                           int(A), lda, int(B), ldb)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-# Single precision complex BLAS3 functions:
-if cuda.cudaDriverGetVersion() < 4000:    
-    _libcublas.cublasCgemm.restype = None
-    _libcublas.cublasCgemm.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       cuda.cuFloatComplex,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       cuda.cuFloatComplex,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasCgemm(transa, transb, m, n, k, alpha, x, lda, y, ldb, beta, C, ldc):
-    """
-    Matrix-matrix product for complex general matrix.
-
-    """
-    
-    _libcublas.cublasCgemm(transa, transb, m, n, k,
-                           cuda.cuFloatComplex(alpha.real,
-                                               alpha.imag),
-                           int(x), lda, int(y), ldb,
-                           cuda.cuFloatComplex(beta.real, beta.imag),
-                           int(C), ldc)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasChemm.restype = None
-    _libcublas.cublasChemm.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       cuda.cuFloatComplex,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       cuda.cuFloatComplex,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasChemm(side, uplo, m, n, alpha, A, lda, B, ldb, beta, C, ldc):
-    """
-    Matrix-matrix product for complex Hermitian matrix.
-
-    """
-    
-    _libcublas.cublasChemm(side, uplo, m, n,
-                           cuda.cuFloatComplex(alpha.real,
-                                               alpha.imag),
-                           int(A), lda, int(B), ldb,
-                           cuda.cuFloatComplex(beta.real, beta.imag),
-                           int(C), ldc)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasCherk.restype = None
-    _libcublas.cublasCherk.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_float,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_float,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasCherk(uplo, trans, n, k, alpha, A, lda, beta, C, ldc):
-    """
-    Rank-k operation on Hermitian matrix.
-
-    """
-    
-    _libcublas.cublasCherk(uplo, trans, n, k, alpha,
-                           int(A), lda, beta,
-                           int(C), ldc)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasCher2k.restype = None
-    _libcublas.cublasCher2k.argtypes = [ctypes.c_char,
-                                        ctypes.c_char,
-                                        ctypes.c_int,
-                                        ctypes.c_int,
-                                        cuda.cuFloatComplex,
-                                        ctypes.c_void_p,
-                                        ctypes.c_int,
-                                        ctypes.c_void_p,
-                                        ctypes.c_int,
-                                        ctypes.c_float,
-                                        ctypes.c_void_p,
-                                        ctypes.c_int]
-def cublasCher2k(uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
-    """
-    Rank-2k operation on Hermitian matrix.
-
-    """
-    
-    _libcublas.cublasCher2k(uplo, trans, n, k,
-                            cuda.cuFloatComplex(alpha.real,
-                                                alpha.imag),
-                            int(A), lda, int(B), ldb, beta,
-                            int(C), ldc)
+    _libcublas.cublasDsymm(side, uplo, m, n, alpha,
+                           int(A), lda, int(B), ldb, beta, int(C), ldc)
     status = cublasGetError()
     cublasCheckStatus(status)
 
@@ -4759,6 +5041,84 @@ def cublasCsymm(side, uplo, m, n, alpha, A, lda, B, ldb, beta, C, ldc):
     cublasCheckStatus(status)
 
 if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasZsymm.restype = None
+    _libcublas.cublasZsymm.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       cuda.cuDoubleComplex,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       cuda.cuDoubleComplex,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasZsymm(side, uplo, m, n, alpha,
+                A, lda, B, ldb, beta, C, ldc):
+    """
+    Matrix-matrix product for complex symmetric matrix.
+
+    """
+    
+    _libcublas.cublasZsymm(side, uplo, m, n,
+                           cuda.cuDoubleComplex(alpha.real,
+                                                alpha.imag),
+                           int(A), lda, int(B), ldb,
+                           cuda.cuDoubleComplex(beta.real,
+                                                beta.imag),
+                           int(C), ldc)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+# SSYRK, DSYRK, CSYRK, ZSYRK (need to convert to CUDA 4.0)
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasSsyrk.restype = None
+    _libcublas.cublasSsyrk.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_float,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_float,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasSsyrk(uplo, trans, n, k, alpha, A, lda, beta, C, ldc):
+    """
+    Rank-k operation on real symmetric matrix.
+
+    """
+    
+    _libcublas.cublasSsyrk(uplo, trans, n, k, alpha,
+                           int(A), lda, beta, int(C), ldc)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasDsyrk.restype = None
+    _libcublas.cublasDsyrk.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_double,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_double,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasDsyrk(uplo, trans, n, k, alpha, A, lda, beta, C, ldc):
+    """
+    Rank-k operation on real symmetric matrix.
+
+    """
+    
+    _libcublas.cublasDsyrk(uplo, trans, n, k, alpha,
+                           int(A), lda, beta, int(C), ldc)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:
     _libcublas.cublasCsyrk.restype = None
     _libcublas.cublasCsyrk.argtypes = [ctypes.c_char,
                                        ctypes.c_char,
@@ -4782,6 +5142,85 @@ def cublasCsyrk(uplo, trans, n, k, alpha, A, lda, beta, C, ldc):
                            int(A), lda,
                            cuda.cuFloatComplex(beta.real, beta.imag),
                            int(C), ldc)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasZsyrk.restype = None
+    _libcublas.cublasZsyrk.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       cuda.cuDoubleComplex,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       cuda.cuDoubleComplex,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasZsyrk(uplo, trans, n, k, alpha, A, lda, beta, C, ldc):
+    """
+    Rank-k operation on complex symmetric matrix.
+
+    """
+    
+    _libcublas.cublasZsyrk(uplo, trans, n, k,
+                           cuda.cuDoubleComplex(alpha.real,
+                                                alpha.imag),
+                           int(A), lda,
+                           cuda.cuDoubleComplex(beta.real,
+                                                beta.imag),
+                           int(C), ldc)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+# SSYR2K, DSYR2K, CSYR2K, ZSYR2K (need to convert to CUDA 4.0)
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasSsyr2k.restype = None
+    _libcublas.cublasSsyr2k.argtypes = [ctypes.c_char,
+                                        ctypes.c_char,
+                                        ctypes.c_int,
+                                        ctypes.c_int,
+                                        ctypes.c_float,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int,
+                                        ctypes.c_float,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int]
+def cublasSsyr2k(uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
+    """
+    Rank-2k operation on real symmetric matrix.
+
+    """
+    
+    _libcublas.cublasSsyr2k(uplo, trans, n, k, alpha,
+                            int(A), lda, int(B), ldb, beta, int(C), ldc)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasDsyr2k.restype = None
+    _libcublas.cublasDsyr2k.argtypes = [ctypes.c_char,
+                                        ctypes.c_char,
+                                        ctypes.c_int,
+                                        ctypes.c_int,
+                                        ctypes.c_double,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int,
+                                        ctypes.c_double,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int]
+def cublasDsyr2k(uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
+    """
+    Rank-2k operation on real symmetric matrix.
+
+    """
+
+    _libcublas.cublasDsyr2k(uplo, trans, n, k, alpha,
+                            int(A), lda, int(B), ldb, beta, int(C), ldc)
     status = cublasGetError()
     cublasCheckStatus(status)
 
@@ -4814,6 +5253,84 @@ def cublasCsyr2k(uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
     status = cublasGetError()
     cublasCheckStatus(status)
 
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasZsyr2k.restype = None
+    _libcublas.cublasZsyr2k.argtypes = [ctypes.c_char,
+                                        ctypes.c_char,
+                                        ctypes.c_int,
+                                        ctypes.c_int,
+                                        cuda.cuDoubleComplex,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int,
+                                        cuda.cuDoubleComplex,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int]
+def cublasZsyr2k(uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
+    """
+    Rank-2k operation on complex symmetric matrix.
+    
+    """
+    
+    _libcublas.cublasZsyr2k(uplo, trans, n, k,
+                            cuda.cuDoubleComplex(alpha.real,
+                                                 alpha.imag),
+                            int(A), lda, int(B), ldb,
+                            cuda.cuDoubleComplex(beta.real,
+                                                 beta.imag),
+                            int(C), ldc)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+# STRMM, DTRMM, CTRMM, ZTRMM (need to convert to CUDA 4.0) 
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasStrmm.restype = None
+    _libcublas.cublasStrmm.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_float,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasStrmm(side, uplo, transa, diag, m, n, alpha, A, lda, B, ldb):
+    """
+    Matrix-matrix product for real triangular matrix.
+
+    """
+    
+    _libcublas.cublasStrmm(side, uplo, transa, diag, m, n, alpha,
+                           int(A), lda, int(B), ldb)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasDtrmm.restype = None
+    _libcublas.cublasDtrmm.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_double,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasDtrmm(side, uplo, transa, diag, m, n, alpha, A, lda, B, ldb):
+    """
+    Matrix-matrix product for real triangular matrix.
+
+    """
+    
+    _libcublas.cublasDtrmm(side, uplo, transa, diag, m, n, alpha,
+                           int(A), lda, int(B), ldb)
+    status = cublasGetError()
+    cublasCheckStatus(status)
 
 if cuda.cudaDriverGetVersion() < 4000:
     _libcublas.cublasCtrmm.restype = None
@@ -4837,6 +5354,81 @@ def cublasCtrmm(side, uplo, transa, diag, m, n, alpha, A, lda, B, ldb):
     _libcublas.cublasCtrmm(side, uplo, transa, diag, m, n,
                            cuda.cuFloatComplex(alpha.real,
                                                alpha.imag),
+                           int(A), lda, int(B), ldb)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasZtrmm.restype = None
+    _libcublas.cublasZtrmm.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       cuda.cuDoubleComplex,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasZtrmm(side, uplo, transa, diag, m, n, alpha, A, lda, B, ldb):
+    """
+    Matrix-matrix product for complex triangular matrix.
+
+    """
+    
+    _libcublas.cublasZtrmm(side, uplo, transa, diag, m, n,
+                           cuda.cuDoubleComplex(alpha.real,
+                                                alpha.imag),
+                           int(A), lda, int(B), ldb)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+# STRSM, DTRSM, CTRSM, ZTRSM (need to convert to CUDA 4.0)
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasStrsm.restype = None
+    _libcublas.cublasStrsm.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_float,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasStrsm(side, uplo, transa, diag, m, n, alpha, A, lda, B, ldb):
+    """
+    Solve a real triangular system with multiple right-hand sides.
+
+    """
+    
+    _libcublas.cublasStrsm(side, uplo, transa, diag, m, n, alpha,
+                           int(A), lda, int(B), ldb)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasDtrsm.restype = None
+    _libcublas.cublasDtrsm.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_double,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasDtrsm(side, uplo, transa, diag, m, n, alpha, A, lda, B, ldb):
+    """
+    Solve a real triangular system with multiple right-hand sides.
+
+    """
+    
+    _libcublas.cublasDtrsm(side, uplo, transa, diag, m, n, alpha,
                            int(A), lda, int(B), ldb)
     status = cublasGetError()
     cublasCheckStatus(status)
@@ -4867,184 +5459,58 @@ def cublasCtrsm(side, uplo, transa, diag, m, n, alpha, A, lda, B, ldb):
     status = cublasGetError()
     cublasCheckStatus(status)
 
-# Double precision real BLAS3:
 if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasDgemm.restype = None
-    _libcublas.cublasDgemm.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_double,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_double,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasDgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
-    """
-    Matrix-matrix product for real general matrix.
-
-    """
-    
-    _libcublas.cublasDgemm(transa, transb, m, n, k, alpha,
-                           int(A), lda, int(B), ldb, beta, int(C), ldc)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasDsymm.restype = None
-    _libcublas.cublasDsymm.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_double,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_double,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-
-def cublasDsymm(side, uplo, m, n, alpha, A, lda, B, ldb, beta, C, ldc):
-    """
-    Matrix-matrix product for real symmetric matrix.
-
-    """
-    
-    _libcublas.cublasDsymm(side, uplo, m, n, alpha,
-                           int(A), lda, int(B), ldb, beta, int(C), ldc)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasDsyrk.restype = None
-    _libcublas.cublasDsyrk.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_double,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_double,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasDsyrk(uplo, trans, n, k, alpha, A, lda, beta, C, ldc):
-    """
-    Rank-k operation on real symmetric matrix.
-
-    """
-    
-    _libcublas.cublasDsyrk(uplo, trans, n, k, alpha,
-                           int(A), lda, beta, int(C), ldc)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasDsyr2k.restype = None
-    _libcublas.cublasDsyr2k.argtypes = [ctypes.c_char,
-                                        ctypes.c_char,
-                                        ctypes.c_int,
-                                        ctypes.c_int,
-                                        ctypes.c_double,
-                                        ctypes.c_void_p,
-                                        ctypes.c_int,
-                                        ctypes.c_void_p,
-                                        ctypes.c_int,
-                                        ctypes.c_double,
-                                        ctypes.c_void_p,
-                                        ctypes.c_int]
-def cublasDsyr2k(uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
-    """
-    Rank-2k operation on real symmetric matrix.
-
-    """
-
-    _libcublas.cublasDsyr2k(uplo, trans, n, k, alpha,
-                            int(A), lda, int(B), ldb, beta, int(C), ldc)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasDtrmm.restype = None
-    _libcublas.cublasDtrmm.argtypes = [ctypes.c_char,
+    _libcublas.cublasZtrsm.restype = None
+    _libcublas.cublasZtrsm.argtypes = [ctypes.c_char,
                                        ctypes.c_char,
                                        ctypes.c_char,
                                        ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_double,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasDtrmm(side, uplo, transa, diag, m, n, alpha, A, lda, B, ldb):
-    """
-    Matrix-matrix product for real triangular matrix.
-
-    """
-    
-    _libcublas.cublasDtrmm(side, uplo, transa, diag, m, n, alpha,
-                           int(A), lda, int(B), ldb)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasDtrsm.restype = None
-    _libcublas.cublasDtrsm.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_double,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasDtrsm(side, uplo, transa, diag, m, n, alpha, A, lda, B, ldb):
-    """
-    Solve a real triangular system with multiple right-hand sides.
-
-    """
-    
-    _libcublas.cublasDtrsm(side, uplo, transa, diag, m, n, alpha,
-                           int(A), lda, int(B), ldb)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-    
-# Double precision complex BLAS3 functions:
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasZgemm.restype = None
-    _libcublas.cublasZgemm.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
                                        ctypes.c_int,
                                        ctypes.c_int,
                                        cuda.cuDoubleComplex,
                                        ctypes.c_void_p,
                                        ctypes.c_int,
                                        ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       cuda.cuDoubleComplex,
-                                       ctypes.c_void_p,
                                        ctypes.c_int]
-def cublasZgemm(transa, transb, m, n, k,
-                alpha, x, lda, y, ldb, beta, C, ldc):
+def cublasZtrsm(side, uplo, transa, diag, m, n, alpha, A, lda, B, ldb):
     """
-    Matrix-matrix product for complex general matrix.
+    Solve complex triangular system with multiple right-hand sides.
 
     """
     
-    _libcublas.cublasZgemm(transa, transb, m, n, k,
+    _libcublas.cublasZtrsm(side, uplo, transa, diag, m, n,
                            cuda.cuDoubleComplex(alpha.real,
-                                                alpha.imag),
-                           int(x), lda, int(y), ldb,
-                           cuda.cuDoubleComplex(beta.real,
-                                                beta.imag),
+                                                alpha.imag),                           
+                           int(A), lda, int(B), ldb)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
+# CHEMM, ZHEMM (need to convert to CUDA 4.0)
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasChemm.restype = None
+    _libcublas.cublasChemm.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       cuda.cuFloatComplex,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       cuda.cuFloatComplex,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasChemm(side, uplo, m, n, alpha, A, lda, B, ldb, beta, C, ldc):
+    """
+    Matrix-matrix product for complex Hermitian matrix.
+
+    """
+    
+    _libcublas.cublasChemm(side, uplo, m, n,
+                           cuda.cuFloatComplex(alpha.real,
+                                               alpha.imag),
+                           int(A), lda, int(B), ldb,
+                           cuda.cuFloatComplex(beta.real, beta.imag),
                            int(C), ldc)
     status = cublasGetError()
     cublasCheckStatus(status)
@@ -5080,6 +5546,31 @@ def cublasZhemm(side, uplo, m, n, alpha,
     status = cublasGetError()
     cublasCheckStatus(status)
 
+# CHERK, ZHERK (need to convert to CUDA 4.0)
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasCherk.restype = None
+    _libcublas.cublasCherk.argtypes = [ctypes.c_char,
+                                       ctypes.c_char,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_float,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_float,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+def cublasCherk(uplo, trans, n, k, alpha, A, lda, beta, C, ldc):
+    """
+    Rank-k operation on Hermitian matrix.
+
+    """
+    
+    _libcublas.cublasCherk(uplo, trans, n, k, alpha,
+                           int(A), lda, beta,
+                           int(C), ldc)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+
 if cuda.cudaDriverGetVersion() < 4000:
     _libcublas.cublasZherk.restype = None
     _libcublas.cublasZherk.argtypes = [ctypes.c_char,
@@ -5104,6 +5595,35 @@ def cublasZherk(uplo, trans, n, k, alpha, A, lda, beta, C, ldc):
     status = cublasGetError()
     cublasCheckStatus(status)
 
+# CHER2K, ZHER2K (need to convert to CUDA 4.0)
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasCher2k.restype = None
+    _libcublas.cublasCher2k.argtypes = [ctypes.c_char,
+                                        ctypes.c_char,
+                                        ctypes.c_int,
+                                        ctypes.c_int,
+                                        cuda.cuFloatComplex,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int,
+                                        ctypes.c_float,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int]
+def cublasCher2k(uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
+    """
+    Rank-2k operation on Hermitian matrix.
+
+    """
+    
+    _libcublas.cublasCher2k(uplo, trans, n, k,
+                            cuda.cuFloatComplex(alpha.real,
+                                                alpha.imag),
+                            int(A), lda, int(B), ldb, beta,
+                            int(C), ldc)
+    status = cublasGetError()
+    cublasCheckStatus(status)
+        
 if cuda.cudaDriverGetVersion() < 4000:
     _libcublas.cublasZher2k.restype = None
     _libcublas.cublasZher2k.argtypes = [ctypes.c_char,
@@ -5129,147 +5649,6 @@ def cublasZher2k(uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
                                                  alpha.imag),
                             int(A), lda, int(B), ldb,
                             beta, int(C), ldc)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasZsymm.restype = None
-    _libcublas.cublasZsymm.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       cuda.cuDoubleComplex,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       cuda.cuDoubleComplex,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasZsymm(side, uplo, m, n, alpha,
-                A, lda, B, ldb, beta, C, ldc):
-    """
-    Matrix-matrix product for complex symmetric matrix.
-
-    """
-    
-    _libcublas.cublasZsymm(side, uplo, m, n,
-                           cuda.cuDoubleComplex(alpha.real,
-                                                alpha.imag),
-                           int(A), lda, int(B), ldb,
-                           cuda.cuDoubleComplex(beta.real,
-                                                beta.imag),
-                           int(C), ldc)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasZsyrk.restype = None
-    _libcublas.cublasZsyrk.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       cuda.cuDoubleComplex,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       cuda.cuDoubleComplex,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasZsyrk(uplo, trans, n, k, alpha, A, lda, beta, C, ldc):
-    """
-    Rank-k operation on complex symmetric matrix.
-
-    """
-    
-    _libcublas.cublasZsyrk(uplo, trans, n, k,
-                           cuda.cuDoubleComplex(alpha.real,
-                                                alpha.imag),
-                           int(A), lda,
-                           cuda.cuDoubleComplex(beta.real,
-                                                beta.imag),
-                           int(C), ldc)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasZsyr2k.restype = None
-    _libcublas.cublasZsyr2k.argtypes = [ctypes.c_char,
-                                        ctypes.c_char,
-                                        ctypes.c_int,
-                                        ctypes.c_int,
-                                        cuda.cuDoubleComplex,
-                                        ctypes.c_void_p,
-                                        ctypes.c_int,
-                                        ctypes.c_void_p,
-                                        ctypes.c_int,
-                                        cuda.cuDoubleComplex,
-                                        ctypes.c_void_p,
-                                        ctypes.c_int]
-def cublasZsyr2k(uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
-    """
-    Rank-2k operation on complex symmetric matrix.
-    
-    """
-    
-    _libcublas.cublasZsyr2k(uplo, trans, n, k,
-                            cuda.cuDoubleComplex(alpha.real,
-                                                 alpha.imag),
-                            int(A), lda, int(B), ldb,
-                            cuda.cuDoubleComplex(beta.real,
-                                                 beta.imag),
-                            int(C), ldc)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasZtrmm.restype = None
-    _libcublas.cublasZtrmm.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       cuda.cuDoubleComplex,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasZtrmm(side, uplo, transa, diag, m, n, alpha, A, lda, B, ldb):
-    """
-    Matrix-matrix product for complex triangular matrix.
-
-    """
-    
-    _libcublas.cublasZtrmm(side, uplo, transa, diag, m, n,
-                           cuda.cuDoubleComplex(alpha.real,
-                                                alpha.imag),
-                           int(A), lda, int(B), ldb)
-    status = cublasGetError()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    _libcublas.cublasZtrsm.restype = None
-    _libcublas.cublasZtrsm.argtypes = [ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_char,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       cuda.cuDoubleComplex,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
-def cublasZtrsm(side, uplo, transa, diag, m, n, alpha, A, lda, B, ldb):
-    """
-    Solve complex triangular system with multiple right-hand sides.
-
-    """
-    
-    _libcublas.cublasZtrsm(side, uplo, transa, diag, m, n,
-                           cuda.cuDoubleComplex(alpha.real,
-                                                alpha.imag),                           
-                           int(A), lda, int(B), ldb)
     status = cublasGetError()
     cublasCheckStatus(status)
 
