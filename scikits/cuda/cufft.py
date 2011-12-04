@@ -114,7 +114,7 @@ _libcufft.cufftPlan1d.argtypes = [ctypes.c_void_p,
 def cufftPlan1d(nx, fft_type, batch):
     """Create 1D FFT plan configuration."""
 
-    plan = ctypes.c_void_p()
+    plan = ctypes.c_uint()
     status = _libcufft.cufftPlan1d(ctypes.byref(plan), nx, fft_type, batch)
     cufftCheckStatus(status)
     return plan
@@ -127,7 +127,7 @@ _libcufft.cufftPlan2d.argtypes = [ctypes.c_void_p,
 def cufftPlan2d(nx, ny, fft_type):
     """Create 2D FFT plan configuration."""
 
-    plan = ctypes.c_void_p()
+    plan = ctypes.c_uint()
     status = _libcufft.cufftPlan2d(ctypes.byref(plan), nx, ny,
                                    fft_type)
     cufftCheckStatus(status)
@@ -142,7 +142,7 @@ _libcufft.cufftPlan3d.argtypes = [ctypes.c_void_p,
 def cufftPlan3d(nx, ny, nz, fft_type):
     """Create 3D FFT plan configuration."""
 
-    plan = ctypes.c_void_p()
+    plan = ctypes.c_uint()
     status = _libcufft.cufftPlan3d(ctypes.byref(plan), nx, ny, nz,
                                    fft_type)
     cufftCheckStatus(status)
@@ -163,7 +163,7 @@ _libcufft.cufftPlanMany.argtypes = [ctypes.c_void_p,
 def cufftPlanMany(rank, n, fft_type, batch):
     """Create batched FFT plan configuration."""
 
-    plan = ctypes.c_void_p()
+    plan = ctypes.c_uint()
     status = _libcufft.cufftPlanMany(ctypes.byref(plan), rank, n,
                                      None, 1, 0, None, 1, 0, fft_type,
                                      batch)
@@ -171,7 +171,7 @@ def cufftPlanMany(rank, n, fft_type, batch):
     return plan
     
 _libcufft.cufftDestroy.restype = int
-_libcufft.cufftDestroy.argtypes = [ctypes.c_void_p]
+_libcufft.cufftDestroy.argtypes = [ctypes.c_uint]
 def cufftDestroy(plan):
     """Destroy FFT plan."""
     
@@ -179,7 +179,7 @@ def cufftDestroy(plan):
     cufftCheckStatus(status)
 
 _libcufft.cufftExecC2C.restype = int
-_libcufft.cufftExecC2C.argtypes = [ctypes.c_void_p,
+_libcufft.cufftExecC2C.argtypes = [ctypes.c_uint,
                                    ctypes.c_void_p,
                                    ctypes.c_void_p,
                                    ctypes.c_int]
@@ -192,7 +192,7 @@ def cufftExecC2C(plan, idata, odata, direction):
     cufftCheckStatus(status)
 
 _libcufft.cufftExecR2C.restype = int
-_libcufft.cufftExecR2C.argtypes = [ctypes.c_void_p,
+_libcufft.cufftExecR2C.argtypes = [ctypes.c_uint,
                                    ctypes.c_void_p,
                                    ctypes.c_void_p]
 def cufftExecR2C(plan, idata, odata):
@@ -202,7 +202,7 @@ def cufftExecR2C(plan, idata, odata):
     cufftCheckStatus(status)
 
 _libcufft.cufftExecC2R.restype = int
-_libcufft.cufftExecC2R.argtypes = [ctypes.c_void_p,
+_libcufft.cufftExecC2R.argtypes = [ctypes.c_uint,
                                    ctypes.c_void_p,
                                    ctypes.c_void_p]
 def cufftExecC2R(plan, idata, odata):
@@ -212,7 +212,7 @@ def cufftExecC2R(plan, idata, odata):
     cufftCheckStatus(status)
 
 _libcufft.cufftExecZ2Z.restype = int
-_libcufft.cufftExecZ2Z.argtypes = [ctypes.c_void_p,
+_libcufft.cufftExecZ2Z.argtypes = [ctypes.c_uint,
                                    ctypes.c_void_p,
                                    ctypes.c_void_p,
                                    ctypes.c_int]
@@ -225,7 +225,7 @@ def cufftExecZ2Z(plan, idata, odata, direction):
     cufftCheckStatus(status)
 
 _libcufft.cufftExecD2Z.restype = int
-_libcufft.cufftExecD2Z.argtypes = [ctypes.c_void_p,
+_libcufft.cufftExecD2Z.argtypes = [ctypes.c_uint,
                                    ctypes.c_void_p,
                                    ctypes.c_void_p]
 def cufftExecD2Z(plan, idata, odata):
@@ -235,7 +235,7 @@ def cufftExecD2Z(plan, idata, odata):
     cufftCheckStatus(status)
 
 _libcufft.cufftExecZ2D.restype = int
-_libcufft.cufftExecZ2D.argtypes = [ctypes.c_void_p,
+_libcufft.cufftExecZ2D.argtypes = [ctypes.c_uint,
                                    ctypes.c_void_p,
                                    ctypes.c_void_p]
 def cufftExecZ2D(plan, idata, odata):
@@ -244,3 +244,11 @@ def cufftExecZ2D(plan, idata, odata):
     status = _libcufft.cufftExecZ2D(plan, idata, odata)
     cufftCheckStatus(status)
 
+_libcufft.cufftSetStream.restype = int
+_libcufft.cufftSetStream.argtypes = [ctypes.c_uint,
+                                     ctypes.c_int]
+def cufftSetStream(plan, stream):
+    """Associate a CUDA stream with a CUFFT plan."""
+    
+    status = _libcufft.cufftSetStream(plan, stream)
+    cufftCheckStatus(status)

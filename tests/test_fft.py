@@ -8,6 +8,7 @@ Unit tests for scikits.cuda.fft
 from unittest import main, makeSuite, TestCase, TestSuite
 
 import pycuda.autoinit
+import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
 import numpy as np
 
@@ -56,11 +57,30 @@ class test_fft(TestCase):
         plan = fft.Plan(x.shape, np.complex128, np.float64)
         fft.ifft(xf_gpu, x_gpu, plan, True)
         assert np.allclose(x, x_gpu.get(), atol=atol_float64)
-        
+
+    def test_multiple_streams(self):
+        x = np.asarray(np.random.rand(self.N), np.float32)
+        xf = np.fft.fft(x)
+        y = np.asarray(np.random.rand(self.N), np.float32)
+        yf = np.fft.fft(y)
+        x_gpu = gpuarray.to_gpu(x)
+        y_gpu = gpuarray.to_gpu(y)
+        xf_gpu = gpuarray.empty(self.N/2+1, np.complex64)
+        yf_gpu = gpuarray.empty(self.N/2+1, np.complex64)
+        stream0 = drv.Stream()
+        stream1 = drv.Stream()
+        plan1 = fft.Plan(x.shape, np.float32, np.complex64, stream=stream0)
+        plan2 = fft.Plan(y.shape, np.float32, np.complex64, stream=stream1)
+        fft.fft(x_gpu, xf_gpu, plan1)
+        fft.fft(y_gpu, yf_gpu, plan2)
+        assert np.allclose(xf[0:self.N/2+1], xf_gpu.get(), atol=atol_float32)
+        assert np.allclose(yf[0:self.N/2+1], yf_gpu.get(), atol=atol_float32)
+
 def suite():
     s = TestSuite()
     s.addTest(test_fft('test_fft_float32_to_complex64'))
     s.addTest(test_fft('test_ifft_complex64_to_float32'))
+    s.addTest(test_fft('test_multiple_streams'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_fft('test_fft_float64_to_complex128'))
         s.addTest(test_fft('test_ifft_complex128_to_float64'))

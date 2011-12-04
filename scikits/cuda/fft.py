@@ -4,6 +4,7 @@
 PyCUDA-based FFT functions.
 """
 
+import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
 import numpy as np
 
@@ -25,10 +26,13 @@ class Plan:
         Type of output data.
     batch : int
         Number of FFTs to configure in parallel (default is 1).
+    stream : pycuda.driver.Stream
+        Stream with which to associate the plan. If no stream is specified,
+        the default stream is used.
             
     """
     
-    def __init__(self, shape, in_dtype, out_dtype, batch=1):
+    def __init__(self, shape, in_dtype, out_dtype, batch=1, stream=None):
 
         if np.isscalar(shape):
             self.shape = (shape, )
@@ -71,7 +75,11 @@ class Plan:
                                               self.fft_type, self.batch)
         else:
             raise ValueError('invalid transform size')
-                                            
+
+        # Associate stream with plan:
+        if stream != None:
+            cufft.cufftSetStream(self.handle, stream.handle)
+            
     def __del__(self):
         cufft.cufftDestroy(self.handle)
           
