@@ -83,8 +83,7 @@ cufftExceptions = {
     }
 
 def cufftCheckStatus(status):
-    """Raise an exception if the specified CUBLAS status is an
-    error."""
+    """Raise an exception if the specified CUBLAS status is an error."""
 
     if status != 0:
         try:
