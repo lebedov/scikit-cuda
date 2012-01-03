@@ -13,16 +13,23 @@ import cuda
 
 # Load CULA library:
 if sys.platform == 'linux2':
-    _libcula_libname = 'libcula.so'
+    _libcula_libname_list = ['libcula.so', 'libcula_lapack.so']
 elif sys.platform == 'darwin':
-    _libcula_libname = 'libcula.dylib'
+    _libcula_libname_list = ['libcula.dylib', 'libcula_lapack.dylib']
 else:
     raise RuntimeError('unsupported platform')
 
-try:
-    _libcula = ctypes.cdll.LoadLibrary(_libcula_libname)
-except OSError:
-    raise RuntimeError('%s not found' % _libcula_libname)
+_load_err = ''
+for _lib in  _libcula_libname_list:
+    try:
+        _libcula = ctypes.cdll.LoadLibrary(_lib)
+    except OSError:
+        _load_err += ('' if _load_err == '' else ', ') + _lib
+    else:
+        _load_err = ''
+        break
+if _load_err:
+    raise OSError('%s not found' % _load_err)
 
 # Check whether the basic or premium version of the toolkit is
 # installed by trying to access a function that is only available in
