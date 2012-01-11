@@ -11,6 +11,7 @@ Release 0.042 - ()
 * Work around numpy bug #1898.
 * Fix issues with pycuda installations done via easy_install/pip. 
 * Add support for specifying streams when creating FFT plans.
+* Successfully find CULA R13a libraries.
 
 Release 0.041 - (May 22, 2011)
 ------------------------------
