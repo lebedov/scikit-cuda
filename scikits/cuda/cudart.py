@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Python interface to CUDA functions.
+Python interface to CUDA runtime functions.
 
 Note: this module does not explicitly depend on PyCUDA.
 """
@@ -11,28 +11,15 @@ import ctypes
 import atexit
 import numpy as np
 
-# Load CUDA libraries:
+# Load CUDA runtime library:
 if sys.platform == 'linux2':
-    _libcuda_libname_list = ['libcuda.so', 'libcuda.so.3', 'libcuda.so.4']
     _libcudart_libname_list = ['libcudart.so', 'libcudart.so.3', 'libcudart.so.4']
 elif sys.platform == 'darwin':
-    _libcuda_libname_list = ['libcuda.dylib']
     _libcudart_libname_list = ['libcudart.dylib']
 else:
     raise RuntimeError('unsupported platform')
 
 # Print understandable error message when library cannot be found:
-_libcuda = None
-for _libcuda_libname in _libcuda_libname_list:
-    try:
-        _libcuda = ctypes.cdll.LoadLibrary(_libcuda_libname)
-    except OSError:
-        pass
-    else:
-        break
-if _libcuda == None:
-    raise OSError('cuda library not found')
-
 _libcudart = None    
 for _libcudart_libname in _libcudart_libname_list:
     try:
@@ -42,8 +29,7 @@ for _libcudart_libname in _libcudart_libname_list:
     else:
         break
 if _libcudart == None:
-    OSError('libcudart not found')
-
+    OSError('CUDA runtime library not found')
 
 # Code adapted from PARRET:
 def POINTER(obj):
@@ -326,6 +312,10 @@ class cudaErrorNoKernelImageForDevice(cudaError):
     __doc__ = _libcudart.cudaGetErrorString(48)
     pass
 
+class cudaErrorIncompatibleDriverContext(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(49)
+    pass
+
 class cudaErrorPeerAccessAlreadyEnabled(cudaError):
     __doc__ = _libcudart.cudaGetErrorString(50)
     pass
@@ -407,7 +397,7 @@ cudaExceptions = {
     46: cudaErrorDevicesUnavailable,
     47: cudaErrorInvalidKernelImage,
     48: cudaErrorNoKernelImageForDevice,
-    49: cudaError,
+    49: cudaErrorIncompatibleDriverContext,
     50: cudaErrorPeerAccessAlreadyEnabled,
     51: cudaErrorPeerAccessNotEnabled,
     52: cudaError,
@@ -424,13 +414,13 @@ def cudaCheckStatus(status):
     """
     Raise CUDA exception.
 
-    Raise an exception corresponding to the specified CUDA error
+    Raise an exception corresponding to the specified CUDA runtime error
     code.
     
     Parameters
     ----------
     status : int
-        CUDA error code.
+        CUDA runtime error code.
 
     See Also
     --------
@@ -667,3 +657,50 @@ def cudaDriverGetVersion():
     status = _libcudart.cudaDriverGetVersion(ctypes.byref(version))
     cudaCheckStatus(status)
     return version.value
+
+# Memory types:
+cudaMemoryTypeHost = 1
+cudaMemoryTypeDevice = 2
+
+class cudaPointerAttributes(ctypes.Structure):
+    _fields_ = [
+        ('memoryType', ctypes.c_int),
+        ('device', ctypes.c_int),
+        ('devicePointer', ctypes.c_void_p),
+        ('hostPointer', ctypes.c_void_p)
+        ]
+        
+_libcudart.cudaPointerGetAttributes.restype = int
+_libcudart.cudaPointerGetAttributes.argtypes = [ctypes.c_void_p,
+                                                ctypes.c_void_p]
+def cudaPointerGetAttributes(ptr):
+    """
+    Get memory pointer attributes.
+
+    Returns attributes of the specified pointer.
+
+    Parameters
+    ----------
+    ptr : ctypes pointer
+        Memory pointer to examine.
+
+    Returns
+    -------
+    memory_type : int
+        Memory type; 1 indicates host memory, 2 indicates device
+        memory.
+    device : int
+        Number of device associated with pointer.
+
+    Notes
+    -----
+    This function only works with CUDA 4.0 and later.
+    
+    """
+
+    attributes = cudaPointerAttributes()
+    status = \
+        _libcudart.cudaPointerGetAttributes(ctypes.byref(attributes), ptr)
+    cudaCheckStatus(status)
+    return attributes.memoryType, attributes.device
+
