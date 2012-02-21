@@ -2,8 +2,6 @@
 
 """
 Python interface to CUDA driver functions.
-
-Note: this module does not explicitly depend on PyCUDA.
 """
 
 import sys, ctypes

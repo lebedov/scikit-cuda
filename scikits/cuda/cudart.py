@@ -2,13 +2,9 @@
 
 """
 Python interface to CUDA runtime functions.
-
-Note: this module does not explicitly depend on PyCUDA.
 """
 
-import sys
-import ctypes
-import atexit
+import sys, ctypes, atexit
 import numpy as np
 
 # Load CUDA runtime library:
