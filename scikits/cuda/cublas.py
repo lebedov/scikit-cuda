@@ -226,7 +226,7 @@ else:
     _libcublas.cublasDestroy_v2.restype = int
     _libcublas.cublasDestroy_v2.argtypes = [ctypes.c_int]
     def cublasDestroy(handle):
-        status = _libcublas.cublasCreate_v2(ctypes.c_int(handle))
+        status = _libcublas.cublasDestroy_v2(ctypes.c_int(handle))
         cublasCheckStatus(status)
 cublasDestroy.__doc__ = \
     """
