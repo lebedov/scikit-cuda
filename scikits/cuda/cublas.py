@@ -270,6 +270,61 @@ cublasGetCurrentCtx.__doc__ = \
 
     """
 
+if cuda.cudaDriverGetVersion() < 4000:
+    _libcublas.cublasSetKernelStream.restype = int
+    _libcublas.cublasSetKernelStream.argtypes = [ctypes.c_int]
+    def cublasSetKernelStream(id):
+        status = _libcublas.cublasSetKernelStream(id)
+        cublasCheckStatus(status)
+    cublasSetStream = cublasSetKernelStream
+else:
+    _libcublas.cublasSetStream_v2.restype = int
+    _libcublas.cublasSetStream_v2.argtypes = [ctypes.c_int,
+                                              ctypes.c_int]
+    def cublasSetStream(id):
+        handle = cublasGetCurrentCtx()
+        status = _libcublas.cublasSetStream_v2(handle, id)
+        cublasCheckStatus(status)
+    cublasSetKernelStream = cublasSetStream
+cublasSetStream.__doc__ = \
+  """
+  Set current CUBLAS library stream.
+
+  Parameters
+  ----------
+  id : int
+      Stream ID.
+
+  """
+
+if cuda.cudaDriverGetVersion() < 4000:
+    def cublasGetStream():
+        raise NotImplementedError(
+            'cublasGetSTream() is only available in CUDA 4.0 and later')
+else:
+    _libcublas.cublasGetStream_v2.restype = int
+    _libcublas.cublasGetStream_v2.argtypes = [ctypes.c_int,
+                                              ctypes.c_void_p]
+    def cublasGetStream():
+        id = ctypes.c_int()
+        handle = cublasGetCurrentCtx()
+        status = _libcublas.cublasGetStream_v2(handle, ctypes.byref(id))
+        cublasCheckStatus(status)
+        return id.value
+cublasGetStream.__doc__ = \
+  """
+  Set current CUBLAS library stream.
+
+  Returns
+  -------
+  id : int
+      Stream ID.
+
+  Notes
+  -----
+  This function is only available in CUDA 4.0 and later.
+  
+  """
 ### BLAS Level 1 Functions ###
 
 # ISAMAX, IDAMAX, ICAMAX, IZAMAX
