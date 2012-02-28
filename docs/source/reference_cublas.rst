@@ -12,8 +12,12 @@ Helper Routines
    :nosignatures:
 
    cublasCheckStatus
+   cublasCreate
+   cublasDestroy
    cublasGetError
+   cublasGetStream
    cublasInit
+   cublasSetStream
    cublasShutdown
 
 Wrapper Routines
