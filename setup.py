@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
-import sys
-import os
+import sys, os
 from glob import glob
 from distutils.command.install import INSTALL_SCHEMES
 from distutils.command.install_headers import install_headers
@@ -14,7 +13,7 @@ VERSION =            __version__
 AUTHOR =             'Lev Givon'
 AUTHOR_EMAIL =       'lev@columbia.edu'
 URL =                'http://github.com/lebedov/scikits.cuda/'
-DESCRIPTION =        'Python utilities for CUDA'
+DESCRIPTION =        'Python interface to GPU-powered libraries'
 LONG_DESCRIPTION =   DESCRIPTION
 DOWNLOAD_URL =       URL
 LICENSE =            'BSD'
@@ -30,23 +29,14 @@ CLASSIFIERS = [
 NAMESPACE_PACKAGES = ['scikits']
 PACKAGES =           find_packages()
 
-# Install the C headers in the include/ subdirectory of whatever
-# directory in which the scikits.cuda python modules are installed
-# rather than wherever they would be installed by default
-class custom_install_headers(install_headers):
-    def run(self):
-        inst_obj = self.distribution.command_obj['install']
-        self.install_dir = inst_obj.install_lib + 'scikits/cuda/include'
-        install_headers.run(self)
-
 if __name__ == "__main__":
     if os.path.exists('MANIFEST'): os.remove('MANIFEST')
-    
+
     # This enables the installation of scikits/__init__.py as a data
     # file:
     for scheme in INSTALL_SCHEMES.values():
         scheme['data'] = scheme['purelib']
-        
+
     setup(
         name = NAME,
         version = VERSION,
@@ -59,8 +49,12 @@ if __name__ == "__main__":
         url = URL,
         namespace_packages = NAMESPACE_PACKAGES,
         packages = PACKAGES,
-        headers = glob('scikits/cuda/include/*.h'),
+
+        # Force installation of __init__.py in namespace package:
         data_files = [('scikits', ['scikits/__init__.py'])],
+        include_package_data = True,
         install_requires = ['numpy',
-                            'pycuda >= 0.94.2'],
-        cmdclass = {'install_headers': custom_install_headers})
+                            'pycuda>=0.94.2'],
+        extras_require = dict(
+            scipy = ['scipy>=0.8.0']
+        ))

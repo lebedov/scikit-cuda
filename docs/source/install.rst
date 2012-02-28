@@ -3,6 +3,17 @@
 Installation Instructions
 =========================
 
+Quick Installation
+------------------
+If you have `pip <http://pypi.python.org/pypi/pip>`_ installed, you should be
+able to install the latest stable release of ``scikits.cuda`` by running the
+following::
+
+   pip install scikits.cuda
+
+All dependencies should be automatically downloaded and installed if they are
+not already on your system.
+
 Obtaining the Latest Software
 -----------------------------
 
@@ -12,8 +23,8 @@ The latest stable and development versions of ``scikits.cuda`` can be downloaded
 Online documentation for ``scikits.cuda`` is available at 
 `<http://lebedov.github.com/scikits.cuda/>`_
 
-Prerequisites
--------------
+Installation Dependencies
+-------------------------
 
 ``scikits.cuda`` requires that the following software packages be
 installed:
@@ -31,17 +42,17 @@ To run the unit tests, the following packages are also required:
 * `SciPy <http://www.scipy.org>`_ 0.8.0 or later.
 
 Some of the linear algebra functionality relies on the CULA toolkit; the single
-precision of the toolkit is free of charge, but requires registration. Depending
-on the version of CULA installed, some functions may not be available:
+precision release of the toolkit is free of charge, but requires registration. 
+Depending on the version of CULA installed, some functions may not be available:
 
 * `CULA <http://www.culatools.com/get-cula/>`_ 2.0 or later.
 
 To build the documentation, the following packages are also required:
 
 * `Docutils <http://docutils.sourceforge.net>`_ 0.5 or later.
-* `Sphinx <http://sphinx.pocoo.org>`_ 1.0.1 or later.
 * `Jinja2 <http://jinja.pocoo.org>`_ 2.2 or later.
 * `Pygments <http://pygments.org>`_ 0.8 or later.
+* `Sphinx <http://sphinx.pocoo.org>`_ 1.0.1 or later.
 
 The software has been tested on Linux; it should also work on other
 platforms supported by the above packages.
@@ -50,7 +61,7 @@ Building and Installation
 -------------------------
 
 ``scikits.cuda`` searches for CUDA libraries in the system library
-search path. You may have to modify this path (e.g., by adding the
+search path when imported. You may have to modify this path (e.g., by adding the
 path to the CUDA libraries to /etc/ld.so.conf or to the
 LD_LIBRARY_PATH environmental variable on Linux) if the libraries are
 not being found.
@@ -63,17 +74,16 @@ release and run::
 from within the main directory in the release. To rebuild the
 documentation, run::
 
-   make
-
-from within the ``doc/`` subdirectory and follow the directions.
+   python setup.py build_docs
 
 Running the Unit Tests
 ----------------------
-To run all of the package unit tests, run::
+To run all of the package unit tests, download and unpack the package source
+tarball and run::
 
    nosetests
 
-from within the main directory in the release. Tests for individual
+from within the main directory in the archive. Tests for individual
 modules (found in the ``tests/`` subdirectory) can also be run
 directly.
 
