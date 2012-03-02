@@ -150,44 +150,6 @@ def cublasCheckStatus(status):
         except KeyError:
             raise cublasError
 
-# Legacy functions:
-
-_libcublas.cublasInit.restype = int
-_libcublas.cublasInit.argtypes = []
-def cublasInit():
-    """
-    Initialize CUBLAS.
-
-    This function must be called before using any other CUBLAS functions.
-
-    """
-
-    if cuda.cudaDriverGetVersion() >= 4000:
-        warnings.warn('cublasInit() is deprecated as of CUDA 4.0',
-                      DeprecationWarning)
-    status = _libcublas.cublasInit()
-    cublasCheckStatus(status)
-
-_libcublas.cublasShutdown.restype = int
-_libcublas.cublasShutdown.argtypes = []
-def cublasShutdown():
-    """
-    Shut down CUBLAS.
-
-    This function must be called before an application that uses
-    CUBLAS terminates.
-    
-    """
-
-    if cuda.cudaDriverGetVersion() >= 4000:
-        warnings.warn('cublasShutdown() is deprecated as of CUDA 4.0',
-                      DeprecationWarning)
-    status = _libcublas.cublasShutdown()
-    cublasCheckStatus(status)
-
-if cuda.cudaDriverGetVersion() < 4000:
-    atexit.register(_libcublas.cublasShutdown)
-
 if cuda.cudaDriverGetVersion() < 4000:
     def cublasCreate():
         raise NotImplementedError(
@@ -244,15 +206,74 @@ cublasDestroy.__doc__ = \
     This function is only available in CUDA 4.0 and later.
     
     """
+        
+# Context used by CUBLAS functions in CUDA 4.0 and later:
+_libcublas_ctx = None
 
+_libcublas.cublasInit.restype = int
+_libcublas.cublasInit.argtypes = []
+def cublasInit():
+    """
+    Initialize CUBLAS.
+
+    This function must be called before using any other CUBLAS functions.
+
+    Notes
+    -----
+    On CUDA 4.0 and later, this function creates a context that is
+    used by all subsequent CUBLAS function invocations.
+
+    """
+
+    if cuda.cudaDriverGetVersion() < 4000:
+        status = _libcublas.cublasInit()
+        cublasCheckStatus(status)
+    else:
+        global _libcublas_ctx
+        _libcublas_ctx = cublasCreate()
+
+_libcublas.cublasShutdown.restype = int
+_libcublas.cublasShutdown.argtypes = []
+def cublasShutdown():
+    """
+    Shut down CUBLAS.
+
+    This function must be called before an application that uses
+    CUBLAS terminates.
+
+    Notes
+    -----
+    On CUDA 4.0 and later, this function destroys the context 
+    used by all CUBLAS functions.
+    
+    """
+
+    if cuda.cudaDriverGetVersion() < 4000:
+        status = _libcublas.cublasShutdown()
+        cublasCheckStatus(status)
+    else:
+        global _libcublas_ctx
+        cublasDestroy(_libcublas_ctx)
+        
 if cuda.cudaDriverGetVersion() < 4000:
+    atexit.register(_libcublas.cublasShutdown)
+
+if cuda.cudaDriverGetVersion() == 4000:
+    try:
+        _libcublas.cublasGetCurrentCtx.restype = int
+    except AttributeError:
+        def cublasGetCurrentCtx():
+            raise NotImplementedError(
+                'cublasGetCurrentCtx() not found; CULA CUBLAS library probably\n'
+                'precedes NVIDIA CUBLAS library in library search path')
+    else:
+        def cublasGetCurrentCtx():
+            return _libcublas.cublasGetCurrentCtx()
+else:
     def cublasGetCurrentCtx():
         raise NotImplementedError(
-            'cublasGetCurrentCtx() is only available in CUDA 4.0 and later')
-else:
-    _libcublas.cublasGetCurrentCtx.restype = int
-    def cublasGetCurrentCtx():
-        return _libcublas.cublasGetCurrentCtx()
+            'cublasGetCurrentCtx() is only available in CUDA 4.0')
+    
 cublasGetCurrentCtx.__doc__ = \
     """
     Get current CUBLAS context.
@@ -266,7 +287,9 @@ cublasGetCurrentCtx.__doc__ = \
 
     Notes
     -----
-    This function is only available in CUDA 4.0 and later.
+    This function is only available in CUDA 4.0. It returns the
+    current context used by CUBLAS, not necessarily the one internally
+    stored by the cublas Python module.
 
     """
 
@@ -282,8 +305,8 @@ else:
     _libcublas.cublasSetStream_v2.argtypes = [ctypes.c_int,
                                               ctypes.c_int]
     def cublasSetStream(id):
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasSetStream_v2(handle, id)
+        global _libcublas_ctx
+        status = _libcublas.cublasSetStream_v2(_libcublas_ctx, id)
         cublasCheckStatus(status)
     cublasSetKernelStream = cublasSetStream
 cublasSetStream.__doc__ = \
@@ -325,6 +348,7 @@ cublasGetStream.__doc__ = \
   This function is only available in CUDA 4.0 and later.
   
   """
+
 ### BLAS Level 1 Functions ###
 
 # ISAMAX, IDAMAX, ICAMAX, IZAMAX
@@ -384,10 +408,10 @@ else:
                                            ctypes.c_int,
                                            ctypes.c_void_p]
     def cublasIsamax(n, x, incx):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = ctypes.c_int()
         status = \
-               _libcublas.cublasIsamax_v2(handle,
+               _libcublas.cublasIsamax_v2(_libcublas_ctx,
                                           n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
         return result.value-1
@@ -416,10 +440,10 @@ else:
                                            ctypes.c_int,
                                            ctypes.c_void_p]
     def cublasIdamax(n, x, incx):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = ctypes.c_int()
         status = \
-               _libcublas.cublasIdamax_v2(handle,
+               _libcublas.cublasIdamax_v2(_libcublas_ctx,
                                           n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
         return result.value-1
@@ -448,10 +472,10 @@ else:
                                            ctypes.c_int,
                                            ctypes.c_void_p]
     def cublasIcamax(n, x, incx):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = ctypes.c_int()
         status = \
-               _libcublas.cublasIcamax_v2(handle,
+               _libcublas.cublasIcamax_v2(_libcublas_ctx,
                                           n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
         return result.value-1
@@ -480,10 +504,10 @@ else:
                                            ctypes.c_int,
                                            ctypes.c_void_p]
     def cublasIzamax(n, x, incx):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = ctypes.c_int()
         status = \
-               _libcublas.cublasIzamax_v2(handle,
+               _libcublas.cublasIzamax_v2(_libcublas_ctx,
                                           n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
         return result.value-1
@@ -552,10 +576,10 @@ else:
                                            ctypes.c_int,
                                            ctypes.c_void_p]
     def cublasIsamin(n, x, incx):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = ctypes.c_int()
         status = \
-               _libcublas.cublasIsamin_v2(handle,
+               _libcublas.cublasIsamin_v2(_libcublas_ctx,
                                           n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
         return result.value-1
@@ -584,10 +608,10 @@ else:
                                            ctypes.c_int,
                                            ctypes.c_void_p]
     def cublasIdamin(n, x, incx):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = ctypes.c_int()
         status = \
-               _libcublas.cublasIdamin_v2(handle,
+               _libcublas.cublasIdamin_v2(_libcublas_ctx,
                                           n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
         return result.value-1
@@ -616,10 +640,10 @@ else:
                                            ctypes.c_int,
                                            ctypes.c_void_p]
     def cublasIcamin(n, x, incx):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = ctypes.c_int()
         status = \
-               _libcublas.cublasIcamin_v2(handle,
+               _libcublas.cublasIcamin_v2(_libcublas_ctx,
                                           n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
         return result.value-1
@@ -648,10 +672,10 @@ else:
                                            ctypes.c_int,
                                            ctypes.c_void_p]
     def cublasIzamin(n, x, incx):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = ctypes.c_int()
         status = \
-               _libcublas.cublasIzamin_v2(handle,
+               _libcublas.cublasIzamin_v2(_libcublas_ctx,
                                           n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
         return result.value-1
@@ -716,9 +740,9 @@ else:
                                           ctypes.c_int,
                                           ctypes.c_void_p]
     def cublasSasum(n, x, incx):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = ctypes.c_float()
-        status = _libcublas.cublasSasum_v2(handle,
+        status = _libcublas.cublasSasum_v2(_libcublas_ctx,
                                            n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
         return np.float32(result.value)
@@ -748,9 +772,9 @@ else:
                                           ctypes.c_int,
                                           ctypes.c_void_p]
     def cublasDasum(n, x, incx):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = ctypes.c_double()
-        status = _libcublas.cublasDasum_v2(handle,
+        status = _libcublas.cublasDasum_v2(_libcublas_ctx,
                                            n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
         return np.float64(result.value)
@@ -780,9 +804,9 @@ else:
                                            ctypes.c_int,
                                            ctypes.c_void_p]
     def cublasScasum(n, x, incx):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = ctypes.c_float()
-        status = _libcublas.cublasScasum_v2(handle,
+        status = _libcublas.cublasScasum_v2(_libcublas_ctx,
                                             n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
         return np.float32(result.value)
@@ -812,9 +836,9 @@ else:
                                            ctypes.c_int,
                                            ctypes.c_void_p]
     def cublasDzasum(n, x, incx):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = ctypes.c_double()
-        status = _libcublas.cublasDzasum_v2(handle,
+        status = _libcublas.cublasDzasum_v2(_libcublas_ctx,
                                             n, int(x), incx, ctypes.byref(result))
         cublasCheckStatus(status)
         return np.float64(result.value)
@@ -893,8 +917,8 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_int]
     def cublasSaxpy(n, alpha, x, incx, y, incy):
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasSaxpy_v2(handle,
+        global _libcublas_ctx        
+        status = _libcublas.cublasSaxpy_v2(_libcublas_ctx,
                                            n, ctypes.byref(ctypes.c_float(alpha)),
                                            int(x), incx, int(y), incy)
         cublasCheckStatus(status)
@@ -930,8 +954,8 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_int]
     def cublasDaxpy(n, alpha, x, incx, y, incy):
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasDaxpy_v2(handle,
+        global _libcublas_ctx        
+        status = _libcublas.cublasDaxpy_v2(_libcublas_ctx,
                                            n, ctypes.byref(ctypes.c_double(alpha)),
                                            int(x), incx, int(y), incy)
         cublasCheckStatus(status)
@@ -968,8 +992,8 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_int]
     def cublasCaxpy(n, alpha, x, incx, y, incy):
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasCaxpy_v2(handle, n,
+        global _libcublas_ctx        
+        status = _libcublas.cublasCaxpy_v2(_libcublas_ctx, n,
                                            ctypes.byref(cuda.cuFloatComplex(alpha.real, alpha.imag)),
                                            int(x), incx, int(y), incy)
         cublasCheckStatus(status)
@@ -1006,8 +1030,8 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_int]
     def cublasZaxpy(n, alpha, x, incx, y, incy):
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasZaxpy_v2(handle, n,
+        global _libcublas_ctx        
+        status = _libcublas.cublasZaxpy_v2(_libcublas_ctx, n,
                                            ctypes.byref(cuda.cuDoubleComplex(alpha.real, alpha.imag)),
                                            int(x), incx, int(y), incy)
         cublasCheckStatus(status)
@@ -1079,9 +1103,9 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_int]
     def cublasScopy(n, x, incx, y, incy):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         status = \
-               _libcublas.cublasScopy_v2(handle,
+               _libcublas.cublasScopy_v2(_libcublas_ctx,
                                          n, int(x), incx, int(y), incy)
         cublasCheckStatus(status)
                 
@@ -1111,9 +1135,9 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_int]
     def cublasDcopy(n, x, incx, y, incy):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         status = \
-               _libcublas.cublasDcopy_v2(handle,
+               _libcublas.cublasDcopy_v2(_libcublas_ctx,
                                          n, int(x), incx, int(y), incy)
         cublasCheckStatus(status)
                 
@@ -1143,9 +1167,9 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_int]
     def cublasCcopy(n, x, incx, y, incy):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         status = \
-               _libcublas.cublasCcopy_v2(handle,
+               _libcublas.cublasCcopy_v2(_libcublas_ctx,
                                          n, int(x), incx, int(y), incy)
         cublasCheckStatus(status)
                 
@@ -1175,9 +1199,9 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_int]
     def cublasZcopy(n, x, incx, y, incy):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         status = \
-               _libcublas.cublasZcopy_v2(handle,
+               _libcublas.cublasZcopy_v2(_libcublas_ctx,
                                          n, int(x), incx, int(y), incy)
         cublasCheckStatus(status)
                 
@@ -1255,9 +1279,9 @@ else:
                                          ctypes.c_int,
                                          ctypes.c_void_p]
     def cublasSdot(n, x, incx, y, incy):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = ctypes.c_float()
-        status = _libcublas.cublasSdot_v2(handle, n,
+        status = _libcublas.cublasSdot_v2(_libcublas_ctx, n,
                                           int(x), incx, int(y), incy,
                                           ctypes.byref(result))
         cublasCheckStatus(status)
@@ -1292,9 +1316,9 @@ else:
                                          ctypes.c_int,
                                          ctypes.c_void_p]
     def cublasDdot(n, x, incx, y, incy):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = ctypes.c_double()
-        status = _libcublas.cublasDdot_v2(handle, n,
+        status = _libcublas.cublasDdot_v2(_libcublas_ctx, n,
                                           int(x), incx, int(y), incy,
                                           ctypes.byref(result))
         cublasCheckStatus(status)
@@ -1329,9 +1353,9 @@ else:
                                           ctypes.c_int,
                                           ctypes.c_void_p]
     def cublasCdotu(n, x, incx, y, incy):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = cuda.cuFloatComplex()
-        status = _libcublas.cublasCdotu_v2(handle, n,
+        status = _libcublas.cublasCdotu_v2(_libcublas_ctx, n,
                                            int(x), incx, int(y), incy,
                                            ctypes.byref(result))
         cublasCheckStatus(status)
@@ -1366,9 +1390,9 @@ else:
                                           ctypes.c_int,
                                           ctypes.c_void_p]
     def cublasCdotc(n, x, incx, y, incy):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = cuda.cuFloatComplex()
-        status = _libcublas.cublasCdotc_v2(handle, n,
+        status = _libcublas.cublasCdotc_v2(_libcublas_ctx, n,
                                            int(x), incx, int(y), incy,
                                            ctypes.byref(result))
         cublasCheckStatus(status)
@@ -1403,9 +1427,9 @@ else:
                                           ctypes.c_int,
                                           ctypes.c_void_p]
     def cublasZdotu(n, x, incx, y, incy):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = cuda.cuDoubleComplex()
-        status = _libcublas.cublasZdotu_v2(handle, n,
+        status = _libcublas.cublasZdotu_v2(_libcublas_ctx, n,
                                            int(x), incx, int(y), incy,
                                            ctypes.byref(result))
         cublasCheckStatus(status)
@@ -1440,9 +1464,9 @@ else:
                                           ctypes.c_int,
                                           ctypes.c_void_p]
     def cublasZdotc(n, x, incx, y, incy):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = cuda.cuDoubleComplex()
-        status = _libcublas.cublasZdotc_v2(handle, n,
+        status = _libcublas.cublasZdotc_v2(_libcublas_ctx, n,
                                            int(x), incx, int(y), incy,
                                            ctypes.byref(result))
         cublasCheckStatus(status)
@@ -1507,9 +1531,9 @@ else:
                                           ctypes.c_int,
                                           ctypes.c_void_p]
     def cublasSnrm2(n, x, incx):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = ctypes.c_float()
-        status = _libcublas.cublasSnrm2_v2(handle,
+        status = _libcublas.cublasSnrm2_v2(_libcublas_ctx,
                                            n, int(x), incx,
                                            ctypes.byref(result))
         cublasCheckStatus(status)
@@ -1540,9 +1564,9 @@ else:
                                           ctypes.c_int,
                                           ctypes.c_void_p]
     def cublasDnrm2(n, x, incx):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = ctypes.c_double()
-        status = _libcublas.cublasDnrm2_v2(handle,
+        status = _libcublas.cublasDnrm2_v2(_libcublas_ctx,
                                            n, int(x), incx,
                                            ctypes.byref(result))
         cublasCheckStatus(status)
@@ -1573,9 +1597,9 @@ else:
                                           ctypes.c_int,
                                           ctypes.c_void_p]
     def cublasScnrm2(n, x, incx):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = cuda.cuFloatComplex()
-        status = _libcublas.cublasScnrm2_v2(handle,
+        status = _libcublas.cublasScnrm2_v2(_libcublas_ctx,
                                             n, int(x), incx,
                                             ctypes.byref(result))
         cublasCheckStatus(status)
@@ -1606,9 +1630,9 @@ else:
                                            ctypes.c_int,
                                            ctypes.c_void_p]
     def cublasDznrm2(n, x, incx):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         result = cuda.cuDoubleComplex()
-        status = _libcublas.cublasDznrm2_v2(handle,
+        status = _libcublas.cublasDznrm2_v2(_libcublas_ctx,
                                             n, int(x), incx,
                                             ctypes.byref(result))
         cublasCheckStatus(status)
@@ -1693,8 +1717,8 @@ else:
                                          ctypes.c_void_p,
                                          ctypes.c_void_p]
     def cublasSrot(n, x, incx, y, incy, c, s):
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasSrot_v2(handle,
+        global _libcublas_ctx
+        status = _libcublas.cublasSrot_v2(_libcublas_ctx,
                                           n, int(x),
                                           incx, int(y), incy,
                                           ctypes.byref(ctypes.c_float(c)),
@@ -1734,8 +1758,8 @@ else:
                                          ctypes.c_void_p,
                                          ctypes.c_void_p]
     def cublasDrot(n, x, incx, y, incy, c, s):
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasDrot_v2(handle,
+        global _libcublas_ctx
+        status = _libcublas.cublasDrot_v2(_libcublas_ctx,
                                           n, int(x),
                                           incx, int(y), incy,
                                           ctypes.byref(ctypes.c_double(c)),
@@ -1777,8 +1801,8 @@ else:
                                          ctypes.c_void_p,
                                          ctypes.c_void_p]
     def cublasCrot(n, x, incx, y, incy, c, s):
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasCrot_v2(handle,
+        global _libcublas_ctx
+        status = _libcublas.cublasCrot_v2(_libcublas_ctx,
                                           n, int(x),
                                           incx, int(y), incy,
                                           ctypes.byref(ctypes.c_float(c)),
@@ -1820,8 +1844,8 @@ else:
                                          ctypes.c_void_p,
                                          ctypes.c_void_p]
     def cublasCsrot(n, x, incx, y, incy, c, s):
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasCsrot_v2(handle,
+        global _libcublas_ctx
+        status = _libcublas.cublasCsrot_v2(_libcublas_ctx,
                                            n, int(x),
                                            incx, int(y), incy,
                                            c, s)
@@ -1861,8 +1885,8 @@ else:
                                          ctypes.c_void_p,
                                          ctypes.c_void_p]
     def cublasZrot(n, x, incx, y, incy, c, s):
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasZrot_v2(handle,
+        global _libcublas_ctx
+        status = _libcublas.cublasZrot_v2(_libcublas_ctx,
                                           n, int(x),
                                           incx, int(y), incy,
                                           c,
@@ -1903,8 +1927,8 @@ else:
                                          ctypes.c_void_p,
                                          ctypes.c_void_p]
     def cublasZdrot(n, x, incx, y, incy, c, s):
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasZdrot_v2(handle,
+        global _libcublas_ctx
+        status = _libcublas.cublasZdrot_v2(_libcublas_ctx,
                                            n, int(x),
                                            incx, int(y), incy,
                                            c, s)
@@ -1985,12 +2009,12 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
     def cublasSrotg(a, b):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         _a = ctypes.c_float(a)
         _b = ctypes.c_float(b)
         _c = ctypes.c_float()
         _s = ctypes.c_float()
-        status = _libcublas.cublasSrotg_v2(handle,
+        status = _libcublas.cublasSrotg_v2(_libcublas_ctx,
                                            ctypes.byref(_a), ctypes.byref(_b),
                                            ctypes.byref(_c), ctypes.byref(_s))
         cublasCheckStatus(status)
@@ -2030,12 +2054,12 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
     def cublasDrotg(a, b):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         _a = ctypes.c_double(a)
         _b = ctypes.c_double(b)
         _c = ctypes.c_double()
         _s = ctypes.c_double()
-        status = _libcublas.cublasDrotg_v2(handle,
+        status = _libcublas.cublasDrotg_v2(_libcublas_ctx,
                                            ctypes.byref(_a), ctypes.byref(_b),
                                            ctypes.byref(_c), ctypes.byref(_s))
         cublasCheckStatus(status)
@@ -2075,12 +2099,12 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
     def cublasCrotg(a, b):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         _a = cuda.cuFloatComplex(a.real, a.imag)
         _b = cuda.cuFloatComplex(b.real, b.imag)
         _c = ctypes.c_float()
         _s = cuda.cuFloatComplex()
-        status = _libcublas.cublasCrotg_v2(handle,
+        status = _libcublas.cublasCrotg_v2(_libcublas_ctx,
                                            ctypes.byref(_a), _b,
                                            ctypes.byref(_c), ctypes.byref(_s))
         cublasCheckStatus(status)
@@ -2120,12 +2144,12 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
     def cublasZrotg(a, b):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         _a = cuda.cuDoubleComplex(a.real, a.imag)
         _b = cuda.cuDoubleComplex(b.real, b.imag)
         _c = ctypes.c_double()
         _s = cuda.cuDoubleComplex()
-        status = _libcublas.cublasZrotg_v2(handle,
+        status = _libcublas.cublasZrotg_v2(_libcublas_ctx,
                                            ctypes.byref(_a), _b,
                                            ctypes.byref(_c), ctypes.byref(_s))
         cublasCheckStatus(status)
@@ -2202,8 +2226,8 @@ else:
                                           ctypes.c_int,
                                           ctypes.c_void_p]
     def cublasSrotm(n, x, incx, y, incy, sparam):
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasSrotm_v2(handle,
+        global _libcublas_ctx        
+        status = _libcublas.cublasSrotm_v2(_libcublas_ctx,
                                            n, int(x), incx, int(y),
                                            incy, int(sparam.ctypes.data))
         cublasCheckStatus(status)
@@ -2234,8 +2258,8 @@ else:
                                           ctypes.c_int,
                                           ctypes.c_void_p]
     def cublasDrotm(n, x, incx, y, incy, sparam):
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasDrotm_v2(handle,
+        global _libcublas_ctx        
+        status = _libcublas.cublasDrotm_v2(_libcublas_ctx,
                                            n, int(x), incx, int(y),
                                            incy, int(sparam.ctypes.data))
         cublasCheckStatus(status)
@@ -2310,14 +2334,14 @@ else:
                                            ctypes.c_void_p,
                                            ctypes.c_void_p]
     def cublasSrotmg(d1, d2, x1, y1):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         _d1 = ctypes.c_float(d1)
         _d2 = ctypes.c_float(d2)
         _x1 = ctypes.c_float(x1)
         _y1 = ctypes.c_float(y1)
         sparam = np.empty(5, np.float32)
 
-        status = _libcublas.cublasSrotmg_v2(handle,
+        status = _libcublas.cublasSrotmg_v2(_libcublas_ctx,
                                             ctypes.byref(_d1), ctypes.byref(_d2),
                                             ctypes.byref(_x1), ctypes.byref(_y1),
                                             int(sparam.ctypes.data))
@@ -2357,14 +2381,14 @@ else:
                                            ctypes.c_void_p,
                                            ctypes.c_void_p]
     def cublasDrotmg(d1, d2, x1, y1):
-        handle = cublasGetCurrentCtx()
+        global _libcublas_ctx
         _d1 = ctypes.c_double(d1)
         _d2 = ctypes.c_double(d2)
         _x1 = ctypes.c_double(x1)
         _y1 = ctypes.c_double(y1)
         sparam = np.empty(5, np.float64)
 
-        status = _libcublas.cublasDrotmg_v2(handle,
+        status = _libcublas.cublasDrotmg_v2(_libcublas_ctx,
                                             ctypes.byref(_d1), ctypes.byref(_d2),
                                             ctypes.byref(_x1), ctypes.byref(_y1),
                                             int(sparam.ctypes.data))
@@ -2426,8 +2450,8 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_int]
     def cublasSscal(n, alpha, x, incx):
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasSscal_v2(handle, n,
+        global _libcublas_ctx
+        status = _libcublas.cublasSscal_v2(_libcublas_ctx, n,
                                            ctypes.byref(ctypes.c_float(alpha)),
                                            int(x), incx)
         cublasCheckStatus(status)
@@ -2459,8 +2483,8 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_int]
     def cublasDscal(n, alpha, x, incx):
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasDscal_v2(handle, n,
+        global _libcublas_ctx
+        status = _libcublas.cublasDscal_v2(_libcublas_ctx, n,
                                            ctypes.byref(ctypes.c_double(alpha)),
                                            int(x), incx)
         cublasCheckStatus(status)
@@ -2492,8 +2516,8 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_int]
     def cublasCscal(n, alpha, x, incx):
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasCscal_v2(handle, n,
+        global _libcublas_ctx
+        status = _libcublas.cublasCscal_v2(_libcublas_ctx, n,
                                            ctypes.byref(cuda.cuFloatComplex(alpha.real,
                                                                             alpha.imag)),
                                            int(x), incx)
@@ -2526,8 +2550,8 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_int]
     def cublasCsscal(n, alpha, x, incx):
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasCsscal_v2(handle, n,
+        global _libcublas_ctx
+        status = _libcublas.cublasCsscal_v2(_libcublas_ctx, n,
                                            ctypes.byref(ctypes.c_float(alpha)),
                                            int(x), incx)
         cublasCheckStatus(status)
@@ -2559,8 +2583,8 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_int]
     def cublasZscal(n, alpha, x, incx):
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasZscal_v2(handle, n,
+        global _libcublas_ctx
+        status = _libcublas.cublasZscal_v2(_libcublas_ctx, n,
                                            ctypes.byref(cuda.cuDoubleComplex(alpha.real,
                                                                              alpha.imag)),
                                            int(x), incx)
@@ -2593,8 +2617,8 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_int]
     def cublasZdscal(n, alpha, x, incx):
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasZdscal_v2(handle, n,
+        global _libcublas_ctx
+        status = _libcublas.cublasZdscal_v2(_libcublas_ctx, n,
                                            ctypes.byref(ctypes.c_double(alpha)),
                                            int(x), incx)
         cublasCheckStatus(status)
@@ -2670,8 +2694,8 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_int]
     def cublasSswap(n, x, incx, y, incy):
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasSswap_v2(handle,
+        global _libcublas_ctx
+        status = _libcublas.cublasSswap_v2(_libcublas_ctx,
                                            n, int(x), incx, int(y), incy)
         cublasCheckStatus(status)
 
@@ -2701,8 +2725,8 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_int]    
     def cublasDswap(n, x, incx, y, incy):
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasDswap_v2(handle,
+        global _libcublas_ctx
+        status = _libcublas.cublasDswap_v2(_libcublas_ctx,
                                            n, int(x), incx, int(y), incy)
         cublasCheckStatus(status)
 
@@ -2732,8 +2756,8 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_int]
     def cublasCswap(n, x, incx, y, incy):
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasCswap_v2(handle,
+        global _libcublas_ctx
+        status = _libcublas.cublasCswap_v2(_libcublas_ctx,
                                            n, int(x), incx, int(y), incy)
         cublasCheckStatus(status)
 
@@ -2763,8 +2787,8 @@ else:
                                           ctypes.c_void_p,
                                           ctypes.c_int]
     def cublasZswap(n, x, incx, y, incy):
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasZswap_v2(handle,
+        global _libcublas_ctx
+        status = _libcublas.cublasZswap_v2(_libcublas_ctx,
                                            n, int(x), incx, int(y), incy)
         cublasCheckStatus(status)
 
@@ -2825,8 +2849,8 @@ else:
         Matrix-vector product for real general banded matrix.
         
         """
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasSgbmv_v2(handle,
+        global _libcublas_ctx
+        status = _libcublas.cublasSgbmv_v2(_libcublas_ctx,
                                            trans, m, n, kl, ku,
                                            ctypes.byref(ctypes.c_float(alpha)),
                                            int(A), lda,
@@ -2882,8 +2906,8 @@ else:
         
         """
 
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasDgbmv_v2(handle,
+        global _libcublas_ctx
+        status = _libcublas.cublasDgbmv_v2(_libcublas_ctx,
                                            trans, m, n, kl, ku,
                                            ctypes.byref(ctypes.c_float(alpha)),
                                            int(A), lda, int(x), incx,
@@ -2945,8 +2969,8 @@ else:
         
         """
 
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasCgbmv_v2(handle,
+        global _libcublas_ctx
+        status = _libcublas.cublasCgbmv_v2(_libcublas_ctx,
                                            trans, m, n, kl, ku,
                                            ctypes.byref(cuda.cuFloatComplex(alpha.real,
                                                                             alpha.imag)),
@@ -3007,8 +3031,8 @@ else:
         
         """
 
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasZgbmv_v2(handle,
+        global _libcublas_ctx        
+        status = _libcublas.cublasZgbmv_v2(_libcublas_ctx,
                                            trans, m, n, kl, ku,
                                            ctypes.byref(cuda.cuDoubleComplex(alpha.real,
                                                                              alpha.imag)),
@@ -3113,8 +3137,8 @@ else:
 
         """
 
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasSgemv_v2(handle,
+        global _libcublas_ctx        
+        status = _libcublas.cublasSgemv_v2(_libcublas_ctx,
                                            _CUBLAS_OP[trans], m, n,
                                            ctypes.byref(ctypes.c_float(alpha)), int(A), lda,
                                            int(x), incx,
@@ -3165,8 +3189,8 @@ else:
         
         """
 
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasDgemv_v2(handle,
+        global _libcublas_ctx        
+        status = _libcublas.cublasDgemv_v2(_libcublas_ctx,
                                            _CUBLAS_OP[trans], m, n,
                                            ctypes.byref(ctypes.c_double(alpha)),
                                            int(A), lda, int(x), incx,
@@ -3222,8 +3246,8 @@ else:
         
         """
 
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasCgemv_v2(handle,
+        global _libcublas_ctx        
+        status = _libcublas.cublasCgemv_v2(_libcublas_ctx,
                                            _CUBLAS_OP[trans], m, n,
                                            ctypes.byref(cuda.cuFloatComplex(alpha.real,
                                                                             alpha.imag)),
@@ -3281,8 +3305,8 @@ else:
         
         """
 
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasZgemv_v2(handle,
+        global _libcublas_ctx        
+        status = _libcublas.cublasZgemv_v2(_libcublas_ctx,
                                            _CUBLAS_OP[trans], m, n,
                                            ctypes.byref(cuda.cuDoubleComplex(alpha.real,
                                                                              alpha.imag)),
@@ -3331,8 +3355,8 @@ else:
         Rank-1 operation on real general matrix.
         
         """
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasSger_v2(handle,
+        global _libcublas_ctx        
+        status = _libcublas.cublasSger_v2(_libcublas_ctx,
                                           m, n,
                                           ctypes.byref(ctypes.c_float(alpha)),
                                           int(x), incx,
@@ -3377,8 +3401,8 @@ else:
         Rank-1 operation on real general matrix.
         
         """
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasDger_v2(handle,
+        global _libcublas_ctx        
+        status = _libcublas.cublasDger_v2(_libcublas_ctx,
                                           m, n,
                                           ctypes.byref(ctypes.c_double(alpha)),
                                           int(x), incx,
@@ -3425,8 +3449,8 @@ else:
         
         """
         
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasCgerc_v2(handle,
+        global _libcublas_ctx        
+        status = _libcublas.cublasCgerc_v2(_libcublas_ctx,
                                            m, n, ctypes.byref(cuda.cuFloatComplex(alpha.real,
                                                                                 alpha.imag)),
                                            int(x), incx, int(y), incy, int(A), lda)
@@ -3472,8 +3496,8 @@ else:
         
         """
 
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasCgeru_v2(handle,
+        global _libcublas_ctx        
+        status = _libcublas.cublasCgeru_v2(_libcublas_ctx,
                                            m, n, ctypes.byref(cuda.cuFloatComplex(alpha.real,
                                                                                   alpha.imag)),
                                            int(x), incx, int(y), incy, int(A), lda)
@@ -3519,8 +3543,8 @@ else:
         
         """
 
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasZgerc_v2(handle,
+        global _libcublas_ctx        
+        status = _libcublas.cublasZgerc_v2(_libcublas_ctx,
                                            m, n, ctypes.byref(cuda.cuDoubleComplex(alpha.real,
                                                                                    alpha.imag)),
                                            int(x), incx, int(y), incy, int(A), lda)
@@ -3567,8 +3591,8 @@ else:
         
         """
 
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasZgeru_v2(handle,
+        global _libcublas_ctx        
+        status = _libcublas.cublasZgeru_v2(_libcublas_ctx,
                                            m, n, ctypes.byref(cuda.cuDoubleComplex(alpha.real,
                                                                                    alpha.imag)),
                                            int(x), incx, int(y), incy, int(A), lda)
@@ -3619,8 +3643,8 @@ else:
         
         """
 
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasSsbmv_v2(handle,
+        global _libcublas_ctx
+        status = _libcublas.cublasSsbmv_v2(_libcublas_ctx,
                                            _CUBLAS_FILL_MODE[uplo], n, k,
                                            ctypes.byref(ctypes.c_float(alpha)),
                                            int(A), lda, int(x), incx,
@@ -3672,8 +3696,8 @@ else:
         
         """
 
-        handle = cublasGetCurrentCtx()
-        status = _libcublas.cublasDsbmv_v2(handle,
+        global _libcublas_ctx
+        status = _libcublas.cublasDsbmv_v2(_libcublas_ctx,
                                            _CUBLAS_FILL_MODE[uplo], n, k,
                                            ctypes.byref(ctypes.c_double(alpha)),
                                            int(A), lda, int(x), incx,
@@ -4819,8 +4843,8 @@ else:
         
         """
 
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasSgemm_v2(handle,
+        global _libcublas_ctx        
+        status = _libcublas.cublasSgemm_v2(_libcublas_ctx,
                                            _CUBLAS_OP[transa],
                                            _CUBLAS_OP[transb], m, n, k, 
                                            ctypes.byref(ctypes.c_float(alpha)),
@@ -4880,8 +4904,8 @@ else:
         
         """
 
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasCgemm_v2(handle,
+        global _libcublas_ctx        
+        status = _libcublas.cublasCgemm_v2(_libcublas_ctx,
                                            _CUBLAS_OP[transa],
                                            _CUBLAS_OP[transb], m, n, k, 
                                            ctypes.byref(cuda.cuFloatComplex(alpha.real,
@@ -4939,8 +4963,8 @@ else:
         
         """
 
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasDgemm_v2(handle,
+        global _libcublas_ctx        
+        status = _libcublas.cublasDgemm_v2(_libcublas_ctx,
                                            _CUBLAS_OP[transa],
                                            _CUBLAS_OP[transb], m, n, k, 
                                            ctypes.byref(ctypes.c_double(alpha)),
@@ -5002,8 +5026,8 @@ else:
         
         """
 
-        handle = cublasGetCurrentCtx()        
-        status = _libcublas.cublasZgemm_v2(handle,
+        global _libcublas_ctx        
+        status = _libcublas.cublasZgemm_v2(_libcublas_ctx,
                                            _CUBLAS_OP[transa],
                                            _CUBLAS_OP[transb], m, n, k, 
                                            ctypes.byref(cuda.cuDoubleComplex(alpha.real,
