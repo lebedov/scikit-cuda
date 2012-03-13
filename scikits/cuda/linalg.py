@@ -257,6 +257,15 @@ def dot(x_gpu, y_gpu, transa='N', transb='N'):
                            y_gpu.gpudata, 1)
     else:
 
+        # Get the shapes of the arguments (accounting for the
+        # possibility that one of them may only have one dimension):
+        x_shape = x_gpu.shape 
+        y_shape = y_gpu.shape
+        if len(x_shape) == 1:
+            x_shape = (1, x_shape[0])
+        if len(y_shape) == 1:
+            y_shape = (1, y_shape[0])
+        
         # Perform matrix multiplication for 2D arrays:
         if (x_gpu.dtype == np.complex64 and y_gpu.dtype == np.complex64):
             cublas_func = cublas.cublasCgemm        
@@ -281,16 +290,16 @@ def dot(x_gpu, y_gpu, transa='N', transb='N'):
         transb = lower(transb)        
 
         if transb in ['t', 'c']:
-            m, k = y_gpu.shape
+            m, k = y_shape
         elif transb in ['n']:
-            k, m = y_gpu.shape
+            k, m = y_shape
         else:
             raise ValueError('invalid value for transb')
 
         if transa in ['t', 'c']:
-            l, n = x_gpu.shape
+            l, n = x_shape
         elif transa in ['n']:
-            n, l = x_gpu.shape
+            n, l = x_shape
         else:
             raise ValueError('invalid value for transa')
 
