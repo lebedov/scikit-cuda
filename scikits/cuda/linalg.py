@@ -328,8 +328,7 @@ def dot(x_gpu, y_gpu, transa='N', transb='N'):
         # Note that the desired shape of the output matrix is the transpose
         # of what CUBLAS assumes:
         c_gpu = gpuarray.empty((n, ldc), x_gpu.dtype)
-        print transb, transa, m, n, k, alpha, y_gpu.gpudata,
-                    lda, x_gpu.gpudata, ldb, beta, c_gpu.gpudata, ldc
+
         cublas_func(transb, transa, m, n, k, alpha, y_gpu.gpudata,
                     lda, x_gpu.gpudata, ldb, beta, c_gpu.gpudata, ldc)
 
