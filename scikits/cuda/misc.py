@@ -15,7 +15,11 @@ import numpy as np
 
 import cuda
 import cublas
-import cula
+try:
+    import cula
+    _has_cula = True
+except:
+    _has_cula = False
 
 isdoubletype = lambda x : True if x == np.float64 or \
                x == np.complex128 else False
@@ -133,7 +137,8 @@ def init():
     # culaSelectDevice() need not (and, in fact, cannot) be called
     # here because the host thread has already been bound to a GPU
     # device:
-    cula.culaInitialize()
+    if _has_cula:
+        cula.culaInitialize()
     
 def get_compute_capability(dev):
     """

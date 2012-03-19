@@ -13,7 +13,11 @@ import numpy as np
 
 import cuda
 import cublas
-import cula
+try:
+    import cula
+    _has_cula = True
+except:
+    _has_cula = False
 import misc
 
 from misc import init
@@ -84,6 +88,9 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     True
 
     """
+    
+    if not _has_cula:
+        raise NotImplementedError('svd requires cula wich is not installed')
     
     # The free version of CULA only supports single precision floating
     # point numbers:
@@ -321,6 +328,7 @@ def dot(x_gpu, y_gpu, transa='N', transb='N'):
         # Note that the desired shape of the output matrix is the transpose
         # of what CUBLAS assumes:
         c_gpu = gpuarray.empty((n, ldc), x_gpu.dtype)
+
         cublas_func(transb, transa, m, n, k, alpha, y_gpu.gpudata,
                     lda, x_gpu.gpudata, ldb, beta, c_gpu.gpudata, ldc)
 
@@ -1020,6 +1028,8 @@ def pinv(a_gpu, rcond=1e-15):
 
     """
     
+    if not _has_cula:
+        raise NotImplementedError('pinv requires cula wich is not installed')
     # Perform in-place SVD if the matrix is square to save memory:
     if a_gpu.shape[0] == a_gpu.shape[1]:
         u_gpu, s_gpu, vh_gpu = svd(a_gpu, 's', 'o')
