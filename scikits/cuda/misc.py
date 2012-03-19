@@ -137,7 +137,7 @@ def init():
     # culaSelectDevice() need not (and, in fact, cannot) be called
     # here because the host thread has already been bound to a GPU
     # device:
-    if not _has_cula:
+    if _has_cula:
         cula.culaInitialize()
     
 def get_compute_capability(dev):
