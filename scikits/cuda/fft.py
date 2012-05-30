@@ -6,6 +6,8 @@ PyCUDA-based FFT functions.
 
 import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
+import pycuda.elementwise as el
+import pycuda.tools as tools
 import numpy as np
 
 import cufft
@@ -13,7 +15,7 @@ import cufft
 class Plan:
     """
     CUFFT plan class.
-    
+
     This class represents an FFT plan for CUFFT.
 
     Parameters
@@ -29,14 +31,14 @@ class Plan:
     stream : pycuda.driver.Stream
         Stream with which to associate the plan. If no stream is specified,
         the default stream is used.
-            
+
     """
-    
+
     def __init__(self, shape, in_dtype, out_dtype, batch=1, stream=None):
 
         if np.isscalar(shape):
             self.shape = (shape, )
-        else:            
+        else:
             self.shape = shape
 
         self.in_dtype = in_dtype
@@ -45,7 +47,7 @@ class Plan:
         if batch <= 0:
             raise ValueError('batch size must be greater than 0')
         self.batch = batch
-        
+
         # Determine type of transformation:
         if in_dtype == np.float32 and out_dtype == np.complex64:
             self.fft_type = cufft.CUFFT_R2C
@@ -79,10 +81,21 @@ class Plan:
         # Associate stream with plan:
         if stream != None:
             cufft.cufftSetStream(self.handle, stream.handle)
-            
+
     def __del__(self):
         cufft.cufftDestroy(self.handle)
-          
+
+def _scale_inplace(a, x_gpu):
+    """
+    Scale an array by a specified value in-place.
+    """
+
+    ctype = tools.dtype_to_ctype(x_gpu.dtype)
+    inplace = el.ElementwiseKernel(
+        "{ctype} a, {ctype} *x".format(ctype=ctype),
+        "x[i] /= a")
+    inplace(np.cast[x_gpu.dtype](a), x_gpu)
+
 def _fft(x_gpu, y_gpu, plan, direction, scale=None):
     """
     Fast Fourier Transform.
@@ -97,16 +110,16 @@ def _fft(x_gpu, y_gpu, plan, direction, scale=None):
         FFT plan.
     direction : { cufft.CUFFT_FORWARD, cufft.CUFFT_INVERSE }
         Transform direction. Only affects in-place transforms.
-    
+
     Optional Parameters
     -------------------
     scale : int or float
         Scale the values in the output array by dividing them by this value.
-    
+
     Notes
     -----
     This function should not be called directly.
-    
+
     """
 
     if (x_gpu.gpudata == y_gpu.gpudata) and \
@@ -129,10 +142,10 @@ def _fft(x_gpu, y_gpu, plan, direction, scale=None):
     else:
         plan.fft_func(plan.handle, int(x_gpu.gpudata),
                       int(y_gpu.gpudata))
-        
+
     # Scale the result by dividing it by the number of elements:
     if scale != None:
-        y_gpu.gpudata = (y_gpu/np.cast[y_gpu.dtype](scale)).gpudata
+        _scale_inplace(scale, y_gpu)
 
 def fft(x_gpu, y_gpu, plan, scale=False):
     """
@@ -224,7 +237,7 @@ def ifft(x_gpu, y_gpu, plan, scale=False):
     For complex to real transformations, this function assumes the
     input contains N/2+1 non-redundant FFT coefficents of a signal of
     length N.
-    
+
     """
 
     if scale == True:
