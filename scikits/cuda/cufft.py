@@ -6,11 +6,10 @@ Python interface to CUFFT functions.
 Note: this module does not explicitly depend on PyCUDA.
 """
 
-import sys
-import ctypes
+import ctypes, sys
 
 if sys.platform == 'linux2':
-    _libcufft_libname_list = ['libcufft.so', 'libcufft.so.3']        
+    _libcufft_libname_list = ['libcufft.so', 'libcufft.so.3', 'libcufft.so.4']
 elif sys.platform == 'darwin':
     _libcufft_libname_list = ['libcufft.dylib']
 else:
@@ -27,7 +26,7 @@ for _libcufft_libname in _libcufft_libname_list:
         break
 if _libcufft == None:
     raise OSError('cufft library not found')
-    
+
 # General CUFFT error:
 class cufftError(Exception):
     """CUFFT error"""
@@ -168,7 +167,7 @@ def cufftPlanMany(rank, n, fft_type, batch):
                                      batch)
     cufftCheckStatus(status)
     return plan
-    
+
 _libcufft.cufftDestroy.restype = int
 _libcufft.cufftDestroy.argtypes = [ctypes.c_uint]
 def cufftDestroy(plan):
