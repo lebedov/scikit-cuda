@@ -25,4 +25,5 @@ Miscellaneous Routines
    ones
    ones_like
    select_block_grid_sizes
+   set_realloc
    zeros
