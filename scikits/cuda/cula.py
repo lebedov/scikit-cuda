@@ -13,9 +13,9 @@ import cuda
 
 # Load CULA library:
 if sys.platform == 'linux2':
-    _libcula_libname_list = ['libcula.so', 'libcula_lapack.so']
+    _libcula_libname_list = ['libcula_lapack.so', 'libcula.so']
 elif sys.platform == 'darwin':
-    _libcula_libname_list = ['libcula.dylib', 'libcula_lapack.dylib']
+    _libcula_libname_list = ['libcula_lapack.so', 'libcula.dylib']
 else:
     raise RuntimeError('unsupported platform')
 
@@ -40,7 +40,7 @@ except AttributeError:
     _libcula_toolkit = 'basic'
 else:
     _libcula_toolkit = 'premium'
-    
+
 # Function for retrieving string associated with specific CULA error
 # code:
 _libcula.culaGetStatusString.restype = ctypes.c_char_p
@@ -58,7 +58,7 @@ def culaGetStatusString(e):
     -------
     s : str
         Status string.
-        
+
     """
 
     return _libcula.culaGetStatusString(e)
