@@ -83,7 +83,13 @@ class Plan:
             cufft.cufftSetStream(self.handle, stream.handle)
 
     def __del__(self):
-        cufft.cufftDestroy(self.handle)
+
+        # Don't complain if handle destruction fails because the plan
+        # may have already been cleaned up:
+        try:
+            cufft.cufftDestroy(self.handle)
+        except:
+            pass
 
 def _scale_inplace(a, x_gpu):
     """
