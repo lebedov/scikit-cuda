@@ -4,7 +4,7 @@
 Python interface to CUDA runtime functions.
 """
 
-import sys, ctypes, atexit
+import atexit, ctypes, sys, warnings
 import numpy as np
 
 # Load CUDA runtime library:
@@ -16,7 +16,7 @@ else:
     raise RuntimeError('unsupported platform')
 
 # Print understandable error message when library cannot be found:
-_libcudart = None    
+_libcudart = None
 for _libcudart_libname in _libcudart_libname_list:
     try:
         _libcudart = ctypes.cdll.LoadLibrary(_libcudart_libname)
@@ -38,7 +38,7 @@ def POINTER(obj):
     in how ctypes handles None on 64-bit platforms.
 
     """
-    
+
     p = ctypes.POINTER(obj)
     if not isinstance(p.from_param, classmethod):
         def from_param(cls, x):
@@ -57,22 +57,21 @@ class float2(ctypes.Structure):
         ('y', ctypes.c_float)
         ]
 
+class cuFloatComplex(float2):
     @property
     def value(self):
         return complex(self.x, self.y)
-    
+
 class double2(ctypes.Structure):
     _fields_ = [
         ('x', ctypes.c_double),
         ('y', ctypes.c_double)
         ]
 
+class cuDoubleComplex(double2):
     @property
     def value(self):
         return complex(self.x, self.y)
-
-cuFloatComplex = float2
-cuDoubleComplex = double2
 
 def gpuarray_ptr(g):
     """
@@ -80,23 +79,40 @@ def gpuarray_ptr(g):
 
     """
 
+    addr = int(g.gpudata)
+    if g.dtype == np.int8:
+        return ctypes.cast(addr, POINTER(ctypes.c_byte))
+    if g.dtype == np.uint8:
+        return ctypes.cast(addr, POINTER(ctypes.c_ubyte))
+    if g.dtype == np.int16:
+        return ctypes.cast(addr, POINTER(ctypes.c_short))
+    if g.dtype == np.uint16:
+        return ctypes.cast(addr, POINTER(ctypes.c_ushort))
+    if g.dtype == np.int32:
+        return ctypes.cast(addr, POINTER(ctypes.c_int))
+    if g.dtype == np.uint32:
+        return ctypes.cast(addr, POINTER(ctypes.c_uint))
+    if g.dtype == np.int64:
+        return ctypes.cast(addr, POINTER(ctypes.c_long))
+    if g.dtype == np.uint64:
+        return ctypes.cast(addr, POINTER(ctypes.c_ulong))
     if g.dtype == np.float32:
-        return ctypes.cast(int(g.gpudata), POINTER(ctypes.c_float))
+        return ctypes.cast(addr, POINTER(ctypes.c_float))
     elif g.dtype == np.float64:
-        return ctypes.cast(int(g.gpudata), POINTER(ctypes.c_double))
+        return ctypes.cast(addr, POINTER(ctypes.c_double))
     elif g.dtype == np.complex64:
-        return ctypes.cast(int(g.gpudata), POINTER(cuFloatComplex))
+        return ctypes.cast(addr, POINTER(cuFloatComplex))
     elif g.dtype == np.complex128:
-        return ctypes.cast(int(g.gpudata), POINTER(cuDoubleComplex))
+        return ctypes.cast(addr, POINTER(cuDoubleComplex))
     else:
         raise ValueError('unrecognized type')
-    
+
 _libcudart.cudaGetErrorString.restype = ctypes.c_char_p
 _libcudart.cudaGetErrorString.argtypes = [ctypes.c_int]
 def cudaGetErrorString(e):
     """
     Retrieve CUDA error string.
-    
+
     Return the string associated with the specified CUDA error status
     code.
 
@@ -109,7 +125,7 @@ def cudaGetErrorString(e):
     -------
     s : str
         Error string.
-        
+
     """
 
     return _libcudart.cudaGetErrorString(e)
@@ -346,7 +362,7 @@ class cudaErrorStartupFailure(cudaError):
 
 cudaExceptions = {
     1: cudaErrorMissingConfiguration,
-    2: cudaErrorMemoryAllocation, 
+    2: cudaErrorMemoryAllocation,
     3: cudaErrorInitializationError,
     4: cudaErrorLaunchFailure,
     5: cudaErrorPriorLaunchFailure,
@@ -412,7 +428,7 @@ def cudaCheckStatus(status):
 
     Raise an exception corresponding to the specified CUDA runtime error
     code.
-    
+
     Parameters
     ----------
     status : int
@@ -421,7 +437,7 @@ def cudaCheckStatus(status):
     See Also
     --------
     cudaExceptions
-    
+
     """
 
     if status != 0:
@@ -447,14 +463,14 @@ def cudaMalloc(count, ctype=None):
         Number of bytes of memory to allocate
     ctype : _ctypes.SimpleType, optional
         ctypes type to cast returned pointer.
-        
+
     Returns
     -------
     ptr : ctypes pointer
         Pointer to allocated device memory.
 
     """
-    
+
     ptr = ctypes.c_void_p()
     status = _libcudart.cudaMalloc(ctypes.byref(ptr), count)
     cudaCheckStatus(status)
@@ -477,7 +493,7 @@ def cudaFree(ptr):
         Pointer to allocated device memory.
 
     """
-    
+
     status = _libcudart.cudaFree(ptr)
     cudaCheckStatus(status)
 
@@ -491,7 +507,7 @@ def cudaMallocPitch(pitch, rows, cols, elesize):
 
     Allocate pitched memory on the device associated with the current active
     context.
-    
+
     Parameters
     ----------
     pitch : int
@@ -507,9 +523,9 @@ def cudaMallocPitch(pitch, rows, cols, elesize):
     -------
     ptr : ctypes pointer
         Pointer to allocated device memory.
-        
+
     """
-    
+
     ptr = ctypes.c_void_p()
     status = _libcudart.cudaMallocPitch(ctypes.byref(ptr),
                                         ctypes.c_size_t(pitch), cols*elesize,
@@ -541,14 +557,14 @@ def cudaMemcpy_htod(dst, src, count):
         Host memory pointer.
     count : int
         Number of bytes to copy.
-    
+
     """
-    
+
     status = _libcudart.cudaMemcpy(dst, src,
                                    ctypes.c_size_t(count),
                                    cudaMemcpyHostToDevice)
     cudaCheckStatus(status)
-    
+
 def cudaMemcpy_dtoh(dst, src, count):
     """
     Copy memory from device to host.
@@ -601,7 +617,7 @@ def cudaSetDevice(dev):
     Set current CUDA device.
 
     Select a device to use for subsequent CUDA operations.
-    
+
     Parameters
     ----------
     dev : int
@@ -611,7 +627,7 @@ def cudaSetDevice(dev):
 
     status = _libcudart.cudaSetDevice(dev)
     cudaCheckStatus(status)
-    
+
 _libcudart.cudaGetDevice.restype = int
 _libcudart.cudaGetDevice.argtypes = [ctypes.POINTER(ctypes.c_int)]
 def cudaGetDevice():
@@ -626,7 +642,7 @@ def cudaGetDevice():
     dev : int
         Device number.
 
-    """    
+    """
 
     dev = ctypes.c_int()
     status = _libcudart.cudaGetDevice(ctypes.byref(dev))
@@ -665,7 +681,7 @@ class cudaPointerAttributes(ctypes.Structure):
         ('devicePointer', ctypes.c_void_p),
         ('hostPointer', ctypes.c_void_p)
         ]
-        
+
 _libcudart.cudaPointerGetAttributes.restype = int
 _libcudart.cudaPointerGetAttributes.argtypes = [ctypes.c_void_p,
                                                 ctypes.c_void_p]
@@ -691,7 +707,7 @@ def cudaPointerGetAttributes(ptr):
     Notes
     -----
     This function only works with CUDA 4.0 and later.
-    
+
     """
 
     attributes = cudaPointerAttributes()
