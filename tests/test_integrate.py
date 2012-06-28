@@ -12,6 +12,9 @@ import scikits.cuda.misc as misc
 import scikits.cuda.integrate as integrate
 
 class test_integrate(TestCase):
+    def setUp(self):
+        integrate.init()
+
     def test_trapz_float32(self):
         x = np.asarray(np.random.rand(10), np.float32)
         x_gpu = gpuarray.to_gpu(x)
