@@ -12,6 +12,8 @@ if sys.platform == 'linux2':
     _libcufft_libname_list = ['libcufft.so', 'libcufft.so.3', 'libcufft.so.4']
 elif sys.platform == 'darwin':
     _libcufft_libname_list = ['libcufft.dylib']
+elif sys.platform == 'Windows':
+    _libcufft_libname_list = ['cufft.lib']
 else:
     raise RuntimeError('unsupported platform')
 

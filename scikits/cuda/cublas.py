@@ -22,6 +22,8 @@ if sys.platform == 'linux2':
                                'libcublas.so.4']
 elif sys.platform == 'darwin':
     _libcublas_libname_list = ['libcublas.dylib']
+elif sys.platform == 'Windows':
+    _libcublas_libname_list = ['cublas.lib']
 else:
     raise RuntimeError('unsupported platform')
 

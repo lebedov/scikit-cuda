@@ -54,8 +54,11 @@ To build the documentation, the following packages are also required:
 * `Pygments <http://pygments.org>`_ 0.8 or later.
 * `Sphinx <http://sphinx.pocoo.org>`_ 1.0.1 or later.
 
-The software has been tested on Linux; it should also work on other
-platforms supported by the above packages.
+Platform Support
+----------------
+The software has been developed and tested on Linux; it should also 
+work on other Unix-like platforms supported by the above packages. Parts of the
+package may work on Windows as well, but remain untested.
 
 Building and Installation
 -------------------------

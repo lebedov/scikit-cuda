@@ -12,6 +12,8 @@ if sys.platform == 'linux2':
     _libcudart_libname_list = ['libcudart.so', 'libcudart.so.3', 'libcudart.so.4']
 elif sys.platform == 'darwin':
     _libcudart_libname_list = ['libcudart.dylib']
+elif sys.platform == 'Windows':
+    _libcudart_libname_list = ['cudart.lib']
 else:
     raise RuntimeError('unsupported platform')
 
