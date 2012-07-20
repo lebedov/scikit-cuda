@@ -13,6 +13,7 @@ Release 0.042 - ()
 * Add support for specifying streams when creating FFT plans.
 * Successfully find CULA R13a libraries.
 * Perform post-fft scaling in-place.
+* Fix broken Python 2.6 compatibility (#19).
 
 Release 0.041 - (May 22, 2011)
 ------------------------------
