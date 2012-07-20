@@ -90,7 +90,7 @@ def init_context(dev):
     -------
     ctx : pycuda.driver.Context
         Created context.
-        
+
     """
 
     ctx = dev.make_context()
@@ -107,7 +107,7 @@ def done_context(ctx):
     ----------
     ctx : pycuda.driver.Context
         Context from which to detach.
-        
+
     """
 
     for i in xrange(len(atexit._exithandlers)):
@@ -115,16 +115,16 @@ def done_context(ctx):
             del atexit._exithandlers[i]
             break
     ctx.detach()
-    
+
 def init():
     """
     Initialize libraries used by scikits.cuda.
-    
+
     Notes
     -----
     This function does not initialize PyCUDA; it uses whatever device
     and context were initialized in the current host thread.
-    
+
     """
 
     # CUBLAS uses whatever device is being used by the host thread:
@@ -134,7 +134,7 @@ def init():
     # here because the host thread has already been bound to a GPU
     # device:
     cula.culaInitialize()
-    
+
 def get_compute_capability(dev):
     """
     Get the compute capability of the specified device.
@@ -176,7 +176,7 @@ def get_dev_attrs(dev):
 
     Retrieve select attributes of the specified CUDA device that
     relate to maximum thread block and grid sizes.
-    
+
     Parameters
     ----------
     d : pycuda.driver.Device
@@ -188,9 +188,9 @@ def get_dev_attrs(dev):
         List containing [MAX_THREADS_PER_BLOCK,
         (MAX_BLOCK_DIM_X, MAX_BLOCK_DIM_Y, MAX_BLOCK_DIM_Z),
         (MAX_GRID_DIM_X, MAX_GRID_DIM_Y)]
-        
+
     """
-    
+
     attrs = dev.get_attributes()
     return [attrs[drv.device_attribute.MAX_THREADS_PER_BLOCK],
             (attrs[drv.device_attribute.MAX_BLOCK_DIM_X],
@@ -207,7 +207,7 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
     Determine the CUDA block and grid dimensions allowed by a GPU
     device that are sufficient for processing every element of an
     array in a separate thread.
-    
+
     Parameters
     ----------
     d : pycuda.driver.Device
@@ -218,7 +218,7 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
         Number of threads to execute in each block. If this is None,
         the maximum number of threads per block allowed by device `d`
         is used.
-        
+
     Returns
     -------
     block_dim : tuple
@@ -252,7 +252,7 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
 
     It is advisable that the number of threads per block be a multiple
     of the warp size to fully utilize a device's computing resources.
-    
+
     """
 
     # Sanity checks:
@@ -269,7 +269,7 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
 
     if threads_per_block != None:
         max_threads_per_block = threads_per_block
-        
+
     # Assume that the maximum number of threads per block is no larger
     # than the maximum X and Y dimension of a thread block:
     assert max_threads_per_block <= max_block_dim[0]
@@ -283,7 +283,7 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
 
     # Actual number of thread blocks needed:
     blocks_needed = N/max_threads_per_block+1
-    
+
     if blocks_needed*max_threads_per_block < max_threads_per_block*max_blocks_per_grid_dim:
         grid_x = blocks_needed
         grid_y = 1
@@ -320,7 +320,7 @@ def zeros(shape, dtype, allocator=drv.mem_alloc):
     prevents pycuda.gpuarray.zeros() from working properly with
     complex types in pycuda 2011.1.2:
     http://projects.scipy.org/numpy/ticket/1898
-    
+
     """
 
     out = gpuarray.GPUArray(shape, dtype, allocator)
@@ -344,11 +344,11 @@ def zeros_like(a):
         Array of zeros with the shape and dtype of `a`.
 
     """
-    
+
     out = gpuarray.GPUArray(a.shape, a.dtype, drv.mem_alloc)
     out.fill(0)
     return out
-    
+
 def ones(shape, dtype, allocator=drv.mem_alloc):
     """
     Return an array of the given shape and dtype filled with ones.
@@ -367,7 +367,7 @@ def ones(shape, dtype, allocator=drv.mem_alloc):
     -------
     out : pycuda.gpuarray.GPUArray
         Array of ones with the given shape and dtype.
-        
+
     """
 
     out = gpuarray.GPUArray(shape, dtype, allocator)
@@ -382,14 +382,14 @@ def ones_like(other):
     ----------
     other : pycuda.gpuarray.GPUArray
         Array whose shape and dtype are to be used to allocate a new array.
- 
+
     Returns
     -------
     out : pycuda.gpuarray.GPUArray
         Array of ones with the shape and dtype of `other`.
 
     """
-    
+
     out = gpuarray.GPUArray(other.shape, other.dtype,
                             other.allocator)
     out.fill(1)
@@ -413,7 +413,7 @@ def inf(shape, dtype, allocator=drv.mem_alloc):
     -------
     out : pycuda.gpuarray.GPUArray
         Array of infs with the given shape and dtype.
-        
+
     """
 
     out = gpuarray.GPUArray(shape, dtype, allocator)
@@ -441,11 +441,11 @@ maxabs_mod_template = Template("""
 
 // This kernel is only meant to be run in one thread;
 // N must contain the length of x:
-__global__ void maxabs(TYPE *x, REAL_TYPE *m, unsigned int N) {                       
+__global__ void maxabs(TYPE *x, REAL_TYPE *m, unsigned int N) {
     unsigned int idx = threadIdx.x;
 
     REAL_TYPE result, temp;
-    
+
     if (idx == 0) {
         result = abs(x[0]);
         for (unsigned int i = 1; i < N; i++) {
@@ -455,7 +455,7 @@ __global__ void maxabs(TYPE *x, REAL_TYPE *m, unsigned int N) {
         }
         m[0] = result;
     }
-}                             
+}
 """)
 
 def maxabs(x_gpu):
@@ -479,7 +479,7 @@ def maxabs(x_gpu):
     -----
     This function could be made faster by computing the absolute
     values of the input array in parallel.
-    
+
     Examples
     --------
     >>> import pycuda.autoinit
@@ -489,7 +489,7 @@ def maxabs(x_gpu):
     >>> m_gpu = misc.maxabs(x_gpu)
     >>> np.allclose(m_gpu.get(), 3.0)
     True
-    
+
     """
 
     use_double = int(x_gpu.dtype in [np.float64, np.complex128])
@@ -549,7 +549,7 @@ def cumsum(x_gpu):
     Cumulative sum.
 
     Return the cumulative sum of the elements in the specified array.
-    
+
     Parameters
     ----------
     x_gpu : pycuda.gpuarray.GPUArray
@@ -559,7 +559,7 @@ def cumsum(x_gpu):
     -------
     c_gpu : pycuda.gpuarray.GPUArray
         Output array containing cumulative sum of `x_gpu`.
-        
+
     Notes
     -----
     This function could be made faster by using a parallel prefix sum.
@@ -573,12 +573,12 @@ def cumsum(x_gpu):
     >>> c_gpu = misc.cumsum(x_gpu)
     >>> np.allclose(c_gpu.get(), np.cumsum(x_gpu.get()))
     True
-    
+
     """
 
     use_double = int(x_gpu.dtype in [np.float64, np.complex128])
     use_complex = int(x_gpu.dtype in [np.complex64, np.complex128])
-    
+
     cumsum_mod = \
                 SourceModule(cumsum_template.substitute(use_double=use_double,
                                                         use_complex=use_complex))
@@ -589,7 +589,7 @@ def cumsum(x_gpu):
            block=(1, 1, 1), grid=(1, 1))
 
     return c_gpu
-    
+
 diff_mod_template = Template("""
 #include <pycuda-complex.hpp>
 
@@ -648,19 +648,19 @@ def diff(x_gpu):
     >>> y_gpu = misc.diff(x_gpu)
     >>> np.allclose(np.diff(x), y_gpu.get())
     True
-    
+
     """
 
     if len(x_gpu.shape) > 1:
         raise ValueError('input must be 1D vector')
-    
+
     use_double = int(x_gpu.dtype in [np.float64, np.complex128])
     use_complex = int(x_gpu.dtype in [np.complex64, np.complex128])
 
     # Get block/grid sizes:
     dev = get_current_device()
     block_dim, grid_dim = select_block_grid_sizes(dev, x_gpu.shape)
-    
+
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
     cache_dir=None
@@ -678,12 +678,12 @@ def diff(x_gpu):
 
     return y_gpu
 
-# List of available numerical types provided by numpy: 
+# List of available numerical types provided by numpy:
 num_types = [np.typeDict[t] for t in \
              np.typecodes['AllInteger']+np.typecodes['AllFloat']]
 
 # Numbers of bytes occupied by each numerical type:
-num_nbytes = {np.dtype(t):t(1).nbytes for t in num_types}
+num_nbytes = dict((np.dtype(t),t(1).nbytes) for t in num_types)
 
 def set_realloc(x_gpu, data):
     """
@@ -693,7 +693,7 @@ def set_realloc(x_gpu, data):
     the array has a different type or dimensions than the instance,
     the GPU memory used by the instance is reallocated and the
     instance updated appropriately.
-    
+
     Parameters
     ----------
     x_gpu : pycuda.gpuarray.GPUArray
@@ -713,26 +713,26 @@ def set_realloc(x_gpu, data):
     >>> set_realloc(x_gpu, x)
     >>> np.allclose(x, x_gpu.get())
     True
-    
+
     """
 
     # Only reallocate if absolutely necessary:
     if x_gpu.shape != data.shape or x_gpu.size != data.size or \
         x_gpu.strides != data.strides or x_gpu.dtype != data.dtype:
-        
+
         # Free old memory:
         x_gpu.gpudata.free()
 
         # Allocate new memory:
         nbytes = num_nbytes[data.dtype]
         x_gpu.gpudata = drv.mem_alloc(nbytes*data.size)
-    
+
         # Set array attributes:
         x_gpu.shape = data.shape
         x_gpu.size = data.size
         x_gpu.strides = data.strides
         x_gpu.dtype = data.dtype
-        
+
     # Update the GPU memory:
     x_gpu.set(data)
 
