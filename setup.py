@@ -2,14 +2,21 @@
 
 import sys, os
 from glob import glob
+
+# Install setuptools if it isn't available:
+try:
+    import setuptools
+except ImportError:
+    from distribute_setup import use_setuptools
+    use_setuptools()
+
 from distutils.command.install import INSTALL_SCHEMES
 from distutils.command.install_headers import install_headers
 from setuptools import find_packages
 from setuptools import setup
-from scikits.cuda.version import __version__
 
 NAME =               'scikits.cuda'
-VERSION =            __version__
+VERSION =            '0.042'
 AUTHOR =             'Lev Givon'
 AUTHOR_EMAIL =       'lev@columbia.edu'
 URL =                'http://github.com/lebedov/scikits.cuda/'
@@ -30,7 +37,8 @@ NAMESPACE_PACKAGES = ['scikits']
 PACKAGES =           find_packages()
 
 if __name__ == "__main__":
-    if os.path.exists('MANIFEST'): os.remove('MANIFEST')
+    if os.path.exists('MANIFEST'): 
+        os.remove('MANIFEST')
 
     # This enables the installation of scikits/__init__.py as a data
     # file:
@@ -54,7 +62,7 @@ if __name__ == "__main__":
         data_files = [('scikits', ['scikits/__init__.py'])],
         include_package_data = True,
         install_requires = ['numpy',
-                            'pycuda>=0.94.2'],
+                            'pycuda >= 0.94.2'],
         extras_require = dict(
-            scipy = ['scipy>=0.8.0']
+            scipy = ['scipy >= 0.8.0']
         ))

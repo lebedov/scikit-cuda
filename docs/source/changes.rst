@@ -14,6 +14,7 @@ Release 0.042 - ()
 * Successfully find CULA R13a libraries.
 * Perform post-fft scaling in-place.
 * Fix broken Python 2.6 compatibility (#19).
+* Download distribute for package installation if it isn't available.
 
 Release 0.041 - (May 22, 2011)
 ------------------------------
