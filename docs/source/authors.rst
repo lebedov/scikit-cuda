@@ -11,7 +11,8 @@ for contributing wrappers for various CULA functions and to Rob Turetsky (also a
 Bionet Group) for invaluable feedback. Thanks are also due to 
 Ying Wei (Daniel) Fan (at Emory University) for kindly permitting the 
 reuse of the CUBLAS wrapper code in his PARRET [2]_ software in this package, 
-and to Stefan van der Walt (at the University of Stellenbosch) for bug fixes.
+to Stefan van der Walt (at the University of Stellenbosch) for bug fixes, 
+and Jacob Frelinger for enhancements.
 
 .. [1] http://bionet.ee.columbia.edu/
 .. [2] http://www.mathcs.emory.edu/~yfan/PARRET
