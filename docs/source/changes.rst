@@ -15,6 +15,7 @@ Release 0.042 - ()
 * Perform post-fft scaling in-place.
 * Fix broken Python 2.6 compatibility (#19).
 * Download distribute for package installation if it isn't available.
+* Prevent absence of CULA from causing import errors (enh. by Jacob Frelinger)
 
 Release 0.041 - (May 22, 2011)
 ------------------------------

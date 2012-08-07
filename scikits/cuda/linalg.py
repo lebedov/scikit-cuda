@@ -13,14 +13,19 @@ import numpy as np
 
 import cuda
 import cublas
-import cula
 import misc
+
+try:
+    import cula
+    _has_cula = True
+except ImportError:
+    _has_cula = False
 
 from misc import init
 
 # Get installation location of C headers:
 from . import install_headers
-    
+
 def svd(a_gpu, jobu='A', jobvt='A'):
     """
     Singular Value Decomposition.
@@ -56,7 +61,7 @@ def svd(a_gpu, jobu='A', jobvt='A'):
         `s` is of length `min(m, n)`.
     vh : pycuda.gpuarray.GPUArray
         Unitary matrix of shape `(n, n)` or `(k, n)`, depending
-        on `jobvt`. 
+        on `jobvt`.
 
     Notes
     -----
@@ -68,7 +73,7 @@ def svd(a_gpu, jobu='A', jobvt='A'):
 
     Only one of `jobu` or `jobvt` may be set to `O`, and then only for
     a square matrix.
-    
+
     Examples
     --------
     >>> import pycuda.gpuarray as gpuarray
@@ -84,13 +89,16 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     True
 
     """
-    
+
+    if not _has_cula:
+        raise NotImplementError('CULA not installed')
+
     # The free version of CULA only supports single precision floating
     # point numbers:
     data_type = a_gpu.dtype.type
     real_type = np.float32
     if data_type == np.complex64:
-        cula_func = cula._libcula.culaDeviceCgesvd        
+        cula_func = cula._libcula.culaDeviceCgesvd
     elif data_type == np.float32:
         cula_func = cula._libcula.culaDeviceSgesvd
     else:
@@ -109,18 +117,18 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     # format, the input matrix is assumed to be transposed:
     n, m = a_gpu.shape
     square = (n == m)
-    
+
     # Since the input matrix is transposed, jobu and jobvt must also
     # be switched because the computed matrices will be returned in
     # reversed order:
     jobvt, jobu = jobu, jobvt
-    
+
     # Set the leading dimension of the input matrix:
     lda = max(1, m)
 
     # Allocate the array of singular values:
     s_gpu = gpuarray.empty(min(m, n), real_type)
-    
+
     # Set the leading dimension and allocate u:
     jobu = upper(jobu)
     jobvt = upper(jobvt)
@@ -138,7 +146,7 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     else:
         ldu = 1
         u_gpu = gpuarray.empty((), data_type)
-        
+
     # Set the leading dimension and allocate vh:
     if jobvt == 'A':
         ldvt = n
@@ -146,7 +154,7 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     elif jobvt == 'S':
         ldvt = min(m, n)
         vh_gpu = gpuarray.empty((n, ldvt), data_type)
-    elif jobvt == 'O':        
+    elif jobvt == 'O':
         if jobu == 'O':
             raise ValueError('jobu and jobvt cannot both be O')
         if not square:
@@ -159,16 +167,16 @@ def svd(a_gpu, jobu='A', jobvt='A'):
         vh_gpu = gpuarray.empty((), data_type)
 
     # Compute SVD and check error status:
-    
+
     status = cula_func(jobu, jobvt, m, n, int(a_gpu.gpudata),
                        lda, int(s_gpu.gpudata), int(u_gpu.gpudata),
                        ldu, int(vh_gpu.gpudata), ldvt)
 
     cula.culaCheckStatus(status)
-        
+
     # Free internal CULA memory:
     cula.culaFreeBuffers()
-        
+
     # Since the input is assumed to be transposed, it is necessary to
     # return the computed matrices in reverse order:
     if jobu in ['A', 'S', 'O'] and jobvt in ['A', 'S', 'O']:
@@ -206,11 +214,11 @@ def dot(x_gpu, y_gpu, transa='N', transb='N'):
     c_gpu : pycuda.gpuarray.GPUArray, float{32,64}, or complex{64,128}
         Inner product of `x_gpu` and `y_gpu`. When the inputs are 1D
         arrays, the result will be returned as a scalar.
-    
+
     Notes
     -----
     The input matrices must all contain elements of the same data type.
-    
+
     Examples
     --------
     >>> import pycuda.gpuarray as gpuarray
@@ -233,14 +241,14 @@ def dot(x_gpu, y_gpu, transa='N', transb='N'):
     >>> f = linalg.dot(d_gpu, e_gpu)
     >>> np.allclose(np.dot(d, e), f)
     True
-    
+
     """
 
     if len(x_gpu.shape) == 1 and len(y_gpu.shape) == 1:
 
         if x_gpu.size != y_gpu.size:
             raise ValueError('arrays must be of same length')
-        
+
         # Compute inner product for 1D arrays:
         if (x_gpu.dtype == np.complex64 and y_gpu.dtype == np.complex64):
             cublas_func = cublas.cublasCdotu
@@ -259,16 +267,16 @@ def dot(x_gpu, y_gpu, transa='N', transb='N'):
 
         # Get the shapes of the arguments (accounting for the
         # possibility that one of them may only have one dimension):
-        x_shape = x_gpu.shape 
+        x_shape = x_gpu.shape
         y_shape = y_gpu.shape
         if len(x_shape) == 1:
             x_shape = (1, x_shape[0])
         if len(y_shape) == 1:
             y_shape = (1, y_shape[0])
-        
+
         # Perform matrix multiplication for 2D arrays:
         if (x_gpu.dtype == np.complex64 and y_gpu.dtype == np.complex64):
-            cublas_func = cublas.cublasCgemm        
+            cublas_func = cublas.cublasCgemm
             alpha = np.complex64(1.0)
             beta = np.complex64(0.0)
         elif (x_gpu.dtype == np.float32 and y_gpu.dtype == np.float32):
@@ -276,7 +284,7 @@ def dot(x_gpu, y_gpu, transa='N', transb='N'):
             alpha = np.float32(1.0)
             beta = np.float32(0.0)
         elif (x_gpu.dtype == np.complex128 and y_gpu.dtype == np.complex128):
-            cublas_func = cublas.cublasZgemm        
+            cublas_func = cublas.cublasZgemm
             alpha = np.complex128(1.0)
             beta = np.complex128(0.0)
         elif (x_gpu.dtype == np.float64 and y_gpu.dtype == np.float64):
@@ -287,7 +295,7 @@ def dot(x_gpu, y_gpu, transa='N', transb='N'):
             raise ValueError('unsupported combination of input types')
 
         transa = lower(transa)
-        transb = lower(transb)        
+        transb = lower(transb)
 
         if transb in ['t', 'c']:
             m, k = y_shape
@@ -305,12 +313,12 @@ def dot(x_gpu, y_gpu, transa='N', transb='N'):
 
         if l != k:
             raise ValueError('objects are not aligned')
-        
+
         if transb == 'n':
             lda = max(1, m)
         else:
             lda = max(1, k)
-            
+
         if transa == 'n':
             ldb = max(1, k)
         else:
@@ -345,7 +353,7 @@ def mdot(*args):
     Notes
     -----
     The input matrices must all contain elements of the same data type.
-        
+
     Examples
     --------
     >>> import pycuda.gpuarray as gpuarray
@@ -387,14 +395,14 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True):
     ----------
     d_gpu : pycuda.gpuarray.GPUArray
         Array of length `N` corresponding to the diagonal of the
-        multiplier. 
+        multiplier.
     a_gpu : pycuda.gpuarray.GPUArray
-        Multiplicand array with shape `(N, M)`. 
+        Multiplicand array with shape `(N, M)`.
     trans : char
         If 'T', compute the product of the transpose of `a_gpu`.
     overwrite : bool
         If true (default), save the result in `a_gpu`.
-        
+
     Returns
     -------
     r_gpu : pycuda.gpuarray.GPUArray
@@ -405,7 +413,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True):
     `d_gpu` and `a_gpu` must have the same precision data
     type. `d_gpu` may be real and `a_gpu` may be complex, but not
     vice-versa.
-    
+
     Examples
     --------
     >>> import pycuda.autoinit
@@ -420,7 +428,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True):
     >>> r_gpu = linalg.dot_diag(d_gpu, a_gpu)
     >>> np.allclose(np.dot(np.diag(d), a), r_gpu.get())
     True
-    
+
     """
 
     if len(d_gpu.shape) != 1:
@@ -448,7 +456,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True):
         scal_func = cublas.cublasDscal
         copy_func = cublas.cublasDcopy
     elif float_type == np.complex64:
-        if d_gpu.dtype == np.complex64:            
+        if d_gpu.dtype == np.complex64:
             scal_func = cublas.cublasCscal
         elif d_gpu.dtype == np.float32:
             scal_func = cublas.cublasCsscal
@@ -465,7 +473,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True):
         copy_func = cublas.cublasZcopy
     else:
         raise ValueError('unrecognized type')
-    
+
     d = d_gpu.get()
     if overwrite:
         r_gpu = a_gpu
@@ -524,9 +532,9 @@ __global__ void transpose(FLOAT *odata, FLOAT *idata, unsigned int N)
 def transpose(a_gpu):
     """
     Matrix transpose.
-    
+
     Transpose a matrix in device memory and return an object
-    representing the transposed matrix. 
+    representing the transposed matrix.
 
     Parameters
     ----------
@@ -537,7 +545,7 @@ def transpose(a_gpu):
     -------
     at_gpu : pycuda.gpuarray.GPUArray
         Transposed matrix of shape `(n, m)`.
-    
+
     Examples
     --------
     >>> import pycuda.autoinit
@@ -562,7 +570,7 @@ def transpose(a_gpu):
     if a_gpu.dtype not in [np.float32, np.float64, np.complex64,
                            np.complex128]:
         raise ValueError('unrecognized type')
-    
+
     use_double = int(a_gpu.dtype in [np.float64, np.complex128])
     use_complex = int(a_gpu.dtype in [np.complex64, np.complex128])
 
@@ -572,7 +580,7 @@ def transpose(a_gpu):
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
-    cache_dir=None            
+    cache_dir=None
     transpose_mod = \
                   SourceModule(transpose_template.substitute(use_double=use_double,
                                                              use_complex=use_complex,
@@ -580,21 +588,21 @@ def transpose(a_gpu):
                                cols=a_gpu.shape[1],
                                rows=a_gpu.shape[0]),
                                cache_dir=cache_dir)
-    
+
     transpose = transpose_mod.get_function("transpose")
     at_gpu = gpuarray.empty(a_gpu.shape[::-1], a_gpu.dtype)
-    transpose(at_gpu, a_gpu, np.uint32(a_gpu.size),              
+    transpose(at_gpu, a_gpu, np.uint32(a_gpu.size),
               block=block_dim,
               grid=grid_dim)
-                    
+
     return at_gpu
 
 def hermitian(a_gpu):
     """
     Hermitian (conjugate) matrix transpose.
-    
+
     Conjugate transpose a matrix in device memory and return an object
-    representing the transposed matrix. 
+    representing the transposed matrix.
 
     Parameters
     ----------
@@ -605,7 +613,7 @@ def hermitian(a_gpu):
     -------
     at_gpu : pycuda.gpuarray.GPUArray
         Transposed matrix of shape `(n, m)`.
-    
+
     Examples
     --------
     >>> import pycuda.autoinit
@@ -630,7 +638,7 @@ def hermitian(a_gpu):
     if a_gpu.dtype not in [np.float32, np.float64, np.complex64,
                            np.complex128]:
         raise ValueError('unrecognized type')
-    
+
     use_double = int(a_gpu.dtype in [np.float64, np.complex128])
     use_complex = int(a_gpu.dtype in [np.complex64, np.complex128])
 
@@ -640,7 +648,7 @@ def hermitian(a_gpu):
 
     # Set this to False when debugging to make sure the compiled kernel is
     # not cached:
-    cache_dir=None            
+    cache_dir=None
     transpose_mod = \
                   SourceModule(transpose_template.substitute(use_double=use_double,
                                                              use_complex=use_complex,
@@ -648,13 +656,13 @@ def hermitian(a_gpu):
                                cols=a_gpu.shape[1],
                                rows=a_gpu.shape[0]),
                                cache_dir=cache_dir)
-    
+
     transpose = transpose_mod.get_function("transpose")
     at_gpu = gpuarray.empty(a_gpu.shape[::-1], a_gpu.dtype)
-    transpose(at_gpu, a_gpu, np.uint32(a_gpu.size),              
+    transpose(at_gpu, a_gpu, np.uint32(a_gpu.size),
               block=block_dim,
               grid=grid_dim)
-                    
+
     return at_gpu
 
 conj_template = Template("""
@@ -671,7 +679,7 @@ __global__ void conj_inplace(COMPLEX *a, unsigned int N)
     unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
                        blockIdx.x*blockDim.x+threadIdx.x;
 
-    if (idx < N)                       
+    if (idx < N)
         a[idx] = conj(a[idx]);
 }
 
@@ -680,7 +688,7 @@ __global__ void conj(COMPLEX *a, COMPLEX *ac, unsigned int N)
     unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
                        blockIdx.x*blockDim.x+threadIdx.x;
 
-    if (idx < N)                       
+    if (idx < N)
         ac[idx] = conj(a[idx]);
 }
 """)
@@ -688,7 +696,7 @@ __global__ void conj(COMPLEX *a, COMPLEX *ac, unsigned int N)
 def conj(a_gpu, overwrite=True):
     """
     Complex conjugate.
-    
+
     Compute the complex conjugate of the array in device memory.
 
     Parameters
@@ -698,10 +706,10 @@ def conj(a_gpu, overwrite=True):
     overwrite : bool
         If true (default), save the result in the specified array.
         If false, return the result in a newly allocated array.
-        
+
     Returns
     -------
-    ac_gpu : pycuda.gpuarray.GPUArray    
+    ac_gpu : pycuda.gpuarray.GPUArray
         Conjugate of the input array. If `overwrite` is true, the
         returned matrix is the same as the input array.
 
@@ -718,7 +726,7 @@ def conj(a_gpu, overwrite=True):
     >>> linalg.conj(a_gpu)
     >>> np.all(a == np.conj(a_gpu.get()))
     True
-    
+
     """
 
     # Don't attempt to process non-complex matrix types:
@@ -731,7 +739,7 @@ def conj(a_gpu, overwrite=True):
         use_double = 1
     else:
         raise ValueError('unsupported type')
-    
+
     # Get block/grid sizes:
     dev = misc.get_current_device()
     block_dim, grid_dim = misc.select_block_grid_sizes(dev, a_gpu.shape)
@@ -745,18 +753,18 @@ def conj(a_gpu, overwrite=True):
 
     if overwrite:
         conj_inplace = conj_mod.get_function("conj_inplace")
-        conj_inplace(a_gpu, np.uint32(a_gpu.size),         
+        conj_inplace(a_gpu, np.uint32(a_gpu.size),
                      block=block_dim,
                      grid=grid_dim)
         return a_gpu
     else:
         conj = conj_mod.get_function("conj")
         ac_gpu = gpuarray.empty_like(a_gpu)
-        conj(a_gpu, ac_gpu, np.uint32(a_gpu.size),         
+        conj(a_gpu, ac_gpu, np.uint32(a_gpu.size),
              block=block_dim,
              grid=grid_dim)
         return ac_gpu
-        
+
 diag_template = Template("""
 #include <pycuda-complex.hpp>
 
@@ -802,7 +810,7 @@ def diag(v_gpu):
     -------
     d_gpu : pycuda.gpuarray.GPUArray
         Diagonal matrix of dimensions `[n, n]`.
-        
+
     Examples
     --------
     >>> import pycuda.driver as drv
@@ -821,7 +829,7 @@ def diag(v_gpu):
     >>> d_gpu = linalg.diag(v_gpu)
     >>> np.all(d_gpu.get() == np.diag(v))
     True
-    
+
     """
 
     if v_gpu.dtype not in [np.float32, np.float64, np.complex64,
@@ -830,7 +838,7 @@ def diag(v_gpu):
 
     if len(v_gpu.shape) > 1:
         raise ValueError('input array cannot be multidimensional')
-    
+
     use_double = int(v_gpu.dtype in [np.float64, np.complex128])
     use_complex = int(v_gpu.dtype in [np.complex64, np.complex128])
 
@@ -849,11 +857,11 @@ def diag(v_gpu):
                                                    use_complex=use_complex),
                           cache_dir=cache_dir)
 
-    diag = diag_mod.get_function("diag")    
+    diag = diag_mod.get_function("diag")
     diag(v_gpu, d_gpu, np.uint32(v_gpu.size),
          block=block_dim,
          grid=grid_dim)
-    
+
     return d_gpu
 
 eye_template = Template("""
@@ -901,7 +909,7 @@ def eye(N, dtype=np.float32):
     e_gpu : pycuda.gpuarray.GPUArray
         Diagonal matrix of dimensions `[N, N]` with diagonal values
         set to 1.
-        
+
     Examples
     --------
     >>> import pycuda.driver as drv
@@ -917,7 +925,7 @@ def eye(N, dtype=np.float32):
     >>> e_gpu = linalg.eye(v_gpu, np.complex64)
     >>> np.all(e_gpu.get() == np.eye(N, np.complex64))
     True
-    
+
     """
 
     if dtype not in [np.float32, np.float64, np.complex64,
@@ -925,7 +933,7 @@ def eye(N, dtype=np.float32):
         raise ValueError('unrecognized type')
     if N <= 0:
         raise ValueError('N must be greater than 0')
-    
+
     use_double = int(dtype in [np.float64, np.complex128])
     use_complex = int(dtype in [np.complex64, np.complex128])
 
@@ -944,11 +952,11 @@ def eye(N, dtype=np.float32):
                                                    use_complex=use_complex),
                           cache_dir=cache_dir)
 
-    eye = eye_mod.get_function("eye")    
+    eye = eye_mod.get_function("eye")
     eye(e_gpu, np.uint32(N),
         block=block_dim,
         grid=grid_dim)
-    
+
     return e_gpu
 
 cutoff_invert_s_template = Template("""
@@ -963,7 +971,7 @@ __global__ void cutoff_invert_s(FLOAT *s, FLOAT *cutoff, unsigned int N) {
     unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
                        blockIdx.x*blockDim.x+threadIdx.x;
 
-    if (idx < N) 
+    if (idx < N)
         if (s[idx] > cutoff[0])
             s[idx] = 1/s[idx];
         else
@@ -984,7 +992,7 @@ def pinv(a_gpu, rcond=1e-15):
     rcond : float
         Singular values smaller than `rcond`*max(singular_values)`
         are set to zero.
-        
+
     Returns
     -------
     a_inv_gpu : pycuda.gpuarray.GPUArray
@@ -998,7 +1006,7 @@ def pinv(a_gpu, rcond=1e-15):
     This function destroys the contents of the input matrix.
 
     If the input matrix is square, the pseudoinverse uses less memory.
-    
+
     Examples
     --------
     >>> import pycuda.driver as drv
@@ -1019,17 +1027,20 @@ def pinv(a_gpu, rcond=1e-15):
     True
 
     """
+
+    if not _has_cula:
+        raise NotImplementedError('CULA not installed')
     
     # Perform in-place SVD if the matrix is square to save memory:
     if a_gpu.shape[0] == a_gpu.shape[1]:
         u_gpu, s_gpu, vh_gpu = svd(a_gpu, 's', 'o')
     else:
         u_gpu, s_gpu, vh_gpu = svd(a_gpu, 's', 's')
-    
+
     # Get block/grid sizes; the number of threads per block is limited
     # to 512 because the cutoff_invert_s kernel defined above uses too
     # many registers to be invoked in 1024 threads per block (i.e., on
-    # GPUs with compute capability >= 2.x): 
+    # GPUs with compute capability >= 2.x):
     dev = misc.get_current_device()
     max_threads_per_block = 512
     block_dim, grid_dim = misc.select_block_grid_sizes(dev, s_gpu.shape, max_threads_per_block)
@@ -1110,12 +1121,12 @@ def tril(a_gpu, overwrite=True):
     >>> l_gpu = linalg.tril(a_gpu, False)
     >>> np.allclose(np.tril(a), l_gpu.get())
     True
-    
+
     """
 
     if len(a_gpu.shape) != 2 or a_gpu.shape[0] != a_gpu.shape[1]:
         raise ValueError('matrix must be square')
-    
+
     if a_gpu.dtype == np.float32:
         swap_func = cublas.cublasSswap
         copy_func = cublas.cublasScopy
@@ -1205,7 +1216,7 @@ __global__ void multiply(FLOAT *x, FLOAT *y, FLOAT *z,
                        blockIdx.x*blockDim.x+threadIdx.x;
     if (idx < N) {
         z[idx] = x[idx]*y[idx];
-    }    
+    }
 }
 """)
 
@@ -1222,7 +1233,7 @@ def multiply(x_gpu, y_gpu, overwrite=True):
     overwrite : bool
         If true (default), return the result in `y_gpu`.
         is false, return the result in a newly allocated array.
-        
+
     Returns
     -------
     z_gpu : pycuda.gpuarray.GPUArray
@@ -1242,7 +1253,7 @@ def multiply(x_gpu, y_gpu, overwrite=True):
     >>> z_gpu = linalg.multiply(x_gpu, y_gpu)
     >>> np.allclose(x*y, z_gpu.get())
     True
-    
+
     """
 
     if x_gpu.shape != y_gpu.shape:
@@ -1254,7 +1265,7 @@ def multiply(x_gpu, y_gpu, overwrite=True):
 
     use_double = int(x_gpu.dtype in [np.float64, np.complex128])
     use_complex = int(x_gpu.dtype in [np.complex64, np.complex128])
-    
+
     # Get block/grid sizes:
     dev = misc.get_current_device()
     block_dim, grid_dim = misc.select_block_grid_sizes(dev, x_gpu.shape)
@@ -1275,7 +1286,7 @@ def multiply(x_gpu, y_gpu, overwrite=True):
     else:
         multiply = multiply_mod.get_function("multiply")
         z_gpu = gpuarray.empty(x_gpu.shape, x_gpu.dtype)
-        multiply(x_gpu, y_gpu, z_gpu, np.uint32(x_gpu.size),                 
+        multiply(x_gpu, y_gpu, z_gpu, np.uint32(x_gpu.size),
                  block=block_dim,
                  grid=grid_dim)
         return z_gpu

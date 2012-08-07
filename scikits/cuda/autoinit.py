@@ -5,7 +5,12 @@ Autoinitialize CUDA tools.
 """
 
 import cublas
-import cula
-
+try:
+    import cula
+    _has_cula = True
+except ImportError:
+    _has_cula = False
+    
 cublas.cublasInit()
-cula.culaInitialize()
+if _has_cula:
+    cula.culaInitialize()
