@@ -160,13 +160,16 @@ _libcufft.cufftPlanMany.argtypes = [ctypes.c_void_p,
                                     ctypes.c_int,
                                     ctypes.c_int,
                                     ctypes.c_int]                                    
-def cufftPlanMany(rank, n, fft_type, batch):
+def cufftPlanMany(rank, n, 
+                  inembed, istride, idist, 
+                  onembed, ostride, odist, fft_type, batch):
     """Create batched FFT plan configuration."""
 
     plan = ctypes.c_uint()
     status = _libcufft.cufftPlanMany(ctypes.byref(plan), rank, n,
-                                     None, 1, 0, None, 1, 0, fft_type,
-                                     batch)
+                                     inembed, istride, idist, 
+                                     onembed, ostride, odist, 
+                                     fft_type, batch)
     cufftCheckStatus(status)
     return plan
 

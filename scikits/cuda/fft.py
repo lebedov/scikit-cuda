@@ -74,6 +74,7 @@ class Plan:
         if len(self.shape) > 0:
             n = np.asarray(self.shape, np.int32)
             self.handle = cufft.cufftPlanMany(len(self.shape), n.ctypes.data,
+                                              None, 1, 0, None, 1, 0,
                                               self.fft_type, self.batch)
         else:
             raise ValueError('invalid transform size')
