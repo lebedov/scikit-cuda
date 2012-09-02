@@ -91,7 +91,7 @@ def cufftCheckStatus(status):
             raise cufftExceptions[status]
         except KeyError:
             raise cufftError
-        
+
 
 # Data transformation types:
 CUFFT_R2C = 0x2a
@@ -101,9 +101,15 @@ CUFFT_D2Z = 0x6a
 CUFFT_Z2D = 0x6c
 CUFFT_Z2Z = 0x69
 
-# Transformation directions
+# Transformation directions:
 CUFFT_FORWARD = -1
 CUFFT_INVERSE = 1
+
+# FFTW compatibility modes:
+CUFFT_COMPATIBILITY_NATIVE = 0x00
+CUFFT_COMPATIBILITY_FFTW_PADDING = 0x01
+CUFFT_COMPATIBILITY_FFTW_ASYMMETRIC = 0x02
+CUFFT_COMPATIBILITY_FFTW_ALL = 0x03
 
 # FFT functions implemented by CUFFT:
 _libcufft.cufftPlan1d.restype = int
@@ -179,6 +185,15 @@ def cufftDestroy(plan):
     """Destroy FFT plan."""
     
     status = _libcufft.cufftDestroy(plan)
+    cufftCheckStatus(status)
+
+_libcufft.cufftSetCompatibilityMode.restype = int
+_libcufft.cufftSetCompatibilityMode.argtypes = [ctypes.c_uint,
+                                                ctypes.c_int]
+def cufftSetCompatibilityMode(plan, mode):
+    """Set FFTW compatibility mode."""
+
+    status = _libcufft.cufftSetCompatibilityMode(plan, mode)
     cufftCheckStatus(status)
 
 _libcufft.cufftExecC2C.restype = int

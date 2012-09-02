@@ -30,4 +30,5 @@ Wrapper Routines
     cufftExecZ2Z
     cufftExecD2Z
     cufftExecZ2D
+    cufftSetCompatibilityMode
     cufftSetStream

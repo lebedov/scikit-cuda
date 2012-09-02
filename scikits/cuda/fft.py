@@ -11,6 +11,10 @@ import pycuda.tools as tools
 import numpy as np
 
 import cufft
+from cufft import CUFFT_COMPATIBILITY_NATIVE, \
+     CUFFT_COMPATIBILITY_FFTW_PADDING, \
+     CUFFT_COMPATIBILITY_FFTW_ASYMMETRIC, \
+     CUFFT_COMPATIBILITY_FFTW_ALL
 
 class Plan:
     """
@@ -31,10 +35,13 @@ class Plan:
     stream : pycuda.driver.Stream
         Stream with which to associate the plan. If no stream is specified,
         the default stream is used.
+    mode : int
+        FFTW compatibility mode.
 
     """
 
-    def __init__(self, shape, in_dtype, out_dtype, batch=1, stream=None):
+    def __init__(self, shape, in_dtype, out_dtype, batch=1, stream=None,
+                 mode=0x01):
 
         if np.isscalar(shape):
             self.shape = (shape, )
@@ -78,6 +85,9 @@ class Plan:
                                               self.fft_type, self.batch)
         else:
             raise ValueError('invalid transform size')
+
+        # Set FFTW compatibility mode:
+        cufft.cufftSetCompatibilityMode(self.handle, mode)
 
         # Associate stream with plan:
         if stream != None:
@@ -187,7 +197,7 @@ def fft(x_gpu, y_gpu, plan, scale=False):
     >>> fft(x_gpu, xf_gpu, plan)
     >>> np.allclose(xf[0:N/2+1], xf_gpu.get(), atol=1e-6)
     True
-    
+
     Returns
     -------
     y_gpu : pycuda.gpuarray.GPUArray
@@ -197,14 +207,14 @@ def fft(x_gpu, y_gpu, plan, scale=False):
     -----
     For real to complex transformations, this function computes
     N/2+1 non-redundant coefficients of a length-N input signal.
-    
+
     """
 
     if scale == True:
         return _fft(x_gpu, y_gpu, plan, cufft.CUFFT_FORWARD, x_gpu.size/plan.batch)
     else:
         return _fft(x_gpu, y_gpu, plan, cufft.CUFFT_FORWARD)
-    
+
 def ifft(x_gpu, y_gpu, plan, scale=False):
     """
     Inverse Fast Fourier Transform.
@@ -222,7 +232,7 @@ def ifft(x_gpu, y_gpu, plan, scale=False):
         FFT plan.
     scale : bool, optional
         If True, scale the computed inverse FFT by the number of
-        elements in the output array.        
+        elements in the output array.
 
     Examples
     --------
