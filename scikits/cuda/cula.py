@@ -78,43 +78,87 @@ class culaPremiumNotFound(culaError):
     pass
 
 class culaNotInitialized(culaError):
-    __doc__ = culaGetStatusString(1)
+    try:
+        __doc__ = culaGetStatusString(1)
+    except:
+        pass
     pass
 
 class culaNoHardware(culaError):
-    __doc__ = culaGetStatusString(2)
+    try:
+        __doc__ = culaGetStatusString(2)
+    except:
+        pass
     pass
 
 class culaInsufficientRuntime(culaError):
-    __doc__ = culaGetStatusString(3)
+    try:
+        __doc__ = culaGetStatusString(3)
+    except:
+        pass
     pass
 
 class culaInsufficientComputeCapability(culaError):
-    __doc__ = culaGetStatusString(4)
+    try:
+        __doc__ = culaGetStatusString(4)
+    except:
+        pass
     pass
 
 class culaInsufficientMemory(culaError):
-    __doc__ = culaGetStatusString(5)
+    try:
+        __doc__ = culaGetStatusString(5)
+    except:
+        pass
     pass
 
 class culaFeatureNotImplemented(culaError):
-    __doc__ = culaGetStatusString(6)
+    try:
+        __doc__ = culaGetStatusString(6)
+    except:
+        pass
     pass
 
 class culaArgumentError(culaError):
-    __doc__ = culaGetStatusString(7)
+    try:
+        __doc__ = culaGetStatusString(7)
+    except:
+        pass
     pass
 
 class culaDataError(culaError):
-    __doc__ = culaGetStatusString(8)
+    try:
+        __doc__ = culaGetStatusString(8)
+    except:
+        pass
     pass
 
 class culaBlasError(culaError):
-    __doc__ = culaGetStatusString(9)
+    try:
+        __doc__ = culaGetStatusString(9)
+    except:
+        pass
     pass
 
 class culaRuntimeError(culaError):
-    __doc__ = culaGetStatusString(10)
+    try:
+        __doc__ = culaGetStatusString(10)
+    except:
+        pass
+    pass
+
+class culaBadStorageFormat(culaError):
+    try:
+        __doc__ = culaGetStatusString(11)
+    except:
+        pass
+    pass
+
+class culaUnspecifiedError(culaError):
+    try:
+        __doc__ = culaGetStatusString(12)
+    except:
+        pass
     pass
 
 culaExceptions = {

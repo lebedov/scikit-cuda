@@ -16,6 +16,7 @@ Release 0.042 - ()
 * Fix broken Python 2.6 compatibility (#19).
 * Download distribute for package installation if it isn't available.
 * Prevent absence of CULA from causing import errors (enh. by Jacob Frelinger)
+* FFT batch tests and FFTW mode configuration (enh. by Lars Pastewka)
 
 Release 0.041 - (May 22, 2011)
 ------------------------------
