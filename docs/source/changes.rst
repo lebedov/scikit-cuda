@@ -7,6 +7,7 @@ Release 0.042 - ()
 ------------------
 * Add complex exponential integral.
 * Fix typo in cublasCgbmv.
+* Fix API v2 return type of cublasZgerc func handle (#23).
 * Correctly load BLAS symbols on MacOSX and with CUDA 4.0.
 * Work around numpy bug #1898.
 * Fix issues with pycuda installations done via easy_install/pip. 
