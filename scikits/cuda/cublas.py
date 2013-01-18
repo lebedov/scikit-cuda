@@ -3528,7 +3528,7 @@ if cuda.cudaDriverGetVersion() < 4000:
         status = cublasGetError()
         cublasCheckStatus(status)
 else:
-    _libcublas.cublasZgerc_v2.restype = None
+    _libcublas.cublasZgerc_v2.restype = int
     _libcublas.cublasZgerc_v2.argtypes = [ctypes.c_int,
                                           ctypes.c_int,
                                           ctypes.c_int,
