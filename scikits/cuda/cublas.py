@@ -1721,10 +1721,11 @@ else:
     def cublasSrot(n, x, incx, y, incy, c, s):
         global _libcublas_ctx
         status = _libcublas.cublasSrot_v2(_libcublas_ctx,
-                                          n, int(x),
-                                          incx, int(y), incy,
+                                          n, int(x), incx,
+                                          int(y), incy,
                                           ctypes.byref(ctypes.c_float(c)),
                                           ctypes.byref(ctypes.c_float(s)))
+                                          
         cublasCheckStatus(status)
         
 cublasSrot.__doc__ = _ROT_doc.substitute(precision='single-precision',
@@ -3707,7 +3708,7 @@ else:
                                            int(y), incy)
         cublasCheckStatus(status)
         
-# SSPMV, DSPMV (need to make CUDA 4.0 compatible)
+# SSPMV, DSPMV
 if cuda.cudaDriverGetVersion() < 4000:    
     _libcublas.cublasSspmv.restype = None
     _libcublas.cublasSspmv.argtypes = [ctypes.c_char,
@@ -3719,17 +3720,47 @@ if cuda.cudaDriverGetVersion() < 4000:
                                        ctypes.c_float,
                                        ctypes.c_void_p,
                                        ctypes.c_int]
-def cublasSspmv(uplo, n, alpha, AP, x, incx, beta, y, incy):
-    """
-    Matrix-vector product for real symmetric-packed matrix.
+    def cublasSspmv(uplo, n, alpha, AP, x, incx, beta, y, incy):
+        """
+        Matrix-vector product for real symmetric-packed matrix.
 
-    """
-    
-    _libcublas.cublasSspmv(uplo, n, alpha, int(AP),
-                           int(x), incx, beta, int(y), incy)
-    status = cublasGetError()
-    cublasCheckStatus(status)
+        """
 
+        _libcublas.cublasSspmv(uplo, n, alpha, int(AP),
+                               int(x), incx, beta, int(y), incy)
+        status = cublasGetError()
+        cublasCheckStatus(status)
+else:
+    _libcublas.cublasSspmv_v2.restype = int
+    _libcublas.cublasSspmv_v2.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int]
+    def cublasSspmv(uplo, n, alpha, AP, x, incx, beta, y, incy):
+        """
+        Matrix-vector product for real symmetric-packed matrix.
+
+        """
+
+        global _libcublas_ctx
+        status = _libcublas.cublasSspmv_v2(_libcublas_ctx,
+                                           _CUBLAS_FILL_MODE[uplo], 
+                                           n,
+                                           ctypes.byref(ctypes.c_float(alpha)),
+                                           ctypes.byref(ctypes.c_float(AP)),
+                                           int(x),
+                                           incx,
+                                           ctypes.byref(ctypes.c_float(beta)),
+                                           int(y),
+                                           incy)
+        cublasCheckStatus(status)
+        
 if cuda.cudaDriverGetVersion() < 4000:
     _libcublas.cublasDspmv.restype = None
     _libcublas.cublasDspmv.argtypes = [ctypes.c_char,
@@ -3741,17 +3772,47 @@ if cuda.cudaDriverGetVersion() < 4000:
                                        ctypes.c_double,
                                        ctypes.c_void_p,
                                        ctypes.c_int]
-def cublasDspmv(uplo, n, alpha, AP, x, incx, beta, y, incy):
-    """
-    Matrix-vector product for real symmetric-packed matrix.
+    def cublasDspmv(uplo, n, alpha, AP, x, incx, beta, y, incy):
+        """
+        Matrix-vector product for real symmetric-packed matrix.
 
-    """
+        """
 
-    _libcublas.cublasDspmv(uplo, n, alpha, int(AP),
-                           int(x), incx, beta, int(y), incy)
-    status = cublasGetError()
-    cublasCheckStatus(status)
+        _libcublas.cublasDspmv(uplo, n, alpha, int(AP),
+                               int(x), incx, beta, int(y), incy)
+        status = cublasGetError()
+        cublasCheckStatus(status)
+else:
+        _libcublas.cublasDspmv_v2.restype = int
+        _libcublas.cublasDspmv_v2.argtypes = [ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int]
+    def cublasDspmv(uplo, n, alpha, AP, x, incx, beta, y, incy):
+        """
+        Matrix-vector product for real symmetric-packed matrix.
 
+        """
+
+        global _libcublas_ctx
+        status = _libcublas.cublasDspmv_v2(_libcublas_ctx,
+                                           _CUBLAS_FILL_MODE[uplo], 
+                                           n,
+                                           ctypes.byref(ctypes.c_double(alpha)),
+                                           ctypes.byref(ctypes.c_double(AP)),
+                                           int(x),
+                                           incx,
+                                           ctypes.byref(ctypes.c_double(beta)),
+                                           int(y),
+                                           incy)
+        cublasCheckStatus(status)
+    
 # SSPR, DSPR (need to make CUDA 4.0 compatible)
 if cuda.cudaDriverGetVersion() < 4000:    
     _libcublas.cublasSspr.restype = None
