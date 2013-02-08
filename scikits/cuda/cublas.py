@@ -3783,17 +3783,17 @@ if cuda.cudaDriverGetVersion() < 4000:
         status = cublasGetError()
         cublasCheckStatus(status)
 else:
-        _libcublas.cublasDspmv_v2.restype = int
-        _libcublas.cublasDspmv_v2.argtypes = [ctypes.c_int,
-                                              ctypes.c_int,
-                                              ctypes.c_int,
-                                              ctypes.c_void_p,
-                                              ctypes.c_void_p,
-                                              ctypes.c_void_p,
-                                              ctypes.c_int,
-                                              ctypes.c_void_p,
-                                              ctypes.c_void_p,
-                                              ctypes.c_int]
+    _libcublas.cublasDspmv_v2.restype = int
+    _libcublas.cublasDspmv_v2.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int]
     def cublasDspmv(uplo, n, alpha, AP, x, incx, beta, y, incy):
         """
         Matrix-vector product for real symmetric-packed matrix.
@@ -3812,9 +3812,9 @@ else:
                                            int(y),
                                            incy)
         cublasCheckStatus(status)
-    
+
 # SSPR, DSPR (need to make CUDA 4.0 compatible)
-if cuda.cudaDriverGetVersion() < 4000:    
+if cuda.cudaDriverGetVersion() < 4000:
     _libcublas.cublasSspr.restype = None
     _libcublas.cublasSspr.argtypes = [ctypes.c_char,
                                       ctypes.c_int,

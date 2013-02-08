@@ -297,6 +297,21 @@ class test_cublas(TestCase):
                            x_gpu.gpudata, 1)
         assert np.allclose(x_gpu.get(), alpha*x)
 
+    # SROT, DROT, CROT, CSROT, ZROT, ZDROT
+    def test_cublasSrot(self):
+        x = np.array([1, 2, 3]).astype(np.float32)
+        y = np.array([4, 5, 6]).astype(np.float32)
+        s = 2.0
+        c = 3.0
+        x_gpu = gpuarray.to_gpu(x)
+        y_gpu = gpuarray.to_gpu(x)
+        cublas.cublasSrot(x_gpu.size, 
+                          x_gpu.gpudata, 1, 
+                          y_gpu.gpudata, 1,
+                          c, s)
+        assert np.allclose(x_gpu.get(), [5, 10, 15])
+        assert np.allclose(y_gpu.get(), [1, 2, 3])
+        
     # SSWAP, DSWAP, CSWAP, ZSWAP
     def test_cublasSswap(self):
         x = np.random.rand(5).astype(np.float32)
@@ -402,6 +417,7 @@ def suite():
     s.addTest(test_cublas('test_cublasScrnm2'))
     s.addTest(test_cublas('test_cublasSscal'))
     s.addTest(test_cublas('test_cublasCscal'))
+    s.addTest(test_cublas('test_cublasSrot'))
     s.addTest(test_cublas('test_cublasSswap'))
     s.addTest(test_cublas('test_cublasCswap'))
     s.addTest(test_cublas('test_cublasSgemv'))
