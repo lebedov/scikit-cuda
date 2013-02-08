@@ -16,6 +16,8 @@ from cufft import CUFFT_COMPATIBILITY_NATIVE, \
      CUFFT_COMPATIBILITY_FFTW_ASYMMETRIC, \
      CUFFT_COMPATIBILITY_FFTW_ALL
 
+import misc
+
 class Plan:
     """
     CUFFT plan class.
@@ -76,6 +78,11 @@ class Plan:
             self.fft_func = cufft.cufftExecZ2Z
         else:
             raise ValueError('unsupported input/output type combination')
+
+        # Check for double precision support:
+        if misc.get_compute_capability(misc.get_current_device()) < 1.3 and \
+           (misc.isdoubletype(in_dtype) or misc.isdoubletype(out_dtype)):
+            raise RuntimeError('double precision requires compute capability >= 1.3')
 
         # Set up plan:
         if len(self.shape) > 0:
