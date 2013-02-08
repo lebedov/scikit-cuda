@@ -19,7 +19,7 @@ import cublas
 try:
     import cula
     _has_cula = True
-except ImportError:
+except (ImportError, OSError):
     _has_cula = False
 
 isdoubletype = lambda x : True if x == np.float64 or \

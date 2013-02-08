@@ -8,9 +8,9 @@ import cublas
 try:
     import cula
     _has_cula = True
-except ImportError:
+except (ImportError, OSError):
     _has_cula = False
-    
+
 cublas.cublasInit()
 if _has_cula:
     cula.culaInitialize()
