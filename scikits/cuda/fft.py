@@ -80,9 +80,11 @@ class Plan:
             raise ValueError('unsupported input/output type combination')
 
         # Check for double precision support:
-        if misc.get_compute_capability(misc.get_current_device()) < 1.3 and \
+        capability = misc.get_compute_capability(misc.get_current_device())
+        if capability < 1.3 and \
            (misc.isdoubletype(in_dtype) or misc.isdoubletype(out_dtype)):
-            raise RuntimeError('double precision requires compute capability >= 1.3')
+            raise RuntimeError('double precision requires compute capability '
+                               '>= 1.3 (you have %g)' % capability)
 
         # Set up plan:
         if len(self.shape) > 0:

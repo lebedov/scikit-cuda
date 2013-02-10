@@ -18,7 +18,7 @@ import misc
 try:
     import cula
     _has_cula = True
-except ImportError:
+except (ImportError, OSError):
     _has_cula = False
 
 from misc import init
@@ -1030,7 +1030,7 @@ def pinv(a_gpu, rcond=1e-15):
 
     if not _has_cula:
         raise NotImplementedError('CULA not installed')
-    
+
     # Perform in-place SVD if the matrix is square to save memory:
     if a_gpu.shape[0] == a_gpu.shape[1]:
         u_gpu, s_gpu, vh_gpu = svd(a_gpu, 's', 'o')
