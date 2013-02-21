@@ -12,6 +12,7 @@ Special thanks are due to the following parties for their contributions:
   PARRET [2]_ software)
 - Jacob Frelinger - various enhancements
 - Eric Larson - various enhancements
+- Teodor Mihai Moldovan - preliminary CUBLAS 5 bindings
 - Lars Pastewka - FFT tests and FFTW compatibility mode configuration
 - Rob Turetsky - useful feedback
 - Stefan van der Walt - bug fixes 

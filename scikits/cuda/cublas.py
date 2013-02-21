@@ -106,6 +106,13 @@ _CUBLAS_DIAG = {
     'U': 1,
     }
 
+_CUBLAS_SIDE = {
+    'l': 0,
+    'L': 0, # CUBLAS_SIDE_LEFT
+    'r': 1,
+    'r': 1  # CUBLAS_SIDE_RIGHT
+    }
+    
 _libcublas.cublasGetError.restype = int
 _libcublas.cublasGetError.argtypes = []
 def cublasGetError():
@@ -5794,6 +5801,116 @@ def cublasZher2k(uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
     status = cublasGetError()
     cublasCheckStatus(status)
 
+if cuda.cudaDriverGetVersion() >= 5000:
+    _libcublas.cublasSdgmm.restype = int
+    _libcublas.cublasSdgmm.argtypes = [ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+
+    def cublasSdgmm(mode, m, n, A, lda, x, incx, C, ldc):
+        """
+        Matrix-diagonal matrix product for real general matrix.
+        
+        """
+
+        global _libcublas_ctx        
+        status = _libcublas.cublasSdgmm(_libcublas_ctx,
+                                        _CUBLAS_SIDE[mode],
+                                        m, n, 
+                                        int(A), lda, 
+                                        int(x), incx,
+                                        int(C), ldc)
+        cublasCheckStatus(status)
+
+    _libcublas.cublasDdgmm.restype = int
+    _libcublas.cublasDdgmm.argtypes = [ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+
+    def cublasDdgmm(mode, m, n, A, lda, x, incx, C, ldc):
+        """
+        Matrix-diagonal matrix product for real general matrix.
+        
+        """
+
+        global _libcublas_ctx        
+        status = _libcublas.cublasDdgmm(_libcublas_ctx,
+                                        _CUBLAS_SIDE[mode],
+                                        m, n, 
+                                        int(A), lda, 
+                                        int(x), incx,
+                                        int(C), ldc)
+        cublasCheckStatus(status)
+
+    _libcublas.cublasCdgmm.restype = int
+    _libcublas.cublasCdgmm.argtypes = [ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+
+    def cublasCdgmm(mode, m, n, A, lda, x, incx, C, ldc):
+        """
+        Matrix-diagonal matrix product for complex general matrix.
+        
+        """
+
+        global _libcublas_ctx        
+        status = _libcublas.cublasCdgmm(_libcublas_ctx,
+                                        _CUBLAS_SIDE[mode],
+                                        m, n, 
+                                        int(A), lda, 
+                                        int(x), incx,
+                                        int(C), ldc)
+        cublasCheckStatus(status)
+
+    _libcublas.cublasZdgmm.restype = int
+    _libcublas.cublasZdgmm.argtypes = [ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+
+    def cublasZdgmm(mode, m, n, A, lda, x, incx, C, ldc):
+        """
+        Matrix-diagonal matrix product for complex general matrix.
+        
+        """
+
+        global _libcublas_ctx        
+        status = _libcublas.cublasZdgmm(_libcublas_ctx,
+                                        _CUBLAS_SIDE[mode],
+                                        m, n, 
+                                        int(A), lda, 
+                                        int(x), incx,
+                                        int(C), ldc)
+        cublasCheckStatus(status)
+        
+        
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
