@@ -4794,14 +4794,13 @@ if _CUBLAS_version >= 5000:
                                        ctypes.c_void_p,
                                        ctypes.c_int]
 
-    def cublasSdgmm(mode, m, n, A, lda, x, incx, C, ldc):
+    def cublasSdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc):
         """
         Matrix-diagonal matrix product for real general matrix.
         
         """
 
-        global _libcublas_ctx        
-        status = _libcublas.cublasSdgmm(_libcublas_ctx,
+        status = _libcublas.cublasSdgmm(handle,
                                         _CUBLAS_SIDE[mode],
                                         m, n, 
                                         int(A), lda, 
@@ -4821,14 +4820,13 @@ if _CUBLAS_version >= 5000:
                                        ctypes.c_void_p,
                                        ctypes.c_int]
 
-    def cublasDdgmm(mode, m, n, A, lda, x, incx, C, ldc):
+    def cublasDdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc):
         """
         Matrix-diagonal matrix product for real general matrix.
         
         """
 
-        global _libcublas_ctx        
-        status = _libcublas.cublasDdgmm(_libcublas_ctx,
+        status = _libcublas.cublasDdgmm(handle,
                                         _CUBLAS_SIDE[mode],
                                         m, n, 
                                         int(A), lda, 
@@ -4854,8 +4852,7 @@ if _CUBLAS_version >= 5000:
         
         """
 
-        global _libcublas_ctx        
-        status = _libcublas.cublasCdgmm(_libcublas_ctx,
+        status = _libcublas.cublasCdgmm(handle,
                                         _CUBLAS_SIDE[mode],
                                         m, n, 
                                         int(A), lda, 
@@ -4881,8 +4878,7 @@ if _CUBLAS_version >= 5000:
         
         """
 
-        global _libcublas_ctx        
-        status = _libcublas.cublasZdgmm(_libcublas_ctx,
+        status = _libcublas.cublasZdgmm(handle,
                                         _CUBLAS_SIDE[mode],
                                         m, n, 
                                         int(A), lda, 
