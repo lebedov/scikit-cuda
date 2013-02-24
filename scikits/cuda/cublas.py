@@ -227,10 +227,10 @@ def cublasSetStream(handle, id):
     id : int
         Stream ID.
 
-     """
+    """
 
-     status = _libcublas.cublasSetStream_v2(handle, id)
-     cublasCheckStatus(status)
+    status = _libcublas.cublasSetStream_v2(handle, id)
+    cublasCheckStatus(status)
 
 _libcublas.cublasGetStream_v2.restype = int
 _libcublas.cublasGetStream_v2.argtypes = [ctypes.c_int,
