@@ -18,7 +18,7 @@ from string import Template
 import cuda
 
 if sys.platform == 'linux2':
-    _libcublas_libname_list = ['libcublas.so', 'libcublas.so.4']
+    _libcublas_libname_list = ['libcublas.so', 'libcublas.so.4', 'libcublas.so.5']
 elif sys.platform == 'darwin':
     _libcublas_libname_list = ['libcublas.dylib']
 elif sys.platform == 'Windows':
@@ -186,9 +186,9 @@ def cublasDestroy(handle):
     status = _libcublas.cublasDestroy_v2(ctypes.c_int(handle))
     cublasCheckStatus(status)
 
-_libcublas.cublasGetVersion.restype = int
-_libcublas.cublasGetVersion.argtypes = [ctypes.c_int,
-                                        ctypes.c_void_p]
+_libcublas.cublasGetVersion_v2.restype = int
+_libcublas.cublasGetVersion_v2.argtypes = [ctypes.c_int,
+                                           ctypes.c_void_p]
 def cublasGetVersion(handle):
     """
     Get CUBLAS version.
@@ -208,10 +208,16 @@ def cublasGetVersion(handle):
     """
     
     version = ctypes.c_int()
-    status = _libcublas.cublasGetVersion(handle, ctypes.byref(version))
+    status = _libcublas.cublasGetVersion_v2(handle, ctypes.byref(version))
     cublasCheckStatus(status)
     return version.value
 
+
+# Get and save CUBLAS version:
+h = cublasCreate()
+_CUBLAS_version = cublasGetVersion(h)
+cublasDestroy(h)
+del h
 
 _libcublas.cublasSetStream_v2.restype = int
 _libcublas.cublasSetStream_v2.argtypes = [ctypes.c_int,
@@ -835,9 +841,8 @@ _libcublas.cublasScopy_v2.argtypes = [ctypes.c_int,
                                       ctypes.c_void_p,
                                       ctypes.c_int]
 def cublasScopy(handle, n, x, incx, y, incy):
-    status = \ 
-           _libcublas.cublasScopy_v2(handle,
-                                     n, int(x), incx, int(y), incy)
+    status = _libcublas.cublasScopy_v2(handle,
+                                       n, int(x), incx, int(y), incy)
     cublasCheckStatus(status)
                 
 cublasScopy.__doc__ = \
@@ -854,9 +859,8 @@ _libcublas.cublasDcopy_v2.argtypes = [ctypes.c_int,
                                       ctypes.c_void_p,
                                       ctypes.c_int]
 def cublasDcopy(handle, n, x, incx, y, incy):
-    status = \
-           _libcublas.cublasDcopy_v2(handle,
-                                     n, int(x), incx, int(y), incy)
+    status = _libcublas.cublasDcopy_v2(handle,
+                                       n, int(x), incx, int(y), incy)
     cublasCheckStatus(status)
                 
 cublasDcopy.__doc__ = \
@@ -873,9 +877,8 @@ _libcublas.cublasCcopy_v2.argtypes = [ctypes.c_int,
                                       ctypes.c_void_p,
                                       ctypes.c_int]
 def cublasCcopy(handle, n, x, incx, y, incy):
-    status = \
-           _libcublas.cublasCcopy_v2(handle,
-                                     n, int(x), incx, int(y), incy)
+    status = _libcublas.cublasCcopy_v2(handle,
+                                       n, int(x), incx, int(y), incy)
     cublasCheckStatus(status)
                 
 cublasCcopy.__doc__ = \
@@ -892,9 +895,8 @@ _libcublas.cublasZcopy_v2.argtypes = [ctypes.c_int,
                                       ctypes.c_void_p,
                                       ctypes.c_int]
 def cublasZcopy(handle, n, x, incx, y, incy):
-    status = \
-           _libcublas.cublasZcopy_v2(handle,
-                                     n, int(x), incx, int(y), incy)
+    status = _libcublas.cublasZcopy_v2(handle,
+                                       n, int(x), incx, int(y), incy)
     cublasCheckStatus(status)
                 
 cublasZcopy.__doc__ = \
@@ -2149,65 +2151,65 @@ def cublasZgbmv(handle, trans, m, n, kl, ku, alpha, A, lda,
                               int(y), incy)
     cublasCheckStatus(status)
     
-# SGEMV, DGEMV, CGEMV, ZGEMV
-_GEMV_doc = Template( # XXX need to adjust
-"""
-    Matrix-vector product for ${precision} ${real} general matrix.
+# SGEMV, DGEMV, CGEMV, ZGEMV # XXX need to adjust
+# _GEMV_doc = Template( 
+# """
+#     Matrix-vector product for ${precision} ${real} general matrix.
 
-    Computes the product `alpha*op(A)*x+beta*y`, where `op(A)` == `A`
-    or `op(A)` == `A.T`, and stores it in `y`.
+#     Computes the product `alpha*op(A)*x+beta*y`, where `op(A)` == `A`
+#     or `op(A)` == `A.T`, and stores it in `y`.
 
-    Parameters
-    ----------
-    trans : char
-        If `upper(trans)` in `['T', 'C']`, assume that `A` is
-        transposed.
-    m : int
-        Number of rows in `A`.
-    n : int
-        Number of columns in `A`.
-    alpha : ${a_type}
-        `A` is multiplied by this quantity. 
-    A : ctypes.c_void_p
-        Pointer to ${precision} matrix. The matrix has
-        shape `(lda, n)` if `upper(trans)` == 'N', `(lda, m)`
-        otherwise.
-    lda : int
-        Leading dimension of `A`.
-    X : ctypes.c_void_p
-        Pointer to ${precision} array of length at least
-        `(1+(n-1)*abs(incx))` if `upper(trans) == 'N',
-        `(1+(m+1)*abs(incx))` otherwise.
-    incx : int
-        Spacing between elements of `x`. Must be nonzero.
-    beta : ${a_type}
-        `y` is multiplied by this quantity. If zero, `y` is ignored.
-    y : ctypes.c_void_p
-        Pointer to ${precision} array of length at least
-        `(1+(m+1)*abs(incy))` if `upper(trans)` == `N`,
-        `(1+(n+1)*abs(incy))` otherwise.
-    incy : int
-        Spacing between elements of `y`. Must be nonzero.
+#     Parameters
+#     ----------
+#     trans : char
+#         If `upper(trans)` in `['T', 'C']`, assume that `A` is
+#         transposed.
+#     m : int
+#         Number of rows in `A`.
+#     n : int
+#         Number of columns in `A`.
+#     alpha : ${a_type}
+#         `A` is multiplied by this quantity. 
+#     A : ctypes.c_void_p
+#         Pointer to ${precision} matrix. The matrix has
+#         shape `(lda, n)` if `upper(trans)` == 'N', `(lda, m)`
+#         otherwise.
+#     lda : int
+#         Leading dimension of `A`.
+#     X : ctypes.c_void_p
+#         Pointer to ${precision} array of length at least
+#         `(1+(n-1)*abs(incx))` if `upper(trans) == 'N',
+#         `(1+(m+1)*abs(incx))` otherwise.
+#     incx : int
+#         Spacing between elements of `x`. Must be nonzero.
+#     beta : ${a_type}
+#         `y` is multiplied by this quantity. If zero, `y` is ignored.
+#     y : ctypes.c_void_p
+#         Pointer to ${precision} array of length at least
+#         `(1+(m+1)*abs(incy))` if `upper(trans)` == `N`,
+#         `(1+(n+1)*abs(incy))` otherwise.
+#     incy : int
+#         Spacing between elements of `y`. Must be nonzero.
 
-    Examples
-    --------
-    >>> import pycuda.autoinit
-    >>> import pycuda.gpuarray as gpuarray
-    >>> import numpy as np
-    >>> a = np.random.rand(2, 3).astype(np.float32)
-    >>> x = np.random.rand(3, 1).astype(np.float32)
-    >>> a_gpu = gpuarray.to_gpu(a.T.copy())
-    >>> x_gpu = gpuarray.to_gpu(x)
-    >>> y_gpu = gpuarray.empty((2, 1), np.float32)
-    >>> alpha = np.float32(1.0)
-    >>> beta = np.float32(0)
-    >>> h = cublasCreate()
-    >>> ${func}(h, 'n', 2, 3, alpha, a_gpu.gpudata, 2, x_gpu.gpudata, 1, beta, y_gpu.gpudata, 1)
-    >>> cublasDestroy(h)
-    >>> np.allclose(y_gpu.get(), np.dot(a, x))
-    True
+#     Examples
+#     --------
+#     >>> import pycuda.autoinit
+#     >>> import pycuda.gpuarray as gpuarray
+#     >>> import numpy as np
+#     >>> a = np.random.rand(2, 3).astype(np.float32)
+#     >>> x = np.random.rand(3, 1).astype(np.float32)
+#     >>> a_gpu = gpuarray.to_gpu(a.T.copy())
+#     >>> x_gpu = gpuarray.to_gpu(x)
+#     >>> y_gpu = gpuarray.empty((2, 1), np.float32)
+#     >>> alpha = np.float32(1.0)
+#     >>> beta = np.float32(0)
+#     >>> h = cublasCreate()
+#     >>> ${func}(h, 'n', 2, 3, alpha, a_gpu.gpudata, 2, x_gpu.gpudata, 1, beta, y_gpu.gpudata, 1)
+#     >>> cublasDestroy(h)
+#     >>> np.allclose(y_gpu.get(), np.dot(a, x))
+#     True
 
-"""
+# """
     
 _libcublas.cublasSgemv_v2.restype = int
 _libcublas.cublasSgemv_v2.argtypes = [ctypes.c_int,
@@ -2717,61 +2719,62 @@ def cublasDsymv(handle, uplo, n, alpha, A, lda, x, incx, beta, y, incy):
                                        int(y), incy)
     cublasCheckStatus(status)
 
-_libcublas.cublasCsymv_v2.restype = int
-_libcublas.cublasCsymv_v2.argtypes = [ctypes.c_int,
-                                      ctypes.c_int,
-                                      ctypes.c_int,
-                                      ctypes.c_void_p,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int,
-                                      ctypes.c_void_p,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int]
-def cublasCsymv(handle, uplo, n, alpha, A, lda, x, incx, beta, y, incy):
-    """
-    Matrix-vector product for complex symmetric matrix.
-    
-    """
+if _CUBLAS_version >= 5000:
+    _libcublas.cublasCsymv_v2.restype = int
+    _libcublas.cublasCsymv_v2.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int]
+    def cublasCsymv(handle, uplo, n, alpha, A, lda, x, incx, beta, y, incy):
+        """
+        Matrix-vector product for complex symmetric matrix.
 
-    status = _libcublas.cublasCsymv_v2(handle, 
-                                       _CUBLAS_FILL_MODE[uplo], n, 
-                                       ctypes.byref(cuda.cuFloatComplex(alpha.real,
-                                                                        alpha.imag)), 
-                                       int(A), lda, int(x), incx, 
-                                       ctypes.byref(cuda.cuFloatComplex(beta.real,
-                                                                        beta.imag)), 
-                                       int(y), incy)
-    cublasCheckStatus(status)
+        """
 
-_libcublas.cublasZsymv_v2.restype = int
-_libcublas.cublasZsymv_v2.argtypes = [ctypes.c_int,
-                                      ctypes.c_int,
-                                      ctypes.c_int,
-                                      ctypes.c_void_p,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int,
-                                      ctypes.c_void_p,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int]
-def cublasZsymv(handle, uplo, n, alpha, A, lda, x, incx, beta, y, incy):
-    """
-    Matrix-vector product for complex symmetric matrix.
-    
-    """
+        status = _libcublas.cublasCsymv_v2(handle, 
+                                           _CUBLAS_FILL_MODE[uplo], n, 
+                                           ctypes.byref(cuda.cuFloatComplex(alpha.real,
+                                                                            alpha.imag)), 
+                                           int(A), lda, int(x), incx, 
+                                           ctypes.byref(cuda.cuFloatComplex(beta.real,
+                                                                            beta.imag)), 
+                                           int(y), incy)
+        cublasCheckStatus(status)
 
-    status = _libcublas.cublasZsymv_v2(handle, 
-                                       _CUBLAS_FILL_MODE[uplo], n, 
-                                       ctypes.byref(cuda.cuDoubleComplex(alpha.real,
-                                                                         alpha.imag)), 
-                                       int(A), lda, int(x), incx, 
-                                       ctypes.byref(cuda.cuDoubleComplex(beta.real,
-                                                                         beta.imag)), 
-                                       int(y), incy)
-    cublasCheckStatus(status)
+    _libcublas.cublasZsymv_v2.restype = int
+    _libcublas.cublasZsymv_v2.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int]
+    def cublasZsymv(handle, uplo, n, alpha, A, lda, x, incx, beta, y, incy):
+        """
+        Matrix-vector product for complex symmetric matrix.
+
+        """
+
+        status = _libcublas.cublasZsymv_v2(handle, 
+                                           _CUBLAS_FILL_MODE[uplo], n, 
+                                           ctypes.byref(cuda.cuDoubleComplex(alpha.real,
+                                                                             alpha.imag)), 
+                                           int(A), lda, int(x), incx, 
+                                           ctypes.byref(cuda.cuDoubleComplex(beta.real,
+                                                                             beta.imag)), 
+                                           int(y), incy)
+        cublasCheckStatus(status)
     
 # SSYR, DSYR, CSYR, ZSYR
 _libcublas.cublasSsyr_v2.restype = int
@@ -2816,49 +2819,50 @@ def cublasDsyr(handle, uplo, n, alpha, x, incx, A, lda):
                                       int(x), incx, int(A), lda)
     cublasCheckStatus(status)
 
-_libcublas.cublasCsyr_v2.restype = int
-_libcublas.cublasCsyr_v2.argtypes = [ctypes.c_int,
-                                     ctypes.c_int,
-                                     ctypes.c_int,
-                                     ctypes.c_void_p,
-                                     ctypes.c_void_p,
-                                     ctypes.c_int,
-                                     ctypes.c_void_p,
-                                     ctypes.c_int]
-def cublasCsyr(handle, uplo, n, alpha, x, incx, A, lda):
-    """
-    Rank-1 operation on complex symmetric matrix.
+if _CUBLAS_version >= 5000:
+    _libcublas.cublasCsyr_v2.restype = int
+    _libcublas.cublasCsyr_v2.argtypes = [ctypes.c_int,
+                                         ctypes.c_int,
+                                         ctypes.c_int,
+                                         ctypes.c_void_p,
+                                         ctypes.c_void_p,
+                                         ctypes.c_int,
+                                         ctypes.c_void_p,
+                                         ctypes.c_int]
+    def cublasCsyr(handle, uplo, n, alpha, x, incx, A, lda):
+        """
+        Rank-1 operation on complex symmetric matrix.
 
-    """
+        """
 
-    status = _libcublas.cublasCsyr_v2(handle,
-                                      _CUBLAS_FILL_MODE[uplo], n, 
-                                      ctypes.byref(cuda.cuFloatComplex(alpha.real,
-                                                                       alpha.imag)),
-                                      int(x), incx, int(A), lda)
-    cublasCheckStatus(status)
+        status = _libcublas.cublasCsyr_v2(handle,
+                                          _CUBLAS_FILL_MODE[uplo], n, 
+                                          ctypes.byref(cuda.cuFloatComplex(alpha.real,
+                                                                           alpha.imag)),
+                                          int(x), incx, int(A), lda)
+        cublasCheckStatus(status)
 
-_libcublas.cublasZsyr_v2.restype = int
-_libcublas.cublasZsyr_v2.argtypes = [ctypes.c_int,
-                                     ctypes.c_int,
-                                     ctypes.c_int,
-                                     ctypes.c_void_p,
-                                     ctypes.c_void_p,
-                                     ctypes.c_int,
-                                     ctypes.c_void_p,
-                                     ctypes.c_int]
-def cublasZsyr(handle, uplo, n, alpha, x, incx, A, lda):
-    """
-    Rank-1 operation on complex symmetric matrix.
+    _libcublas.cublasZsyr_v2.restype = int
+    _libcublas.cublasZsyr_v2.argtypes = [ctypes.c_int,
+                                         ctypes.c_int,
+                                         ctypes.c_int,
+                                         ctypes.c_void_p,
+                                         ctypes.c_void_p,
+                                         ctypes.c_int,
+                                         ctypes.c_void_p,
+                                         ctypes.c_int]
+    def cublasZsyr(handle, uplo, n, alpha, x, incx, A, lda):
+        """
+        Rank-1 operation on complex symmetric matrix.
 
-    """
+        """
 
-    status = _libcublas.cublasZsyr_v2(handle,
-                                      _CUBLAS_FILL_MODE[uplo], n, 
-                                      ctypes.byref(cuda.cuDoubleComplex(alpha.real,
-                                                                        alpha.imag)),
-                                      int(x), incx, int(A), lda)
-    cublasCheckStatus(status)
+        status = _libcublas.cublasZsyr_v2(handle,
+                                          _CUBLAS_FILL_MODE[uplo], n, 
+                                          ctypes.byref(cuda.cuDoubleComplex(alpha.real,
+                                                                            alpha.imag)),
+                                          int(x), incx, int(A), lda)
+        cublasCheckStatus(status)
     
 # SSYR2, DSYR2, CSYR2, ZSYR2
 _libcublas.cublasSsyr2_v2.restype = int
@@ -2909,55 +2913,56 @@ def cublasDsyr2(handle, uplo, n, alpha, x, incx, y, incy, A, lda):
                                        int(A), lda)                                       
     cublasCheckStatus(status)
 
-_libcublas.cublasCsyr2_v2.restype = int
-_libcublas.cublasCsyr2_v2.argtypes = [ctypes.c_int,
-                                      ctypes.c_int,
-                                      ctypes.c_int,                                   
-                                      ctypes.c_void_p,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int]
-def cublasCsyr2(handle, uplo, n, alpha, x, incx, y, incy, A, lda):
-    """
-    Rank-2 operation on complex symmetric matrix.
+if _CUBLAS_version >= 5000:
+    _libcublas.cublasCsyr2_v2.restype = int
+    _libcublas.cublasCsyr2_v2.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,                                   
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int]
+    def cublasCsyr2(handle, uplo, n, alpha, x, incx, y, incy, A, lda):
+        """
+        Rank-2 operation on complex symmetric matrix.
 
-    """
+        """
 
-    status = _libcublas.cublasCsyr2_v2(handle, 
-                                       _CUBLAS_FILL_MODE[uplo], n, 
-                                       ctypes.byref(cuda.cuFloatComplex(alpha.real,
-                                                                        alpha.imag)), 
-                                       int(x), incx, int(y), incy, 
-                                       int(A), lda)                                       
-    cublasCheckStatus(status)
+        status = _libcublas.cublasCsyr2_v2(handle, 
+                                           _CUBLAS_FILL_MODE[uplo], n, 
+                                           ctypes.byref(cuda.cuFloatComplex(alpha.real,
+                                                                            alpha.imag)), 
+                                           int(x), incx, int(y), incy, 
+                                           int(A), lda)                                       
+        cublasCheckStatus(status)
 
-_libcublas.cublasZsyr2_v2.restype = int
-_libcublas.cublasZsyr2_v2.argtypes = [ctypes.c_int,
-                                      ctypes.c_int,
-                                      ctypes.c_int,                                   
-                                      ctypes.c_void_p,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int,
-                                      ctypes.c_void_p,
-                                      ctypes.c_int]
-def cublasZsyr2(handle, uplo, n, alpha, x, incx, y, incy, A, lda):
-    """
-    Rank-2 operation on complex symmetric matrix.
+    _libcublas.cublasZsyr2_v2.restype = int
+    _libcublas.cublasZsyr2_v2.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,                                   
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int]
+    def cublasZsyr2(handle, uplo, n, alpha, x, incx, y, incy, A, lda):
+        """
+        Rank-2 operation on complex symmetric matrix.
 
-    """
+        """
 
-    status = _libcublas.cublasZsyr2_v2(handle, 
-                                       _CUBLAS_FILL_MODE[uplo], n, 
-                                       ctypes.byref(cuda.cuDoubleComplex(alpha.real,
-                                                                         alpha.imag)), 
-                                       int(x), incx, int(y), incy, 
-                                       int(A), lda)                                       
-    cublasCheckStatus(status)
+        status = _libcublas.cublasZsyr2_v2(handle, 
+                                           _CUBLAS_FILL_MODE[uplo], n, 
+                                           ctypes.byref(cuda.cuDoubleComplex(alpha.real,
+                                                                             alpha.imag)), 
+                                           int(x), incx, int(y), incy, 
+                                           int(A), lda)                                       
+        cublasCheckStatus(status)
     
 # STBMV, DTBMV, CTBMV, ZTBMV
 _libcublas.cublasStbmv_v2.restype = int
@@ -2990,7 +2995,7 @@ _libcublas.cublasDtbmv_v2.argtypes = [ctypes.c_int,
                                       ctypes.c_int,
                                       ctypes.c_int,
                                       ctypes.c_int,
-                                      ctypes.c_int
+                                      ctypes.c_int,
                                       ctypes.c_void_p,
                                       ctypes.c_int,
                                       ctypes.c_void_p,
@@ -4774,7 +4779,7 @@ def cublasZher2k(handle, uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc)
                                         int(C), ldc)
     cublasCheckStatus(status)
 
-if cuda.cudaDriverGetVersion() >= 5000:
+if _CUBLAS_version >= 5000:
 
     # SDGMM, DDGMM, CDGMM, ZDGMM
     _libcublas.cublasSdgmm.restype = int
