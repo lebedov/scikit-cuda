@@ -34,18 +34,18 @@ installed:
 * `NumPy <http://numpy.scipy.org>`_ 1.2.0 or later.
 * `PyCUDA <http://mathema.tician.de/software/pycuda>`_ 0.94.2 or later (some
   parts of ``scikits.cuda`` might not work properly with earlier versions).
-* `NIVIDIA CUDA Toolkit <http://www.nvidia.com/object/cuda_home_new.html>`_ 3.0 or later.
+* `NIVIDIA CUDA Toolkit <http://www.nvidia.com/object/cuda_home_new.html>`_ 4.0 or later.
 
 To run the unit tests, the following packages are also required:
 
 * `nose <http://code.google.com/p/python-nose/>`_ 0.11 or later.
 * `SciPy <http://www.scipy.org>`_ 0.8.0 or later.
 
-Some of the linear algebra functionality relies on the CULA toolkit; the single
-precision release of the toolkit is free of charge, but requires registration. 
+Some of the linear algebra functionality relies on the CULA Dense toolkit; 
+the single precision release of the toolkit is free of charge, but requires registration. 
 Depending on the version of CULA installed, some functions may not be available:
 
-* `CULA <http://www.culatools.com/get-cula/>`_ 2.0 or later.
+* `CULA <http://www.culatools.com/dense/>`_ R12 or later.
 
 To build the documentation, the following packages are also required:
 
