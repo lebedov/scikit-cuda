@@ -17,81 +17,84 @@ import scikits.cuda.misc as misc
 
 class test_cublas(TestCase):
     def setUp(self):
-        cublas.cublasInit()
+        self.cublas_handle = cublas.cublasCreate()
 
+    def tearDown(self):
+        cublas.cublasDestroy(self.cublas_handle)
+        
     # ISAMAX, IDAMAX, ICAMAX, IZAMAX
     def test_cublasIsamax(self):
         x = np.random.rand(5).astype(np.float32)
         x_gpu = gpuarray.to_gpu(x)
-        result = cublas.cublasIsamax(x_gpu.size, x_gpu.gpudata, 1)
+        result = cublas.cublasIsamax(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1)
         assert np.allclose(result, np.argmax(x))
 
     def test_cublasIdamax(self):
         x = np.random.rand(5).astype(np.float64)
         x_gpu = gpuarray.to_gpu(x)
-        result = cublas.cublasIdamax(x_gpu.size, x_gpu.gpudata, 1)
+        result = cublas.cublasIdamax(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1)
         assert np.allclose(result, np.argmax(x))
 
     def test_cublasIcamax(self):
         x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)
         x_gpu = gpuarray.to_gpu(x)
-        result = cublas.cublasIcamax(x_gpu.size, x_gpu.gpudata, 1)
+        result = cublas.cublasIcamax(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1)
         assert np.allclose(result, np.argmax(np.abs(x)))
 
     def test_cublasIzamax(self):
         x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)
         x_gpu = gpuarray.to_gpu(x)
-        result = cublas.cublasIzamax(x_gpu.size, x_gpu.gpudata, 1)
+        result = cublas.cublasIzamax(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1)
         assert np.allclose(result, np.argmax(np.abs(x)))
 
     # ISAMIN, IDAMIN, ICAMIN, IZAMIN
     def test_cublasIsamin(self):
         x = np.random.rand(5).astype(np.float32)
         x_gpu = gpuarray.to_gpu(x)
-        result = cublas.cublasIsamin(x_gpu.size, x_gpu.gpudata, 1)
+        result = cublas.cublasIsamin(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1)
         assert np.allclose(result, np.argmin(x))
 
     def test_cublasIdamin(self):
         x = np.random.rand(5).astype(np.float64)
         x_gpu = gpuarray.to_gpu(x)
-        result = cublas.cublasIdamin(x_gpu.size, x_gpu.gpudata, 1)
+        result = cublas.cublasIdamin(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1)
         assert np.allclose(result, np.argmin(x))
 
     def test_cublasIcamin(self):
         x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)
         x_gpu = gpuarray.to_gpu(x)
-        result = cublas.cublasIcamin(x_gpu.size, x_gpu.gpudata, 1)
+        result = cublas.cublasIcamin(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1)
         assert np.allclose(result, np.argmin(np.abs(x)))
 
     def test_cublasIzamin(self):
         x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)
         x_gpu = gpuarray.to_gpu(x)
-        result = cublas.cublasIzamin(x_gpu.size, x_gpu.gpudata, 1)
+        result = cublas.cublasIzamin(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1)
         assert np.allclose(result, np.argmin(np.abs(x)))
 
     # SASUM, DASUM, SCASUM, DZASUM
     def test_cublasSasum(self):
         x = np.random.rand(5).astype(np.float32)
         x_gpu = gpuarray.to_gpu(x)
-        result = cublas.cublasSasum(x_gpu.size, x_gpu.gpudata, 1)
+        result = cublas.cublasSasum(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1)
         assert np.allclose(result, np.sum(np.abs(x)))
 
     def test_cublasDasum(self):
         x = np.random.rand(5).astype(np.float64)
         x_gpu = gpuarray.to_gpu(x)
-        result = cublas.cublasDasum(x_gpu.size, x_gpu.gpudata, 1)
+        result = cublas.cublasDasum(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1)
         assert np.allclose(result, np.sum(np.abs(x)))
 
     def test_cublasScasum(self):
         x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)
         x_gpu = gpuarray.to_gpu(x)
-        result = cublas.cublasScasum(x_gpu.size, x_gpu.gpudata, 1)
+        result = cublas.cublasScasum(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1)
         assert np.allclose(result, np.sum(np.abs(x.real)+np.abs(x.imag)))
 
     def test_cublasDzasum(self):
         x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)
         x_gpu = gpuarray.to_gpu(x)
-        result = cublas.cublasDzasum(x_gpu.size, x_gpu.gpudata, 1)
+        result = cublas.cublasDzasum(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1)
         assert np.allclose(result, np.sum(np.abs(x.real)+np.abs(x.imag)))
 
     # SAXPY, DAXPY, CAXPY, ZAXPY
@@ -101,7 +104,7 @@ class test_cublas(TestCase):
         x_gpu = gpuarray.to_gpu(x)
         y = np.random.rand(5).astype(np.float32)
         y_gpu = gpuarray.to_gpu(y)
-        cublas.cublasSaxpy(x_gpu.size, alpha, x_gpu.gpudata, 1,
+        cublas.cublasSaxpy(self.cublas_handle, x_gpu.size, alpha, x_gpu.gpudata, 1,
                            y_gpu.gpudata, 1)
         assert np.allclose(y_gpu.get(), alpha*x+y)
 
@@ -111,7 +114,7 @@ class test_cublas(TestCase):
         x_gpu = gpuarray.to_gpu(x)
         y = np.random.rand(5).astype(np.float64)
         y_gpu = gpuarray.to_gpu(y)
-        cublas.cublasDaxpy(x_gpu.size, alpha, x_gpu.gpudata, 1,
+        cublas.cublasDaxpy(self.cublas_handle, x_gpu.size, alpha, x_gpu.gpudata, 1,
                            y_gpu.gpudata, 1)
         assert np.allclose(y_gpu.get(), alpha*x+y)
 
@@ -121,7 +124,7 @@ class test_cublas(TestCase):
         x_gpu = gpuarray.to_gpu(x)
         y = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)
         y_gpu = gpuarray.to_gpu(y)
-        cublas.cublasCaxpy(x_gpu.size, alpha, x_gpu.gpudata, 1,
+        cublas.cublasCaxpy(self.cublas_handle, x_gpu.size, alpha, x_gpu.gpudata, 1,
                            y_gpu.gpudata, 1)
         assert np.allclose(y_gpu.get(), alpha*x+y)
 
@@ -131,7 +134,7 @@ class test_cublas(TestCase):
         x_gpu = gpuarray.to_gpu(x)
         y = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)
         y_gpu = gpuarray.to_gpu(y)
-        cublas.cublasZaxpy(x_gpu.size, alpha, x_gpu.gpudata, 1,
+        cublas.cublasZaxpy(self.cublas_handle, x_gpu.size, alpha, x_gpu.gpudata, 1,
                            y_gpu.gpudata, 1)
         assert np.allclose(y_gpu.get(), alpha*x+y)
 
@@ -140,7 +143,7 @@ class test_cublas(TestCase):
         x = np.random.rand(5).astype(np.float32)
         x_gpu = gpuarray.to_gpu(x)
         y_gpu = gpuarray.zeros_like(x_gpu)
-        cublas.cublasScopy(x_gpu.size, x_gpu.gpudata, 1,
+        cublas.cublasScopy(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1,
                            y_gpu.gpudata, 1)
         assert np.allclose(y_gpu.get(), x_gpu.get())
 
@@ -148,7 +151,7 @@ class test_cublas(TestCase):
         x = np.random.rand(5).astype(np.float64)
         x_gpu = gpuarray.to_gpu(x)
         y_gpu = gpuarray.zeros_like(x_gpu)
-        cublas.cublasDcopy(x_gpu.size, x_gpu.gpudata, 1,
+        cublas.cublasDcopy(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1,
                            y_gpu.gpudata, 1)
         assert np.allclose(y_gpu.get(), x_gpu.get())
 
@@ -156,7 +159,7 @@ class test_cublas(TestCase):
         x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)
         x_gpu = gpuarray.to_gpu(x)
         y_gpu = misc.zeros_like(x_gpu)
-        cublas.cublasCcopy(x_gpu.size, x_gpu.gpudata, 1,
+        cublas.cublasCcopy(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1,
                            y_gpu.gpudata, 1)
         assert np.allclose(y_gpu.get(), x_gpu.get())
 
@@ -164,7 +167,7 @@ class test_cublas(TestCase):
         x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)
         x_gpu = gpuarray.to_gpu(x)
         y_gpu = misc.zeros_like(x_gpu)
-        cublas.cublasZcopy(x_gpu.size, x_gpu.gpudata, 1,
+        cublas.cublasZcopy(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1,
                            y_gpu.gpudata, 1)
         assert np.allclose(y_gpu.get(), x_gpu.get())
 
@@ -174,7 +177,7 @@ class test_cublas(TestCase):
         x_gpu = gpuarray.to_gpu(x)
         y = np.random.rand(5).astype(np.float32)
         y_gpu = gpuarray.to_gpu(y)
-        result = cublas.cublasSdot(x_gpu.size, x_gpu.gpudata, 1,
+        result = cublas.cublasSdot(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1,
                                    y_gpu.gpudata, 1)
         assert np.allclose(result, np.dot(x, y))
 
@@ -183,7 +186,7 @@ class test_cublas(TestCase):
         x_gpu = gpuarray.to_gpu(x)
         y = np.random.rand(5).astype(np.float64)
         y_gpu = gpuarray.to_gpu(y)
-        result = cublas.cublasDdot(x_gpu.size, x_gpu.gpudata, 1,
+        result = cublas.cublasDdot(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1,
                                    y_gpu.gpudata, 1)
         assert np.allclose(result, np.dot(x, y))
 
@@ -192,7 +195,7 @@ class test_cublas(TestCase):
         x_gpu = gpuarray.to_gpu(x)
         y = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)
         y_gpu = gpuarray.to_gpu(y)
-        result = cublas.cublasCdotu(x_gpu.size, x_gpu.gpudata, 1,
+        result = cublas.cublasCdotu(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1,
                                     y_gpu.gpudata, 1)
         assert np.allclose(result, np.dot(x, y))
 
@@ -201,7 +204,7 @@ class test_cublas(TestCase):
         x_gpu = gpuarray.to_gpu(x)
         y = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)
         y_gpu = gpuarray.to_gpu(y)
-        result = cublas.cublasCdotc(x_gpu.size, x_gpu.gpudata, 1,
+        result = cublas.cublasCdotc(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1,
                                     y_gpu.gpudata, 1)
         assert np.allclose(result, np.dot(np.conj(x), y))
 
@@ -210,7 +213,7 @@ class test_cublas(TestCase):
         x_gpu = gpuarray.to_gpu(x)
         y = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)
         y_gpu = gpuarray.to_gpu(y)
-        result = cublas.cublasZdotu(x_gpu.size, x_gpu.gpudata, 1,
+        result = cublas.cublasZdotu(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1,
                                     y_gpu.gpudata, 1)
         assert np.allclose(result, np.dot(x, y))
 
@@ -219,7 +222,7 @@ class test_cublas(TestCase):
         x_gpu = gpuarray.to_gpu(x)
         y = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)
         y_gpu = gpuarray.to_gpu(y)
-        result = cublas.cublasZdotc(x_gpu.size, x_gpu.gpudata, 1,
+        result = cublas.cublasZdotc(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1,
                                     y_gpu.gpudata, 1)
         assert np.allclose(result, np.dot(np.conj(x), y))
 
@@ -227,25 +230,25 @@ class test_cublas(TestCase):
     def test_cublasSrnm2(self):
         x = np.random.rand(5).astype(np.float32)
         x_gpu = gpuarray.to_gpu(x)
-        result = cublas.cublasSnrm2(x_gpu.size, x_gpu.gpudata, 1)
+        result = cublas.cublasSnrm2(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1)
         assert np.allclose(result, np.linalg.norm(x))
 
     def test_cublasDrnm2(self):
         x = np.random.rand(5).astype(np.float64)
         x_gpu = gpuarray.to_gpu(x)
-        result = cublas.cublasDnrm2(x_gpu.size, x_gpu.gpudata, 1)
+        result = cublas.cublasDnrm2(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1)
         assert np.allclose(result, np.linalg.norm(x))
 
     def test_cublasScrnm2(self):
         x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)
         x_gpu = gpuarray.to_gpu(x)
-        result = cublas.cublasScnrm2(x_gpu.size, x_gpu.gpudata, 1)
+        result = cublas.cublasScnrm2(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1)
         assert np.allclose(result, np.linalg.norm(x))
 
     def test_cublasDzrnm2(self):
         x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)
         x_gpu = gpuarray.to_gpu(x)
-        result = cublas.cublasDznrm2(x_gpu.size, x_gpu.gpudata, 1)
+        result = cublas.cublasDznrm2(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1)
         assert np.allclose(result, np.linalg.norm(x))
 
     # SSCAL, DSCAL, CSCAL, CSSCAL, ZSCAL, ZDSCAL
@@ -253,7 +256,7 @@ class test_cublas(TestCase):
         x = np.random.rand(5).astype(np.float32)
         x_gpu = gpuarray.to_gpu(x)
         alpha = np.float32(np.random.rand())
-        cublas.cublasSscal(x_gpu.size, alpha,
+        cublas.cublasSscal(self.cublas_handle, x_gpu.size, alpha,
                            x_gpu.gpudata, 1)
         assert np.allclose(x_gpu.get(), alpha*x)
         
@@ -261,7 +264,7 @@ class test_cublas(TestCase):
         x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)
         x_gpu = gpuarray.to_gpu(x)
         alpha = np.complex64(np.random.rand()+1j*np.random.rand())
-        cublas.cublasCscal(x_gpu.size, alpha,
+        cublas.cublasCscal(self.cublas_handle, x_gpu.size, alpha,
                            x_gpu.gpudata, 1)
         assert np.allclose(x_gpu.get(), alpha*x)
 
@@ -269,7 +272,7 @@ class test_cublas(TestCase):
         x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)
         x_gpu = gpuarray.to_gpu(x)
         alpha = np.float32(np.random.rand())
-        cublas.cublasCscal(x_gpu.size, alpha,
+        cublas.cublasCscal(self.cublas_handle, x_gpu.size, alpha,
                            x_gpu.gpudata, 1)
         assert np.allclose(x_gpu.get(), alpha*x)
 
@@ -277,7 +280,7 @@ class test_cublas(TestCase):
         x = np.random.rand(5).astype(np.float64)
         x_gpu = gpuarray.to_gpu(x)
         alpha = np.float64(np.random.rand())
-        cublas.cublasDscal(x_gpu.size, alpha,
+        cublas.cublasDscal(self.cublas_handle, x_gpu.size, alpha,
                            x_gpu.gpudata, 1)
         assert np.allclose(x_gpu.get(), alpha*x)
 
@@ -285,7 +288,7 @@ class test_cublas(TestCase):
         x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)
         x_gpu = gpuarray.to_gpu(x)
         alpha = np.complex128(np.random.rand()+1j*np.random.rand())
-        cublas.cublasZscal(x_gpu.size, alpha,
+        cublas.cublasZscal(self.cublas_handle, x_gpu.size, alpha,
                            x_gpu.gpudata, 1)
         assert np.allclose(x_gpu.get(), alpha*x)
 
@@ -293,7 +296,7 @@ class test_cublas(TestCase):
         x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)
         x_gpu = gpuarray.to_gpu(x)
         alpha = np.float64(np.random.rand())
-        cublas.cublasZdscal(x_gpu.size, alpha,
+        cublas.cublasZdscal(self.cublas_handle, x_gpu.size, alpha,
                            x_gpu.gpudata, 1)
         assert np.allclose(x_gpu.get(), alpha*x)
 
@@ -305,7 +308,7 @@ class test_cublas(TestCase):
         c = 3.0
         x_gpu = gpuarray.to_gpu(x)
         y_gpu = gpuarray.to_gpu(x)
-        cublas.cublasSrot(x_gpu.size, 
+        cublas.cublasSrot(self.cublas_handle, x_gpu.size, 
                           x_gpu.gpudata, 1, 
                           y_gpu.gpudata, 1,
                           c, s)
@@ -318,7 +321,7 @@ class test_cublas(TestCase):
         x_gpu = gpuarray.to_gpu(x)
         y = np.random.rand(5).astype(np.float32)
         y_gpu = gpuarray.to_gpu(y)
-        cublas.cublasSswap(x_gpu.size, x_gpu.gpudata, 1,
+        cublas.cublasSswap(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1,
                            y_gpu.gpudata, 1)
         assert np.allclose(x_gpu.get(), y)
 
@@ -327,7 +330,7 @@ class test_cublas(TestCase):
         x_gpu = gpuarray.to_gpu(x)
         y = np.random.rand(5).astype(np.float64)
         y_gpu = gpuarray.to_gpu(y)
-        cublas.cublasDswap(x_gpu.size, x_gpu.gpudata, 1,
+        cublas.cublasDswap(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1,
                            y_gpu.gpudata, 1)
         assert np.allclose(x_gpu.get(), y)
 
@@ -336,7 +339,7 @@ class test_cublas(TestCase):
         x_gpu = gpuarray.to_gpu(x)
         y = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)
         y_gpu = gpuarray.to_gpu(y)
-        cublas.cublasCswap(x_gpu.size, x_gpu.gpudata, 1,
+        cublas.cublasCswap(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1,
                            y_gpu.gpudata, 1)
         assert np.allclose(x_gpu.get(), y)
 
@@ -345,7 +348,7 @@ class test_cublas(TestCase):
         x_gpu = gpuarray.to_gpu(x)
         y = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)
         y_gpu = gpuarray.to_gpu(y)
-        cublas.cublasZswap(x_gpu.size, x_gpu.gpudata, 1,
+        cublas.cublasZswap(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1,
                            y_gpu.gpudata, 1)
         assert np.allclose(x_gpu.get(), y)
 
@@ -358,7 +361,8 @@ class test_cublas(TestCase):
         y_gpu = gpuarray.empty((2, 1), np.float32)
         alpha = np.float32(1.0)
         beta = np.float32(0.0)
-        cublas.cublasSgemv('n', 2, 3, alpha, a_gpu.gpudata, 2, x_gpu.gpudata,
+        cublas.cublasSgemv(self.cublas_handle, 'n', 2, 3, alpha, 
+                           a_gpu.gpudata, 2, x_gpu.gpudata,
                            1, beta, y_gpu.gpudata, 1)
         assert np.allclose(y_gpu.get(), np.dot(a, x))
 
@@ -370,7 +374,8 @@ class test_cublas(TestCase):
         y_gpu = gpuarray.empty((2, 1), np.float64)
         alpha = np.float64(1.0)
         beta = np.float64(0.0)
-        cublas.cublasDgemv('n', 2, 3, alpha, a_gpu.gpudata, 2, x_gpu.gpudata,
+        cublas.cublasDgemv(self.cublas_handle, 'n', 2, 3, alpha, 
+                           a_gpu.gpudata, 2, x_gpu.gpudata,
                            1, beta, y_gpu.gpudata, 1)
         assert np.allclose(y_gpu.get(), np.dot(a, x))
 
@@ -382,7 +387,8 @@ class test_cublas(TestCase):
         y_gpu = gpuarray.empty((2, 1), np.complex64)
         alpha = np.complex64(1.0)
         beta = np.complex64(0.0)
-        cublas.cublasCgemv('n', 2, 3, alpha, a_gpu.gpudata, 2, x_gpu.gpudata,
+        cublas.cublasCgemv(self.cublas_handle, 'n', 2, 3, alpha, 
+                           a_gpu.gpudata, 2, x_gpu.gpudata,
                            1, beta, y_gpu.gpudata, 1)
         assert np.allclose(y_gpu.get(), np.dot(a, x))
 
@@ -394,7 +400,8 @@ class test_cublas(TestCase):
         y_gpu = gpuarray.empty((2, 1), np.complex128)
         alpha = np.complex128(1.0)
         beta = np.complex128(0.0)
-        cublas.cublasZgemv('n', 2, 3, alpha, a_gpu.gpudata, 2, x_gpu.gpudata,
+        cublas.cublasZgemv(self.cublas_handle, 'n', 2, 3, alpha, 
+                           a_gpu.gpudata, 2, x_gpu.gpudata,
                            1, beta, y_gpu.gpudata, 1)
         assert np.allclose(y_gpu.get(), np.dot(a, x))
         

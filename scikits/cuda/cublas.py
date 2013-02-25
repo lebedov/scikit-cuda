@@ -1805,7 +1805,7 @@ _libcublas.cublasDscal_v2.argtypes = [ctypes.c_int,
                                       ctypes.c_void_p,
                                       ctypes.c_void_p,
                                       ctypes.c_int]
-def cublasDscal(handle, alpha, x, incx):
+def cublasDscal(handle, n, alpha, x, incx):
     status = _libcublas.cublasDscal_v2(handle, n,
                                        ctypes.byref(ctypes.c_double(alpha)),
                                        int(x), incx)
