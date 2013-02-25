@@ -14,12 +14,11 @@ Helper Routines
    cublasCheckStatus
    cublasCreate
    cublasDestroy
-   cublasGetError
+   cublasGetCurrentCtx
    cublasGetStream
-   cublasInit
+   cublasGetVersion
    cublasSetStream
-   cublasShutdown
-
+   
 Wrapper Routines
 ----------------
 
@@ -115,6 +114,7 @@ Single Precision BLAS2 Routines
    cublasStpsv
    cublasStrmv
    cublasStrsv
+
    cublasCgbmv
    cublasCgemv
    cublasCgerc
@@ -155,6 +155,7 @@ Double Precision BLAS2 Routines
    cublasDtpsv
    cublasDtrmv
    cublasDtrsv
+
    cublasZgbmv
    cublasZgemv
    cublasZgerc
@@ -185,6 +186,7 @@ Single Precision BLAS3 Routines
    cublasSsyr2k
    cublasStrmm
    cublasStrsm
+
    cublasCgemm
    cublasChemm
    cublasCherk
@@ -207,6 +209,7 @@ Double Precision BLAS3 Routines
    cublasDsyr2k
    cublasDtrmm
    cublasDtrsm
+
    cublasZgemm
    cublasZhemm
    cublasZherk
@@ -216,3 +219,21 @@ Double Precision BLAS3 Routines
    cublasZsyr2k
    cublasZtrmm
    cublasZtrsm
+
+Single-Precision BLAS-like Extension Routines
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+    cublasSdgmm
+    cublasCdgmm
+
+Double-Precision BLAS-like Extension Routines
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   cublasDdgmm
+   cublasZdgmm

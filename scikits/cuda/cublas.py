@@ -2747,7 +2747,16 @@ if _CUBLAS_version >= 5000:
                                                                             beta.imag)), 
                                            int(y), incy)
         cublasCheckStatus(status)
+else:
+    def cublasCsymv(handle, uplo, n, alpha, A, lda, x, incx, beta, y, incy):
+        """
+        Matrix-vector product for complex symmetric matrix.
 
+        """
+
+        raise NotImplementedError('CUBLAS 5.0 or later required')
+
+if _CUBLAS_version >= 5000:    
     _libcublas.cublasZsymv_v2.restype = int
     _libcublas.cublasZsymv_v2.argtypes = [ctypes.c_int,
                                           ctypes.c_int,
@@ -2775,6 +2784,13 @@ if _CUBLAS_version >= 5000:
                                                                              beta.imag)), 
                                            int(y), incy)
         cublasCheckStatus(status)
+else:
+    def cublasZsymv(handle, uplo, n, alpha, A, lda, x, incx, beta, y, incy):
+        """
+        Matrix-vector product for complex symmetric matrix.
+
+        """
+        raise NotImplementedError('CUBLAS 5.0 required')
     
 # SSYR, DSYR, CSYR, ZSYR
 _libcublas.cublasSsyr_v2.restype = int
@@ -2841,7 +2857,16 @@ if _CUBLAS_version >= 5000:
                                                                            alpha.imag)),
                                           int(x), incx, int(A), lda)
         cublasCheckStatus(status)
+else:
+    def cublasCsyr(handle, uplo, n, alpha, x, incx, A, lda):
+        """
+        Rank-1 operation on complex symmetric matrix.
 
+        """
+
+        raise NotImplementedError('CUBLAS 5.0 required')
+
+if _CUBLAS_version >= 5000:
     _libcublas.cublasZsyr_v2.restype = int
     _libcublas.cublasZsyr_v2.argtypes = [ctypes.c_int,
                                          ctypes.c_int,
@@ -2863,6 +2888,14 @@ if _CUBLAS_version >= 5000:
                                                                             alpha.imag)),
                                           int(x), incx, int(A), lda)
         cublasCheckStatus(status)
+else:
+    def cublasZsyr(handle, uplo, n, alpha, x, incx, A, lda):
+        """
+        Rank-1 operation on complex symmetric matrix.
+
+        """
+
+        raise NotImplementedError('CUBLAS 5.0 required')
     
 # SSYR2, DSYR2, CSYR2, ZSYR2
 _libcublas.cublasSsyr2_v2.restype = int
@@ -2938,7 +2971,16 @@ if _CUBLAS_version >= 5000:
                                            int(x), incx, int(y), incy, 
                                            int(A), lda)                                       
         cublasCheckStatus(status)
+else:
+    def cublasCsyr2(handle, uplo, n, alpha, x, incx, y, incy, A, lda):
+        """
+        Rank-2 operation on complex symmetric matrix.
 
+        """
+
+        raise NotImplementedError('CUBLAS 5.0 required')
+
+if _CUBLAS_version >= 5000:    
     _libcublas.cublasZsyr2_v2.restype = int
     _libcublas.cublasZsyr2_v2.argtypes = [ctypes.c_int,
                                           ctypes.c_int,
@@ -2963,6 +3005,14 @@ if _CUBLAS_version >= 5000:
                                            int(x), incx, int(y), incy, 
                                            int(A), lda)                                       
         cublasCheckStatus(status)
+else:
+    def cublasZsyr2(handle, uplo, n, alpha, x, incx, y, incy, A, lda):
+        """
+        Rank-2 operation on complex symmetric matrix.
+
+        """
+
+        raise NotImplementedError('CUBLAS 5.0 required')
     
 # STBMV, DTBMV, CTBMV, ZTBMV
 _libcublas.cublasStbmv_v2.restype = int
@@ -4778,9 +4828,10 @@ def cublasZher2k(handle, uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc)
                                         int(C), ldc)
     cublasCheckStatus(status)
 
-if _CUBLAS_version >= 5000:
+### BLAS-like extension routines ###
 
-    # SDGMM, DDGMM, CDGMM, ZDGMM
+# SDGMM, DDGMM, CDGMM, ZDGMM
+if _CUBLAS_version >= 5000:
     _libcublas.cublasSdgmm.restype = int
     _libcublas.cublasSdgmm.argtypes = [ctypes.c_int,
                                        ctypes.c_int,
@@ -4806,7 +4857,16 @@ if _CUBLAS_version >= 5000:
                                         int(x), incx,
                                         int(C), ldc)
         cublasCheckStatus(status)
+else:
+    def cublasSdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc):
+        """
+        Matrix-diagonal matrix product for real general matrix.
+        
+        """
 
+        raise NotImplementedError('CUBLAS 5.0 required')
+    
+if _CUBLAS_version >= 5000:        
     _libcublas.cublasDdgmm.restype = int
     _libcublas.cublasDdgmm.argtypes = [ctypes.c_int,
                                        ctypes.c_int,
@@ -4832,7 +4892,16 @@ if _CUBLAS_version >= 5000:
                                         int(x), incx,
                                         int(C), ldc)
         cublasCheckStatus(status)
+else:
+    def cublasDdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc):
+        """
+        Matrix-diagonal matrix product for real general matrix.
+        
+        """
 
+        raise NotImplementedError('CUBLAS 5.0 required')
+    
+if _CUBLAS_version >= 5000:                
     _libcublas.cublasCdgmm.restype = int
     _libcublas.cublasCdgmm.argtypes = [ctypes.c_int,
                                        ctypes.c_int,
@@ -4858,7 +4927,16 @@ if _CUBLAS_version >= 5000:
                                         int(x), incx,
                                         int(C), ldc)
         cublasCheckStatus(status)
+else:
+    def cublasCdgmm(mode, m, n, A, lda, x, incx, C, ldc):
+        """
+        Matrix-diagonal matrix product for complex general matrix.
+        
+        """
 
+        raise NotImplementedError('CUBLAS 5.0 required')
+    
+if _CUBLAS_version >= 5000:            
     _libcublas.cublasZdgmm.restype = int
     _libcublas.cublasZdgmm.argtypes = [ctypes.c_int,
                                        ctypes.c_int,
@@ -4883,9 +4961,16 @@ if _CUBLAS_version >= 5000:
                                         int(A), lda, 
                                         int(x), incx,
                                         int(C), ldc)
-        cublasCheckStatus(status)
+        cublasCheckStatus(status)        
+else:
+    def cublasZdgmm(mode, m, n, A, lda, x, incx, C, ldc):
+        """
+        Matrix-diagonal matrix product for complex general matrix.
         
-        
+        """
+
+        raise NotImplementedError('CUBLAS 5.0 required')
+    
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

@@ -21,4 +21,3 @@ Linear Algebra Routines
    svd
    transpose
    tril
-
