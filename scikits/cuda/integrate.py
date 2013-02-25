@@ -97,7 +97,7 @@ def gen_trapz_mult(N, mult_type):
     
     return mult_gpu
 
-def trapz(x_gpu, dx=1.0):
+def trapz(x_gpu, dx=1.0, handle=None):
     """
     1D trapezoidal integration.
 
@@ -107,6 +107,9 @@ def trapz(x_gpu, dx=1.0):
         Input array to integrate.
     dx : scalar
         Spacing.
+    handle : int
+        CUBLAS context. If no context is specified, the default handle from
+        `scikits.misc._global_cublas_handle` is used.
 
     Returns
     -------
@@ -127,7 +130,10 @@ def trapz(x_gpu, dx=1.0):
     True
     
     """
-    
+
+    if handle is None:
+        handle = misc._global_cublas_handle
+        
     if len(x_gpu.shape) > 1:
         raise ValueError('input array must be 1D')
     if np.iscomplex(dx):
@@ -146,7 +152,7 @@ def trapz(x_gpu, dx=1.0):
         raise ValueError('unsupported input type')
 
     trapz_mult_gpu = gen_trapz_mult(x_gpu.size, float_type)
-    result = cublas_func(x_gpu.size, x_gpu.gpudata, 1,
+    result = cublas_func(handle, x_gpu.size, x_gpu.gpudata, 1,
                          trapz_mult_gpu.gpudata, 1)
 
     return float_type(dx)*result
@@ -239,7 +245,7 @@ def gen_trapz2d_mult(mat_shape, mult_type):
     
     return mult_gpu
 
-def trapz2d(x_gpu, dx=1.0, dy=1.0):
+def trapz2d(x_gpu, dx=1.0, dy=1.0, handle=None):
     """
     2D trapezoidal integration.
 
@@ -251,6 +257,9 @@ def trapz2d(x_gpu, dx=1.0, dy=1.0):
         X-axis spacing.
     dy : float
         Y-axis spacing
+    handle : int
+        CUBLAS context. If no context is specified, the default handle from
+        `scikits.misc._global_cublas_handle` is used.
         
     Returns
     -------
@@ -271,7 +280,10 @@ def trapz2d(x_gpu, dx=1.0, dy=1.0):
     True
 
     """
-    
+
+    if handle is None:
+        handle = misc._global_cublas_handle
+        
     if len(x_gpu.shape) != 2:
         raise ValueError('input array must be 2D')
     if np.iscomplex(dx) or np.iscomplex(dy):
