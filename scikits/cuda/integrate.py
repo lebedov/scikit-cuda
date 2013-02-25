@@ -302,7 +302,7 @@ def trapz2d(x_gpu, dx=1.0, dy=1.0, handle=None):
         raise ValueError('unsupported input type')
                                             
     trapz_mult_gpu = gen_trapz2d_mult(x_gpu.shape, float_type)
-    result = cublas_func(x_gpu.size, x_gpu.gpudata, 1,
+    result = cublas_func(handle, x_gpu.size, x_gpu.gpudata, 1,
                          trapz_mult_gpu.gpudata, 1)
 
     return float_type(dx)*float_type(dy)*result
