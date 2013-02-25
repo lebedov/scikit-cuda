@@ -121,10 +121,15 @@ def done_context(ctx):
             break
     ctx.detach()
 
+global _global_cublas_handle
+_global_cublas_handle = None
 def init():
     """
     Initialize libraries used by scikits.cuda.
 
+    Initialize the CUBLAS and CULA libraries used by high-level functions
+    provided by scikits.cuda.
+    
     Notes
     -----
     This function does not initialize PyCUDA; it uses whatever device
@@ -133,7 +138,8 @@ def init():
     """
 
     # CUBLAS uses whatever device is being used by the host thread:
-    cublas.cublasInit()
+    global _global_cublas_handle
+    _global_cublas_handle = cublas.cublasCreate()
 
     # culaSelectDevice() need not (and, in fact, cannot) be called
     # here because the host thread has already been bound to a GPU
@@ -141,6 +147,27 @@ def init():
     if _has_cula:
         cula.culaInitialize()
 
+def shutdown():
+    """
+    Shutdown libraries used by scikits.cuda.
+
+    Shutdown the CUBLAS and CULA libraries used by high-level functions provided
+    by scikits.cuda.
+
+    Notes
+    -----
+    This function does not shutdown PyCUDA.
+
+    """
+
+    global _global_cublas_handle
+    cublasDestroy(_global_cublas_handle)
+    
+    if _has_cula:
+        cula.culaShutdown()
+
+    _global_cublas_handle = None
+    
 def get_compute_capability(dev):
     """
     Get the compute capability of the specified device.
