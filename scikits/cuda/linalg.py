@@ -188,7 +188,7 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     else:
         return s_gpu
 
-def dot(x_gpu, y_gpu, transa='N', transb='N'):
+def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None):
     """
     Dot product of two arrays.
 
@@ -208,7 +208,10 @@ def dot(x_gpu, y_gpu, transa='N', transb='N'):
     transb : char
         If 'T', compute the product of the transpose of `y_gpu`.
         If 'C', compute the product of the Hermitian of `y_gpu`.
-
+    handle : int
+        CUBLAS context. If no context is specified, the default handle from
+        `scikits.misc._global_cublas_handle` is used.
+        
     Returns
     -------
     c_gpu : pycuda.gpuarray.GPUArray, float{32,64}, or complex{64,128}
@@ -244,6 +247,9 @@ def dot(x_gpu, y_gpu, transa='N', transb='N'):
 
     """
 
+    if handle is None:
+        handle = misc._global_cublas_handle
+        
     if len(x_gpu.shape) == 1 and len(y_gpu.shape) == 1:
 
         if x_gpu.size != y_gpu.size:
@@ -261,7 +267,7 @@ def dot(x_gpu, y_gpu, transa='N', transb='N'):
         else:
             raise ValueError('unsupported combination of input types')
 
-        return cublas_func(x_gpu.size, x_gpu.gpudata, 1,
+        return cublas_func(handle, x_gpu.size, x_gpu.gpudata, 1,
                            y_gpu.gpudata, 1)
     else:
 
@@ -329,12 +335,12 @@ def dot(x_gpu, y_gpu, transa='N', transb='N'):
         # Note that the desired shape of the output matrix is the transpose
         # of what CUBLAS assumes:
         c_gpu = gpuarray.empty((n, ldc), x_gpu.dtype)
-        cublas_func(transb, transa, m, n, k, alpha, y_gpu.gpudata,
+        cublas_func(handle, transb, transa, m, n, k, alpha, y_gpu.gpudata,
                     lda, x_gpu.gpudata, ldb, beta, c_gpu.gpudata, ldc)
 
         return c_gpu
 
-def mdot(*args):
+def mdot(*args, **kwargs):
     """
     Product of several matrices.
 
@@ -344,7 +350,10 @@ def mdot(*args):
     ----------
     a_gpu, b_gpu, ... : pycuda.gpuarray.GPUArray
         Arrays to multiply.
-
+    handle : int
+        CUBLAS context. If no context is specified, the default handle from
+        `scikits.misc._global_cublas_handle` is used.
+        
     Returns
     -------
     c_gpu : pycuda.gpuarray.GPUArray
@@ -373,18 +382,23 @@ def mdot(*args):
 
     """
 
+    if kwargs.has_key['handle'] and kwargs['handle'] is not None:
+        handle = kwargs['handle']
+    else:
+        handle = misc._global_cublas_handle
+        
     # Free the temporary matrix allocated when computing the dot
     # product:
     out_gpu = args[0]
     for next_gpu in args[1:]:
-        temp_gpu = dot(out_gpu, next_gpu)
+        temp_gpu = dot(out_gpu, next_gpu, handle=handle)
         out_gpu.gpudata.free()
         del(out_gpu)
         out_gpu = temp_gpu
         del(temp_gpu)
     return out_gpu
 
-def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True):
+def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
     """
     Dot product of diagonal and non-diagonal arrays.
 
@@ -402,6 +416,9 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True):
         If 'T', compute the product of the transpose of `a_gpu`.
     overwrite : bool
         If true (default), save the result in `a_gpu`.
+    handle : int
+        CUBLAS context. If no context is specified, the default handle from
+        `scikits.misc._global_cublas_handle` is used.
 
     Returns
     -------
@@ -431,6 +448,9 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True):
 
     """
 
+    if handle is None:
+        handle = misc._global_cublas_handle
+        
     if len(d_gpu.shape) != 1:
         raise ValueError('d_gpu must be a vector')
     if len(a_gpu.shape) != 2:
@@ -479,7 +499,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True):
         r_gpu = a_gpu
     else:
         r_gpu = gpuarray.empty_like(a_gpu)
-        copy_func(a_gpu.size, int(a_gpu.gpudata), 1,
+        copy_func(handle, a_gpu.size, int(a_gpu.gpudata), 1,
                   int(r_gpu.gpudata), 1)
 
     if lower(trans) == 'n':
@@ -1089,7 +1109,7 @@ __global__ void tril(FLOAT *a, unsigned int N) {
 }
 """)
 
-def tril(a_gpu, overwrite=True):
+def tril(a_gpu, overwrite=True, handle=None):
     """
     Lower triangle of a matrix.
 
@@ -1102,6 +1122,9 @@ def tril(a_gpu, overwrite=True):
     overwrite : boolean
         If true (default), zero out the upper triangle of the matrix.
         If false, return the result in a newly allocated matrix.
+    handle : int
+        CUBLAS context. If no context is specified, the default handle from
+        `scikits.misc._global_cublas_handle` is used.
 
     Returns
     -------
@@ -1124,6 +1147,9 @@ def tril(a_gpu, overwrite=True):
 
     """
 
+    if handle is None:
+        handle = misc._global_cublas_handle
+        
     if len(a_gpu.shape) != 2 or a_gpu.shape[0] != a_gpu.shape[1]:
         raise ValueError('matrix must be square')
 
@@ -1168,7 +1194,7 @@ def tril(a_gpu, overwrite=True):
 
     if not overwrite:
         a_orig_gpu = gpuarray.empty(a_gpu.shape, a_gpu.dtype)
-        copy_func(a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
+        copy_func(handle, a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
 
     tril(a_gpu, np.uint32(a_gpu.size),
          block=block_dim,
@@ -1179,7 +1205,7 @@ def tril(a_gpu, overwrite=True):
     else:
 
         # Restore original contents of a_gpu:
-        swap_func(a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
+        swap_func(handle, a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
         return a_orig_gpu
 
 multiply_template = Template("""
