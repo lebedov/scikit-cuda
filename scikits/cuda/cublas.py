@@ -3382,7 +3382,6 @@ def cublasCtrmv(handle, uplo, trans, diag, n, A, lda, x, incx):
                                        _CUBLAS_OP[trans], 
                                        _CUBLAS_DIAG[diag], 
                                        n, int(A), lda, int(x), incx)
-    status = cublasGetError()
     cublasCheckStatus(status)
 
 _libcublas.cublasDtrmv_v2.restype = int
