@@ -226,8 +226,8 @@ Single-Precision BLAS-like Extension Routines
    :toctree: generated/
    :nosignatures:
 
-    cublasSdgmm
-    cublasCdgmm
+   cublasSdgmm
+   cublasCdgmm
 
 Double-Precision BLAS-like Extension Routines
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
