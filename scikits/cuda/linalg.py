@@ -382,7 +382,7 @@ def mdot(*args, **kwargs):
 
     """
 
-    if kwargs.has_key['handle'] and kwargs['handle'] is not None:
+    if kwargs.has_key('handle') and kwargs['handle'] is not None:
         handle = kwargs['handle']
     else:
         handle = misc._global_cublas_handle
@@ -510,7 +510,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
         bytes_step = float_type().itemsize
 
     for i in xrange(N):
-        scal_func(cols, d[i], int(r_gpu.gpudata)+i*bytes_step, incx)
+        scal_func(handle, cols, d[i], int(r_gpu.gpudata)+i*bytes_step, incx)
     return r_gpu
 
 transpose_template = Template("""
