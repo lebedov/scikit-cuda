@@ -215,7 +215,7 @@ def cublasGetVersion(handle):
 
 # Get and save CUBLAS version:
 h = cublasCreate()
-_CUBLAS_version = cublasGetVersion(h)
+_cublas_version = cublasGetVersion(h)
 cublasDestroy(h)
 del h
 
@@ -2719,7 +2719,7 @@ def cublasDsymv(handle, uplo, n, alpha, A, lda, x, incx, beta, y, incy):
                                        int(y), incy)
     cublasCheckStatus(status)
 
-if _CUBLAS_version >= 5000:
+if _cublas_version >= 5000:
     _libcublas.cublasCsymv_v2.restype = int
     _libcublas.cublasCsymv_v2.argtypes = [ctypes.c_int,
                                           ctypes.c_int,
@@ -2756,7 +2756,7 @@ else:
 
         raise NotImplementedError('CUBLAS 5.0 or later required')
 
-if _CUBLAS_version >= 5000:    
+if _cublas_version >= 5000:    
     _libcublas.cublasZsymv_v2.restype = int
     _libcublas.cublasZsymv_v2.argtypes = [ctypes.c_int,
                                           ctypes.c_int,
@@ -2835,7 +2835,7 @@ def cublasDsyr(handle, uplo, n, alpha, x, incx, A, lda):
                                       int(x), incx, int(A), lda)
     cublasCheckStatus(status)
 
-if _CUBLAS_version >= 5000:
+if _cublas_version >= 5000:
     _libcublas.cublasCsyr_v2.restype = int
     _libcublas.cublasCsyr_v2.argtypes = [ctypes.c_int,
                                          ctypes.c_int,
@@ -2866,7 +2866,7 @@ else:
 
         raise NotImplementedError('CUBLAS 5.0 required')
 
-if _CUBLAS_version >= 5000:
+if _cublas_version >= 5000:
     _libcublas.cublasZsyr_v2.restype = int
     _libcublas.cublasZsyr_v2.argtypes = [ctypes.c_int,
                                          ctypes.c_int,
@@ -2946,7 +2946,7 @@ def cublasDsyr2(handle, uplo, n, alpha, x, incx, y, incy, A, lda):
                                        int(A), lda)                                       
     cublasCheckStatus(status)
 
-if _CUBLAS_version >= 5000:
+if _cublas_version >= 5000:
     _libcublas.cublasCsyr2_v2.restype = int
     _libcublas.cublasCsyr2_v2.argtypes = [ctypes.c_int,
                                           ctypes.c_int,
@@ -2980,7 +2980,7 @@ else:
 
         raise NotImplementedError('CUBLAS 5.0 required')
 
-if _CUBLAS_version >= 5000:    
+if _cublas_version >= 5000:    
     _libcublas.cublasZsyr2_v2.restype = int
     _libcublas.cublasZsyr2_v2.argtypes = [ctypes.c_int,
                                           ctypes.c_int,
@@ -4831,7 +4831,7 @@ def cublasZher2k(handle, uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc)
 ### BLAS-like extension routines ###
 
 # SDGMM, DDGMM, CDGMM, ZDGMM
-if _CUBLAS_version >= 5000:
+if _cublas_version >= 5000:
     _libcublas.cublasSdgmm.restype = int
     _libcublas.cublasSdgmm.argtypes = [ctypes.c_int,
                                        ctypes.c_int,
@@ -4866,7 +4866,7 @@ else:
 
         raise NotImplementedError('CUBLAS 5.0 required')
     
-if _CUBLAS_version >= 5000:        
+if _cublas_version >= 5000:        
     _libcublas.cublasDdgmm.restype = int
     _libcublas.cublasDdgmm.argtypes = [ctypes.c_int,
                                        ctypes.c_int,
@@ -4901,7 +4901,7 @@ else:
 
         raise NotImplementedError('CUBLAS 5.0 required')
     
-if _CUBLAS_version >= 5000:                
+if _cublas_version >= 5000:                
     _libcublas.cublasCdgmm.restype = int
     _libcublas.cublasCdgmm.argtypes = [ctypes.c_int,
                                        ctypes.c_int,
@@ -4936,7 +4936,7 @@ else:
 
         raise NotImplementedError('CUBLAS 5.0 required')
     
-if _CUBLAS_version >= 5000:            
+if _cublas_version >= 5000:            
     _libcublas.cublasZdgmm.restype = int
     _libcublas.cublasZdgmm.argtypes = [ctypes.c_int,
                                        ctypes.c_int,
