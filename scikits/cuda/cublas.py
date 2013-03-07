@@ -17,7 +17,8 @@ import numpy as np
 from string import Template
 
 import cuda
-import misc
+import utils
+
 
 if sys.platform == 'linux2':
     _libcublas_libname_list = ['libcublas.so', 'libcublas.so.4', 'libcublas.so.5']
@@ -222,7 +223,7 @@ def cublasGetVersion(handle):
 # XXX This approach to obtaining the CUBLAS version number
 # may break Windows/MacOSX compatibility XXX
 _cublas_version = int(re.search('[\D\.]\.+(\d)',
-      misc.get_soname(misc.find_lib_path(_libcublas_libname))).group(1) + '000')
+      utils.get_soname(utils.find_lib_path(_libcublas_libname))).group(1) + '000')
 
 _libcublas.cublasSetStream_v2.restype = int
 _libcublas.cublasSetStream_v2.argtypes = [ctypes.c_int,
