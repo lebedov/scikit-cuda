@@ -5,6 +5,7 @@ Miscellaneous utility functions.
 """
 
 import string
+import subprocess
 from string import Template
 import atexit
 
@@ -773,7 +774,6 @@ try:
     import elftools
 except ImportError:
     import re
-    import subprocess
 
     def get_soname(filename):
         """
@@ -865,6 +865,29 @@ else:
 
         # No SONAME found:
         return ''
+
+def find_lib_path(filename):
+    """
+    Find full path of a shared library.
+
+    Parameter
+    ---------
+    filename : str
+        Basename of library to search for.
+
+    Returns
+    -------
+    path : str
+        Full path to library.
+
+    """
+
+    output = subprocess.check_output(['/sbin/ldconfig', '-p'])
+    result = re.search('^\s*%s\s.*\=\>\s(.+)$' % filename, output, re.MULTILINE)
+    if result:
+        return result.group(1)
+    else:
+        raise RuntimeError('library not found')
     
 if __name__ == "__main__":
     import doctest
