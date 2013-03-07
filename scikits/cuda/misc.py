@@ -4,6 +4,7 @@
 Miscellaneous utility functions.
 """
 
+import re
 import string
 import subprocess
 from string import Template

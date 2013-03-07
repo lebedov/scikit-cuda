@@ -6,6 +6,7 @@ Python interface to CUBLAS functions.
 Note: this module does not explicitly depend on PyCUDA.
 """
 
+import re
 import sys
 import warnings
 import ctypes
@@ -16,6 +17,7 @@ import numpy as np
 from string import Template
 
 import cuda
+import misc
 
 if sys.platform == 'linux2':
     _libcublas_libname_list = ['libcublas.so', 'libcublas.so.4', 'libcublas.so.5']
@@ -213,11 +215,14 @@ def cublasGetVersion(handle):
     return version.value
 
 
-# Get and save CUBLAS version:
-h = cublasCreate()
-_cublas_version = cublasGetVersion(h)
-cublasDestroy(h)
-del h
+# Get and save CUBLAS major version using the CUBLAS library's SONAME;
+# this is done because creating a CUBLAS context can subtly affect the
+# performance of subsequent CUDA operations in certain circumstances.
+# We append zeros to match format of version returned by cublasGetVersion():
+# XXX This approach to obtaining the CUBLAS version number
+# may break Windows/MacOSX compatibility XXX
+_cublas_version = int(re.search('[\D\.]\.+(\d)',
+      misc.get_soname(misc.find_lib_path(_libcublas_libname))).group(1) + '000')
 
 _libcublas.cublasSetStream_v2.restype = int
 _libcublas.cublasSetStream_v2.argtypes = [ctypes.c_int,
