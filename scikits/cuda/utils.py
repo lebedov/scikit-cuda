@@ -4,6 +4,7 @@
 Utility functions.
 """
 
+import ctypes
 import re
 import subprocess
 
@@ -105,15 +106,25 @@ else:
         # No SONAME found:
         return ''
 
-def find_lib_path(filename):
+class DL_info(ctypes.Structure):
+    _fields_ = [('dli_fname', ctypes.c_char_p),
+                ('dli_fbase', ctypes.c_void_p),
+                ('dli_sname', ctypes.c_char_p),
+                ('dli_saddr', ctypes.c_void_p)]
+libdl = ctypes.cdll.LoadLibrary('libdl.so')
+libdl.dladdr.restype = int
+libdl.dladdr.argtypes = [ctypes.c_void_p,
+                         ctypes.c_void_p]
+    
+def find_lib_path(func):
     """
-    Find full path of a shared library.
+    Find full path of a shared library containing some function.
 
     Parameter
     ---------
-    filename : str
-        Basename of library to search for.
-
+    func : ctypes function pointer
+        Pointer to function to search for.
+        
     Returns
     -------
     path : str
@@ -121,11 +132,6 @@ def find_lib_path(filename):
 
     """
 
-    p = subprocess.Popen(['/sbin/ldconfig', '-p'], stdout=subprocess.PIPE)
-    output = p.communicate()[0]
-    result = re.search('^\s*%s\s.*\=\>\s(.+)$' % filename, output, re.MULTILINE)
-    if result:
-        return result.group(1)
-    else:
-        raise RuntimeError('library not found')
-
+    dl_info = DL_info()            
+    libdl.dladdr(func, ctypes.byref(dl_info))
+    return dl_info.dli_fname
