@@ -3,8 +3,8 @@
 Change Log
 ==========
 
-Release 0.042 - ()
-------------------
+Release 0.042 - (March 10, 2013)
+--------------------------------
 * Add complex exponential integral.
 * Fix typo in cublasCgbmv.
 * Use CUBLAS v2 API, add preliminary support for CUBLAS 5 functions.
