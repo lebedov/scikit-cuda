@@ -26,4 +26,6 @@ Miscellaneous Routines
    ones_like
    select_block_grid_sizes
    set_realloc
+   shutdown
    zeros
+   zeros_like
