@@ -284,8 +284,8 @@ class NumpyDocString(object):
         for (section,content) in self._read_sections():
             if not section.startswith('..'):
                 section = ' '.join([s.capitalize() for s in section.split(' ')])
-            if section in ('Parameters', 'Attributes', 'Methods',
-                           'Returns', 'Raises', 'Warns'):
+            if section in ('Parameters', 'Returns', 'Raises', 'Warns',
+                           'Other Parameters', 'Attributes', 'Methods'):
                 self[section] = self._parse_param_list(content)
             elif section.startswith('.. index::'):
                 self['index'] = self._parse_index(section, content)
@@ -381,7 +381,8 @@ class NumpyDocString(object):
         out += self._str_signature()
         out += self._str_summary()
         out += self._str_extended_summary()
-        for param_list in ('Parameters','Returns','Raises'):
+        for param_list in ('Parameters', 'Returns', 'Other Parameters',
+                           'Raises', 'Warns'):
             out += self._str_param_list(param_list)
         out += self._str_section('Warnings')
         out += self._str_see_also(func_role)
@@ -459,6 +460,9 @@ class FunctionDoc(NumpyDocString):
 
 
 class ClassDoc(NumpyDocString):
+
+    extra_public_methods = ['__call__']
+
     def __init__(self, cls, doc=None, modulename='', func_doc=FunctionDoc,
                  config={}):
         if not inspect.isclass(cls) and cls is not None:
@@ -489,7 +493,9 @@ class ClassDoc(NumpyDocString):
         if self._cls is None:
             return []
         return [name for name,func in inspect.getmembers(self._cls)
-                if not name.startswith('_') and callable(func)]
+                if ((not name.startswith('_')
+                     or name in self.extra_public_methods)
+                    and callable(func))]
 
     @property
     def properties(self):
