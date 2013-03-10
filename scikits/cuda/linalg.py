@@ -65,8 +65,8 @@ def svd(a_gpu, jobu='A', jobvt='A'):
 
     Notes
     -----
-    Double precision is only supported if the premium version of the
-    CULA toolkit is installed.
+    Double precision is only supported if the standard version of the
+    CULA Dense toolkit is installed.
 
     This function destroys the contents of the input matrix regardless
     of the values of `jobu` and `jobvt`.
@@ -102,7 +102,7 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     elif data_type == np.float32:
         cula_func = cula._libcula.culaDeviceSgesvd
     else:
-        if cula._libcula_toolkit == 'premium':
+        if cula._libcula_toolkit == 'standard':
             if data_type == np.complex128:
                 cula_func = cula._libcula.culaDeviceZgesvd
             elif data_type == np.float64:
@@ -1020,8 +1020,8 @@ def pinv(a_gpu, rcond=1e-15):
 
     Notes
     -----
-    Double precision is only supported if the premium version of the
-    CULA toolkit is installed.
+    Double precision is only supported if the standard version of the
+    CULA Dense toolkit is installed.
 
     This function destroys the contents of the input matrix.
 

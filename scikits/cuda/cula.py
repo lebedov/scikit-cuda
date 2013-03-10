@@ -31,15 +31,15 @@ for _lib in  _libcula_libname_list:
 if _load_err:
     raise OSError('%s not found' % _load_err)
 
-# Check whether the basic or premium version of the toolkit is
+# Check whether the free or standard version of the toolkit is
 # installed by trying to access a function that is only available in
 # the latter:
 try:
     _libcula.culaDeviceMalloc
 except AttributeError:
-    _libcula_toolkit = 'basic'
+    _libcula_toolkit = 'free'
 else:
-    _libcula_toolkit = 'premium'
+    _libcula_toolkit = 'standard'
 
 # Function for retrieving string associated with specific CULA error
 # code:
@@ -73,8 +73,8 @@ class culaNotFound(culaError):
     """CULA shared library not found"""
     pass
 
-class culaPremiumNotFound(culaError):
-    """Premium CULA toolkit unavailable"""
+class culaStandardNotFound(culaError):
+    """Standard CULA Dense toolkit unavailable"""
     pass
 
 class culaNotInitialized(culaError):
@@ -390,6 +390,8 @@ def culaShutdown():
 atexit.register(_libcula.culaShutdown)
 
 # LAPACK functions available in CULA Dense Free:
+
+# SGESV, CGESV
 _libcula.culaDeviceSgesv.restype = \
 _libcula.culaDeviceCgesv.restype = int
 _libcula.culaDeviceSgesv.argtypes = \
@@ -420,6 +422,7 @@ def culaDeviceCgesv(n, nrhs, a, lda, ipiv, b, ldb):
                                       int(b), ldb)
     culaCheckStatus(status)
 
+# SGETRF, CGETRF    
 _libcula.culaDeviceSgetrf.restype = \
 _libcula.culaDeviceCgetrf.restype = int
 _libcula.culaDeviceSgetrf.argtypes = \
@@ -446,6 +449,7 @@ def culaDeviceCgetrf(m, n, a, lda, ipiv):
     status = _libcula.culaDeviceCgetrf(m, n, int(a), lda, int(ipiv))
     culaCheckStatus(status)
 
+# SGEQRF, CGEQRF    
 _libcula.culaDeviceSgeqrf.restype = \
 _libcula.culaDeviceCgeqrf.restype = int
 _libcula.culaDeviceSgeqrf.argtypes = \
@@ -472,6 +476,7 @@ def culaDeviceCgeqrf(m, n, a, lda, tau):
     status = _libcula.culaDeviceCgeqrf(m, n, int(a), lda, int(tau))
     culaCheckStatus(status)
 
+# SGELS, CGELS    
 _libcula.culaDeviceSgels.restype = \
 _libcula.culaDeviceCgels.restype = int
 _libcula.culaDeviceSgels.argtypes = \
@@ -503,6 +508,7 @@ def culaDeviceCgels(trans, m, n, nrhs, a, lda, b, ldb):
                                       lda, int(b), ldb)
     culaCheckStatus(status)
 
+# SGGLSE, CGGLSE    
 _libcula.culaDeviceSgglse.restype = \
 _libcula.culaDeviceCgglse.restype = int
 _libcula.culaDeviceSgglse.argtypes = \
@@ -535,7 +541,8 @@ def culaDeviceCgglse(m, n, p, a, lda, b, ldb, c, d, x):
     status = _libcula.culaDeviceCgglse(m, n, p, int(a), lda, int(b),
                                        ldb, int(c), int(d), int(x))
     culaCheckStatus(status)
-    
+
+# SGESVD, CGESVD    
 _libcula.culaDeviceSgesvd.restype = \
 _libcula.culaDeviceCgesvd.restype = int
 _libcula.culaDeviceSgesvd.argtypes = \
@@ -573,6 +580,8 @@ def culaDeviceCgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
     culaCheckStatus(status)
 
 # LAPACK functions available in CULA Dense:
+
+# DGESV, ZGESV
 try:
     _libcula.culaDeviceDgesv.restype = \
     _libcula.culaDeviceZgesv.restype = int
@@ -585,27 +594,43 @@ try:
                                          ctypes.c_void_p,
                                          ctypes.c_int]
 except AttributeError:
-    pass
-def culaDeviceDgesv(n, nrhs, a, lda, ipiv, b, ldb):
-    """
-    Solve linear system with LU factorization.
+    def culaDeviceDgesv(n, nrhs, a, lda, ipiv, b, ldb):
+        """
+        Solve linear system with LU factorization.
 
-    """
+        """
 
-    status = _libcula.culaDeviceDgesv(n, nrhs, int(a), lda, int(ipiv),
-                                      int(b), ldb)
-    culaCheckStatus(status)
+        raise NotImplementedError('CULA Dense required')
 
-def culaDeviceZgesv(n, nrhs, a, lda, ipiv, b, ldb):
-    """
-    Solve linear system with LU factorization.
+    def culaDeviceZgesv(n, nrhs, a, lda, ipiv, b, ldb):
+        """
+        Solve linear system with LU factorization.
 
-    """
+        """
 
-    status = _libcula.culaDeviceZgesv(n, nrhs, int(a), lda, int(ipiv),
-                                      int(b), ldb)
-    culaCheckStatus(status)
+        raise NotImplementedError('CULA Dense required')
+else:
+    def culaDeviceDgesv(n, nrhs, a, lda, ipiv, b, ldb):
+        """
+        Solve linear system with LU factorization.
 
+        """
+
+        status = _libcula.culaDeviceDgesv(n, nrhs, int(a), lda, int(ipiv),
+                                          int(b), ldb)
+        culaCheckStatus(status)
+
+    def culaDeviceZgesv(n, nrhs, a, lda, ipiv, b, ldb):
+        """
+        Solve linear system with LU factorization.
+
+        """
+
+        status = _libcula.culaDeviceZgesv(n, nrhs, int(a), lda, int(ipiv),
+                                          int(b), ldb)
+        culaCheckStatus(status)
+
+# DGETRF, ZGETRF        
 try:
     _libcula.culaDeviceDgetrf.restype = \
     _libcula.culaDeviceZgetrf.restype = int
@@ -616,25 +641,41 @@ try:
                                           ctypes.c_int,
                                           ctypes.c_void_p]
 except AttributeError:
-    pass
-def culaDeviceDgetrf(m, n, a, lda, ipiv):
-    """
-    LU factorization.
+    def culaDeviceDgetrf(m, n, a, lda, ipiv):
+        """
+        LU factorization.
 
-    """
-    
-    status = _libcula.culaDeviceDgetrf(m, n, int(a), lda, int(ipiv))
-    culaCheckStatus(status)
+        """
 
-def culaDeviceZgetrf(m, n, a, lda, ipiv):
-    """
-    LU factorization.
+        raise NotImplementedError('CULA Dense required')
 
-    """
-    
-    status = _libcula.culaDeviceZgetrf(m, n, int(a), lda, int(ipiv))
-    culaCheckStatus(status)
+    def culaDeviceZgetrf(m, n, a, lda, ipiv):
+        """
+        LU factorization.
 
+        """
+        
+        raise NotImplementedError('CULA Dense required')    
+else:
+    def culaDeviceDgetrf(m, n, a, lda, ipiv):
+        """
+        LU factorization.
+
+        """
+
+        status = _libcula.culaDeviceDgetrf(m, n, int(a), lda, int(ipiv))
+        culaCheckStatus(status)
+
+    def culaDeviceZgetrf(m, n, a, lda, ipiv):
+        """
+        LU factorization.
+
+        """
+
+        status = _libcula.culaDeviceZgetrf(m, n, int(a), lda, int(ipiv))
+        culaCheckStatus(status)
+
+# DGEQRF, ZGEQRF        
 try:
     _libcula.culaDeviceDgeqrf.restype = \
     _libcula.culaDeviceZgeqrf.restype = int
@@ -645,25 +686,40 @@ try:
                                           ctypes.c_int,
                                           ctypes.c_void_p]
 except AttributeError:
-    pass
-def culaDeviceDgeqrf(m, n, a, lda, tau):
-    """
-    QR factorization.
+    def culaDeviceDgeqrf(m, n, a, lda, tau):
+        """
+        QR factorization.
 
-    """
-    
-    status = _libcula.culaDeviceDgeqrf(m, n, int(a), lda, int(tau))
-    culaCheckStatus(status)
+        """
+        
+        raise NotImplementedError('CULA Dense required')
 
-def culaDeviceZgeqrf(m, n, a, lda, tau):
-    """
-    QR factorization.
+    def culaDeviceZgeqrf(m, n, a, lda, tau):
+        """
+        QR factorization.
 
-    """
-    
-    status = _libcula.culaDeviceZgeqrf(m, n, int(a), lda, int(tau))
-    culaCheckStatus(status)
+        """
+        raise NotImplementedError('CULA Dense required')    
+else:
+    def culaDeviceDgeqrf(m, n, a, lda, tau):
+        """
+        QR factorization.
 
+        """
+
+        status = _libcula.culaDeviceDgeqrf(m, n, int(a), lda, int(tau))
+        culaCheckStatus(status)
+
+    def culaDeviceZgeqrf(m, n, a, lda, tau):
+        """
+        QR factorization.
+
+        """
+
+        status = _libcula.culaDeviceZgeqrf(m, n, int(a), lda, int(tau))
+        culaCheckStatus(status)
+
+# DGELS, ZGELS        
 try:
     _libcula.culaDeviceDgels.restype = \
     _libcula.culaDeviceZgels.restype = int
@@ -677,27 +733,42 @@ try:
                                          ctypes.c_void_p,
                                          ctypes.c_int]
 except AttributeError:
-    pass
-def culaDeviceDgels(trans, m, n, nrhs, a, lda, b, ldb):
-    """
-    Solve linear system with QR or LQ factorization.
+    def culaDeviceDgels(trans, m, n, nrhs, a, lda, b, ldb):
+        """
+        Solve linear system with QR or LQ factorization.
 
-    """
-    
-    status = _libcula.culaDeviceDgels(trans, m, n, nrhs, int(a),
-                                      lda, int(b), ldb)
-    culaCheckStatus(status)
+        """
 
-def culaDeviceZgels(trans, m, n, nrhs, a, lda, b, ldb):
-    """
-    Solve linear system with QR or LQ factorization.
+        raise NotImplementedError('CULA Dense required')
 
-    """
+    def culaDeviceZgels(trans, m, n, nrhs, a, lda, b, ldb):
+        """
+        Solve linear system with QR or LQ factorization.
 
-    status = _libcula.culaDeviceZgels(trans, m, n, nrhs, int(a),
-                                      lda, int(b), ldb)
-    culaCheckStatus(status)
+        """
+        raise NotImplementedError('CULA Dense required')
+else:  
+    def culaDeviceDgels(trans, m, n, nrhs, a, lda, b, ldb):
+        """
+        Solve linear system with QR or LQ factorization.
 
+        """
+
+        status = _libcula.culaDeviceDgels(trans, m, n, nrhs, int(a),
+                                          lda, int(b), ldb)
+        culaCheckStatus(status)
+
+    def culaDeviceZgels(trans, m, n, nrhs, a, lda, b, ldb):
+        """
+        Solve linear system with QR or LQ factorization.
+
+        """
+
+        status = _libcula.culaDeviceZgels(trans, m, n, nrhs, int(a),
+                                          lda, int(b), ldb)
+        culaCheckStatus(status)
+
+# DGGLSE, ZGGLSE        
 try:
     _libcula.culaDeviceDgglse.restype = \
     _libcula.culaDeviceZgglse.restype = int
@@ -713,27 +784,43 @@ try:
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
 except AttributeError:
-    pass
-def culaDeviceDgglse(m, n, p, a, lda, b, ldb, c, d, x):
-    """
-    Solve linear equality-constrained least squares problem.
+    def culaDeviceDgglse(m, n, p, a, lda, b, ldb, c, d, x):
+        """
+        Solve linear equality-constrained least squares problem.
 
-    """
-    
-    status = _libcula.culaDeviceDgglse(m, n, p, int(a), lda, int(b),
-                                       ldb, int(c), int(d), int(x))
-    culaCheckStatus(status)
+        """
 
-def culaDeviceZgglse(m, n, p, a, lda, b, ldb, c, d, x):
-    """
-    Solve linear equality-constrained least squares problem.
+        raise NotImplementedError('CULA Dense required')
 
-    """
+    def culaDeviceZgglse(m, n, p, a, lda, b, ldb, c, d, x):
+        """
+        Solve linear equality-constrained least squares problem.
 
-    status = _libcula.culaDeviceZgglse(m, n, p, int(a), lda, int(b),
-                                       ldb, int(c), int(d), int(x))
-    culaCheckStatus(status)
+        """
+        
+        raise NotImplementedError('CULA Dense required')    
+else:
+    def culaDeviceDgglse(m, n, p, a, lda, b, ldb, c, d, x):
+        """
+        Solve linear equality-constrained least squares problem.
 
+        """
+
+        status = _libcula.culaDeviceDgglse(m, n, p, int(a), lda, int(b),
+                                           ldb, int(c), int(d), int(x))
+        culaCheckStatus(status)
+
+    def culaDeviceZgglse(m, n, p, a, lda, b, ldb, c, d, x):
+        """
+        Solve linear equality-constrained least squares problem.
+
+        """
+
+        status = _libcula.culaDeviceZgglse(m, n, p, int(a), lda, int(b),
+                                           ldb, int(c), int(d), int(x))
+        culaCheckStatus(status)
+
+# DGESVD, ZGESVD        
 try:
     _libcula.culaDeviceDgesvd.restype = \
     _libcula.culaDeviceZgesvd.restype = int
@@ -750,30 +837,45 @@ try:
                                           ctypes.c_void_p,
                                           ctypes.c_int]
 except AttributeError:
-    pass
-def culaDeviceDgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
-    """
-    SVD decomposition.
-    
-    """
-    
-    status = _libcula.culaDeviceDgesvd(jobu, jobvt, m, n, int(a), lda,
-                                       int(s), int(u), ldu, int(vt),
-                                       ldvt)
-    culaCheckStatus(status)
+    def culaDeviceDgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
+        """
+        SVD decomposition.
 
-def culaDeviceZgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
-    """
-    SVD decomposition.
-    
-    """
-            
-    status = _libcula.culaDeviceZgesvd(jobu, jobvt, m, n, int(a), lda,
-                                       int(s), int(u), ldu, int(vt),
-                                       ldvt)
-    culaCheckStatus(status)
+        """
 
+        raise NotImplementedError('CULA Dense required')
 
+    def culaDeviceZgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
+        """
+        SVD decomposition.
+
+        """
+
+        raise NotImplementedError('CULA Dense required')
+else:
+    def culaDeviceDgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
+        """
+        SVD decomposition.
+
+        """
+
+        status = _libcula.culaDeviceDgesvd(jobu, jobvt, m, n, int(a), lda,
+                                           int(s), int(u), ldu, int(vt),
+                                           ldvt)
+        culaCheckStatus(status)
+
+    def culaDeviceZgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
+        """
+        SVD decomposition.
+
+        """
+
+        status = _libcula.culaDeviceZgesvd(jobu, jobvt, m, n, int(a), lda,
+                                           int(s), int(u), ldu, int(vt),
+                                           ldvt)
+        culaCheckStatus(status)
+
+# SPOSV, CPOSV, DPOSV, ZPOSV        
 try:
     _libcula.culaDeviceSposv.restype = \
     _libcula.culaDeviceCposv.restype = \
@@ -790,47 +892,79 @@ try:
                                          ctypes.c_void_p,
                                          ctypes.c_int]
 except AttributeError:
-    pass
-def culaDeviceSposv(upio, n, nrhs, a, lda, b, ldb):
-    """
-    Solve positive definite linear system with Cholesky factorization.
+    def culaDeviceSposv(upio, n, nrhs, a, lda, b, ldb):
+        """
+        Solve positive definite linear system with Cholesky factorization.
 
-    """
+        """
+        
+        raise NotImplementedError('CULA Dense required')
 
-    status = _libcula.culaDeviceSposv(upio, n, nrhs, int(a), lda, int(b),
-                                      ldb)
-    culaCheckStatus(status)
+    def culaDeviceCposv(upio, n, nrhs, a, lda, b, ldb):
+        """
+        Solve positive definite linear system with Cholesky factorization.
 
-def culaDeviceCposv(upio, n, nrhs, a, lda, b, ldb):
-    """
-    Solve positive definite linear system with Cholesky factorization.
+        """
+        
+        raise NotImplementedError('CULA Dense required')
 
-    """
+    def culaDeviceDposv(upio, n, nrhs, a, lda, b, ldb):
+        """
+        Solve positive definite linear system with Cholesky factorization.
 
-    status = _libcula.culaDeviceCposv(upio, n, nrhs, int(a), lda, int(b),
-                                      ldb)
-    culaCheckStatus(status)
+        """
+        
+        raise NotImplementedError('CULA Dense required')
 
-def culaDeviceDposv(upio, n, nrhs, a, lda, b, ldb):
-    """
-    Solve positive definite linear system with Cholesky factorization.
+    def culaDeviceDposv(upio, n, nrhs, a, lda, b, ldb):
+        """
+        Solve positive definite linear system with Cholesky factorization.
 
-    """
+        """
 
-    status = _libcula.culaDeviceDposv(upio, n, nrhs, int(a), lda, int(b),
-                                      ldb)
-    culaCheckStatus(status)
+        raise NotImplementedError('CULA Dense required')
+else:
+    def culaDeviceSposv(upio, n, nrhs, a, lda, b, ldb):
+        """
+        Solve positive definite linear system with Cholesky factorization.
 
-def culaDeviceZposv(upio, n, nrhs, a, lda, b, ldb):
-    """
-    Solve positive definite linear system with Cholesky factorization.
+        """
 
-    """
+        status = _libcula.culaDeviceSposv(upio, n, nrhs, int(a), lda, int(b),
+                                          ldb)
+        culaCheckStatus(status)
 
-    status = _libcula.culaDeviceZposv(upio, n, nrhs, int(a), lda, int(b),
-                                      ldb)
-    culaCheckStatus(status)
+    def culaDeviceCposv(upio, n, nrhs, a, lda, b, ldb):
+        """
+        Solve positive definite linear system with Cholesky factorization.
 
+        """
+
+        status = _libcula.culaDeviceCposv(upio, n, nrhs, int(a), lda, int(b),
+                                          ldb)
+        culaCheckStatus(status)
+
+    def culaDeviceDposv(upio, n, nrhs, a, lda, b, ldb):
+        """
+        Solve positive definite linear system with Cholesky factorization.
+
+        """
+
+        status = _libcula.culaDeviceDposv(upio, n, nrhs, int(a), lda, int(b),
+                                          ldb)
+        culaCheckStatus(status)
+
+    def culaDeviceZposv(upio, n, nrhs, a, lda, b, ldb):
+        """
+        Solve positive definite linear system with Cholesky factorization.
+
+        """
+
+        status = _libcula.culaDeviceZposv(upio, n, nrhs, int(a), lda, int(b),
+                                          ldb)
+        culaCheckStatus(status)
+
+# SPOTRF, CPOTRF, DPOTRF, ZPOTRF        
 try:
     _libcula.culaDeviceSpotrf.restype = \
     _libcula.culaDeviceCpotrf.restype = \
@@ -844,43 +978,75 @@ try:
                                           ctypes.c_void_p,
                                           ctypes.c_int]
 except AttributeError:
-    pass
-def culaDeviceSpotrf(uplo, n, a, lda):
-    """
-    Cholesky factorization.
+    def culaDeviceSpotrf(uplo, n, a, lda):
+        """
+        Cholesky factorization.
 
-    """
-    
-    status = _libcula.culaDeviceSpotrf(uplo, n, int(a), lda)
-    culaCheckStatus(status)
+        """
 
-def culaDeviceCpotrf(uplo, n, a, lda):
-    """
-    Cholesky factorization.
+        raise NotImplementedError('CULA Dense required')
 
-    """
+    def culaDeviceCpotrf(uplo, n, a, lda):
+        """
+        Cholesky factorization.
 
-    status = _libcula.culaDeviceCpotrf(uplo, n, int(a), lda)
-    culaCheckStatus(status)
+        """
 
-def culaDeviceDpotrf(uplo, n, a, lda):
-    """
-    Cholesky factorization.
+        raise NotImplementedError('CULA Dense required')
 
-    """
+    def culaDeviceDpotrf(uplo, n, a, lda):
+        """
+        Cholesky factorization.
 
-    status = _libcula.culaDeviceDpotrf(uplo, n, int(a), lda)
-    culaCheckStatus(status)
+        """
+        
+        raise NotImplementedError('CULA Dense required')
 
-def culaDeviceZpotrf(uplo, n, a, lda):
-    """
-    Cholesky factorization.
+    def culaDeviceZpotrf(uplo, n, a, lda):
+        """
+        Cholesky factorization.
 
-    """
+        """
+        
+        raise NotImplementedError('CULA Dense required')    
+else:            
+    def culaDeviceSpotrf(uplo, n, a, lda):
+        """
+        Cholesky factorization.
 
-    status = _libcula.culaDeviceZpotrf(uplo, n, int(a), lda)
-    culaCheckStatus(status)
+        """
 
+        status = _libcula.culaDeviceSpotrf(uplo, n, int(a), lda)
+        culaCheckStatus(status)
+
+    def culaDeviceCpotrf(uplo, n, a, lda):
+        """
+        Cholesky factorization.
+
+        """
+
+        status = _libcula.culaDeviceCpotrf(uplo, n, int(a), lda)
+        culaCheckStatus(status)
+
+    def culaDeviceDpotrf(uplo, n, a, lda):
+        """
+        Cholesky factorization.
+
+        """
+
+        status = _libcula.culaDeviceDpotrf(uplo, n, int(a), lda)
+        culaCheckStatus(status)
+
+    def culaDeviceZpotrf(uplo, n, a, lda):
+        """
+        Cholesky factorization.
+
+        """
+
+        status = _libcula.culaDeviceZpotrf(uplo, n, int(a), lda)
+        culaCheckStatus(status)
+
+# SSYEV, DSYEV, CHEEV, ZHEEV        
 try:
     _libcula.culaDeviceSsyev.restype = \
     _libcula.culaDeviceDsyev.restype = \
@@ -896,45 +1062,78 @@ try:
                                          ctypes.c_int,
                                          ctypes.c_void_p]
 except AttributeError:
-    pass
-def culaDeviceSsyev(jobz, uplo, n, a, lda, w):
-    """
-    Symmetric eigenvalue decomposition.
+    def culaDeviceSsyev(jobz, uplo, n, a, lda, w):
+        """
+        Symmetric eigenvalue decomposition.
 
-    """
+        """
 
-    status = _libcula.culaDeviceSsyev(jobz, uplo, n, int(a), lda, int(w))
-    culaCheckStatus(status)
+        raise NotImplementedError('CULA Dense required')
 
-def culaDeviceDsyev(jobz, uplo, n, a, lda, w):
-    """
-    Symmetric eigenvalue decomposition.
+    def culaDeviceDsyev(jobz, uplo, n, a, lda, w):
+        """
+        Symmetric eigenvalue decomposition.
 
-    """
+        """
 
-    status = _libcula.culaDeviceDsyev(jobz, uplo, n, int(a), lda, int(w))
-    culaCheckStatus(status)
+        raise NotImplementedError('CULA Dense required')
 
-def culaDeviceCheev(jobz, uplo, n, a, lda, w):
-    """
-    Hermitian eigenvalue decomposition.
+    def culaDeviceCheev(jobz, uplo, n, a, lda, w):
+        """
+        Hermitian eigenvalue decomposition.
 
-    """
+        """
+        
+        raise NotImplementedError('CULA Dense required')
 
-    status = _libcula.culaDeviceCheev(jobz, uplo, n, int(a), lda, int(w))
-    culaCheckStatus(status)
+    def culaDeviceZheev(jobz, uplo, n, a, lda, w):
+        """
+        Hermitian eigenvalue decomposition.
 
-def culaDeviceZheev(jobz, uplo, n, a, lda, w):
-    """
-    Hermitian eigenvalue decomposition.
+        """
+        
+        raise NotImplementedError('CULA Dense required')    
+else:
+    
+    def culaDeviceSsyev(jobz, uplo, n, a, lda, w):
+        """
+        Symmetric eigenvalue decomposition.
 
-    """
+        """
 
-    status = _libcula.culaDeviceZheev(jobz, uplo, n, int(a), lda, int(w))
-    culaCheckStatus(status)
+        status = _libcula.culaDeviceSsyev(jobz, uplo, n, int(a), lda, int(w))
+        culaCheckStatus(status)
 
+    def culaDeviceDsyev(jobz, uplo, n, a, lda, w):
+        """
+        Symmetric eigenvalue decomposition.
+
+        """
+
+        status = _libcula.culaDeviceDsyev(jobz, uplo, n, int(a), lda, int(w))
+        culaCheckStatus(status)
+
+    def culaDeviceCheev(jobz, uplo, n, a, lda, w):
+        """
+        Hermitian eigenvalue decomposition.
+
+        """
+
+        status = _libcula.culaDeviceCheev(jobz, uplo, n, int(a), lda, int(w))
+        culaCheckStatus(status)
+
+    def culaDeviceZheev(jobz, uplo, n, a, lda, w):
+        """
+        Hermitian eigenvalue decomposition.
+
+        """
+
+        status = _libcula.culaDeviceZheev(jobz, uplo, n, int(a), lda, int(w))
+        culaCheckStatus(status)
 
 # BLAS routines provided by CULA:
+
+# SGEMM, DGEMM, CGEMM, ZGEMM
 _libcula.culaDeviceSgemm.restype = \
 _libcula.culaDeviceDgemm.restype = \
 _libcula.culaDeviceCgemm.restype = \
@@ -1046,7 +1245,7 @@ def culaDeviceZgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc
                                       int(C), ldc)
     culaCheckStatus(status)
 
-
+# SGEMV, DGEMV, CGEMV, ZGEMV
 _libcula.culaDeviceSgemv.restype = \
 _libcula.culaDeviceDgemv.restype = \
 _libcula.culaDeviceCgemv.restype = \
@@ -1151,6 +1350,7 @@ def culaDeviceZgemv(trans, m, n, alpha, A, lda, x, incx, beta, y, incy):
                            int(y), incy)
     culaCheckStatus(status)
     
+# Auxiliary routines:
     
 try:
     _libcula.culaDeviceSgeTranspose.restype = \
@@ -1167,39 +1367,73 @@ try:
                                                 ctypes.c_void_p,
                                                 ctypes.c_int]
 except AttributeError:
-    pass
+    def culaDeviceSgeTranspose(m, n, A, lda, B, ldb):
+        """
+        Transpose of real general matrix.
 
-def culaDeviceSgeTranspose(m, n, A, lda, B, ldb):
-    """
-    Transpose of real general matrix.
+        """
 
-    """
-    status = _libcula.culaDeviceSgeTranspose(m, n, int(A), lda, int(B), ldb)
-    culaCheckStatus(status)
-    
-def culaDeviceDgeTranspose(m, n, A, lda, B, ldb):
-    """
-    Transpose of real general matrix.
+        raise NotImplementedError('CULA Dense required')
 
-    """
-    status = _libcula.culaDeviceDgeTranspose(m, n, int(A), lda, int(B), ldb)
-    culaCheckStatus(status)
-    
-def culaDeviceCgeTranspose(m, n, A, lda, B, ldb):
-    """
-    Transpose of complex general matrix.
+    def culaDeviceDgeTranspose(m, n, A, lda, B, ldb):
+        """
+        Transpose of real general matrix.
 
-    """
-    status = _libcula.culaDeviceCgeTranspose(m, n, int(A), lda, int(B), ldb)
-    culaCheckStatus(status)
+        """
+        
+        raise NotImplementedError('CULA Dense required')
 
-def culaDeviceZgeTranspose(m, n, A, lda, B, ldb):
-    """
-    Transpose of complex general matrix.
+    def culaDeviceCgeTranspose(m, n, A, lda, B, ldb):
+        """
+        Transpose of complex general matrix.
 
-    """
-    status = _libcula.culaDeviceZgeTranspose(m, n, int(A), lda, int(B), ldb)
-    culaCheckStatus(status)
+        """
+
+        raise NotImplementedError('CULA Dense required')
+
+    def culaDeviceZgeTranspose(m, n, A, lda, B, ldb):
+        """
+        Transpose of complex general matrix.
+
+        """
+
+        raise NotImplementedError('CULA Dense required')
+else:
+    def culaDeviceSgeTranspose(m, n, A, lda, B, ldb):
+        """
+        Transpose of real general matrix.
+
+        """
+        
+        status = _libcula.culaDeviceSgeTranspose(m, n, int(A), lda, int(B), ldb)
+        culaCheckStatus(status)
+
+    def culaDeviceDgeTranspose(m, n, A, lda, B, ldb):
+        """
+        Transpose of real general matrix.
+
+        """
+        
+        status = _libcula.culaDeviceDgeTranspose(m, n, int(A), lda, int(B), ldb)
+        culaCheckStatus(status)
+
+    def culaDeviceCgeTranspose(m, n, A, lda, B, ldb):
+        """
+        Transpose of complex general matrix.
+
+        """
+        
+        status = _libcula.culaDeviceCgeTranspose(m, n, int(A), lda, int(B), ldb)
+        culaCheckStatus(status)
+
+    def culaDeviceZgeTranspose(m, n, A, lda, B, ldb):
+        """
+        Transpose of complex general matrix.
+
+        """
+        
+        status = _libcula.culaDeviceZgeTranspose(m, n, int(A), lda, int(B), ldb)
+        culaCheckStatus(status)
     
     
 try:
@@ -1214,40 +1448,73 @@ try:
                                                     ctypes.c_void_p,
                                                     ctypes.c_int]
 except AttributeError:
-    pass
+    def culaDeviceSgeTransposeInplace(n, A, lda):
+        """
+        Inplace transpose of real square matrix.
 
-def culaDeviceSgeTransposeInplace(n, A, lda):
-    """
-    Inplace transpose of real square matrix.
+        """
 
-    """
-    status = _libcula.culaDeviceSgeTransposeInplace(n, int(A), lda)
-    culaCheckStatus(status)
-    
-def culaDeviceDgeTransposeInplace(n, A, lda):
-    """
-    Inplace transpose of real square matrix.
+        raise NotImplementedError('CULA Dense required')
 
-    """
-    status = _libcula.culaDeviceDgeTransposeInplace(n, int(A), lda)
-    culaCheckStatus(status)
+    def culaDeviceDgeTransposeInplace(n, A, lda):
+        """
+        Inplace transpose of real square matrix.
 
-def culaDeviceCgeTransposeInplace(n, A, lda):
-    """
-    Inplace transpose of complex square matrix.
+        """
+        
+        raise NotImplementedError('CULA Dense required')
 
-    """
-    status = _libcula.culaDeviceCgeTransposeInplace(n, int(A), lda)
-    culaCheckStatus(status)
+    def culaDeviceCgeTransposeInplace(n, A, lda):
+        """
+        Inplace transpose of complex square matrix.
 
-def culaDeviceZgeTransposeInplace(n, A, lda):
-    """
-    Inplace transpose of complex square matrix.
+        """
 
-    """
-    status = _libcula.culaDeviceZgeTransposeInplace(n, int(A), lda)
-    culaCheckStatus(status)
+        raise NotImplementedError('CULA Dense required')
 
+    def culaDeviceZgeTransposeInplace(n, A, lda):
+        """
+        Inplace transpose of complex square matrix.
+
+        """
+
+        raise NotImplementedError('CULA Dense required')
+else:
+    def culaDeviceSgeTransposeInplace(n, A, lda):
+        """
+        Inplace transpose of real square matrix.
+
+        """
+        
+        status = _libcula.culaDeviceSgeTransposeInplace(n, int(A), lda)
+        culaCheckStatus(status)
+
+    def culaDeviceDgeTransposeInplace(n, A, lda):
+        """
+        Inplace transpose of real square matrix.
+
+        """
+        
+        status = _libcula.culaDeviceDgeTransposeInplace(n, int(A), lda)
+        culaCheckStatus(status)
+
+    def culaDeviceCgeTransposeInplace(n, A, lda):
+        """
+        Inplace transpose of complex square matrix.
+
+        """
+        
+        status = _libcula.culaDeviceCgeTransposeInplace(n, int(A), lda)
+        culaCheckStatus(status)
+
+    def culaDeviceZgeTransposeInplace(n, A, lda):
+        """
+        Inplace transpose of complex square matrix.
+
+        """
+        
+        status = _libcula.culaDeviceZgeTransposeInplace(n, int(A), lda)
+        culaCheckStatus(status)
 
 try:
 
@@ -1261,23 +1528,38 @@ try:
                                                         ctypes.c_void_p,
                                                         ctypes.c_int]
 except AttributeError:
-    pass
+    def culaDeviceCgeTransposeConjugate(m, n, A, lda, B, ldb):
+        """
+        Conjugate transpose of complex general matrix.
 
-def culaDeviceCgeTransposeConjugate(m, n, A, lda, B, ldb):
-    """
-    Conjugate transpose of complex general matrix.
+        """
+        
+        raise NotImplementedError('CULA Dense required')
 
-    """
-    status = _libcula.culaDeviceCgeTransposeConjugate(m, n, int(A), lda, int(B), ldb)
-    culaCheckStatus(status)
+    def culaDeviceZgeTransposeConjugate(m, n, A, lda, B, ldb):
+        """
+        Conjugate transpose of complex general matrix.
 
-def culaDeviceZgeTransposeConjugate(m, n, A, lda, B, ldb):
-    """
-    Conjugate transpose of complex general matrix.
+        """
+        raise NotImplementedError('CULA Dense required')    
+else:
+    def culaDeviceCgeTransposeConjugate(m, n, A, lda, B, ldb):
+        """
+        Conjugate transpose of complex general matrix.
 
-    """
-    status = _libcula.culaDeviceZgeTransposeConjugate(m, n, int(A), lda, int(B), ldb)
-    culaCheckStatus(status)
+        """
+        
+        status = _libcula.culaDeviceCgeTransposeConjugate(m, n, int(A), lda, int(B), ldb)
+        culaCheckStatus(status)
+
+    def culaDeviceZgeTransposeConjugate(m, n, A, lda, B, ldb):
+        """
+        Conjugate transpose of complex general matrix.
+
+        """
+        
+        status = _libcula.culaDeviceZgeTransposeConjugate(m, n, int(A), lda, int(B), ldb)
+        culaCheckStatus(status)
 
 try:
     _libcula.culaDeviceCgeTransposeConjugateInplace.restype = \
@@ -1287,24 +1569,39 @@ try:
                                                                 ctypes.c_void_p,
                                                                 ctypes.c_int]
 except AttributeError:
-    pass
+    def culaDeviceCgeTransposeConjugateInplace(n, A, lda):
+        """
+        Inplace conjugate transpose of complex square matrix.
 
+        """
 
-def culaDeviceCgeTransposeConjugateInplace(n, A, lda):
-    """
-    Inplace conjugate transpose of complex square matrix.
+        raise NotImplementedError('CULA Dense required')
 
-    """
-    status = _libcula.culaDeviceCgeTransposeConjugateInplace(n, int(A), lda)
-    culaCheckStatus(status)
+    def culaDeviceZgeTransposeConjugateInplace(n, A, lda):
+        """
+        Inplace conjugate transpose of complex square matrix.
 
-def culaDeviceZgeTransposeConjugateInplace(n, A, lda):
-    """
-    Inplace conjugate transpose of complex square matrix.
+        """
+        
+        raise NotImplementedError('CULA Dense required')    
+else:
+    def culaDeviceCgeTransposeConjugateInplace(n, A, lda):
+        """
+        Inplace conjugate transpose of complex square matrix.
 
-    """
-    status = _libcula.culaDeviceZgeTransposeConjugateInplace(n, int(A), lda)
-    culaCheckStatus(status)
+        """
+        
+        status = _libcula.culaDeviceCgeTransposeConjugateInplace(n, int(A), lda)
+        culaCheckStatus(status)
+
+    def culaDeviceZgeTransposeConjugateInplace(n, A, lda):
+        """
+        Inplace conjugate transpose of complex square matrix.
+
+        """
+        
+        status = _libcula.culaDeviceZgeTransposeConjugateInplace(n, int(A), lda)
+        culaCheckStatus(status)
 
 try:
     _libcula.culaDeviceCgeConjugate.restype = \
@@ -1315,25 +1612,39 @@ try:
                                                 ctypes.c_void_p,
                                                 ctypes.c_int]
 except AttributeError:
-    pass
+    def culaDeviceCgeConjugate(m, n, A, lda):
+        """
+        Conjugate of complex general matrix.
 
+        """
+    
+        raise NotImplementedError('CULA Dense required')
 
-def culaDeviceCgeConjugate(m, n, A, lda):
-    """
-    Conjugate of complex general matrix.
+    def culaDeviceZgeConjugate(m, n, A, lda):
+        """
+        Conjugate of complex general matrix.
 
-    """
-    status = _libcula.culaDeviceCgeConjugate(m, n, int(A), lda)
-    culaCheckStatus(status)
+        """
 
-def culaDeviceZgeConjugate(m, n, A, lda):
-    """
-    Conjugate of complex general matrix.
+        raise NotImplementedError('CULA Dense required')
+else:
+    def culaDeviceCgeConjugate(m, n, A, lda):
+        """
+        Conjugate of complex general matrix.
 
-    """
-    status = _libcula.culaDeviceZgeConjugate(m, n, int(A), lda)
-    culaCheckStatus(status)
+        """
+        
+        status = _libcula.culaDeviceCgeConjugate(m, n, int(A), lda)
+        culaCheckStatus(status)
 
+    def culaDeviceZgeConjugate(m, n, A, lda):
+        """
+        Conjugate of complex general matrix.
+
+        """
+        
+        status = _libcula.culaDeviceZgeConjugate(m, n, int(A), lda)
+        culaCheckStatus(status)
 
 try:
     _libcula.culaDeviceCtrConjugate.restype = \
@@ -1346,24 +1657,39 @@ try:
                                                 ctypes.c_void_p,
                                                 ctypes.c_int]
 except AttributeError:
-    pass
+    def culaDeviceCtrConjugate(uplo, diag, m, n, A, lda):
+        """
+        Conjugate of complex upper or lower triangle matrix.
 
-def culaDeviceCtrConjugate(uplo, diag, m, n, A, lda):
-    """
-    Conjugate of complex upper or lower triangle matrix.
+        """
+    
+        raise NotImplementedError('CULA Dense required')
 
-    """
-    status = _libcula.culaDeviceCtrConjugate(uplo, diag, m, n, int(A), lda)
-    culaCheckStatus(status)
+    def culaDeviceZtrConjugate(uplo, diag, m, n, A, lda):
+        """
+        Conjugate of complex upper or lower triangle matrix.
 
-def culaDeviceZtrConjugate(uplo, diag, m, n, A, lda):
-    """
-    Conjugate of complex upper or lower triangle matrix.
+        """
+        
+        raise NotImplementedError('CULA Dense required')    
+else:
+    def culaDeviceCtrConjugate(uplo, diag, m, n, A, lda):
+        """
+        Conjugate of complex upper or lower triangle matrix.
 
-    """
-    status = _libcula.culaDeviceZtrConjugate(uplo, diag, m, n, int(A), lda)
-    culaCheckStatus(status)
+        """
+        
+        status = _libcula.culaDeviceCtrConjugate(uplo, diag, m, n, int(A), lda)
+        culaCheckStatus(status)
 
+    def culaDeviceZtrConjugate(uplo, diag, m, n, A, lda):
+        """
+        Conjugate of complex upper or lower triangle matrix.
+
+        """
+        
+        status = _libcula.culaDeviceZtrConjugate(uplo, diag, m, n, int(A), lda)
+        culaCheckStatus(status)
 
 try:
     _libcula.culaDeviceSgeNancheck.restype = \
@@ -1378,55 +1704,89 @@ try:
                                                 ctypes.c_void_p,
                                                 ctypes.c_int]
 except AttributeError:
-    pass
+    def culaDeviceSgeNancheck(m, n, A, lda):
+        """
+        Check a real general matrix for invalid entries
 
-def culaDeviceSgeNancheck(m, n, A, lda):
-    """
-    Check a real general matrix for invalid entries
+        """
 
-    """
-    status = _libcula.culaDeviceSgeNancheck(m, n, int(A), lda)
-    try:
-        culaCheckStatus(status)
-    except culaDataError:
-        return True
-    return False
+        raise NotImplementedError('CULA Dense required')
 
-def culaDeviceDgeNancheck(m, n, A, lda):
-    """
-    Check a real general matrix for invalid entries
+    def culaDeviceDgeNancheck(m, n, A, lda):
+        """
+        Check a real general matrix for invalid entries
 
-    """
-    status = _libcula.culaDeviceDgeNancheck(m, n, int(A), lda)
-    try:
-        culaCheckStatus(status)
-    except culaDataError:
-        return True
-    return False
+        """
 
-def culaDeviceCgeNancheck(m, n, A, lda):
-    """
-    Check a complex general matrix for invalid entries
+        raise NotImplementedError('CULA Dense required')
 
-    """
-    status = _libcula.culaDeviceCgeNancheck(m, n, int(A), lda)
-    try:
-        culaCheckStatus(status)
-    except culaDataError:
-        return True
-    return False
+    def culaDeviceCgeNancheck(m, n, A, lda):
+        """
+        Check a complex general matrix for invalid entries
 
-def culaDeviceZgeNancheck(m, n, A, lda):
-    """
-    Check a complex general matrix for invalid entries
+        """
 
-    """
-    status = _libcula.culaDeviceZgeNancheck(m, n, int(A), lda)
-    try:
-        culaCheckStatus(status)
-    except culaDataError:
-        return True
-    return False
+        raise NotImplementedError('CULA Dense required')
+
+    def culaDeviceZgeNancheck(m, n, A, lda):
+        """
+        Check a complex general matrix for invalid entries
+
+        """
+
+        raise NotImplementedError('CULA Dense required')        
+else:
+    def culaDeviceSgeNancheck(m, n, A, lda):
+        """
+        Check a real general matrix for invalid entries
+
+        """
+        
+        status = _libcula.culaDeviceSgeNancheck(m, n, int(A), lda)
+        try:
+            culaCheckStatus(status)
+        except culaDataError:
+            return True
+        return False
+
+    def culaDeviceDgeNancheck(m, n, A, lda):
+        """
+        Check a real general matrix for invalid entries
+
+        """
+        
+        status = _libcula.culaDeviceDgeNancheck(m, n, int(A), lda)
+        try:
+            culaCheckStatus(status)
+        except culaDataError:
+            return True
+        return False
+
+    def culaDeviceCgeNancheck(m, n, A, lda):
+        """
+        Check a complex general matrix for invalid entries
+
+        """
+        
+        status = _libcula.culaDeviceCgeNancheck(m, n, int(A), lda)
+        try:
+            culaCheckStatus(status)
+        except culaDataError:
+            return True
+        return False
+
+    def culaDeviceZgeNancheck(m, n, A, lda):
+        """
+        Check a complex general matrix for invalid entries
+
+        """
+        
+        status = _libcula.culaDeviceZgeNancheck(m, n, int(A), lda)
+        try:
+            culaCheckStatus(status)
+        except culaDataError:
+            return True
+        return False
 
         
 if __name__ == "__main__":
