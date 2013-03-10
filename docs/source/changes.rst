@@ -7,12 +7,14 @@ Release 0.042 - ()
 ------------------
 * Add complex exponential integral.
 * Fix typo in cublasCgbmv.
-* Convert to CUBLAS API, add preliminary support for CUBLAS 5 functions.
-* Correctly load BLAS symbols on MacOSX and with CUDA 4.0.
+* Use CUBLAS v2 API, add preliminary support for CUBLAS 5 functions.
+* Detect CUBLAS version without initializing the GPU.
 * Work around numpy bug #1898.
 * Fix issues with pycuda installations done via easy_install/pip. 
 * Add support for specifying streams when creating FFT plans.
 * Successfully find CULA R13a libraries.
+* Raise exceptions when functions in the full release of CULA Dense are invoked
+  without the library installed.
 * Perform post-fft scaling in-place.
 * Fix broken Python 2.6 compatibility (#19).
 * Download distribute for package installation if it isn't available.
@@ -49,7 +51,7 @@ Release 0.03 - (November 22, 2010)
 * Include missing CUDA headers in package.
 
 Release 0.02 - (September 21, 2010)
-------------------------------------
+-----------------------------------
 * Add documentation.
 * Update copyright information.
 
