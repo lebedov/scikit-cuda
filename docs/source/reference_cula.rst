@@ -13,11 +13,18 @@ Framework Routines
 
    culaCheckStatus
    culaFreeBuffers
+   culaGetCublasMinimumVersion
+   culaGetCublasRuntimeVersion
+   culaGetCudaDriverVersion
+   culaGetCudaMinimumVersion
+   culaGetCudaRuntimeVersion
+   culaGetDeviceCount
    culaGetErrorInfo
    culaGetErrorInfoString
    culaGetExecutingDevice
    culaGetLastStatus
    culaGetStatusString
+   culaGetVersion
    culaInitialize
    culaSelectDevice
    culaShutdown

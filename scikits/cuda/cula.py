@@ -300,7 +300,70 @@ def culaFreeBuffers():
     """
 
     _libcula.culaFreeBuffers()
-    
+
+_libcula.culaGetVersion.restype = int    
+def culaGetVersion():
+    """
+    Report the version number of CULA.
+
+    """
+
+    return _libcula.culaGetVersion()
+
+_libcula.culaGetCudaMinimumVersion.restype = int
+def culaGetCudaMinimumVersion():
+    """
+    Report the minimum version of CUDA required by CULA.
+
+    """
+
+    return _libcula.culaGetCudaMinimumVersion()
+
+_libcula.culaGetCudaRuntimeVersion.restype = int
+def culaGetCudaRuntimeVersion():
+    """
+    Report the version of the CUDA runtime linked to by the CULA library.
+
+    """
+
+    return _libcula.culaGetCudaRuntimeVersion()
+
+_libcula.culaGetCudaDriverVersion.restype = int
+def culaGetCudaDriverVersion():
+    """
+    Report the version of the CUDA driver installed on the system.
+
+    """
+
+    return _libcula.culaGetCudaDriverVersion()
+
+_libcula.culaGetCublasMinimumVersion.restype = int
+def culaGetCublasMinimumVersion():
+    """
+    Report the version of CUBLAS required by CULA.
+
+    """
+
+    return _libcula.culaGetCublasMinimumVersion()
+
+_libcula.culaGetCublasRuntimeVersion.restype = int
+def culaGetCublasRuntimeVersion():
+    """
+    Report the version of CUBLAS linked to by CULA.
+
+    """
+
+    return _libcula.culaGetCublasRuntimeVersion()
+
+_libcula.culaGetDeviceCount.restype = int
+def culaGetDeviceCount():
+    """
+    Report the number of available GPU devices.
+
+    """
+    return _libcula.culaGetDeviceCount()
+
+_libcula.culaInitialize.restype = int
 def culaInitialize():
     """
     Initialize CULA.
@@ -314,6 +377,7 @@ def culaInitialize():
     status = _libcula.culaInitialize()
     culaCheckStatus(status)
 
+_libcula.culaShutdown.restype = int    
 def culaShutdown():
     """
     Shuts down CULA.
@@ -325,7 +389,7 @@ def culaShutdown():
 # Shut down CULA upon exit:
 atexit.register(_libcula.culaShutdown)
 
-# LAPACK functions available in CULA basic:
+# LAPACK functions available in CULA Dense Free:
 _libcula.culaDeviceSgesv.restype = \
 _libcula.culaDeviceCgesv.restype = int
 _libcula.culaDeviceSgesv.argtypes = \
@@ -508,7 +572,7 @@ def culaDeviceCgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
                                        ldvt)
     culaCheckStatus(status)
 
-# LAPACK functions available in CULA premium:
+# LAPACK functions available in CULA Dense:
 try:
     _libcula.culaDeviceDgesv.restype = \
     _libcula.culaDeviceZgesv.restype = int
