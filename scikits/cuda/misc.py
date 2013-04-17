@@ -308,21 +308,19 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
     assert max_threads_per_block <= max_block_dim[0]
     assert max_threads_per_block <= max_block_dim[1]
 
-    # Assume that the maximum X and Y dimensions of a grid are the
-    # same:
-    max_blocks_per_grid_dim = max(max_grid_dim)
-    assert max_blocks_per_grid_dim == max_grid_dim[0]
-    assert max_blocks_per_grid_dim == max_grid_dim[1]
-
     # Actual number of thread blocks needed:
     blocks_needed = N/max_threads_per_block+1
+    
+    # Assume that the maximum X dimension of a grid
+    # is always at least as large as the maximum Y dimension:
+    assert max_grid_dim[0] >= max_grid_dim[1]
 
-    if blocks_needed*max_threads_per_block < max_threads_per_block*max_blocks_per_grid_dim:
+    if blocks_needed < max_block_dim[0]:
         grid_x = blocks_needed
         grid_y = 1
-    elif blocks_needed*max_threads_per_block < max_threads_per_block*max_blocks_per_grid_dim**2:
-        grid_x = max_blocks_per_grid_dim
-        grid_y = blocks_needed/max_blocks_per_grid_dim+1
+    elif blocks_needed < max_grid_dim[0]*max_grid_dim[1]:
+        grid_x = max_grid_dim[0]
+        grid_y = blocks_needed/max_grid_dim[0]+1
     else:
         raise ValueError('array size too large')
 
