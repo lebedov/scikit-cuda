@@ -16,7 +16,7 @@ from setuptools import find_packages
 from setuptools import setup
 
 NAME =               'scikits.cuda'
-VERSION =            '0.042'
+VERSION =            '0.043'
 AUTHOR =             'Lev Givon'
 AUTHOR_EMAIL =       'lev@columbia.edu'
 URL =                'http://github.com/lebedov/scikits.cuda/'
