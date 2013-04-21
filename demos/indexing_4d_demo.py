@@ -55,8 +55,8 @@ __global__ void func(double *x, unsigned int N) {
     // Convert the linear index to subscripts:
     unsigned int a = idx/(${B}*${C}*${D});
     unsigned int b = (idx%(${B}*${C}*${D}))/(${C}*${D});
-    unsigned int c = ((idx%(${B}*${C}*${D}))%(${C}*${D}))/D;
-    unsigned int d = ((idx%(${B}*${C}*${D}))%(${C}*${D}))%D;
+    unsigned int c = ((idx%(${B}*${C}*${D}))%(${C}*${D}))/${D};
+    unsigned int d = ((idx%(${B}*${C}*${D}))%(${C}*${D}))%${D};
 
     // Use the subscripts to access the array:
     if (idx < N) {
