@@ -3,6 +3,10 @@
 Change Log
 ==========
 
+Release 0.043 - (under development)
+-----------------------------------
+* Improve support for latest NVIDIA GPUs.
+  
 Release 0.042 - (March 10, 2013)
 --------------------------------
 * Add complex exponential integral.
