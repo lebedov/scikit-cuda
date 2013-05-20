@@ -109,21 +109,21 @@ pygments_style = 'sphinx'
 
 # The theme to use for HTML and HTML Help pages.  Major themes that come with
 # Sphinx are currently 'default' and 'sphinxdoc'.
-html_theme = 'default'
+html_theme = 'sphinxdoc'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 
 # 'stickysidebar' Only valid for default theme:
-html_theme_options = {
-    'stickysidebar': 'false',
-    'sidebarbgcolor': '#D8D8D8',
-    'sidebarlinkcolor': '#006699',
-    'sidebartextcolor': '#000000',
-    'relbarbgcolor': '#084B8A',
-    'footerbgcolor': '#000000'
-    }
+#html_theme_options = {
+#    'stickysidebar': 'false',
+#    'sidebarbgcolor': '#D8D8D8',
+#    'sidebarlinkcolor': '#006699',
+#    'sidebartextcolor': '#000000',
+#    'relbarbgcolor': '#084B8A',
+#    'footerbgcolor': '#000000'
+#    }
 
 # Add any paths that contain custom themes here, relative to this directory.
 #html_theme_path = []
@@ -185,7 +185,7 @@ html_use_index = True
 #html_file_suffix = ''
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'ted-doc'
+htmlhelp_basename = 'scikits-cuda-doc'
 
 # -- Options for LaTeX output --------------------------------------------------
 

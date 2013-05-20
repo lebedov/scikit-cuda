@@ -6,7 +6,8 @@ Change Log
 Release 0.043 - (under development)
 -----------------------------------
 * Improve support for latest NVIDIA GPUs.
-  
+* Add support for CULA Dense Free R17 (enh. by Alex Rubinsteyn)
+
 Release 0.042 - (March 10, 2013)
 --------------------------------
 * Add complex exponential integral.

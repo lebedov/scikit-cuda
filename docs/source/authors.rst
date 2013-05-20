@@ -14,6 +14,7 @@ Special thanks are due to the following parties for their contributions:
 - Eric Larson - various enhancements
 - Teodor Mihai Moldovan - preliminary CUBLAS 5 bindings
 - Lars Pastewka - FFT tests and FFTW compatibility mode configuration
+- Alex Rubinsteyn - Support for CULA Dense Free R17
 - Rob Turetsky - useful feedback
 - Stefan van der Walt - bug fixes 
 - Yiyin Zhou - patches, bug reports, and function wrappers 
