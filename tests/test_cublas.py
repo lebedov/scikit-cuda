@@ -14,6 +14,16 @@ import numpy as np
 
 import scikits.cuda.cublas as cublas
 import scikits.cuda.misc as misc
+    
+def bptrs(a):
+    """
+    Pointer array when input represents a batch of matrices.
+    """
+    return gpuarray.arange(a.ptr,a.ptr+a.shape[0]*a.strides[0],a.strides[0],
+                dtype=cublas.ctypes.c_void_p)
+
+    
+
 
 class test_cublas(TestCase):
     def setUp(self):
@@ -404,7 +414,80 @@ class test_cublas(TestCase):
                            a_gpu.gpudata, 2, x_gpu.gpudata,
                            1, beta, y_gpu.gpudata, 1)
         assert np.allclose(y_gpu.get(), np.dot(a, x))
+     
+    # S*Batched
+    def test_cublasSgemmBatched(self):
         
+        l,m,k,n = 11,7,5,3
+        A = np.random.rand(l,m, k).astype(np.float32)
+        B = np.random.rand(l,k, n).astype(np.float32)
+        
+        C_res = np.einsum('nij,njk->nik',A,B)
+        
+        a_gpu = gpuarray.to_gpu(A)
+        b_gpu = gpuarray.to_gpu(B)
+        c_gpu = gpuarray.empty((l,m,n), np.float32)
+        
+        alpha = np.float32(1.0)
+        beta = np.float32(0.0)
+
+        a_arr = bptrs(a_gpu)
+        b_arr = bptrs(b_gpu)
+        c_arr = bptrs(c_gpu)
+
+        cublas.cublasSgemmBatched(self.cublas_handle, 'n','n', 
+                           n, m, k, alpha, 
+                           b_arr.gpudata, n, 
+                           a_arr.gpudata, k, 
+                           beta, c_arr.gpudata, n, l)
+
+        assert np.allclose(C_res, c_gpu.get()  )
+
+    def test_cublasStrsmBatched(self):
+        
+        l,m,n = 11,7,5
+        A = np.random.rand(l,m, m).astype(np.float32)
+        B = np.random.rand(l,m, n).astype(np.float32)
+
+        A = np.array(map(np.triu,A))
+        X = np.array([np.linalg.solve(a,b) for a,b in zip(A,B)])
+       
+        alpha = np.float32(1.0)
+
+        a_gpu = gpuarray.to_gpu(A)
+        b_gpu = gpuarray.to_gpu(B)
+        
+        a_arr = bptrs(a_gpu)
+        b_arr = bptrs(b_gpu)
+
+        cublas.cublasStrsmBatched(self.cublas_handle, 'r','l','n','n',
+                           n, m, alpha, 
+                           a_arr.gpudata, m, 
+                           b_arr.gpudata, n, 
+                           l)
+
+        assert np.allclose(X, b_gpu.get() ,5 )
+
+    def test_cublasSgetrfBatched(self):
+        from scipy.linalg import lu_factor
+        l,m = 11,7
+        A = np.random.rand(l,m, m).astype(np.float32)
+        A = np.array([np.matrix(a)*np.matrix(a).T for a in A])
+        
+        a_gpu = gpuarray.to_gpu(A)
+        a_arr = bptrs(a_gpu)
+        p_gpu = gpuarray.empty((l,m), np.int32)
+        i_gpu = gpuarray.zeros(1, np.int32)
+        X = np.array([ lu_factor(a)[0] for a in A])
+
+        cublas.cublasSgetrfBatched(self.cublas_handle, 
+                    m, a_arr.gpudata, m, p_gpu.gpudata, i_gpu.gpudata, l)
+        
+        X_ = np.array([a.T for a in a_gpu.get()])
+
+        assert np.allclose(X,X_)
+
+
 def suite():
     s = TestSuite()
     s.addTest(test_cublas('test_cublasIsamax'))
@@ -429,6 +512,9 @@ def suite():
     s.addTest(test_cublas('test_cublasCswap'))
     s.addTest(test_cublas('test_cublasSgemv'))
     s.addTest(test_cublas('test_cublasCgemv'))
+    s.addTest(test_cublas('test_cublasSgemmBatched'))
+    s.addTest(test_cublas('test_cublasStrsmBatched'))
+    s.addTest(test_cublas('test_cublasSgetrfBatched'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_cublas('test_cublasIdamax'))
         s.addTest(test_cublas('test_cublasIzamax'))
