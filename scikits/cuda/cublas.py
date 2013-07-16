@@ -146,26 +146,6 @@ def cublasCheckStatus(status):
             raise cublasExceptions[status]
         except KeyError:
             raise cublasError
-
-class _cublas_version_req(object):
-    """
-    Decorator to replace function with a placeholder that raises an exception
-    if the installed CUBLAS version is not greater than `v`.     
-    """
-    
-    def __init__(self,v):
-        self.vs = str(v)
-        self.vi = int(v*1000)
-
-    def __call__(self,f):
-        def f_new(*args,**kwargs):
-            raise NotImplementedError('CUBLAS '+self.vs+' required')
-        f_new.__doc__ = f.__doc__
-
-        if _cublas_version >= self.vi:
-            return f
-        else:
-            return f_new
         
 # Helper functions:
 _libcublas.cublasCreate_v2.restype = int
@@ -242,6 +222,26 @@ def cublasGetVersion(handle):
 # may break Windows/MacOSX compatibility XXX
 _cublas_version = int(re.search('[\D\.]\.+(\d)',
       utils.get_soname(utils.find_lib_path(_libcublas.cublasGetVersion_v2))).group(1) + '000')
+
+class _cublas_version_req(object):
+    """
+    Decorator to replace function with a placeholder that raises an exception
+    if the installed CUBLAS version is not greater than `v`.     
+    """
+    
+    def __init__(self,v):
+        self.vs = str(v)
+        self.vi = int(v*1000)
+
+    def __call__(self,f):
+        def f_new(*args,**kwargs):
+            raise NotImplementedError('CUBLAS '+self.vs+' required')
+        f_new.__doc__ = f.__doc__
+
+        if _cublas_version >= self.vi:
+            return f
+        else:
+            return f_new
 
 _libcublas.cublasSetStream_v2.restype = int
 _libcublas.cublasSetStream_v2.argtypes = [ctypes.c_int,
@@ -5139,12 +5139,7 @@ def cublasDgetrfBatched(handle, n, A, lda, P, info, batchSize):
                                             int(A), lda, int(P), 
                                             int(info), batchSize)                                       
     cublasCheckStatus(status)
-    
-
-
-
-
- 
+     
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

@@ -537,7 +537,7 @@ class test_cublas(TestCase):
     def test_cublasDgetrfBatched(self):
         from scipy.linalg import lu_factor
         l, m = 11, 7
-        A = np.random.rand(l, m, m).astype(np.float32)
+        A = np.random.rand(l, m, m).astype(np.float64)
         A = np.array([np.matrix(a)*np.matrix(a).T for a in A])
         
         a_gpu = gpuarray.to_gpu(A)
