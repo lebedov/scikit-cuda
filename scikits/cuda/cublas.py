@@ -4837,146 +4837,233 @@ def cublasZher2k(handle, uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc)
 ### BLAS-like extension routines ###
 
 # SDGMM, DDGMM, CDGMM, ZDGMM
-if _cublas_version >= 5000:
-    _libcublas.cublasSdgmm.restype = int
-    _libcublas.cublasSdgmm.argtypes = [ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
+class vreq(object):
+    """
+    Decorator to replace function with a placeholder unless cublas version is greater than v. Placeholder raises an exception. 
+    """
+    def __init__(self,v):
+        self.vs = str(v)
+        self.vi = int(v*1000)
 
-    def cublasSdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc):
-        """
-        Matrix-diagonal matrix product for real general matrix.
+    def __call__(self,f):
+        def f_new(*args,**kwargs):
+            raise NotImplementedError('CUBLAS '+self.vs+' required')
+        f_new.__doc__ = f.__doc__
+
+        if _cublas_version >= self.vi:
+            return f
+        else:
+            return f_new
         
-        """
+     
+_libcublas.cublasSdgmm.restype = int
+_libcublas.cublasSdgmm.argtypes = [ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int]
 
-        status = _libcublas.cublasSdgmm(handle,
-                                        _CUBLAS_SIDE[mode],
-                                        m, n, 
-                                        int(A), lda, 
-                                        int(x), incx,
-                                        int(C), ldc)
-        cublasCheckStatus(status)
-else:
-    def cublasSdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc):
-        """
-        Matrix-diagonal matrix product for real general matrix.
-        
-        """
-
-        raise NotImplementedError('CUBLAS 5.0 required')
+@vreq(5.0)
+def cublasSdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc):
+    """
+    Matrix-diagonal matrix product for real general matrix.
     
-if _cublas_version >= 5000:        
-    _libcublas.cublasDdgmm.restype = int
-    _libcublas.cublasDdgmm.argtypes = [ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
+    """
 
-    def cublasDdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc):
-        """
-        Matrix-diagonal matrix product for real general matrix.
-        
-        """
-
-        status = _libcublas.cublasDdgmm(handle,
-                                        _CUBLAS_SIDE[mode],
-                                        m, n, 
-                                        int(A), lda, 
-                                        int(x), incx,
-                                        int(C), ldc)
-        cublasCheckStatus(status)
-else:
-    def cublasDdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc):
-        """
-        Matrix-diagonal matrix product for real general matrix.
-        
-        """
-
-        raise NotImplementedError('CUBLAS 5.0 required')
+    status = _libcublas.cublasSdgmm(handle,
+                                    _CUBLAS_SIDE[mode],
+                                    m, n, 
+                                    int(A), lda, 
+                                    int(x), incx,
+                                    int(C), ldc)
+    cublasCheckStatus(status)
     
-if _cublas_version >= 5000:                
-    _libcublas.cublasCdgmm.restype = int
-    _libcublas.cublasCdgmm.argtypes = [ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
+_libcublas.cublasDdgmm.restype = int
+_libcublas.cublasDdgmm.argtypes = [ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int]
 
-    def cublasCdgmm(mode, m, n, A, lda, x, incx, C, ldc):
-        """
-        Matrix-diagonal matrix product for complex general matrix.
-        
-        """
-
-        status = _libcublas.cublasCdgmm(handle,
-                                        _CUBLAS_SIDE[mode],
-                                        m, n, 
-                                        int(A), lda, 
-                                        int(x), incx,
-                                        int(C), ldc)
-        cublasCheckStatus(status)
-else:
-    def cublasCdgmm(mode, m, n, A, lda, x, incx, C, ldc):
-        """
-        Matrix-diagonal matrix product for complex general matrix.
-        
-        """
-
-        raise NotImplementedError('CUBLAS 5.0 required')
+@vreq(5)
+def cublasDdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc):
+    """
+    Matrix-diagonal matrix product for real general matrix.
     
-if _cublas_version >= 5000:            
-    _libcublas.cublasZdgmm.restype = int
-    _libcublas.cublasZdgmm.argtypes = [ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int]
+    """
 
-    def cublasZdgmm(mode, m, n, A, lda, x, incx, C, ldc):
-        """
-        Matrix-diagonal matrix product for complex general matrix.
-        
-        """
-
-        status = _libcublas.cublasZdgmm(handle,
-                                        _CUBLAS_SIDE[mode],
-                                        m, n, 
-                                        int(A), lda, 
-                                        int(x), incx,
-                                        int(C), ldc)
-        cublasCheckStatus(status)        
-else:
-    def cublasZdgmm(mode, m, n, A, lda, x, incx, C, ldc):
-        """
-        Matrix-diagonal matrix product for complex general matrix.
-        
-        """
-
-        raise NotImplementedError('CUBLAS 5.0 required')
+    status = _libcublas.cublasDdgmm(handle,
+                                    _CUBLAS_SIDE[mode],
+                                    m, n, 
+                                    int(A), lda, 
+                                    int(x), incx,
+                                    int(C), ldc)
+    cublasCheckStatus(status)
     
+
+_libcublas.cublasCdgmm.restype = int
+_libcublas.cublasCdgmm.argtypes = [ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int]
+
+@vreq(5)
+def cublasCdgmm(mode, m, n, A, lda, x, incx, C, ldc):
+    """
+    Matrix-diagonal matrix product for complex general matrix.
+    
+    """
+
+    status = _libcublas.cublasCdgmm(handle,
+                                    _CUBLAS_SIDE[mode],
+                                    m, n, 
+                                    int(A), lda, 
+                                    int(x), incx,
+                                    int(C), ldc)
+    cublasCheckStatus(status)
+    
+_libcublas.cublasZdgmm.restype = int
+_libcublas.cublasZdgmm.argtypes = [ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int]
+
+@vreq(5)
+def cublasZdgmm(mode, m, n, A, lda, x, incx, C, ldc):
+    """
+    Matrix-diagonal matrix product for complex general matrix.
+    
+    """
+
+    status = _libcublas.cublasZdgmm(handle,
+                                    _CUBLAS_SIDE[mode],
+                                    m, n, 
+                                    int(A), lda, 
+                                    int(x), incx,
+                                    int(C), ldc)
+    cublasCheckStatus(status)        
+    
+### Batched routines ###
+
+# SgemmBatched, 
+_libcublas.cublasSgemmBatched.restype = int
+_libcublas.cublasSgemmBatched.argtypes = [ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_int]
+@vreq(4.1)
+def cublasSgemmBatched(handle, transa, transb, m, n, k, 
+                alpha, A, lda, B, ldb, beta, C, ldc, batchCount):
+    """
+    Matrix-matrix product for arrays of real general matrices.
+
+    """
+
+    status = _libcublas.cublasSgemmBatched(handle,
+                                       _CUBLAS_OP[transa],
+                                       _CUBLAS_OP[transb], m, n, k, 
+                                       ctypes.byref(ctypes.c_float(alpha)),
+                                       int(A), lda, int(B), ldb,
+                                       ctypes.byref(ctypes.c_float(beta)),
+                                       int(C), ldc, batchCount)
+    cublasCheckStatus(status)
+
+# StrsmBatched
+
+_libcublas.cublasStrsmBatched.restype = int
+_libcublas.cublasStrsmBatched.argtypes = [ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_int]
+@vreq(5.0)
+def cublasStrsmBatched(handle, side, uplo, trans, diag, m, n, alpha, 
+                    A, lda, B, ldb, batchCount):
+    """
+    This function solves an array of triangular linear systems with multiple right-hand-sides
+
+    """
+
+    status = _libcublas.cublasStrsmBatched(handle,
+                                       _CUBLAS_SIDE_MODE[side],
+                                       _CUBLAS_FILL_MODE[uplo],
+                                       _CUBLAS_OP[trans],
+                                       _CUBLAS_DIAG[diag],
+                                       m, n, 
+                                       ctypes.byref(ctypes.c_float(alpha)),
+                                       int(A), lda, int(B), ldb,
+                                       batchCount)
+    cublasCheckStatus(status)
+
+
+# getrfBatched
+
+_libcublas.cublasSgetrfBatched.restype = int
+_libcublas.cublasSgetrfBatched.argtypes = [ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int]
+@vreq(5.0)
+def cublasSgetrfBatched(handle, n, A, lda, P, info, batchSize):
+    """
+    This function performs the LU factorization of an array of n x n matrices.
+    """
+
+    status = _libcublas.cublasSgetrfBatched(handle, n,
+                                       int(A), lda, int(P), 
+                                       int(info),batchSize
+                                       )
+    cublasCheckStatus(status)
+
+
+
+
+
+ 
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
