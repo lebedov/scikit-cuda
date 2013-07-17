@@ -2756,29 +2756,23 @@ if _cublas_version >= 5000:
                                           ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_int]
-    def cublasCsymv(handle, uplo, n, alpha, A, lda, x, incx, beta, y, incy):
-        """
-        Matrix-vector product for complex symmetric matrix.
+    
+@_cublas_version_req(5.0)    
+def cublasCsymv(handle, uplo, n, alpha, A, lda, x, incx, beta, y, incy):
+    """
+    Matrix-vector product for complex symmetric matrix.
 
-        """
+    """
 
-        status = _libcublas.cublasCsymv_v2(handle, 
-                                           _CUBLAS_FILL_MODE[uplo], n, 
-                                           ctypes.byref(cuda.cuFloatComplex(alpha.real,
-                                                                            alpha.imag)), 
-                                           int(A), lda, int(x), incx, 
-                                           ctypes.byref(cuda.cuFloatComplex(beta.real,
-                                                                            beta.imag)), 
-                                           int(y), incy)
-        cublasCheckStatus(status)
-else:
-    def cublasCsymv(handle, uplo, n, alpha, A, lda, x, incx, beta, y, incy):
-        """
-        Matrix-vector product for complex symmetric matrix.
-
-        """
-
-        raise NotImplementedError('CUBLAS 5.0 or later required')
+    status = _libcublas.cublasCsymv_v2(handle, 
+                                       _CUBLAS_FILL_MODE[uplo], n, 
+                                       ctypes.byref(cuda.cuFloatComplex(alpha.real,
+                                       alpha.imag)), 
+                                       int(A), lda, int(x), incx, 
+                                       ctypes.byref(cuda.cuFloatComplex(beta.real,
+                                                                        beta.imag)), 
+                                       int(y), incy)
+    cublasCheckStatus(status)
 
 if _cublas_version >= 5000:    
     _libcublas.cublasZsymv_v2.restype = int
@@ -2793,28 +2787,23 @@ if _cublas_version >= 5000:
                                           ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_int]
-    def cublasZsymv(handle, uplo, n, alpha, A, lda, x, incx, beta, y, incy):
-        """
-        Matrix-vector product for complex symmetric matrix.
 
-        """
+@_cublas_version_req(5.0
+def cublasZsymv(handle, uplo, n, alpha, A, lda, x, incx, beta, y, incy):
+    """
+    Matrix-vector product for complex symmetric matrix.
 
-        status = _libcublas.cublasZsymv_v2(handle, 
-                                           _CUBLAS_FILL_MODE[uplo], n, 
-                                           ctypes.byref(cuda.cuDoubleComplex(alpha.real,
-                                                                             alpha.imag)), 
-                                           int(A), lda, int(x), incx, 
-                                           ctypes.byref(cuda.cuDoubleComplex(beta.real,
-                                                                             beta.imag)), 
-                                           int(y), incy)
-        cublasCheckStatus(status)
-else:
-    def cublasZsymv(handle, uplo, n, alpha, A, lda, x, incx, beta, y, incy):
-        """
-        Matrix-vector product for complex symmetric matrix.
+    """
 
-        """
-        raise NotImplementedError('CUBLAS 5.0 required')
+    status = _libcublas.cublasZsymv_v2(handle, 
+                                       _CUBLAS_FILL_MODE[uplo], n, 
+                                       ctypes.byref(cuda.cuDoubleComplex(alpha.real,
+                                                                         alpha.imag)), 
+                                       int(A), lda, int(x), incx, 
+                                       ctypes.byref(cuda.cuDoubleComplex(beta.real,
+                                                                         beta.imag)), 
+                                       int(y), incy)
+    cublasCheckStatus(status)
     
 # SSYR, DSYR, CSYR, ZSYR
 _libcublas.cublasSsyr_v2.restype = int
@@ -2869,26 +2858,20 @@ if _cublas_version >= 5000:
                                          ctypes.c_int,
                                          ctypes.c_void_p,
                                          ctypes.c_int]
-    def cublasCsyr(handle, uplo, n, alpha, x, incx, A, lda):
-        """
-        Rank-1 operation on complex symmetric matrix.
 
-        """
+@_cublas_version_req(5.0)                                         
+def cublasCsyr(handle, uplo, n, alpha, x, incx, A, lda):
+    """
+    Rank-1 operation on complex symmetric matrix.
 
-        status = _libcublas.cublasCsyr_v2(handle,
-                                          _CUBLAS_FILL_MODE[uplo], n, 
-                                          ctypes.byref(cuda.cuFloatComplex(alpha.real,
-                                                                           alpha.imag)),
-                                          int(x), incx, int(A), lda)
-        cublasCheckStatus(status)
-else:
-    def cublasCsyr(handle, uplo, n, alpha, x, incx, A, lda):
-        """
-        Rank-1 operation on complex symmetric matrix.
+    """
 
-        """
-
-        raise NotImplementedError('CUBLAS 5.0 required')
+    status = _libcublas.cublasCsyr_v2(handle,
+                                      _CUBLAS_FILL_MODE[uplo], n, 
+                                      ctypes.byref(cuda.cuFloatComplex(alpha.real,
+                                                                       alpha.imag)),
+                                      int(x), incx, int(A), lda)
+    cublasCheckStatus(status)
 
 if _cublas_version >= 5000:
     _libcublas.cublasZsyr_v2.restype = int
@@ -2900,26 +2883,20 @@ if _cublas_version >= 5000:
                                          ctypes.c_int,
                                          ctypes.c_void_p,
                                          ctypes.c_int]
-    def cublasZsyr(handle, uplo, n, alpha, x, incx, A, lda):
-        """
-        Rank-1 operation on complex symmetric matrix.
 
-        """
+@_cublas_version_req(5.0)                                         
+def cublasZsyr(handle, uplo, n, alpha, x, incx, A, lda):
+    """
+    Rank-1 operation on complex symmetric matrix.
 
-        status = _libcublas.cublasZsyr_v2(handle,
-                                          _CUBLAS_FILL_MODE[uplo], n, 
-                                          ctypes.byref(cuda.cuDoubleComplex(alpha.real,
-                                                                            alpha.imag)),
-                                          int(x), incx, int(A), lda)
-        cublasCheckStatus(status)
-else:
-    def cublasZsyr(handle, uplo, n, alpha, x, incx, A, lda):
-        """
-        Rank-1 operation on complex symmetric matrix.
+    """
 
-        """
-
-        raise NotImplementedError('CUBLAS 5.0 required')
+    status = _libcublas.cublasZsyr_v2(handle,
+                                      _CUBLAS_FILL_MODE[uplo], n, 
+                                      ctypes.byref(cuda.cuDoubleComplex(alpha.real,
+                                                                        alpha.imag)),
+                                      int(x), incx, int(A), lda)
+    cublasCheckStatus(status)
     
 # SSYR2, DSYR2, CSYR2, ZSYR2
 _libcublas.cublasSsyr2_v2.restype = int
@@ -2982,27 +2959,21 @@ if _cublas_version >= 5000:
                                           ctypes.c_int,
                                           ctypes.c_void_p,
                                           ctypes.c_int]
-    def cublasCsyr2(handle, uplo, n, alpha, x, incx, y, incy, A, lda):
-        """
-        Rank-2 operation on complex symmetric matrix.
 
-        """
+@_cublas_version_req(5.0)                                          
+def cublasCsyr2(handle, uplo, n, alpha, x, incx, y, incy, A, lda):
+    """
+    Rank-2 operation on complex symmetric matrix.
 
-        status = _libcublas.cublasCsyr2_v2(handle, 
-                                           _CUBLAS_FILL_MODE[uplo], n, 
-                                           ctypes.byref(cuda.cuFloatComplex(alpha.real,
-                                                                            alpha.imag)), 
-                                           int(x), incx, int(y), incy, 
-                                           int(A), lda)                                       
-        cublasCheckStatus(status)
-else:
-    def cublasCsyr2(handle, uplo, n, alpha, x, incx, y, incy, A, lda):
-        """
-        Rank-2 operation on complex symmetric matrix.
+    """
 
-        """
-
-        raise NotImplementedError('CUBLAS 5.0 required')
+    status = _libcublas.cublasCsyr2_v2(handle, 
+                                       _CUBLAS_FILL_MODE[uplo], n, 
+                                       ctypes.byref(cuda.cuFloatComplex(alpha.real,
+                                                                        alpha.imag)), 
+                                       int(x), incx, int(y), incy, 
+                                       int(A), lda)                                       
+    cublasCheckStatus(status)
 
 if _cublas_version >= 5000:    
     _libcublas.cublasZsyr2_v2.restype = int
@@ -3016,27 +2987,21 @@ if _cublas_version >= 5000:
                                           ctypes.c_int,
                                           ctypes.c_void_p,
                                           ctypes.c_int]
-    def cublasZsyr2(handle, uplo, n, alpha, x, incx, y, incy, A, lda):
-        """
-        Rank-2 operation on complex symmetric matrix.
 
-        """
+@_cublas_version_req(5.0)                                          
+def cublasZsyr2(handle, uplo, n, alpha, x, incx, y, incy, A, lda):
+    """
+    Rank-2 operation on complex symmetric matrix.
 
-        status = _libcublas.cublasZsyr2_v2(handle, 
-                                           _CUBLAS_FILL_MODE[uplo], n, 
-                                           ctypes.byref(cuda.cuDoubleComplex(alpha.real,
-                                                                             alpha.imag)), 
-                                           int(x), incx, int(y), incy, 
-                                           int(A), lda)                                       
-        cublasCheckStatus(status)
-else:
-    def cublasZsyr2(handle, uplo, n, alpha, x, incx, y, incy, A, lda):
-        """
-        Rank-2 operation on complex symmetric matrix.
+    """
 
-        """
-
-        raise NotImplementedError('CUBLAS 5.0 required')
+    status = _libcublas.cublasZsyr2_v2(handle, 
+                                       _CUBLAS_FILL_MODE[uplo], n, 
+                                       ctypes.byref(cuda.cuDoubleComplex(alpha.real,
+                                                                         alpha.imag)), 
+                                       int(x), incx, int(y), incy, 
+                                       int(A), lda)                                       
+    cublasCheckStatus(status)
     
 # STBMV, DTBMV, CTBMV, ZTBMV
 _libcublas.cublasStbmv_v2.restype = int

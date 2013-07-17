@@ -227,6 +227,9 @@ Single-Precision BLAS-like Extension Routines
    :nosignatures:
 
    cublasSdgmm
+   cublasSgemmBatched
+   cublasStrsmBatched
+   cublasSgetrfBatched
    cublasCdgmm
 
 Double-Precision BLAS-like Extension Routines
@@ -236,4 +239,7 @@ Double-Precision BLAS-like Extension Routines
    :nosignatures:
 
    cublasDdgmm
+   cublasDgemmBatched
+   cublasDtrsmBatched
+   cublasDgetrfBatched
    cublasZdgmm

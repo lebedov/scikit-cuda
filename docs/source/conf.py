@@ -22,23 +22,14 @@ sys.path.append(os.path.abspath('../sphinxext'))
 
 # Add any Sphinx extension module names here, as strings. They can be extensions
 # coming with Sphinx (named 'sphinx.ext.*') or your custom ones.
-extensions = ['sphinx.ext.pngmath',
-              'sphinx.ext.autodoc', # needed by numpydoc              
-              'sphinx.ext.autosummary', # needed to autogenerate stubs
+extensions = ['sphinx.ext.autodoc',
+              'sphinx.ext.autosummary',
+              'sphinx.ext.intersphinx',
+              'sphinx.ext.pngmath',                 
               'numpydoc',
               'plot_directive']
 
-# Use local autosummary extension because the autosummary extension
-# included in Sphinx 0.6.* and later doesn't seem to extract docstring
-# summaries correctly:
-import sphinx
-if sphinx.__version__ < "0.7":
-    extensions.append('autosummary')
-    extensions.append('only_directives')                
-
-# Generate autosummary stubs:
-import glob
-autosummary_generate = glob.glob('*.rst')
+autosummary_generate = True
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
