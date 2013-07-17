@@ -5087,7 +5087,7 @@ if _cublas_version >= 5000:
                                               ctypes.c_void_p,
                                               ctypes.c_int,
                                               ctypes.c_int]
-@_cublas_version_req(5000)
+@_cublas_version_req(5.0)
 def cublasSgemmBatched(handle, transa, transb, m, n, k, 
                        alpha, A, lda, B, ldb, beta, C, ldc, batchCount):
     """
@@ -5121,7 +5121,7 @@ if _cublas_version >= 5000:
                                               ctypes.c_void_p,
                                               ctypes.c_int,
                                               ctypes.c_int]
-@_cublas_version_req(5000)
+@_cublas_version_req(5.0)
 def cublasDgemmBatched(handle, transa, transb, m, n, k, 
                        alpha, A, lda, B, ldb, beta, C, ldc, batchCount):
     """
