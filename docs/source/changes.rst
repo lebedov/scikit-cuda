@@ -6,6 +6,7 @@ Change Log
 Release 0.043 - (under development)
 -----------------------------------
 * Improve support for latest NVIDIA GPUs.
+* Add more wrappers for CUBLAS 5 functions (enh. by Teodor Moldovan)
 * Add support for CULA Dense Free R17 (enh. by Alex Rubinsteyn)
 
 Release 0.042 - (March 10, 2013)
