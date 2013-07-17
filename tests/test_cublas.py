@@ -412,7 +412,64 @@ class test_cublas(TestCase):
                            a_gpu.gpudata, 2, x_gpu.gpudata,
                            1, beta, y_gpu.gpudata, 1)
         assert np.allclose(y_gpu.get(), np.dot(a, x))
-     
+
+    # SGEAM, CGEAM, DGEAM, ZDGEAM
+    def test_cublasSgeam(self):
+        a = np.random.rand(2, 3).astype(np.float32)
+        b = np.random.rand(2, 3).astype(np.float32)
+        a_gpu = gpuarray.to_gpu(a.copy())
+        b_gpu = gpuarray.to_gpu(b.copy())
+        c_gpu = gpuarray.zeros_like(a_gpu)
+        alpha = np.float32(np.random.rand())
+        beta = np.float32(np.random.rand())
+        cublas.cublasSgeam(self.cublas_handle, 'n', 'n', 2, 3,
+                           alpha, a_gpu.gpudata, 2,
+                           beta, b_gpu.gpudata, 2,
+                           c_gpu.gpudata, 2)
+        assert np.allclose(c_gpu.get(), alpha*a+beta*b)
+
+    def test_cublasCgeam(self):
+        a = (np.random.rand(2, 3)+1j*np.random.rand(2, 3)).astype(np.complex64)
+        b = (np.random.rand(2, 3)+1j*np.random.rand(2, 3)).astype(np.complex64)
+        a_gpu = gpuarray.to_gpu(a.copy())
+        b_gpu = gpuarray.to_gpu(b.copy())
+        c_gpu = gpuarray.zeros_like(a_gpu)
+        alpha = np.complex64(np.random.rand()+1j*np.random.rand())
+        beta = np.complex64(np.random.rand()+1j*np.random.rand())
+        cublas.cublasCgeam(self.cublas_handle, 'n', 'n', 2, 3,
+                           alpha, a_gpu.gpudata, 2,
+                           beta, b_gpu.gpudata, 2,
+                           c_gpu.gpudata, 2)
+        assert np.allclose(c_gpu.get(), alpha*a+beta*b)
+
+    def test_cublasDgeam(self):
+        a = np.random.rand(2, 3).astype(np.float64)
+        b = np.random.rand(2, 3).astype(np.float64)
+        a_gpu = gpuarray.to_gpu(a.copy())
+        b_gpu = gpuarray.to_gpu(b.copy())
+        c_gpu = gpuarray.zeros_like(a_gpu)
+        alpha = np.float64(np.random.rand())
+        beta = np.float64(np.random.rand())
+        cublas.cublasDgeam(self.cublas_handle, 'n', 'n', 2, 3,
+                           alpha, a_gpu.gpudata, 2,
+                           beta, b_gpu.gpudata, 2,
+                           c_gpu.gpudata, 2)
+        assert np.allclose(c_gpu.get(), alpha*a+beta*b)
+
+    def test_cublasZgeam(self):
+        a = (np.random.rand(2, 3)+1j*np.random.rand(2, 3)).astype(np.complex128)
+        b = (np.random.rand(2, 3)+1j*np.random.rand(2, 3)).astype(np.complex128)
+        a_gpu = gpuarray.to_gpu(a.copy())
+        b_gpu = gpuarray.to_gpu(b.copy())
+        c_gpu = gpuarray.zeros_like(a_gpu)
+        alpha = np.complex128(np.random.rand()+1j*np.random.rand())
+        beta = np.complex128(np.random.rand()+1j*np.random.rand())
+        cublas.cublasZgeam(self.cublas_handle, 'n', 'n', 2, 3,
+                           alpha, a_gpu.gpudata, 2,
+                           beta, b_gpu.gpudata, 2,
+                           c_gpu.gpudata, 2)
+        assert np.allclose(c_gpu.get(), alpha*a+beta*b)
+        
     # SgemmBatched, DgemmBatched
     def test_cublasSgemmBatched(self):        
         l, m, k, n = 11, 7, 5, 3
@@ -579,6 +636,8 @@ def suite():
     s.addTest(test_cublas('test_cublasCswap'))
     s.addTest(test_cublas('test_cublasSgemv'))
     s.addTest(test_cublas('test_cublasCgemv'))
+    s.addTest(test_cublas('test_cublasSgeam'))
+    s.addTest(test_cublas('test_cublasCgeam'))
     s.addTest(test_cublas('test_cublasSgemmBatched'))
     s.addTest(test_cublas('test_cublasStrsmBatched'))
     s.addTest(test_cublas('test_cublasSgetrfBatched'))
@@ -605,6 +664,8 @@ def suite():
         s.addTest(test_cublas('test_cublasZswap'))
         s.addTest(test_cublas('test_cublasDgemv'))
         s.addTest(test_cublas('test_cublasZgemv'))
+        s.addTest(test_cublas('test_cublasDgeam'))
+        s.addTest(test_cublas('test_cublasZgeam'))        
         s.addTest(test_cublas('test_cublasDgemmBatched'))
         s.addTest(test_cublas('test_cublasDtrsmBatched'))
         s.addTest(test_cublas('test_cublasDgetrfBatched'))        

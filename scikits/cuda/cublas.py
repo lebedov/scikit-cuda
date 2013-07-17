@@ -229,8 +229,8 @@ class _cublas_version_req(object):
     if the installed CUBLAS version is not greater than `v`.     
     """
     
-    def __init__(self,v):
-        self.vs = str(v)
+    def __init__(self, v):
+        self.vs = str( v)
         self.vi = int(v*1000)
 
     def __call__(self,f):
@@ -2788,7 +2788,7 @@ if _cublas_version >= 5000:
                                           ctypes.c_void_p,
                                           ctypes.c_int]
 
-@_cublas_version_req(5.0
+@_cublas_version_req(5.0)
 def cublasZsymv(handle, uplo, n, alpha, A, lda, x, incx, beta, y, incy):
     """
     Matrix-vector product for complex symmetric matrix.
@@ -4819,19 +4819,158 @@ def cublasZher2k(handle, uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc)
 
 ### BLAS-like extension routines ###
 
-# SDGMM, DDGMM, CDGMM, ZDGMM
-_libcublas.cublasSdgmm.restype = int
-_libcublas.cublasSdgmm.argtypes = [ctypes.c_int,
-                                   ctypes.c_int,
-                                   ctypes.c_int,
-                                   ctypes.c_int,
-                                   ctypes.c_void_p,
-                                   ctypes.c_int,
-                                   ctypes.c_void_p,
-                                   ctypes.c_int,
-                                   ctypes.c_void_p,
-                                   ctypes.c_int]
+# SGEAM, DGEAM, CGEAM, ZGEAM
+if _cublas_version >= 5000:
+    _libcublas.cublasSgeam.restype = int
+    _libcublas.cublasSgeam.argtypes = [ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,                                   
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+@_cublas_version_req(5.0)                                   
+def cublasSgeam(handle, transa, transb,
+                m, n, alpha, A, lda, beta, B, ldb, C, ldc):
+    """
+    Real matrix-matrix addition/transposition.
 
+    """
+    
+    status = _libcublas.cublasSgeam(handle,
+                                    _CUBLAS_OP[transa],
+                                    _CUBLAS_OP[transb],
+                                    m, n, ctypes.byref(ctypes.c_float(alpha)),
+                                    int(A), lda, 
+                                    ctypes.byref(ctypes.c_float(beta)),
+                                    int(B), ldb,
+                                    int(C), ldc)
+    cublasCheckStatus(status)
+    
+if _cublas_version >= 5000:                                    
+    _libcublas.cublasDgeam.restype = int
+    _libcublas.cublasDgeam.argtypes = [ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,                                   
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+@_cublas_version_req(5.0)                                   
+def cublasDgeam(handle, transa, transb,
+                m, n, alpha, A, lda, beta, B, ldb, C, ldc):
+    """
+    Real matrix-matrix addition/transposition.
+
+    """
+    
+    status = _libcublas.cublasDgeam(handle,
+                                    _CUBLAS_OP[transa],
+                                    _CUBLAS_OP[transb],
+                                    m, n, ctypes.byref(ctypes.c_double(alpha)),
+                                    int(A), lda,                                    
+                                    ctypes.byref(ctypes.c_double(beta)),
+                                    int(B), ldb,
+                                    int(C), ldc)
+    cublasCheckStatus(status)
+    
+if _cublas_version >= 5000:                                    
+    _libcublas.cublasCgeam.restype = int
+    _libcublas.cublasCgeam.argtypes = [ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,                                   
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+@_cublas_version_req(5.0)                                   
+def cublasCgeam(handle, transa, transb,
+                m, n, alpha, A, lda, beta, B, ldb, C, ldc):
+    """
+    Complex matrix-matrix addition/transposition.
+
+    """
+    
+    status = _libcublas.cublasCgeam(handle,
+                                    _CUBLAS_OP[transa],
+                                    _CUBLAS_OP[transb],
+                                    m, n, 
+                                    ctypes.byref(cuda.cuFloatComplex(alpha.real,
+                                                                     alpha.imag)),
+                                    int(A), lda,
+                                    ctypes.byref(cuda.cuFloatComplex(beta.real,
+                                                                     beta.imag)),
+                                    int(B), ldb,
+                                    int(C), ldc)
+    cublasCheckStatus(status)
+    
+if _cublas_version >= 5000:                                    
+    _libcublas.cublasZgeam.restype = int
+    _libcublas.cublasZgeam.argtypes = [ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,                                   
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
+@_cublas_version_req(5.0)                                   
+def cublasZgeam(handle, transa, transb,
+                m, n, alpha, A, lda, beta, B, ldb, C, ldc):
+    """
+    Complex matrix-matrix addition/transposition.
+
+    """
+    
+    status = _libcublas.cublasZgeam(handle,
+                                    _CUBLAS_OP[transa],
+                                    _CUBLAS_OP[transb],
+                                    m, n, 
+                                    ctypes.byref(cuda.cuDoubleComplex(alpha.real,
+                                                                      alpha.imag)),
+                                    int(A), lda,                                    
+                                    ctypes.byref(cuda.cuDoubleComplex(beta.real,
+                                                                      beta.imag)),
+                                    int(B), ldb,
+                                    int(C), ldc)
+    cublasCheckStatus(status)
+    
+# SDGMM, DDGMM, CDGMM, ZDGMM
+if _cublas_version >= 5000:
+    _libcublas.cublasSdgmm.restype = int
+    _libcublas.cublasSdgmm.argtypes = [ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
 @_cublas_version_req(5.0)
 def cublasSdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc):
     """
@@ -4846,19 +4985,19 @@ def cublasSdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc):
                                     int(x), incx,
                                     int(C), ldc)
     cublasCheckStatus(status)
-    
-_libcublas.cublasDdgmm.restype = int
-_libcublas.cublasDdgmm.argtypes = [ctypes.c_int,
-                                   ctypes.c_int,
-                                   ctypes.c_int,
-                                   ctypes.c_int,
-                                   ctypes.c_void_p,
-                                   ctypes.c_int,
-                                   ctypes.c_void_p,
-                                   ctypes.c_int,
-                                   ctypes.c_void_p,
-                                   ctypes.c_int]
 
+if _cublas_version >= 5000:    
+    _libcublas.cublasDdgmm.restype = int
+    _libcublas.cublasDdgmm.argtypes = [ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
 @_cublas_version_req(5)
 def cublasDdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc):
     """
@@ -4874,19 +5013,18 @@ def cublasDdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc):
                                     int(C), ldc)
     cublasCheckStatus(status)
     
-
-_libcublas.cublasCdgmm.restype = int
-_libcublas.cublasCdgmm.argtypes = [ctypes.c_int,
-                                   ctypes.c_int,
-                                   ctypes.c_int,
-                                   ctypes.c_int,
-                                   ctypes.c_void_p,
-                                   ctypes.c_int,
-                                   ctypes.c_void_p,
-                                   ctypes.c_int,
-                                   ctypes.c_void_p,
-                                   ctypes.c_int]
-
+if _cublas_version >= 5000:
+    _libcublas.cublasCdgmm.restype = int
+    _libcublas.cublasCdgmm.argtypes = [ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
 @_cublas_version_req(5)
 def cublasCdgmm(mode, m, n, A, lda, x, incx, C, ldc):
     """
@@ -4901,19 +5039,19 @@ def cublasCdgmm(mode, m, n, A, lda, x, incx, C, ldc):
                                     int(x), incx,
                                     int(C), ldc)
     cublasCheckStatus(status)
-    
-_libcublas.cublasZdgmm.restype = int
-_libcublas.cublasZdgmm.argtypes = [ctypes.c_int,
-                                   ctypes.c_int,
-                                   ctypes.c_int,
-                                   ctypes.c_int,
-                                   ctypes.c_void_p,
-                                   ctypes.c_int,
-                                   ctypes.c_void_p,
-                                   ctypes.c_int,
-                                   ctypes.c_void_p,
-                                   ctypes.c_int]
 
+if _cublas_version >= 5000:    
+    _libcublas.cublasZdgmm.restype = int
+    _libcublas.cublasZdgmm.argtypes = [ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int]
 @_cublas_version_req(5)
 def cublasZdgmm(mode, m, n, A, lda, x, incx, C, ldc):
     """
@@ -4932,23 +5070,24 @@ def cublasZdgmm(mode, m, n, A, lda, x, incx, C, ldc):
 ### Batched routines ###
 
 # SgemmBatched, DgemmBatched
-_libcublas.cublasSgemmBatched.restype = int
-_libcublas.cublasSgemmBatched.argtypes = [ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_int]
-@_cublas_version_req(4.1)
+if _cublas_version >= 5000:
+    _libcublas.cublasSgemmBatched.restype = int
+    _libcublas.cublasSgemmBatched.argtypes = [ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_int]
+@_cublas_version_req(5000)
 def cublasSgemmBatched(handle, transa, transb, m, n, k, 
                        alpha, A, lda, B, ldb, beta, C, ldc, batchCount):
     """
@@ -4965,23 +5104,24 @@ def cublasSgemmBatched(handle, transa, transb, m, n, k,
                                            int(C), ldc, batchCount)
     cublasCheckStatus(status)
 
-_libcublas.cublasDgemmBatched.restype = int
-_libcublas.cublasDgemmBatched.argtypes = [ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_int]
-@_cublas_version_req(4.1)
+if _cublas_version >= 5000:    
+    _libcublas.cublasDgemmBatched.restype = int
+    _libcublas.cublasDgemmBatched.argtypes = [ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_int]
+@_cublas_version_req(5000)
 def cublasDgemmBatched(handle, transa, transb, m, n, k, 
                        alpha, A, lda, B, ldb, beta, C, ldc, batchCount):
     """
@@ -4999,20 +5139,21 @@ def cublasDgemmBatched(handle, transa, transb, m, n, k,
     cublasCheckStatus(status)
     
 # StrsmBatched, DtrsmBatched
-_libcublas.cublasStrsmBatched.restype = int
-_libcublas.cublasStrsmBatched.argtypes = [ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_int]
+if _cublas_version >= 5000:
+    _libcublas.cublasStrsmBatched.restype = int
+    _libcublas.cublasStrsmBatched.argtypes = [ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_int]
 @_cublas_version_req(5.0)
 def cublasStrsmBatched(handle, side, uplo, trans, diag, m, n, alpha, 
                        A, lda, B, ldb, batchCount):
@@ -5032,20 +5173,21 @@ def cublasStrsmBatched(handle, side, uplo, trans, diag, m, n, alpha,
                                            batchCount)
     cublasCheckStatus(status)
 
-_libcublas.cublasDtrsmBatched.restype = int
-_libcublas.cublasDtrsmBatched.argtypes = [ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_int]
+if _cublas_version >= 5000:    
+    _libcublas.cublasDtrsmBatched.restype = int
+    _libcublas.cublasDtrsmBatched.argtypes = [ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_int]
 @_cublas_version_req(5.0)
 def cublasDtrsmBatched(handle, side, uplo, trans, diag, m, n, alpha, 
                        A, lda, B, ldb, batchCount):
@@ -5067,14 +5209,15 @@ def cublasDtrsmBatched(handle, side, uplo, trans, diag, m, n, alpha,
     
 
 # SgetrfBatched, DgetrfBatched
-_libcublas.cublasSgetrfBatched.restype = int
-_libcublas.cublasSgetrfBatched.argtypes = [ctypes.c_int,
-                                           ctypes.c_int,
-                                           ctypes.c_void_p,
-                                           ctypes.c_int,
-                                           ctypes.c_void_p,
-                                           ctypes.c_void_p,
-                                           ctypes.c_int]
+if _cublas_version >= 5000:
+    _libcublas.cublasSgetrfBatched.restype = int
+    _libcublas.cublasSgetrfBatched.argtypes = [ctypes.c_int,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int]
 @_cublas_version_req(5.0)
 def cublasSgetrfBatched(handle, n, A, lda, P, info, batchSize):
     """
@@ -5086,14 +5229,15 @@ def cublasSgetrfBatched(handle, n, A, lda, P, info, batchSize):
                                             int(info), batchSize)                                       
     cublasCheckStatus(status)
 
-_libcublas.cublasDgetrfBatched.restype = int
-_libcublas.cublasDgetrfBatched.argtypes = [ctypes.c_int,
-                                           ctypes.c_int,
-                                           ctypes.c_void_p,
-                                           ctypes.c_int,
-                                           ctypes.c_void_p,
-                                           ctypes.c_void_p,
-                                           ctypes.c_int]
+if _cublas_version >= 5000:    
+    _libcublas.cublasDgetrfBatched.restype = int
+    _libcublas.cublasDgetrfBatched.argtypes = [ctypes.c_int,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int]
 @_cublas_version_req(5.0)
 def cublasDgetrfBatched(handle, n, A, lda, P, info, batchSize):
     """
