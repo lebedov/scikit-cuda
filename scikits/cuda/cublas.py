@@ -295,20 +295,19 @@ except AttributeError:
             'precedes NVIDIA CUBLAS library in library search path')
 else:
     def cublasGetCurrentCtx():
-        """
-        Get current CUBLAS context.
-        
-        Returns the current context used by CUBLAS.
-        
-        Returns
-        -------
-        handle : int
-            CUBLAS context.
-        
-        """
-
         return _libcublas.cublasGetCurrentCtx()
-    
+cublasGetCurrentCtx.__doc__ = """
+    Get current CUBLAS context.
+
+    Returns the current context used by CUBLAS.
+
+    Returns
+    -------
+    handle : int
+        CUBLAS context.
+
+"""
+
 ### BLAS Level 1 Functions ###
 
 # ISAMAX, IDAMAX, ICAMAX, IZAMAX

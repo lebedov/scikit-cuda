@@ -53,6 +53,8 @@ To build the documentation, the following packages are also required:
 * `Jinja2 <http://jinja.pocoo.org>`_ 2.2 or later.
 * `Pygments <http://pygments.org>`_ 0.8 or later.
 * `Sphinx <http://sphinx.pocoo.org>`_ 1.0.1 or later.
+* `Sphinx Bootstrap Theme
+  <https://github.com/ryan-roemer/sphinx-bootstrap-theme>`_ 0.2.6 or later.
 
 Platform Support
 ----------------
