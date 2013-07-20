@@ -5,7 +5,7 @@
 // http://www.netlib.org/cephes/
 // http://www.netlib.org/specfun/
 
-#include <pycuda/pycuda-complex.hpp>
+#include <pycuda-complex.hpp>
 #include "cuConstants.h"
 
 #if !defined(CU_SPECIAL_FUNCS_H_)

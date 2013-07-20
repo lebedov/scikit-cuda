@@ -70,7 +70,7 @@ def sici(x_gpu):
     >>> import special
     >>> x = np.array([[1, 2], [3, 4]], np.float32)
     >>> x_gpu = gpuarray.to_gpu(x)
-    >>> (si_gpu, ci_gpu) = sici(x_gpu, pycuda.autoinit.device)
+    >>> (si_gpu, ci_gpu) = sici(x_gpu)
     >>> (si, ci) = scipy.special.sici(x)
     >>> np.allclose(si, si_gpu.get())
     True
@@ -166,7 +166,7 @@ def exp1(z_gpu):
     >>> import special
     >>> z = np.asarray(np.random.rand(4, 4)+1j*np.random.rand(4, 4), np.complex64)
     >>> z_gpu = gpuarray.to_gpu(z)
-    >>> e_gpu = exp1(z_gpu, pycuda.autoinit.device)
+    >>> e_gpu = exp1(z_gpu)
     >>> e_sp = scipy.special.exp1(z)
     >>> np.allclose(e_sp, e_gpu.get())
     True
@@ -229,7 +229,7 @@ def expi(z_gpu):
     >>> import special
     >>> z = np.asarray(np.random.rand(4, 4)+1j*np.random.rand(4, 4), np.complex64)
     >>> z_gpu = gpuarray.to_gpu(z)
-    >>> e_gpu = expi(z_gpu, pycuda.autoinit.device)
+    >>> e_gpu = expi(z_gpu)
     >>> e_sp = scipy.special.expi(z)
     >>> np.allclose(e_sp, e_gpu.get())
     True

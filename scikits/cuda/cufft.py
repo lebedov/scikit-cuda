@@ -83,6 +83,12 @@ cufftExceptions = {
     0x9: cufftUnalignedData
     }
 
+
+class _types:
+    """Some alias types."""
+    plan = ctypes.c_int
+    stream = ctypes.c_void_p
+
 def cufftCheckStatus(status):
     """Raise an exception if the specified CUBLAS status is an error."""
 
@@ -120,7 +126,7 @@ _libcufft.cufftPlan1d.argtypes = [ctypes.c_void_p,
 def cufftPlan1d(nx, fft_type, batch):
     """Create 1D FFT plan configuration."""
 
-    plan = ctypes.c_uint()
+    plan = _types.plan()
     status = _libcufft.cufftPlan1d(ctypes.byref(plan), nx, fft_type, batch)
     cufftCheckStatus(status)
     return plan
@@ -133,7 +139,7 @@ _libcufft.cufftPlan2d.argtypes = [ctypes.c_void_p,
 def cufftPlan2d(nx, ny, fft_type):
     """Create 2D FFT plan configuration."""
 
-    plan = ctypes.c_uint()
+    plan = _types.plan()
     status = _libcufft.cufftPlan2d(ctypes.byref(plan), nx, ny,
                                    fft_type)
     cufftCheckStatus(status)
@@ -148,7 +154,7 @@ _libcufft.cufftPlan3d.argtypes = [ctypes.c_void_p,
 def cufftPlan3d(nx, ny, nz, fft_type):
     """Create 3D FFT plan configuration."""
 
-    plan = ctypes.c_uint()
+    plan = _types.plan()
     status = _libcufft.cufftPlan3d(ctypes.byref(plan), nx, ny, nz,
                                    fft_type)
     cufftCheckStatus(status)
@@ -171,7 +177,7 @@ def cufftPlanMany(rank, n,
                   onembed, ostride, odist, fft_type, batch):
     """Create batched FFT plan configuration."""
 
-    plan = ctypes.c_uint()
+    plan = _types.plan()
     status = _libcufft.cufftPlanMany(ctypes.byref(plan), rank, n,
                                      inembed, istride, idist, 
                                      onembed, ostride, odist, 
@@ -180,7 +186,7 @@ def cufftPlanMany(rank, n,
     return plan
 
 _libcufft.cufftDestroy.restype = int
-_libcufft.cufftDestroy.argtypes = [ctypes.c_uint]
+_libcufft.cufftDestroy.argtypes = [_types.plan]
 def cufftDestroy(plan):
     """Destroy FFT plan."""
     
@@ -188,7 +194,7 @@ def cufftDestroy(plan):
     cufftCheckStatus(status)
 
 _libcufft.cufftSetCompatibilityMode.restype = int
-_libcufft.cufftSetCompatibilityMode.argtypes = [ctypes.c_uint,
+_libcufft.cufftSetCompatibilityMode.argtypes = [_types.plan,
                                                 ctypes.c_int]
 def cufftSetCompatibilityMode(plan, mode):
     """Set FFTW compatibility mode."""
@@ -197,7 +203,7 @@ def cufftSetCompatibilityMode(plan, mode):
     cufftCheckStatus(status)
 
 _libcufft.cufftExecC2C.restype = int
-_libcufft.cufftExecC2C.argtypes = [ctypes.c_uint,
+_libcufft.cufftExecC2C.argtypes = [_types.plan,
                                    ctypes.c_void_p,
                                    ctypes.c_void_p,
                                    ctypes.c_int]
@@ -210,7 +216,7 @@ def cufftExecC2C(plan, idata, odata, direction):
     cufftCheckStatus(status)
 
 _libcufft.cufftExecR2C.restype = int
-_libcufft.cufftExecR2C.argtypes = [ctypes.c_uint,
+_libcufft.cufftExecR2C.argtypes = [_types.plan,
                                    ctypes.c_void_p,
                                    ctypes.c_void_p]
 def cufftExecR2C(plan, idata, odata):
@@ -220,7 +226,7 @@ def cufftExecR2C(plan, idata, odata):
     cufftCheckStatus(status)
 
 _libcufft.cufftExecC2R.restype = int
-_libcufft.cufftExecC2R.argtypes = [ctypes.c_uint,
+_libcufft.cufftExecC2R.argtypes = [_types.plan,
                                    ctypes.c_void_p,
                                    ctypes.c_void_p]
 def cufftExecC2R(plan, idata, odata):
@@ -230,7 +236,7 @@ def cufftExecC2R(plan, idata, odata):
     cufftCheckStatus(status)
 
 _libcufft.cufftExecZ2Z.restype = int
-_libcufft.cufftExecZ2Z.argtypes = [ctypes.c_uint,
+_libcufft.cufftExecZ2Z.argtypes = [_types.plan,
                                    ctypes.c_void_p,
                                    ctypes.c_void_p,
                                    ctypes.c_int]
@@ -243,7 +249,7 @@ def cufftExecZ2Z(plan, idata, odata, direction):
     cufftCheckStatus(status)
 
 _libcufft.cufftExecD2Z.restype = int
-_libcufft.cufftExecD2Z.argtypes = [ctypes.c_uint,
+_libcufft.cufftExecD2Z.argtypes = [_types.plan,
                                    ctypes.c_void_p,
                                    ctypes.c_void_p]
 def cufftExecD2Z(plan, idata, odata):
@@ -253,7 +259,7 @@ def cufftExecD2Z(plan, idata, odata):
     cufftCheckStatus(status)
 
 _libcufft.cufftExecZ2D.restype = int
-_libcufft.cufftExecZ2D.argtypes = [ctypes.c_uint,
+_libcufft.cufftExecZ2D.argtypes = [_types.plan,
                                    ctypes.c_void_p,
                                    ctypes.c_void_p]
 def cufftExecZ2D(plan, idata, odata):
@@ -263,8 +269,8 @@ def cufftExecZ2D(plan, idata, odata):
     cufftCheckStatus(status)
 
 _libcufft.cufftSetStream.restype = int
-_libcufft.cufftSetStream.argtypes = [ctypes.c_uint,
-                                     ctypes.c_int]
+_libcufft.cufftSetStream.argtypes = [_types.plan,
+                                     _types.stream]
 def cufftSetStream(plan, stream):
     """Associate a CUDA stream with a CUFFT plan."""
     

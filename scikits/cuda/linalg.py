@@ -743,7 +743,7 @@ def conj(a_gpu, overwrite=True):
     >>> linalg.init()
     >>> a = np.array([[1+1j, 2-2j, 3+3j, 4-4j], [5+5j, 6-6j, 7+7j, 8-8j]], np.complex64)
     >>> a_gpu = gpuarray.to_gpu(a)
-    >>> linalg.conj(a_gpu)
+    >>> a_gpu = linalg.conj(a_gpu)
     >>> np.all(a == np.conj(a_gpu.get()))
     True
 
@@ -942,8 +942,8 @@ def eye(N, dtype=np.float32):
     >>> e_gpu = linalg.eye(N)
     >>> np.all(e_gpu.get() == np.eye(N))
     True
-    >>> e_gpu = linalg.eye(v_gpu, np.complex64)
-    >>> np.all(e_gpu.get() == np.eye(N, np.complex64))
+    >>> e_gpu = linalg.eye(N, np.complex64)
+    >>> np.all(e_gpu.get() == np.eye(N, dtype=np.complex64))
     True
 
     """
@@ -1316,6 +1316,60 @@ def multiply(x_gpu, y_gpu, overwrite=True):
                  block=block_dim,
                  grid=grid_dim)
         return z_gpu
+
+def norm(x_gpu, handle=None):
+    """
+    Euclidean norm (2-norm) of real vector.
+
+    Computes the Euclidean norm of an array.
+
+    Parameters
+    ----------
+    x_gpu : pycuda.gpuarray.GPUArray
+        Input array.
+    handle : int
+        CUBLAS context. If no context is specified, the default handle from
+        `scikits.misc._global_cublas_handle` is used.
+
+    Returns
+    -------
+    nrm : real
+        Euclidean norm of `x`.
+
+    Examples
+    --------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import numpy as np
+    >>> import linalg
+    >>> linalg.init()
+    >>> x = np.asarray(np.random.rand(4, 4), np.float32)
+    >>> x_gpu = gpuarray.to_gpu(x)
+    >>> nrm = linalg.norm(x_gpu)
+    >>> np.allclose(nrm, np.linalg.norm(x))
+    True
+
+    """
+    
+    if handle is None:
+        handle = misc._global_cublas_handle
+
+    if len(x_gpu.shape) != 1:
+        x_gpu = x_gpu.ravel()
+
+    # Compute inner product for 1D arrays:
+    if (x_gpu.dtype == np.complex64):
+        cublas_func = cublas.cublasScnrm2
+    elif (x_gpu.dtype == np.float32):
+        cublas_func = cublas.cublasSnrm2
+    elif (x_gpu.dtype == np.complex128):
+        cublas_func = cublas.cublasDznrm2
+    elif (x_gpu.dtype == np.float64):
+        cublas_func = cublas.cublasDnrm2
+    else:
+        raise ValueError('unsupported input type')
+
+    return cublas_func(handle, x_gpu.size, x_gpu.gpudata, 1) 
 
 if __name__ == "__main__":
     import doctest
