@@ -161,7 +161,7 @@ def shutdown():
     """
 
     global _global_cublas_handle
-    cublasDestroy(_global_cublas_handle)
+    cublas.cublasDestroy(_global_cublas_handle)
     
     if _has_cula:
         cula.culaShutdown()
