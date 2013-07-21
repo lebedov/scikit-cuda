@@ -1374,6 +1374,61 @@ def norm(x_gpu, handle=None):
 
     return cublas_func(handle, x_gpu.size, x_gpu.gpudata, 1) 
 
+def scale(alpha, x_gpu, alpha_real=False, handle=None):
+    """
+    Scale a vector by a factor alpha.
+
+    Parameters
+    ----------
+    alpha : scalar
+        Scale parameter
+    x_gpu : pycuda.gpuarray.GPUArray
+        Input array.
+    alpha_real : bool
+        If `True` and `x_gpu` is complex, then one of the specialized versions 
+        `cublasCsscal` or `cublasZdscal` is used which might improve
+        performance for large arrays.  (By default, `alpha` is coerced to
+        the corresponding complex type.) 
+    handle : int
+        CUBLAS context. If no context is specified, the default handle from
+        `scikits.misc._global_cublas_handle` is used.
+
+    Examples
+    --------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import numpy as np
+    >>> import linalg
+    >>> linalg.init()
+    >>> x = np.asarray(np.random.rand(4, 4), np.float32)
+    >>> x_gpu = gpuarray.to_gpu(x)
+    >>> alpha = 2.4
+    >>> linalg.scale(alpha, x_gpu)
+    >>> np.allclose(x_gpu.get(), alpha*x)
+    True
+    """
+    
+    if handle is None:
+        handle = misc._global_cublas_handle
+
+    if len(x_gpu.shape) != 1:
+        x_gpu = x_gpu.ravel()
+
+    cublas_func = {
+        np.float32: cublas.cublasSscal,
+        np.float64: cublas.cublasDscal,
+        np.complex64: cublas.cublasCsscal if alpha_real else 
+                      cublas.cublasCscal, 
+        np.complex128: cublas.cublasZdscal if alpha_real else 
+                       cublas.cublasZscal 
+    }.get(x_gpu.dtype.type, None)
+
+    if cublas_func:
+        return cublas_func(handle, x_gpu.size, alpha, x_gpu.gpudata, 1) 
+    else:
+        raise ValueError('unsupported input type')
+
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
