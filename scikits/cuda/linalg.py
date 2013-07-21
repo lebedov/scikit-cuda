@@ -210,8 +210,8 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None):
         If 'C', compute the product of the Hermitian of `y_gpu`.
     handle : int
         CUBLAS context. If no context is specified, the default handle from
-        `scikits.misc._global_cublas_handle` is used.
-        
+        `scikits.cuda.misc._global_cublas_handle` is used.
+
     Returns
     -------
     c_gpu : pycuda.gpuarray.GPUArray, float{32,64}, or complex{64,128}
@@ -249,7 +249,7 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None):
 
     if handle is None:
         handle = misc._global_cublas_handle
-        
+
     if len(x_gpu.shape) == 1 and len(y_gpu.shape) == 1:
 
         if x_gpu.size != y_gpu.size:
@@ -352,8 +352,8 @@ def mdot(*args, **kwargs):
         Arrays to multiply.
     handle : int
         CUBLAS context. If no context is specified, the default handle from
-        `scikits.misc._global_cublas_handle` is used.
-        
+        `scikits.cuda.misc._global_cublas_handle` is used.
+
     Returns
     -------
     c_gpu : pycuda.gpuarray.GPUArray
@@ -418,7 +418,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
         If true (default), save the result in `a_gpu`.
     handle : int
         CUBLAS context. If no context is specified, the default handle from
-        `scikits.misc._global_cublas_handle` is used.
+        `scikits.cuda.misc._global_cublas_handle` is used.
 
     Returns
     -------
@@ -450,7 +450,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
 
     if handle is None:
         handle = misc._global_cublas_handle
-        
+
     if len(d_gpu.shape) != 1:
         raise ValueError('d_gpu must be a vector')
     if len(a_gpu.shape) != 2:
@@ -1124,7 +1124,7 @@ def tril(a_gpu, overwrite=True, handle=None):
         If false, return the result in a newly allocated matrix.
     handle : int
         CUBLAS context. If no context is specified, the default handle from
-        `scikits.misc._global_cublas_handle` is used.
+        `scikits.cuda.misc._global_cublas_handle` is used.
 
     Returns
     -------
