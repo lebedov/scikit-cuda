@@ -2,7 +2,6 @@
 
 TODO
 ====
-
 * Improve docstrings for the ctypes wrapper functions.
 * Add more doctests.
 * Replace computationally inefficient kernels in various functions 

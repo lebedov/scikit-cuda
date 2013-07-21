@@ -16,7 +16,6 @@ not already on your system.
 
 Obtaining the Latest Software
 -----------------------------
-
 The latest stable and development versions of ``scikits.cuda`` can be downloaded from 
 `GitHub <http://github.com/lebedov/scikits.cuda>`_
 
@@ -25,7 +24,6 @@ Online documentation for ``scikits.cuda`` is available at
 
 Installation Dependencies
 -------------------------
-
 ``scikits.cuda`` requires that the following software packages be
 installed:
 
@@ -64,7 +62,6 @@ package may work on Windows as well, but remain untested.
 
 Building and Installation
 -------------------------
-
 ``scikits.cuda`` searches for CUDA libraries in the system library
 search path when imported. You may have to modify this path (e.g., by adding the
 path to the CUDA libraries to /etc/ld.so.conf or to the

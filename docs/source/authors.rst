@@ -2,7 +2,6 @@
 
 Authors & Acknowledgments
 =========================
-
 This software was written and packaged by Lev Givon, currently at the
 Bionet Group [1]_ at Columbia University. 
 
