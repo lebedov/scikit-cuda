@@ -121,7 +121,7 @@ html_theme = 'bootstrap'
 # documentation.
 html_theme_options = {
     # Navigation bar title. (Default: ``project`` value)
-    'navbar_title': "TED",
+    'navbar_title': "scikits.cuda",
 
     # Tab name for entire site. (Default: "Site")
     'navbar_site_name': "Contents",
@@ -129,7 +129,7 @@ html_theme_options = {
     # Global TOC depth for "site" navbar tab. (Default: 1)
     # Switching to -1 shows all levels.
     'globaltoc_depth': 2,
-    
+
     # Include hidden TOCs in Site navbar?
     #
     # Note: If this is "false", you cannot have mixed ``:hidden:`` and
