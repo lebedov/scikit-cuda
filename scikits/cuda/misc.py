@@ -139,7 +139,8 @@ def init():
 
     # CUBLAS uses whatever device is being used by the host thread:
     global _global_cublas_handle
-    _global_cublas_handle = cublas.cublasCreate()
+    if not _global_cublas_handle:
+        _global_cublas_handle = cublas.cublasCreate()
 
     # culaSelectDevice() need not (and, in fact, cannot) be called
     # here because the host thread has already been bound to a GPU
@@ -161,12 +162,12 @@ def shutdown():
     """
 
     global _global_cublas_handle
-    cublas.cublasDestroy(_global_cublas_handle)
-    
-    if _has_cula:
-        cula.culaShutdown()
+    if _global_cublas_handle:
+        cublas.cublasDestroy(_global_cublas_handle)
+        _global_cublas_handle = None
 
-    _global_cublas_handle = None
+    if _has_cula:
+        cula.culaShutdown()    
     
 def get_compute_capability(dev):
     """
