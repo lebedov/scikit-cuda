@@ -1348,6 +1348,9 @@ def norm(x_gpu, handle=None):
     >>> nrm = linalg.norm(x_gpu)
     >>> np.allclose(nrm, np.linalg.norm(x))
     True
+    >>> x_gpu = gpuarray.to_gpu(np.array([3+4j, 12-84j]))
+    >>> linalg.norm(x_gpu)
+    85.0
 
     """
     

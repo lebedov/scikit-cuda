@@ -1220,12 +1220,12 @@ _libcublas.cublasScnrm2_v2.argtypes = [_types.handle,
                                       ctypes.c_int,
                                       ctypes.c_void_p]
 def cublasScnrm2(handle, n, x, incx):
-    result = cuda.cuFloatComplex()
+    result = ctypes.c_float()
     status = _libcublas.cublasScnrm2_v2(handle,
                                         n, int(x), incx,
                                         ctypes.byref(result))
     cublasCheckStatus(status)
-    return np.complex64(result.value)
+    return np.float32(result.value)
     
 cublasScnrm2.__doc__ = \
                     _NRM2_doc.substitute(precision='single-precision',
@@ -1241,12 +1241,12 @@ _libcublas.cublasDznrm2_v2.argtypes = [_types.handle,
                                        ctypes.c_int,
                                        ctypes.c_void_p]
 def cublasDznrm2(handle, n, x, incx):
-    result = cuda.cuDoubleComplex()
+    result = ctypes.c_double()
     status = _libcublas.cublasDznrm2_v2(handle,
                                         n, int(x), incx,
                                         ctypes.byref(result))
     cublasCheckStatus(status)
-    return np.complex128(result.value)
+    return np.float64(result.value)
     
 cublasDznrm2.__doc__ = \
                     _NRM2_doc.substitute(precision='double-precision',
