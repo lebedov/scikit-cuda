@@ -4,6 +4,7 @@
 Utility functions.
 """
 
+import sys
 import ctypes
 import re
 import subprocess
@@ -13,6 +14,7 @@ try:
 except ImportError:
     import re
 
+    
     def get_soname(filename):
         """
         Retrieve SONAME of shared library.
@@ -29,24 +31,33 @@ except ImportError:
 
         Notes
         -----
-        This function uses the `objdump` system command.
+        This function uses the `objdump` system command on linux and
+        'otool' on Mac OS X (darwin).
         
         """
-        
+        if sys.platform == 'darwin':
+            cmds = ['otool', '-L', filename]
+        else:
+            # Fallback to linux... what about windows?
+            cmds = ['objdump', '-p', filename]
+
         try:
-            p = subprocess.Popen(['objdump', '-p', filename],
-                                 stdout=subprocess.PIPE)
+            p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
             out = p.communicate()[0]
         except:
-            raise RuntimeError('error executing objdump')
+            raise RuntimeError('error executing {0}'.format(cmds))
+
+        if sys.platform == 'darwin':
+            result = re.search('^\s@rpath/(lib.+.dylib)', out, re.MULTILINE)
         else:
             result = re.search('^\s+SONAME\s+(.+)$',out,re.MULTILINE)
-            if result:
-                return result.group(1)
-            else:
-
-                # No SONAME found:
-                return ''
+        
+        if result:
+            return result.group(1)
+        else:
+            # No SONAME found:
+            raise RuntimeError('no library name found for {0}'.format(
+                (filename,)))
 
 else:
     import ctypes
@@ -111,7 +122,17 @@ class DL_info(ctypes.Structure):
                 ('dli_fbase', ctypes.c_void_p),
                 ('dli_sname', ctypes.c_char_p),
                 ('dli_saddr', ctypes.c_void_p)]
-libdl = ctypes.cdll.LoadLibrary('libdl.so')
+
+if sys.platform == 'linux2':
+    libdl = ctypes.cdll.LoadLibrary('libdl.so')
+elif sys.platform == 'darwin':
+    libdl = ctypes.cdll.LoadLibrary('libdl.dylib')
+elif sys.platform == 'Windows':
+    # I don't know about this... no windows box to test.
+    libdl = ctypes.cdll.LoadLibrary('dl.lib')
+else:
+    raise RuntimeError('unsupported platform')
+
 libdl.dladdr.restype = int
 libdl.dladdr.argtypes = [ctypes.c_void_p,
                          ctypes.c_void_p]

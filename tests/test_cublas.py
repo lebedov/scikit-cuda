@@ -12,6 +12,9 @@ import pycuda.autoinit
 import pycuda.gpuarray as gpuarray
 import numpy as np
 
+_SEPS = np.finfo(np.float32).eps
+_DEPS = np.finfo(np.float64).eps
+
 import scikits.cuda.cublas as cublas
 import scikits.cuda.misc as misc
     
@@ -25,6 +28,7 @@ def bptrs(a):
 
 class test_cublas(TestCase):
     def setUp(self):
+        np.random.seed(23)    # For reproducible tests.
         self.cublas_handle = cublas.cublasCreate()
 
     def tearDown(self):
@@ -47,13 +51,13 @@ class test_cublas(TestCase):
         x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)
         x_gpu = gpuarray.to_gpu(x)
         result = cublas.cublasIcamax(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1)
-        assert np.allclose(result, np.argmax(np.abs(x)))
+        assert np.allclose(result, np.argmax(np.abs(x.real) + np.abs(x.imag)))
 
     def test_cublasIzamax(self):
         x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)
         x_gpu = gpuarray.to_gpu(x)
         result = cublas.cublasIzamax(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1)
-        assert np.allclose(result, np.argmax(np.abs(x)))
+        assert np.allclose(result, np.argmax(np.abs(x.real) + np.abs(x.imag)))
 
     # ISAMIN, IDAMIN, ICAMIN, IZAMIN
     def test_cublasIsamin(self):
@@ -72,13 +76,13 @@ class test_cublas(TestCase):
         x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)
         x_gpu = gpuarray.to_gpu(x)
         result = cublas.cublasIcamin(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1)
-        assert np.allclose(result, np.argmin(np.abs(x)))
+        assert np.allclose(result, np.argmin(np.abs(x.real) + np.abs(x.imag)))
 
     def test_cublasIzamin(self):
         x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex128)
         x_gpu = gpuarray.to_gpu(x)
         result = cublas.cublasIzamin(self.cublas_handle, x_gpu.size, x_gpu.gpudata, 1)
-        assert np.allclose(result, np.argmin(np.abs(x)))
+        assert np.allclose(result, np.argmin(np.abs(x.real) + np.abs(x.imag)))
 
     # SASUM, DASUM, SCASUM, DZASUM
     def test_cublasSasum(self):
@@ -589,7 +593,7 @@ class test_cublas(TestCase):
         
         X_ = np.array([a.T for a in a_gpu.get()])
 
-        assert np.allclose(X,X_)
+        assert np.allclose(X, X_, atol=10*_SEPS)
 
     def test_cublasDgetrfBatched(self):
         from scipy.linalg import lu_factor
