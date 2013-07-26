@@ -121,7 +121,7 @@ html_theme = 'bootstrap'
 # documentation.
 html_theme_options = {
     # Navigation bar title. (Default: ``project`` value)
-    'navbar_title': "TED",
+    'navbar_title': "scikits.cuda",
 
     # Tab name for entire site. (Default: "Site")
     'navbar_site_name': "Contents",
