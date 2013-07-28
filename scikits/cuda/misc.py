@@ -11,6 +11,7 @@ import atexit
 import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
 from pycuda.compiler import SourceModule
+from pytools import memoize
 import numpy as np
 
 import cuda
@@ -167,7 +168,8 @@ def shutdown():
         cula.culaShutdown()
 
     _global_cublas_handle = None
-    
+
+@memoize
 def get_compute_capability(dev):
     """
     Get the compute capability of the specified device.
@@ -203,6 +205,7 @@ def get_current_device():
 
     return drv.Device(cuda.cudaGetDevice())
 
+@memoize
 def get_dev_attrs(dev):
     """
     Get select CUDA device attributes.
@@ -232,7 +235,7 @@ def get_dev_attrs(dev):
             (attrs[drv.device_attribute.MAX_GRID_DIM_X],
             attrs[drv.device_attribute.MAX_GRID_DIM_Y])]
 
-
+@memoize
 def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
     """
     Determine CUDA block and grid dimensions given device constraints.
