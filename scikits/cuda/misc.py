@@ -10,6 +10,8 @@ import atexit
 
 import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
+import pycuda.reduction as reduction
+import pycuda.tools as tools
 from pycuda.compiler import SourceModule
 from pytools import memoize
 import numpy as np
@@ -454,44 +456,6 @@ def inf(shape, dtype, allocator=drv.mem_alloc):
     out.fill(np.inf)
     return out
 
-maxabs_mod_template = Template("""
-#include <pycuda-complex.hpp>
-
-#if ${use_double}
-#define REAL_TYPE double
-#if ${use_complex}
-#define TYPE pycuda::complex<double>
-#else
-#define TYPE double
-#endif
-#else
-#define REAL_TYPE float
-#if ${use_complex}
-#define TYPE pycuda::complex<float>
-#else
-#define TYPE float
-#endif
-#endif
-
-// This kernel is only meant to be run in one thread;
-// N must contain the length of x:
-__global__ void maxabs(TYPE *x, REAL_TYPE *m, unsigned int N) {
-    unsigned int idx = threadIdx.x;
-
-    REAL_TYPE result, temp;
-
-    if (idx == 0) {
-        result = abs(x[0]);
-        for (unsigned int i = 1; i < N; i++) {
-           temp = abs(x[i]);
-           if (temp > result)
-               result = temp;
-        }
-        m[0] = result;
-    }
-}
-""")
-
 def maxabs(x_gpu):
     """
     Get maximum absolute value.
@@ -506,13 +470,7 @@ def maxabs(x_gpu):
     Returns
     -------
     m_gpu : pycuda.gpuarray.GPUArray
-        Length 1 array containing the maximum absolute value in
-        `x_gpu`.
-
-    Notes
-    -----
-    This function could be made faster by computing the absolute
-    values of the input array in parallel.
+        Array containing maximum absolute value in `x_gpu`.        
 
     Examples
     --------
@@ -526,24 +484,19 @@ def maxabs(x_gpu):
 
     """
 
-    use_double = int(x_gpu.dtype in [np.float64, np.complex128])
-    use_complex = int(x_gpu.dtype in [np.complex64, np.complex128])
-    real_type = np.float64 if use_double else np.float32
-
-    # Set this to False when debugging to make sure the compiled kernel is
-    # not cached:
-    cache_dir = None
-    maxabs_mod = \
-               SourceModule(maxabs_mod_template.substitute(use_double=use_double,
-                                                           use_complex=use_complex),
-                            cache_dir=cache_dir)
-
-    maxabs = maxabs_mod.get_function("maxabs")
-    m_gpu = gpuarray.empty(1, real_type)
-    maxabs(x_gpu, m_gpu, np.uint32(x_gpu.size),
-           block=(1, 1, 1), grid=(1, 1))
-
-    return m_gpu
+    try:
+        func = maxabs.cache[x_gpu.dtype]
+    except KeyError:
+        ctype = tools.dtype_to_ctype(x_gpu.dtype)
+        use_double = int(x_gpu.dtype in [np.float64, np.complex128])        
+        ret_type = np.float64 if use_double else np.float32
+        func = reduction.ReductionKernel(ret_type, neutral="0",
+                                           reduce_expr="max(a,b)", 
+                                           map_expr="abs(x[i])",
+                                           arguments="{ctype} *x".format(ctype=ctype))
+        maxabs.cache[x_gpu.dtype] = func
+    return func(x_gpu)
+maxabs.cache = {}
 
 cumsum_template = Template("""
 #include <pycuda-complex.hpp>
