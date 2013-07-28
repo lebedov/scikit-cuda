@@ -11,6 +11,7 @@ import atexit
 import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
 import pycuda.reduction as reduction
+import pycuda.scan as scan
 import pycuda.tools as tools
 from pycuda.compiler import SourceModule
 from pytools import memoize
@@ -498,39 +499,6 @@ def maxabs(x_gpu):
     return func(x_gpu)
 maxabs.cache = {}
 
-cumsum_template = Template("""
-#include <pycuda-complex.hpp>
-
-#if ${use_double}
-#define REAL_TYPE double
-#if ${use_complex}
-#define TYPE pycuda::complex<double>
-#else
-#define TYPE double
-#endif
-#else
-#define REAL_TYPE float
-#if ${use_complex}
-#define TYPE pycuda::complex<float>
-#else
-#define TYPE float
-#endif
-#endif
-
-// This kernel should only be invoked on a single thread:
-__global__ void cumsum(TYPE *x, TYPE *c, unsigned int N) {
-    unsigned int idx = threadIdx.x;
-
-    if (idx == 0) {
-        TYPE sum_curr = 0;
-        for (unsigned i = 0; i < N; i++) {
-            sum_curr += x[i];
-            c[i] = sum_curr;
-        }
-    }
-}
-""")
-
 def cumsum(x_gpu):
     """
     Cumulative sum.
@@ -549,7 +517,7 @@ def cumsum(x_gpu):
 
     Notes
     -----
-    This function could be made faster by using a parallel prefix sum.
+    Higher dimensional arrays are implicitly flattened row-wise by this function.
 
     Examples
     --------
@@ -563,19 +531,13 @@ def cumsum(x_gpu):
 
     """
 
-    use_double = int(x_gpu.dtype in [np.float64, np.complex128])
-    use_complex = int(x_gpu.dtype in [np.complex64, np.complex128])
-
-    cumsum_mod = \
-                SourceModule(cumsum_template.substitute(use_double=use_double,
-                                                        use_complex=use_complex))
-
-    cumsum = cumsum_mod.get_function("cumsum")
-    c_gpu = gpuarray.empty_like(x_gpu)
-    cumsum(x_gpu, c_gpu, np.uint32(x_gpu.size),
-           block=(1, 1, 1), grid=(1, 1))
-
-    return c_gpu
+    try:
+        func = cumsum.cache[x_gpu.dtype]
+    except KeyError:
+        func = scan.InclusiveScanKernel(x_gpu.dtype, "a+b")
+        cumsum.cache[x_gpu.dtype] = func
+    return func(x_gpu)
+cumsum.cache = {}
 
 diff_mod_template = Template("""
 #include <pycuda-complex.hpp>
