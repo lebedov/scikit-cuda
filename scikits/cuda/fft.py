@@ -119,14 +119,14 @@ def _scale_inplace(a, x_gpu):
     # Cache the kernel to avoid invoking the compiler if the
     # specified scale factor and array type have already been encountered:
     try:
-        inplace = _scale_inplace.cache[(a, x_gpu.dtype)]
+        func = _scale_inplace.cache[(a, x_gpu.dtype)]
     except KeyError:
         ctype = tools.dtype_to_ctype(x_gpu.dtype)
-        inplace = el.ElementwiseKernel(
+        func = el.ElementwiseKernel(
             "{ctype} a, {ctype} *x".format(ctype=ctype),
             "x[i] /= a")
-        _scale_inplace.cache[(a, x_gpu.dtype)] = inplace
-    inplace(x_gpu.dtype.type(a), x_gpu)
+        _scale_inplace.cache[(a, x_gpu.dtype)] = func
+    func(x_gpu.dtype.type(a), x_gpu)
 _scale_inplace.cache = {}
 
 def _fft(x_gpu, y_gpu, plan, direction, scale=None):

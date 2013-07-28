@@ -9,6 +9,8 @@ from string import Template, lower, upper
 from pycuda.compiler import SourceModule
 import pycuda.gpuarray as gpuarray
 import pycuda.driver as drv
+import pycuda.elementwise as el
+import pycuda.tools as tools
 import numpy as np
 
 import cuda
@@ -693,35 +695,7 @@ def hermitian(a_gpu):
 
     return at_gpu
 
-conj_template = Template("""
-#include <pycuda-complex.hpp>
-
-#if ${use_double}
-#define COMPLEX pycuda::complex<double>
-#else
-#define COMPLEX pycuda::complex<float>
-#endif
-
-__global__ void conj_inplace(COMPLEX *a, unsigned int N)
-{
-    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
-                       blockIdx.x*blockDim.x+threadIdx.x;
-
-    if (idx < N)
-        a[idx] = conj(a[idx]);
-}
-
-__global__ void conj(COMPLEX *a, COMPLEX *ac, unsigned int N)
-{
-    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
-                       blockIdx.x*blockDim.x+threadIdx.x;
-
-    if (idx < N)
-        ac[idx] = conj(a[idx]);
-}
-""")
-
-def conj(a_gpu, overwrite=True):
+def conj(x_gpu, overwrite=True):
     """
     Complex conjugate.
 
@@ -729,7 +703,7 @@ def conj(a_gpu, overwrite=True):
 
     Parameters
     ----------
-    a_gpu : pycuda.gpuarray.GPUArray
+    x_gpu : pycuda.gpuarray.GPUArray
         Input array of shape `(m, n)`.
     overwrite : bool
         If true (default), save the result in the specified array.
@@ -737,7 +711,7 @@ def conj(a_gpu, overwrite=True):
 
     Returns
     -------
-    ac_gpu : pycuda.gpuarray.GPUArray
+    xc_gpu : pycuda.gpuarray.GPUArray
         Conjugate of the input array. If `overwrite` is true, the
         returned matrix is the same as the input array.
 
@@ -749,49 +723,34 @@ def conj(a_gpu, overwrite=True):
     >>> import numpy as np
     >>> import linalg
     >>> linalg.init()
-    >>> a = np.array([[1+1j, 2-2j, 3+3j, 4-4j], [5+5j, 6-6j, 7+7j, 8-8j]], np.complex64)
-    >>> a_gpu = gpuarray.to_gpu(a)
-    >>> linalg.conj(a_gpu)
-    >>> np.all(a == np.conj(a_gpu.get()))
+    >>> x = np.array([[1+1j, 2-2j, 3+3j, 4-4j], [5+5j, 6-6j, 7+7j, 8-8j]], np.complex64)
+    >>> x_gpu = gpuarray.to_gpu(x)
+    >>> linalg.conj(x_gpu)
+    >>> np.all(x == np.conj(x_gpu.get()))
     True
 
     """
 
     # Don't attempt to process non-complex matrix types:
-    if a_gpu.dtype in [np.float32, np.float64]:
-        return
-
-    if a_gpu.dtype == np.complex64:
-        use_double = 0
-    elif a_gpu.dtype == np.complex128:
-        use_double = 1
-    else:
-        raise ValueError('unsupported type')
-
-    # Get block/grid sizes:
-    dev = misc.get_current_device()
-    block_dim, grid_dim = misc.select_block_grid_sizes(dev, a_gpu.shape)
-
-    # Set this to False when debugging to make sure the compiled kernel is
-    # not cached:
-    cache_dir=None
-    conj_mod = \
-             SourceModule(conj_template.substitute(use_double=use_double),
-                          cache_dir=cache_dir)
-
+    if x_gpu.dtype in [np.float32, np.float64]:
+        return x_gpu
+    
+    try:
+        func = conj.cache[x_gpu.dtype]
+    except KeyError:
+        ctype = tools.dtype_to_ctype(x_gpu.dtype)
+        func = el.ElementwiseKernel(
+                "{ctype} *x, {ctype} *y".format(ctype=ctype),
+                "y[i] = conj(x[i])")
+        conj.cache[x_gpu.dtype] = func
     if overwrite:
-        conj_inplace = conj_mod.get_function("conj_inplace")
-        conj_inplace(a_gpu, np.uint32(a_gpu.size),
-                     block=block_dim,
-                     grid=grid_dim)
-        return a_gpu
+        func(x_gpu, x_gpu)
+        return x_gpu
     else:
-        conj = conj_mod.get_function("conj")
-        ac_gpu = gpuarray.empty_like(a_gpu)
-        conj(a_gpu, ac_gpu, np.uint32(a_gpu.size),
-             block=block_dim,
-             grid=grid_dim)
-        return ac_gpu
+        y_gpu = gpuarray.empty_like(x_gpu)
+        func(x_gpu, y_gpu)
+        return y_gpu
+conj.cache = {}
 
 diag_template = Template("""
 #include <pycuda-complex.hpp>
