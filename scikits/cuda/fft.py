@@ -116,17 +116,6 @@ def _scale_inplace(a, x_gpu):
     Scale an array by a specified value in-place.
     """
 
-    ctype = tools.dtype_to_ctype(x_gpu.dtype)
-    inplace = el.ElementwiseKernel(
-        "{ctype} a, {ctype} *x".format(ctype=ctype),
-        "x[i] /= a")
-    inplace(np.cast[x_gpu.dtype](a), x_gpu)
-
-def _scale_inplace(a, x_gpu):
-    """
-    Scale an array by a specified value in-place.
-    """
-
     # Cache the kernel to avoid invoking the compiler if the
     # specified scale factor and array type have already been encountered:
     try:
