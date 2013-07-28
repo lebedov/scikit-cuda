@@ -566,6 +566,10 @@ def transpose(a_gpu):
     at_gpu : pycuda.gpuarray.GPUArray
         Transposed matrix of shape `(n, m)`.
 
+    Notes
+    -----
+    The current implementation of the transpose operation is relatively inefficient.
+
     Examples
     --------
     >>> import pycuda.autoinit
@@ -633,6 +637,10 @@ def hermitian(a_gpu):
     -------
     at_gpu : pycuda.gpuarray.GPUArray
         Transposed matrix of shape `(n, m)`.
+
+    Notes
+    -----
+    The current implementation of the transpose operation is relatively inefficient.
 
     Examples
     --------
