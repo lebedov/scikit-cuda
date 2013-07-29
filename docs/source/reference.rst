@@ -12,6 +12,7 @@ Library Wrapper Routines
    reference_cublas
    reference_cufft
    reference_cula
+   reference_pcula
 
 High-Level Routines
 -------------------

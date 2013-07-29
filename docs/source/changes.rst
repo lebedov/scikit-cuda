@@ -11,6 +11,8 @@ Release 0.043 - (under development)
 * Memoize elementwise kernel used by ifft scaling (#37).
 * Speed up misc.maxabs using reduction and kernel memoization.
 * Speed up misc.cumsum using scan and kernel memoization.
+* Speed up linalg.conj using elementwise kernel and memoization.
+* Add wrappers for experimental multi-GPU CULA routines in CULA Dense R14+.
 
 Release 0.042 - (March 10, 2013)
 --------------------------------
