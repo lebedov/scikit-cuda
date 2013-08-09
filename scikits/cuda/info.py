@@ -18,9 +18,9 @@ provide high-level functions comparable to those in the NumPy package
 High-level modules
 ------------------
 
-- autoinit	 Import this module to automatically initialize CUBLAS and CULA.
+- autoinit       Import this module to automatically initialize CUBLAS and CULA.
 - fft            Fast Fourier Transform functions.
-- integrate	 Numerical integration functions.
+- integrate      Numerical integration functions.
 - linalg         Linear algebra functions.
 - misc           Miscellaneous support functions.
 - special        Special math functions.
@@ -32,6 +32,7 @@ Low-level modules
 - cufft          Wrappers for functions in the CUFFT library.
 - cuda           Wrappers for functions in the CUDA/CUDART libraries.
 - cula           Wrappers for functions in the CULA library.
+- pcula          Wrappers for functions in the multi-GPU CULA library.
 
 .. [1] http://www.scipy.org/
 .. [2] http://www.nvidia.com/cuda
