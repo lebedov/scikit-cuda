@@ -265,6 +265,39 @@ def magma_isamax(n, dx, incx):
 
     return _libmagma.magma_isamax(n, int(dx), incx)
 
+_libmagma.magma_idamax.restype = int
+_libmagma.magma_idamax.argtypes = [ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int]
+def magma_idamax(n, dx, incx):
+    """
+    Index of maximum magnitude element.
+    """
+
+    return _libmagma.magma_idamax(n, int(dx), incx)
+
+_libmagma.magma_icamax.restype = int
+_libmagma.magma_icamax.argtypes = [ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int]
+def magma_icamax(n, dx, incx):
+    """
+    Index of maximum magnitude element.
+    """
+
+    return _libmagma.magma_icamax(n, int(dx), incx)
+
+_libmagma.magma_izamax.restype = int
+_libmagma.magma_izamax.argtypes = [ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int]
+def magma_izamax(n, dx, incx):
+    """
+    Index of maximum magnitude element.
+    """
+
+    return _libmagma.magma_izamax(n, int(dx), incx)
+
 # ISAMIN, IDAMIN, ICAMIN, IZAMIN
 _libmagma.magma_isamin.restype = int
 _libmagma.magma_isamin.argtypes = [ctypes.c_int,
@@ -277,6 +310,39 @@ def magma_isamin(n, dx, incx):
 
     return _libmagma.magma_isamin(n, int(dx), incx)
 
+_libmagma.magma_idamin.restype = int
+_libmagma.magma_idamin.argtypes = [ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int]
+def magma_idamin(n, dx, incx):
+    """
+    Index of minimum magnitude element.
+    """
+
+    return _libmagma.magma_idamin(n, int(dx), incx)
+
+_libmagma.magma_icamin.restype = int
+_libmagma.magma_icamin.argtypes = [ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int]
+def magma_icamin(n, dx, incx):
+    """
+    Index of minimum magnitude element.
+    """
+
+    return _libmagma.magma_icamin(n, int(dx), incx)
+
+_libmagma.magma_izamin.restype = int
+_libmagma.magma_izamin.argtypes = [ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int]
+def magma_izamin(n, dx, incx):
+    """
+    Index of minimum magnitude element.
+    """
+
+    return _libmagma.magma_izamin(n, int(dx), incx)
+
 # SASUM, DASUM, SCASUM, DZASUM
 _libmagma.magma_sasum.restype = int
 _libmagma.magma_sasum.argtypes = [ctypes.c_int,
@@ -288,6 +354,39 @@ def magma_sasum(n, dx, incx):
     """
 
     return _libmagma.magma_sasum(n, int(dx), incx)
+
+_libmagma.magma_dasum.restype = int
+_libmagma.magma_dasum.argtypes = [ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int]
+def magma_dasum(n, dx, incx):
+    """
+    Sum of absolute values of vector.
+    """
+
+    return _libmagma.magma_dasum(n, int(dx), incx)
+
+_libmagma.magma_scasum.restype = int
+_libmagma.magma_scasum.argtypes = [ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int]
+def magma_scasum(n, dx, incx):
+    """
+    Sum of absolute values of vector.
+    """
+
+    return _libmagma.magma_scasum(n, int(dx), incx)
+
+_libmagma.magma_dzasum.restype = int
+_libmagma.magma_dzasum.argtypes = [ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int]
+def magma_dzasum(n, dx, incx):
+    """
+    Sum of absolute values of vector.
+    """
+
+    return _libmagma.magma_dzasum(n, int(dx), incx)
 
 # SAXPY, DAXPY, CAXPY, ZAXPY
 _libmagma.magma_saxpy.restype = int
@@ -304,6 +403,52 @@ def magma_saxpy(n, alpha, dx, incx, dy, incy):
 
     _libmagma.magma_saxpy(n, alpha, int(dx), incx, int(dy), incy)
 
+_libmagma.magma_daxpy.restype = int
+_libmagma.magma_daxpy.argtypes = [ctypes.c_int,
+                                  ctypes.c_double,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int]
+def magma_daxpy(n, alpha, dx, incx, dy, incy):
+    """
+    Vector addition.
+    """
+
+    _libmagma.magma_daxpy(n, alpha, int(dx), incx, int(dy), incy)
+
+_libmagma.magma_caxpy.restype = int
+_libmagma.magma_caxpy.argtypes = [ctypes.c_int,
+                                  cuda.cuFloatComplex,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int]
+def magma_caxpy(n, alpha, dx, incx, dy, incy):
+    """
+    Vector addition.
+    """
+
+    _libmagma.magma_caxpy(n, ctypes.byref(cuda.cuFloatComplex(alpha.real,
+                                                              alpha.imag)), 
+                          int(dx), incx, int(dy), incy)
+
+_libmagma.magma_zaxpy.restype = int
+_libmagma.magma_zaxpy.argtypes = [ctypes.c_int,
+                                  cuda.cuDoubleComplex,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int]
+def magma_zaxpy(n, alpha, dx, incx, dy, incy):
+    """
+    Vector addition.
+    """
+
+    _libmagma.magma_zaxpy(n, ctypes.byref(cuda.cuDoubleComplex(alpha.real,
+                                                               alpha.imag)), 
+                          int(dx), incx, int(dy), incy)
+
 # SCOPY, DCOPY, CCOPY, ZCOPY
 _libmagma.magma_scopy.restype = int
 _libmagma.magma_scopy.argtypes = [ctypes.c_int,
@@ -318,6 +463,45 @@ def magma_scopy(n, dx, incx, dy, incy):
 
     _libmagma.magma_scopy(n, int(dx), incx, int(dy), incy)
 
+_libmagma.magma_dcopy.restype = int
+_libmagma.magma_dcopy.argtypes = [ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int]
+def magma_dcopy(n, dx, incx, dy, incy):
+    """
+    Vector copy.
+    """
+
+    _libmagma.magma_dcopy(n, int(dx), incx, int(dy), incy)
+
+_libmagma.magma_ccopy.restype = int
+_libmagma.magma_ccopy.argtypes = [ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int]
+def magma_ccopy(n, dx, incx, dy, incy):
+    """
+    Vector copy.
+    """
+
+    _libmagma.magma_ccopy(n, int(dx), incx, int(dy), incy)
+
+_libmagma.magma_zcopy.restype = int
+_libmagma.magma_zcopy.argtypes = [ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int]
+def magma_zcopy(n, dx, incx, dy, incy):
+    """
+    Vector copy.
+    """
+
+    _libmagma.magma_zcopy(n, int(dx), incx, int(dy), incy)
+
 # SDOT, DDOT, CDOTU, CDOTC, ZDOTU, ZDOTC
 _libmagma.magma_sdot.restype = ctypes.c_float
 _libmagma.magma_sdot.argtypes = [ctypes.c_int,
@@ -330,7 +514,72 @@ def magma_sdot(n, dx, incx, dy, incy):
     Vector dot product.
     """
 
-    float _libmagma.magma_sdot(n, int(dx), incx, int(dy), incy)
+    return _libmagma.magma_sdot(n, int(dx), incx, int(dy), incy)
+
+_libmagma.magma_ddot.restype = ctypes.c_double
+_libmagma.magma_ddot.argtypes = [ctypes.c_int,
+                                 ctypes.c_void_p,
+                                 ctypes.c_int,
+                                 ctypes.c_void_p,
+                                 ctypes.c_int]
+def magma_ddot(n, dx, incx, dy, incy):
+    """
+    Vector dot product.
+    """
+
+    return _libmagma.magma_ddot(n, int(dx), incx, int(dy), incy)
+
+_libmagma.magma_cdotc.restype = cuda.cuFloatComplex
+_libmagma.magma_cdotc.argtypes = [ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int]
+def magma_cdotc(n, dx, incx, dy, incy):
+    """
+    Vector dot product.
+    """
+
+    return _libmagma.magma_cdotc(n, int(dx), incx, int(dy), incy)
+
+_libmagma.magma_cdotu.restype = cuda.cuFloatComplex
+_libmagma.magma_cdotu.argtypes = [ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int]
+def magma_cdotu(n, dx, incx, dy, incy):
+    """
+    Vector dot product.
+    """
+
+    return _libmagma.magma_cdotu(n, int(dx), incx, int(dy), incy)
+
+_libmagma.magma_zdotc.restype = cuda.cuDoubleComplex
+_libmagma.magma_zdotc.argtypes = [ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int]
+def magma_zdotc(n, dx, incx, dy, incy):
+    """
+    Vector dot product.
+    """
+
+    return _libmagma.magma_zdotc(n, int(dx), incx, int(dy), incy)
+
+_libmagma.magma_zdotu.restype = cuda.cuDoubleComplex
+_libmagma.magma_zdotu.argtypes = [ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int]
+def magma_zdotu(n, dx, incx, dy, incy):
+    """
+    Vector dot product.
+    """
+
+    return _libmagma.magma_zdotu(n, int(dx), incx, int(dy), incy)
 
 # SNRM2, DNRM2, SCNRM2, DZNRM2
 _libmagma.magma_snrm2.restype = ctypes.c_float
@@ -342,7 +591,40 @@ def magma_snrm2(n, dx, incx):
     Euclidean norm (2-norm) of vector.
     """
 
-    float _libmagma.magma_snrm2(n, int(dx), incx)
+    return _libmagma.magma_snrm2(n, int(dx), incx)
+
+_libmagma.magma_dnrm2.restype = ctypes.c_double
+_libmagma.magma_dnrm2.argtypes = [ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int]
+def magma_dnrm2(n, dx, incx):
+    """
+    Euclidean norm (2-norm) of vector.
+    """
+
+    return _libmagma.magma_dnrm2(n, int(dx), incx)
+
+_libmagma.magma_scnrm2.restype = ctypes.c_float
+_libmagma.magma_scnrm2.argtypes = [ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int]
+def magma_scnrm2(n, dx, incx):
+    """
+    Euclidean norm (2-norm) of vector.
+    """
+
+    return _libmagma.magma_scnrm2(n, int(dx), incx)
+
+_libmagma.magma_dznrm2.restype = ctypes.c_double
+_libmagma.magma_dznrm2.argtypes = [ctypes.c_int,
+                                   ctypes.c_void_p,
+                                   ctypes.c_int]
+def magma_dznrm2(n, dx, incx):
+    """
+    Euclidean norm (2-norm) of vector.
+    """
+
+    return _libmagma.magma_dznrm2(n, int(dx), incx)
 
 # SROT, DROT, CROT, CSROT, ZROT, ZDROT
 _libmagma.magma_srot.argtypes = [ctypes.c_int,

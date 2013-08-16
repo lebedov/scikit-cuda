@@ -29,7 +29,8 @@ needs_sphinx = '1.0'
 extensions = ['sphinx.ext.autodoc',
               'sphinx.ext.autosummary',
               'sphinx.ext.intersphinx',
-              'sphinx.ext.pngmath',                 
+              'sphinx.ext.pngmath',
+              'sphinx.ext.viewcode',
               'numpydoc']
 try:
     import matplotlib.sphinxext.plot_directive
