@@ -221,7 +221,7 @@ def cublasGetVersion(handle):
 # XXX This approach to obtaining the CUBLAS version number
 # may break Windows/MacOSX compatibility XXX
 _cublas_version = int(re.search('[\D\.]\.+(\d)',
-      utils.get_soname(utils.find_lib_path(_libcublas.cublasGetVersion_v2))).group(1) + '000')
+      utils.get_soname(utils.find_lib_path('cublas'))).group(1) + '000')
 
 class _cublas_version_req(object):
     """

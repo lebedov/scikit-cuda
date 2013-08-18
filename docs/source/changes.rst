@@ -13,6 +13,7 @@ Release 0.043 - (under development)
 * Speed up misc.cumsum using scan and kernel memoization.
 * Speed up linalg.conj using elementwise kernel and memoization.
 * Add wrappers for experimental multi-GPU CULA routines in CULA Dense R14+.
+* Use ldconfig to find library paths rather than libdl (#39).
 
 Release 0.042 - (March 10, 2013)
 --------------------------------

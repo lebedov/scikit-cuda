@@ -5,8 +5,10 @@ Utility functions.
 """
 
 import ctypes
+import os
 import re
 import subprocess
+import struct
 
 try:
     import elftools
@@ -106,32 +108,49 @@ else:
         # No SONAME found:
         return ''
 
-class DL_info(ctypes.Structure):
-    _fields_ = [('dli_fname', ctypes.c_char_p),
-                ('dli_fbase', ctypes.c_void_p),
-                ('dli_sname', ctypes.c_char_p),
-                ('dli_saddr', ctypes.c_void_p)]
-libdl = ctypes.cdll.LoadLibrary('libdl.so')
-libdl.dladdr.restype = int
-libdl.dladdr.argtypes = [ctypes.c_void_p,
-                         ctypes.c_void_p]
-    
-def find_lib_path(func):
+def find_lib_path(name):
     """
-    Find full path of a shared library containing some function.
+    Find full path of a shared library.
 
     Parameter
     ---------
-    func : ctypes function pointer
-        Pointer to function to search for.
-        
+    name : str
+        Link name of library, e.g., cublas for libcublas.so.*.
+
     Returns
     -------
     path : str
         Full path to library.
 
+    Notes
+    -----
+    Code adapted from ctyles.util module.
+
     """
 
-    dl_info = DL_info()            
-    libdl.dladdr(func, ctypes.byref(dl_info))
-    return dl_info.dli_fname
+    uname = os.uname()[4]
+    if uname.startswith("arm"):
+        uname = "arm"
+    if struct.calcsize('l') == 4:
+        machine = uname + '-32'
+    else:
+        machine = uname + '-64'
+    mach_map = {
+        'x86_64-64': 'libc6,x86-64',
+        'ppc64-64': 'libc6,64bit',
+        'sparc64-64': 'libc6,64bit',
+        's390x-64': 'libc6,64bit',
+        'ia64-64': 'libc6,IA-64',
+        'arm-32': 'libc6(,hard-float)?',
+        }
+    abi_type = mach_map.get(machine, 'libc6')
+    expr = r'\s+lib%s\.[^\s]+\s+\(%s.*\=\>\s(.+)' % (re.escape(name), abi_type)
+    f = os.popen('/sbin/ldconfig -p 2>/dev/null')
+    try:
+        data = f.read()
+    finally:
+        f.close()
+    res = re.search(expr, data)
+    if not res:
+        return None
+    return res.group(1)
