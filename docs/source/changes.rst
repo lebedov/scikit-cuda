@@ -14,6 +14,7 @@ Release 0.043 - (under development)
 * Speed up linalg.conj using elementwise kernel and memoization.
 * Add wrappers for experimental multi-GPU CULA routines in CULA Dense R14+.
 * Use ldconfig to find library paths rather than libdl (#39).
+* Fix win32 platform detection.
 
 Release 0.042 - (March 10, 2013)
 --------------------------------
