@@ -12,7 +12,7 @@ if sys.platform == 'linux2':
     _libcudart_libname_list = ['libcudart.so', 'libcudart.so.3', 'libcudart.so.4']
 elif sys.platform == 'darwin':
     _libcudart_libname_list = ['libcudart.dylib']
-elif sys.platform == 'Windows':
+elif sys.platform == 'win32':
     _libcudart_libname_list = ['cudart.lib']
 else:
     raise RuntimeError('unsupported platform')
@@ -27,7 +27,7 @@ for _libcudart_libname in _libcudart_libname_list:
     else:
         break
 if _libcudart == None:
-    OSError('CUDA runtime library not found')
+    raise OSError('CUDA runtime library not found')
 
 # Code adapted from PARRET:
 def POINTER(obj):
