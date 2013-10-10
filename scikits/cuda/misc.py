@@ -10,6 +10,7 @@ import atexit
 
 import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
+import pycuda.elementwise as elementwise
 import pycuda.reduction as reduction
 import pycuda.scan as scan
 import pycuda.tools as tools
@@ -539,35 +540,6 @@ def cumsum(x_gpu):
     return func(x_gpu)
 cumsum.cache = {}
 
-diff_mod_template = Template("""
-#include <pycuda-complex.hpp>
-
-#if ${use_double}
-#define REAL_TYPE double
-#if ${use_complex}
-#define TYPE pycuda::complex<double>
-#else
-#define TYPE double
-#endif
-#else
-#define REAL_TYPE float
-#if ${use_complex}
-#define TYPE pycuda::complex<float>
-#else
-#define TYPE float
-#endif
-#endif
-
-__global__ void diff(TYPE *x, TYPE *y, unsigned int N) {
-    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
-                       blockIdx.x*blockDim.x+threadIdx.x;
-
-    if (idx < N-1) {
-        y[idx] = x[idx+1]-x[idx];
-    }
-}
-""")
-
 def diff(x_gpu):
     """
     Calculate the discrete difference.
@@ -600,33 +572,18 @@ def diff(x_gpu):
 
     """
 
-    if len(x_gpu.shape) > 1:
-        raise ValueError('input must be 1D vector')
-
-    use_double = int(x_gpu.dtype in [np.float64, np.complex128])
-    use_complex = int(x_gpu.dtype in [np.complex64, np.complex128])
-
-    # Get block/grid sizes:
-    dev = get_current_device()
-    block_dim, grid_dim = select_block_grid_sizes(dev, x_gpu.shape)
-
-    # Set this to False when debugging to make sure the compiled kernel is
-    # not cached:
-    cache_dir=None
-    diff_mod = \
-             SourceModule(diff_mod_template.substitute(use_double=use_double,
-                                                       use_complex=use_complex),
-                          cache_dir=cache_dir)
-    diff = diff_mod.get_function("diff")
-
-    N = x_gpu.size
-    y_gpu = gpuarray.empty((N-1,), x_gpu.dtype)
-    diff(x_gpu, y_gpu, np.uint32(N),
-         block=block_dim,
-         grid=grid_dim)
-
+    y_gpu = gpuarray.empty(len(x_gpu)-1, x_gpu.dtype)
+    try:
+        func = diff.cache[x_gpu.dtype]
+    except KeyError:
+        ctype = tools.dtype_to_ctype(x_gpu.dtype)
+        func = elementwise.ElementwiseKernel("{ctype} *a, {ctype} *b".format(ctype=ctype),
+                                             "b[i] = a[i+1]-a[i]")
+        diff.cache[x_gpu.dtype] = func
+    func(x_gpu, y_gpu)
     return y_gpu
-
+diff.cache = {}
+        
 # List of available numerical types provided by numpy:
 num_types = [np.typeDict[t] for t in \
              np.typecodes['AllInteger']+np.typecodes['AllFloat']]
