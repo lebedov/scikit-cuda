@@ -2,8 +2,7 @@
 
 Authors & Acknowledgments
 =========================
-This software was written and packaged by Lev Givon, currently at the
-Bionet Group [1]_ at Columbia University. 
+This software was written and packaged by Lev Givon [1]_. 
 
 Special thanks are due to the following parties for their contributions:
 
@@ -18,5 +17,5 @@ Special thanks are due to the following parties for their contributions:
 - Stefan van der Walt - bug fixes 
 - Yiyin Zhou - patches, bug reports, and function wrappers 
 
-.. [1] http://bionet.ee.columbia.edu/
+.. [1] http://www.columbia.edu/~lev/
 .. [2] http://www.mathcs.emory.edu/~yfan/PARRET
