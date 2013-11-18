@@ -154,9 +154,16 @@ class culaBadStorageFormat(culaError):
         pass
     pass
 
-class culaUnspecifiedError(culaError):
+class culaInvalidReferenceHandle(culaError):
     try:
         __doc__ = culaGetStatusString(12)
+    except:
+        pass
+    pass
+
+class culaUnspecifiedError(culaError):
+    try:
+        __doc__ = culaGetStatusString(13)
     except:
         pass
     pass
@@ -173,6 +180,9 @@ culaExceptions = {
     8: culaDataError,
     9: culaBlasError,
     10: culaRuntimeError,
+    11: culaBadStorageFormat,
+    12: culaInvalidReferenceHandle,
+    13: culaUnspecifiedError,
     }
 
 # CULA functions:
