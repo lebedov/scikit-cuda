@@ -13,6 +13,7 @@ Special thanks are due to the following parties for their contributions:
 - Teodor Mihai Moldovan - CUBLAS 5 bindings
 - Lars Pastewka - FFT tests and FFTW compatibility mode configuration
 - Alex Rubinsteyn - Support for CULA Dense Free R17
+- Steve Taylor - Cholesky factorization/solve functions
 - Rob Turetsky - useful feedback
 - Stefan van der Walt - bug fixes 
 - Yiyin Zhou - patches, bug reports, and function wrappers 
