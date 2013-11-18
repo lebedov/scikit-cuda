@@ -195,9 +195,9 @@ def cho_factor(a_gpu, uplo='L'):
     """
     Cholesky factorisation
 
-    Performs an in-place cholesky factorisation on the matrix 'a' 
-    such that a = x*x.T or x.T*x, if the lower='L' or upper='U'
-    triangle of 'a' is used, respectively.
+    Performs an in-place cholesky factorisation on the matrix `a`
+    such that `a = x*x.T` or `x.T*x`, if the lower='L' or upper='U'
+    triangle of `a` is used, respectively.
 
     Parameters
     ----------
@@ -207,7 +207,8 @@ def cho_factor(a_gpu, uplo='L'):
 
     Returns
     -------
-    a: Cholesky factorised matrix
+    a: pycuda.gpuarray.GPUArray
+        Cholesky factorised matrix
 
     Notes
     -----
@@ -219,12 +220,15 @@ def cho_factor(a_gpu, uplo='L'):
     >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
     >>> import numpy as np
+    >>> import scipy.linalg
     >>> import linalg
     >>> linalg.init()
     >>> a = np.array([[3.0,0.0],[0.0,7.0]])
     >>> a = np.asarray(a, np.float64)
     >>> a_gpu = gpuarray.to_gpu(a)
     >>> cho_factor(a_gpu)
+    >>> np.allclose(a_gpu.get(), scipy.linalg.cho_factor(a)[0])
+    True
 
     """
 
@@ -273,10 +277,10 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
     """
     Cholesky solver
 
-    Solve a system of equations via cholesky factorisation,
-    i.e. a*x = b.
-    Overwrites 'b' to give 'inv(a)*b', and overwrites the chosen triangle
-    of 'a' with factorised triangle
+    Solve a system of equations via cholesky factorization,
+    i.e. `a*x = b`.
+    Overwrites `b` to give `inv(a)*b`, and overwrites the chosen triangle
+    of `a` with factorized triangle
 
     Parameters
     ----------
@@ -284,11 +288,13 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
         Input matrix of shape `(m, m)` to decompose.
     b : pycuda.gpuarray.GPUArray
         Input matrix of shape `(m, 1)` to decompose.
-    uplo: use the upper='U' or lower='L' (default) triangle of 'a'
+    uplo: chr
+        use the upper='U' or lower='L' (default) triangle of `a`.
 
     Returns
     -------
-    a: Cholesky factorised matrix
+    a: pycuda.gpuarray.GPUArray
+        Cholesky factorised matrix
 
     Notes
     -----
@@ -300,6 +306,7 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
     >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
     >>> import numpy as np
+    >>> import scipy.linalg
     >>> import linalg
     >>> linalg.init()
     >>> a = np.array([[3.0,0.0],[0.0,7.0]])
@@ -309,6 +316,8 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
     >>> b = np.asarray(b, np.float64)
     >>> b_gpu  = gpuarray.to_gpu(b)
     >>> cho_solve(a_gpu,b_gpu)
+    >>> np.allclose(b_gpu.get(), scipy.linalg.cho_solve(scipy.linalg.cho_factor(a), b))
+    True
 
     """
 
@@ -319,13 +328,13 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
     real_type = np.float32
     if cula._libcula_toolkit == 'standard':
         if data_type == np.complex64:
-            cula_func = cula._libcula.culaDeviceCpotrf
+            cula_func = cula._libcula.culaDeviceCposv
         elif data_type == np.float32:
-            cula_func = cula._libcula.culaDeviceSpotrf
+            cula_func = cula._libcula.culaDeviceSposv
         if data_type == np.complex128:
-            cula_func = cula._libcula.culaDeviceZpotrf
+            cula_func = cula._libcula.culaDeviceZposv
         elif data_type == np.float64:
-            cula_func = cula._libcula.culaDeviceDpotrf
+            cula_func = cula._libcula.culaDeviceDposv
         else:
             raise ValueError('unsupported type')
         real_type = np.float64
@@ -345,14 +354,16 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
     ldb = lda
 
     # Assuming we are only solving for a vector. Hence, nrhs = 1
-    status = cula_func(uplo, na, 1, int(a_gpu.gpudata), lda, int(b_gpu.gpudata), ldb)
+    status = cula_func(uplo, na, 1, int(a_gpu.gpudata), lda, 
+                       int(b_gpu.gpudata), ldb)
 
     cula.culaCheckStatus(status)
 
     # Free internal CULA memory:
     cula.culaFreeBuffers()
 
-    # In-place operation. No return matrix. Result is stored in the input matrix and in the input vector.
+    # In-place operation. No return matrix. Result is stored in the input matrix
+    # and in the input vector.
 
 
 def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None):
@@ -890,8 +901,8 @@ def conj(x_gpu, overwrite=True):
     >>> linalg.init()
     >>> x = np.array([[1+1j, 2-2j, 3+3j, 4-4j], [5+5j, 6-6j, 7+7j, 8-8j]], np.complex64)
     >>> x_gpu = gpuarray.to_gpu(x)
-    >>> linalg.conj(x_gpu)
-    >>> np.all(x == np.conj(x_gpu.get()))
+    >>> y_gpu = linalg.conj(x_gpu)
+    >>> np.all(x == np.conj(y_gpu.get()))
     True
 
     """
@@ -1083,6 +1094,8 @@ def eye(N, dtype=np.float32):
     ----------
     N : int
         Number of rows or columns in the output matrix.
+    dtype : type
+        Matrix data type.
 
     Returns
     -------
@@ -1102,8 +1115,8 @@ def eye(N, dtype=np.float32):
     >>> e_gpu = linalg.eye(N)
     >>> np.all(e_gpu.get() == np.eye(N))
     True
-    >>> e_gpu = linalg.eye(v_gpu, np.complex64)
-    >>> np.all(e_gpu.get() == np.eye(N, np.complex64))
+    >>> e_gpu = linalg.eye(N, np.complex64)
+    >>> np.all(e_gpu.get() == np.eye(N, dtype=np.complex64))
     True
 
     """

@@ -9,6 +9,8 @@ Linear Algebra Routines
    :toctree: generated/
    :nosignatures:
 
+   cho_factor
+   cho_solve
    conj
    diag
    dot

@@ -6,8 +6,8 @@ Change Log
 Release 0.043 - (under development)
 -----------------------------------
 * Improve support for latest NVIDIA GPUs.
-* Add more wrappers for CUBLAS 5 functions (enh. by Teodor Moldovan)
-* Add support for CULA Dense Free R17 (enh. by Alex Rubinsteyn)
+* Add more wrappers for CUBLAS 5 functions (enh. by Teodor Moldovan).
+* Add support for CULA Dense Free R17 (enh. by Alex Rubinsteyn).
 * Memoize elementwise kernel used by ifft scaling (#37).
 * Speed up misc.maxabs using reduction and kernel memoization.
 * Speed up misc.cumsum using scan and kernel memoization.
@@ -15,6 +15,7 @@ Release 0.043 - (under development)
 * Add wrappers for experimental multi-GPU CULA routines in CULA Dense R14+.
 * Use ldconfig to find library paths rather than libdl (#39).
 * Fix win32 platform detection.
+* Add Cholesky factorization/solve routines (enh. by Steve Taylor).
 
 Release 0.042 - (March 10, 2013)
 --------------------------------
