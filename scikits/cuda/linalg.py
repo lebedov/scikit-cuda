@@ -190,6 +190,171 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     else:
         return s_gpu
 
+
+def cho_factor(a_gpu, uplo='L'):
+    """
+    Cholesky factorisation
+
+    Performs an in-place cholesky factorisation on the matrix 'a' 
+    such that a = x*x.T or x.T*x, if the lower='L' or upper='U'
+    triangle of 'a' is used, respectively.
+
+    Parameters
+    ----------
+    a : pycuda.gpuarray.GPUArray
+        Input matrix of shape `(m, m)` to decompose.
+    uplo: use the upper='U' or lower='L' (default) triangle of 'a'
+
+    Returns
+    -------
+    a: Cholesky factorised matrix
+
+    Notes
+    -----
+    Double precision is only supported if the standard version of the
+    CULA Dense toolkit is installed.
+
+    Examples
+    --------
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import pycuda.autoinit
+    >>> import numpy as np
+    >>> import linalg
+    >>> linalg.init()
+    >>> a = np.array([[3.0,0.0],[0.0,7.0]])
+    >>> a = np.asarray(a, np.float64)
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> cho_factor(a_gpu)
+
+    """
+
+    if not _has_cula:
+        raise NotImplementError('CULA not installed')
+
+    data_type = a_gpu.dtype.type
+    real_type = np.float32
+    if cula._libcula_toolkit == 'standard':
+        if data_type == np.complex64:
+            cula_func = cula._libcula.culaDeviceCpotrf
+        elif data_type == np.float32:
+            cula_func = cula._libcula.culaDeviceSpotrf
+        if data_type == np.complex128:
+            cula_func = cula._libcula.culaDeviceZpotrf
+        elif data_type == np.float64:
+            cula_func = cula._libcula.culaDeviceDpotrf
+        else:
+            raise ValueError('unsupported type')
+        real_type = np.float64
+    else:
+        raise ValueError('Cholesky factorisation not included in CULA Dense Free version')
+
+    # Since CUDA assumes that arrays are stored in column-major
+    # format, the input matrix is assumed to be transposed:
+    n, m = a_gpu.shape
+    square = (n == m)
+
+    if (n!=m):
+        raise ValueError('Matrix must be symmetric positive-definite')
+
+    # Set the leading dimension of the input matrix:
+    lda = max(1, m)
+
+    status = cula_func(uplo, n, int(a_gpu.gpudata), lda)
+
+    cula.culaCheckStatus(status)
+
+    # Free internal CULA memory:
+    cula.culaFreeBuffers()
+
+    # In-place operation. No return matrix. Result is stored in the input matrix.
+
+
+def cho_solve(a_gpu, b_gpu, uplo='L'):
+    """
+    Cholesky solver
+
+    Solve a system of equations via cholesky factorisation,
+    i.e. a*x = b.
+    Overwrites 'b' to give 'inv(a)*b', and overwrites the chosen triangle
+    of 'a' with factorised triangle
+
+    Parameters
+    ----------
+    a : pycuda.gpuarray.GPUArray
+        Input matrix of shape `(m, m)` to decompose.
+    b : pycuda.gpuarray.GPUArray
+        Input matrix of shape `(m, 1)` to decompose.
+    uplo: use the upper='U' or lower='L' (default) triangle of 'a'
+
+    Returns
+    -------
+    a: Cholesky factorised matrix
+
+    Notes
+    -----
+    Double precision is only supported if the standard version of the
+    CULA Dense toolkit is installed.
+
+    Examples
+    --------
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import pycuda.autoinit
+    >>> import numpy as np
+    >>> import linalg
+    >>> linalg.init()
+    >>> a = np.array([[3.0,0.0],[0.0,7.0]])
+    >>> a = np.asarray(a, np.float64)
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> b = np.array([11.,19.])
+    >>> b = np.asarray(b, np.float64)
+    >>> b_gpu  = gpuarray.to_gpu(b)
+    >>> cho_solve(a_gpu,b_gpu)
+
+    """
+
+    if not _has_cula:
+        raise NotImplementError('CULA not installed')
+
+    data_type = a_gpu.dtype.type
+    real_type = np.float32
+    if cula._libcula_toolkit == 'standard':
+        if data_type == np.complex64:
+            cula_func = cula._libcula.culaDeviceCpotrf
+        elif data_type == np.float32:
+            cula_func = cula._libcula.culaDeviceSpotrf
+        if data_type == np.complex128:
+            cula_func = cula._libcula.culaDeviceZpotrf
+        elif data_type == np.float64:
+            cula_func = cula._libcula.culaDeviceDpotrf
+        else:
+            raise ValueError('unsupported type')
+        real_type = np.float64
+    else:
+        raise ValueError('Cholesky factorisation not included in CULA Dense Free version')
+
+    # Since CUDA assumes that arrays are stored in column-major
+    # format, the input matrix is assumed to be transposed:
+    na, ma = a_gpu.shape
+    square = (na == ma)
+    
+    if (na!=ma):
+        raise ValueError('Matrix must be symmetric positive-definite')
+
+    # Set the leading dimension of the input matrix:
+    lda = max(1, ma)
+    ldb = lda
+
+    # Assuming we are only solving for a vector. Hence, nrhs = 1
+    status = cula_func(uplo, na, 1, int(a_gpu.gpudata), lda, int(b_gpu.gpudata), ldb)
+
+    cula.culaCheckStatus(status)
+
+    # Free internal CULA memory:
+    cula.culaFreeBuffers()
+
+    # In-place operation. No return matrix. Result is stored in the input matrix and in the input vector.
+
+
 def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None):
     """
     Dot product of two arrays.
@@ -782,21 +947,31 @@ __global__ void diag(FLOAT *v, FLOAT *d, int N) {
 
 def diag(v_gpu):
     """
-    Construct a diagonal matrix.
+    Construct a diagonal matrix if input array is one-dimensional,
+    or extracts diagonal entries of a two-dimensional array.
 
+    --- If input-array is one-dimensional: 
     Constructs a matrix in device memory whose diagonal elements
     correspond to the elements in the specified array; all
     non-diagonal elements are set to 0.
+    
+    --- If input-array is two-dimensional: 
+    Constructs an array in device memory whose elements
+    correspond to the elements along the main-diagonal of the specified 
+    array.
 
     Parameters
     ----------
     v_obj : pycuda.gpuarray.GPUArray
-        Input array of length `n`.
+            Input array of shape `(n,m)`.
 
     Returns
     -------
     d_gpu : pycuda.gpuarray.GPUArray
-        Diagonal matrix of dimensions `[n, n]`.
+            ---If v_obj has shape `(n,1)`, output is 
+               diagonal matrix of dimensions `[n, n]`.
+            ---If v_obj has shape `(n,m)`, output is 
+               array of length `min(n,m)`.
 
     Examples
     --------
@@ -816,6 +991,11 @@ def diag(v_gpu):
     >>> d_gpu = linalg.diag(v_gpu)
     >>> np.all(d_gpu.get() == np.diag(v))
     True
+    >>> v = np.array([[1., 2., 3.],[4., 5., 6.]], np.float64)
+    >>> v_gpu = gpuarray.to_gpu(v)
+    >>> d_gpu = linalg.diag(v_gpu)
+    >>> d_gpu
+    array([ 1.,  5.])
 
     """
 
@@ -823,8 +1003,21 @@ def diag(v_gpu):
                            np.complex128]:
         raise ValueError('unrecognized type')
 
-    if len(v_gpu.shape) > 1:
-        raise ValueError('input array cannot be multidimensional')
+    if (len(v_gpu.shape) > 1) and (len(v_gpu.shape) < 3):
+        # Since CUDA assumes that arrays are stored in column-major
+        # format, the input matrix is assumed to be transposed:
+        n, m = v_gpu.shape
+        square = (n == m)
+
+        # Allocate the output array
+        d_gpu = gpuarray.empty(min(m, n), v_gpu.dtype.type)
+
+        diag_kernel = el.ElementwiseKernel("double *x, double *y, int z", "y[i] = x[(z+1)*i]", "diakernel")
+        diag_kernel(v_gpu,d_gpu,max(m,n))
+
+        return d_gpu
+    elif len(v_gpu.shape) >= 3:
+        raise ValueError('input array cannot have greater than 2-dimensions')
 
     use_double = int(v_gpu.dtype in [np.float64, np.complex128])
     use_complex = int(v_gpu.dtype in [np.complex64, np.complex128])
