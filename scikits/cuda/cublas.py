@@ -3868,24 +3868,24 @@ def cublasZhpr(handle, uplo, n, alpha, x, incx, AP):
     cublasCheckStatus(status)
 
 # CHPR2, ZHPR2
-_libcublas.cublasChpr2.restype = int
-_libcublas.cublasChpr2.argtypes = [ctypes.c_int,
-                                   ctypes.c_int,
-                                   ctypes.c_int,                                   
-                                   ctypes.c_void_p,
-                                   ctypes.c_void_p,
-                                   ctypes.c_int,
-                                   ctypes.c_void_p,
-                                   ctypes.c_int,
-                                   ctypes.c_void_p]
+_libcublas.cublasChpr2_v2.restype = int
+_libcublas.cublasChpr2_v2.argtypes = [ctypes.c_int,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     ctypes.c_void_p,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int,
+                                     ctypes.c_void_p,
+                                     ctypes.c_int,
+                                     ctypes.c_void_p]
 def cublasChpr2(handle, uplo, n, alpha, x, inx, y, incy, AP):
     """
     Rank-2 operation on Hermitian-packed matrix.
-    
+
     """
 
-    status = _libcublas.cublasChpr2_v2(handle, 
-                                       _CUBLAS_FILL_MODE[uplo], 
+    status = _libcublas.cublasChpr2_v2(handle,
+                                       _CUBLAS_FILL_MODE[uplo],
                                        n, ctypes.byref(cuda.cuFloatComplex(alpha.real,
                                                                            alpha.imag)),
                                        int(x), incx, int(y), incy, int(AP))
@@ -3894,7 +3894,7 @@ def cublasChpr2(handle, uplo, n, alpha, x, inx, y, incy, AP):
 _libcublas.cublasZhpr2_v2.restype = int
 _libcublas.cublasZhpr2_v2.argtypes = [ctypes.c_int,
                                       ctypes.c_int,
-                                      ctypes.c_int,                                      
+                                      ctypes.c_int,
                                       ctypes.c_void_p,
                                       ctypes.c_void_p,
                                       ctypes.c_int,
