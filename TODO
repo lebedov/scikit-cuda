@@ -3,7 +3,8 @@
 TODO
 ====
 * Improve docstrings for the ctypes wrapper functions.
-* Add more doctests.
+* Improve code coverage of unit tests.
 * Replace computationally inefficient kernels in various functions 
   with more efficient algorithms.
+* Complete CUSPARSE bindings.
 * Add bindings for more useful CUDA-based libraries (e.g., MAGMA, CUDAPP).
