@@ -1129,10 +1129,8 @@ _libmagma.magma_sgeqrf_ooc.argtypes = [ctypes.c_int,
                                        ctypes.c_void_p,
                                        ctypes.c_void_p,
                                        ctypes.c_int,
-                                       ctypes.c_void_p,
-                                       ctypes.c_int,
                                        ctypes.c_void_p]
-def magma_sgeqrf_ooc(m, n, A, lda, tau, work, lwork, info, n, nrhs):
+def magma_sgeqrf_ooc(m, n, A, lda, tau, work, lwork, info):
                  
     """
     QR factorization (ooc).
@@ -1140,7 +1138,7 @@ def magma_sgeqrf_ooc(m, n, A, lda, tau, work, lwork, info, n, nrhs):
     
     status = _libmagma.magma_sgeqrf_ooc(m, n, int(A), lda,
                                         int(tau), int(work), 
-                                        lwork, int(info), n, nrhs)
+                                        lwork, int(info))
     magmaCheckStatus(status)
 
 # SGESV, DGESV, CGESV, ZGESV
@@ -1222,10 +1220,10 @@ def magma_sgeev(jobvl, jobvr, n, a, lda,
     """
     Compute eigenvalues and eigenvectors.
     """
-    
+
     status = _libmagma.magma_sgeev(jobvl, jobvr, n, int(a), lda,
-                                   int(w), int(v)l, ldvl, int(vr), ldvr, 
-                                   int(work), lwork, int(rwork), int(info)):
+                                   int(w), int(vl), ldvl, int(vr), ldvr, 
+                                   int(work), lwork, int(rwork), int(info))
     magmaCheckStatus(status)
 
 # SGESVD, DGESVD, CGESVD, ZGESVD

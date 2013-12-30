@@ -373,4 +373,5 @@ _libcusparse.cusparseSdense2csr.argtypes = [ctypes.c_int,
                                             ctypes.c_void_p]
 def cusparseSdense2csr(handle, m, n, descrA, A, lda, 
                        nnzPerRow, csrValA, csrRowPtrA, csrColIndA):
-    
+    # Unfinished
+    pass

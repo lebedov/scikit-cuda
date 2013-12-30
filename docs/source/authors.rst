@@ -16,6 +16,7 @@ Special thanks are due to the following parties for their contributions:
 - Steve Taylor - Cholesky factorization/solve functions
 - Rob Turetsky - useful feedback
 - Stefan van der Walt - bug fixes 
+- Feng Wang - bug reports
 - Yiyin Zhou - patches, bug reports, and function wrappers 
 
 .. [1] http://www.columbia.edu/~lev/
