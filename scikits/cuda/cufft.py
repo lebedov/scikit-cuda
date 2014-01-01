@@ -193,6 +193,11 @@ def cufftPlan1d(nx, fft_type, batch):
         Transform type.
     batch : int
         Transform batch size.
+
+    Returns
+    -------
+    plan : int
+        CUFFT plan handle.
     """
 
     plan = _ffi.new('cufftHandle *')
@@ -212,6 +217,11 @@ def cufftPlan2d(nx, ny, fft_type):
         Transform size in y direction.
     fft_type : int
         Transform type.
+
+    Returns
+    -------
+    plan : int
+        CUFFT plan handle.
     """
 
     plan = _ffi.new('cufftHandle *')
@@ -234,6 +244,11 @@ def cufftPlan3d(nx, ny, nz, fft_type):
         Transform size in z direction.
     fft_type : int
         Transform type.
+
+    Returns
+    -------
+    plan : int
+        CUFFT plan handle.
     """
 
     plan = _ffi.new('cufftHandle *')
@@ -276,6 +291,11 @@ def cufftPlanMany(rank, n,
         Transform type.
     batch : int
         Transform batch size.
+
+    Returns
+    -------
+    plan : int
+        CUFFT plan handle.
     """
 
     plan = _ffi.new('cufftHandle *')
@@ -292,8 +312,18 @@ def cufftPlanMany(rank, n,
     return plan[0]
 
 def cufftExecC2C(plan, idata, odata, direction):
-    """Execute single precision complex-to-complex transform plan as
-    specified by `direction`."""
+    """
+    Execute single precision complex-to-complex transform plan.
+
+    Parameters
+    ----------
+    plan : int
+        CUFFT plan handle.
+    idata : int
+        Pointer to complex input data.
+    odata : int
+        Pointer to complex output data.
+    """
     
     status = _ffi_lib.cufftExecC2C(plan, 
                                    _ffi.cast('cufftComplex *', idata), 
@@ -302,7 +332,18 @@ def cufftExecC2C(plan, idata, odata, direction):
     cufftCheckStatus(status)
 
 def cufftExecR2C(plan, idata, odata):
-    """Execute single precision real-to-complex forward transform plan."""
+    """
+    Execute single precision real-to-complex forward transform plan.
+
+    Parameters
+    ----------
+    plan : int
+        CUFFT plan handle.
+    idata : int
+        Pointer to real input data.
+    odata : int
+        Pointer to complex output data.
+    """
     
     status = _ffi_lib.cufftExecR2C(plan, 
                                    _ffi.cast('cufftReal *', idata), 
@@ -310,7 +351,18 @@ def cufftExecR2C(plan, idata, odata):
     cufftCheckStatus(status)
 
 def cufftExecC2R(plan, idata, odata):
-    """Execute single precision complex-to-real reverse transform plan."""
+    """
+    Execute single precision complex-to-real reverse transform plan.
+
+    Parameters
+    ----------
+    plan : int
+        CUFFT plan handle.
+    idata : int
+        Pointer to complex input data.
+    odata : int
+        Pointer to real output data.
+    """
     
     status = _ffi_lib.cufftExecC2R(plan, 
                                    _ffi.cast('cufftComplex *', idata), 
@@ -318,8 +370,18 @@ def cufftExecC2R(plan, idata, odata):
     cufftCheckStatus(status)
 
 def cufftExecZ2Z(plan, idata, odata, direction):
-    """Execute double precision complex-to-complex transform plan as
-    specified by `direction`."""
+    """
+    Execute double precision complex-to-complex transform plan.
+
+    Parameters
+    ----------
+    plan : int
+        CUFFT plan handle.
+    idata : int
+        Pointer to complex input data.
+    odata : int
+        Pointer to complex output data.
+    """
     
     status = _ffi_lib.cufftExecZ2Z(plan, 
                                    _ffi.cast('cufftDoubleComplex *', idata), 
@@ -328,7 +390,17 @@ def cufftExecZ2Z(plan, idata, odata, direction):
     cufftCheckStatus(status)
 
 def cufftExecD2Z(plan, idata, odata):
-    """Execute double precision real-to-complex forward transform plan."""
+    """Execute double precision real-to-complex forward transform plan.
+
+    Parameters
+    ----------
+    plan : int
+        CUFFT plan handle.
+    idata : int
+        Pointer to real input data.
+    odata : int
+        Pointer to complex output data.
+    """
     
     status = _ffi_lib.cufftExecD2Z(plan, 
                                    _ffi.cast('cufftDoubleReal *', idata), 
@@ -336,7 +408,18 @@ def cufftExecD2Z(plan, idata, odata):
     cufftCheckStatus(status)
 
 def cufftExecZ2D(plan, idata, odata):
-    """Execute double precision complex-to-real transform plan."""
+    """
+    Execute double precision complex-to-real reverse transform plan.
+
+    Parameters
+    ----------
+    plan : int
+        CUFFT plan handle.
+    idata : int
+        Pointer to complex input data.
+    odata : int
+        Pointer to real output data.
+    """
     
     status = _ffi_lib.cufftExecZ2D(plan, 
                                    _ffi.cast('cufftDoubleComplex *', idata), 
