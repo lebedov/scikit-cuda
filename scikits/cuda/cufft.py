@@ -6,28 +6,9 @@ Python interface to CUFFT functions.
 Note: this module does not explicitly depend on PyCUDA.
 """
 
-import ctypes, sys
-
-if sys.platform == 'linux2':
-    _libcufft_libname_list = ['libcufft.so', 'libcufft.so.3', 'libcufft.so.4']
-elif sys.platform == 'darwin':
-    _libcufft_libname_list = ['libcufft.dylib']
-elif sys.platform == 'Windows':
-    _libcufft_libname_list = ['cufft.lib']
-else:
-    raise RuntimeError('unsupported platform')
-
-# Print understandable error message when library cannot be found:
-_libcufft = None
-for _libcufft_libname in _libcufft_libname_list:
-    try:
-        _libcufft = ctypes.cdll.LoadLibrary(_libcufft_libname)
-    except OSError:
-        pass
-    else:
-        break
-if _libcufft == None:
-    raise OSError('cufft library not found')
+import re
+import cffi
+_ffi = cffi.FFI()
 
 # General CUFFT error:
 class cufftError(Exception):
@@ -71,20 +52,128 @@ class cufftUnalignedData(cufftError):
     """Input or output does not satisfy texture alignment requirements."""
     pass
 
+_ffi.cdef("""
+typedef struct CUstream_st *cudaStream_t;
+
+typedef struct float2 {
+    ...;
+} float2;
+typedef float2 cuFloatComplex;
+typedef float2 cuComplex;
+
+typedef struct double2 {
+    ...;
+} double2;
+typedef double2 cuDoubleComplex;
+
+typedef float cufftReal;
+typedef double cufftDoubleReal;
+
+typedef cuComplex cufftComplex;
+typedef cuDoubleComplex cufftDoubleComplex;
+
+// Result status codes:
+typedef enum cufftResult_t {
+  CUFFT_SUCCESS        = 0x0,
+  CUFFT_INVALID_PLAN   = 0x1,
+  CUFFT_ALLOC_FAILED   = 0x2,
+  CUFFT_INVALID_TYPE   = 0x3,
+  CUFFT_INVALID_VALUE  = 0x4,
+  CUFFT_INTERNAL_ERROR = 0x5,
+  CUFFT_EXEC_FAILED    = 0x6,
+  CUFFT_SETUP_FAILED   = 0x7,
+  CUFFT_INVALID_SIZE   = 0x8,
+  CUFFT_UNALIGNED_DATA = 0x9
+} cufftResult;
+
+// Data transformation types:
+typedef enum cufftType_t {
+  CUFFT_R2C = 0x2a,     // Real to Complex (interleaved)
+  CUFFT_C2R = 0x2c,     // Complex (interleaved) to Real
+  CUFFT_C2C = 0x29,     // Complex to Complex, interleaved
+  CUFFT_D2Z = 0x6a,     // Double to Double-Complex
+  CUFFT_Z2D = 0x6c,     // Double-Complex to Double
+  CUFFT_Z2Z = 0x69      // Double-Complex to Double-Complex
+} cufftType;
+
+// FFT direction:
+#define CUFFT_FORWARD ... // -1, Forward FFT
+#define CUFFT_INVERSE ... // 1, Inverse FFT
+
+typedef enum cufftCompatibility_t {
+    CUFFT_COMPATIBILITY_NATIVE          = 0x00, 
+    CUFFT_COMPATIBILITY_FFTW_PADDING    = 0x01,    // The default value
+    CUFFT_COMPATIBILITY_FFTW_ASYMMETRIC = 0x02,
+    CUFFT_COMPATIBILITY_FFTW_ALL        = 0x03
+} cufftCompatibility;
+
+typedef int cufftHandle;
+
+cufftResult cufftPlan1d(cufftHandle *plan, int nx, cufftType type, int batch);
+cufftResult cufftPlan2d(cufftHandle *plan, int nx, int ny, cufftType type);
+cufftResult cufftPlan3d(cufftHandle *plan, int nx, int ny, int nz, cufftType type);
+cufftResult cufftPlanMany(cufftHandle *plan, int rank, int *n,
+                          int *inembed, int istride, int idist,
+                          int *onembed, int ostride, int odist,
+                          cufftType type, int batch);
+                                                                    
+cufftResult cufftExecC2C(cufftHandle plan, cufftComplex *idata, 
+                         cufftComplex *odata, int direction);                         
+cufftResult cufftExecR2C(cufftHandle plan, 
+                         cufftReal *idata,
+                         cufftComplex *odata);
+cufftResult cufftExecC2R(cufftHandle plan, 
+                         cufftComplex *idata,
+                         cufftReal *odata);
+cufftResult cufftExecZ2Z(cufftHandle plan, 
+                         cufftDoubleComplex *idata,
+                         cufftDoubleComplex *odata,
+                         int direction);
+cufftResult cufftExecD2Z(cufftHandle plan, 
+                         cufftDoubleReal *idata,
+                         cufftDoubleComplex *odata);
+cufftResult cufftExecZ2D(cufftHandle plan, 
+                         cufftDoubleComplex *idata,
+                         cufftDoubleReal *odata);
+
+cufftResult cufftDestroy(cufftHandle plan);
+cufftResult cufftSetStream(cufftHandle plan,
+                           cudaStream_t stream);
+cufftResult cufftSetCompatibilityMode(cufftHandle plan,
+                                      cufftCompatibility mode);
+cufftResult cufftGetVersion(int *version);
+""")
+
+_ffi_lib = _ffi.verify("""
+#include <cuda.h>
+#include <cufft.h>
+""", libraries=['cufft'])
+
+# Import all CUFFT* definitions directly into module namespace:
+for k, v in _ffi_lib.__dict__.iteritems():
+    if re.match('CUFFT.*', k):
+        vars()[k] = v
+
 cufftExceptions = {
-    0x1: cufftInvalidPlan,
-    0x2: cufftAllocFailed,
-    0x3: cufftInvalidType,
-    0x4: cufftInvalidValue,
-    0x5: cufftInternalError,
-    0x6: cufftExecFailed,
-    0x7: cufftSetupFailed,
-    0x8: cufftInvalidSize,
-    0x9: cufftUnalignedData
-    }
+    CUFFT_INVALID_PLAN: cufftInvalidPlan,
+    CUFFT_ALLOC_FAILED: cufftAllocFailed,
+    CUFFT_INVALID_TYPE: cufftInvalidType,
+    CUFFT_INTERNAL_ERROR: cufftInternalError,
+    CUFFT_EXEC_FAILED: cufftExecFailed,
+    CUFFT_SETUP_FAILED: cufftSetupFailed,
+    CUFFT_INVALID_SIZE: cufftInvalidSize,
+    CUFFT_UNALIGNED_DATA: cufftUnalignedData
+}
 
 def cufftCheckStatus(status):
-    """Raise an exception if the specified CUBLAS status is an error."""
+    """
+    Raise an exception if the specified CUFFT status is an error.
+
+    Parameters
+    ----------
+    status : int
+        CUFFT status.
+    """
 
     if status != 0:
         try:
@@ -92,181 +181,222 @@ def cufftCheckStatus(status):
         except KeyError:
             raise cufftError
 
-
-# Data transformation types:
-CUFFT_R2C = 0x2a
-CUFFT_C2R = 0x2c
-CUFFT_C2C = 0x29
-CUFFT_D2Z = 0x6a
-CUFFT_Z2D = 0x6c
-CUFFT_Z2Z = 0x69
-
-# Transformation directions:
-CUFFT_FORWARD = -1
-CUFFT_INVERSE = 1
-
-# FFTW compatibility modes:
-CUFFT_COMPATIBILITY_NATIVE = 0x00
-CUFFT_COMPATIBILITY_FFTW_PADDING = 0x01
-CUFFT_COMPATIBILITY_FFTW_ASYMMETRIC = 0x02
-CUFFT_COMPATIBILITY_FFTW_ALL = 0x03
-
-# FFT functions implemented by CUFFT:
-_libcufft.cufftPlan1d.restype = int
-_libcufft.cufftPlan1d.argtypes = [ctypes.c_void_p,
-                                  ctypes.c_int,
-                                  ctypes.c_int,
-                                  ctypes.c_int]
 def cufftPlan1d(nx, fft_type, batch):
-    """Create 1D FFT plan configuration."""
+    """
+    Create 1D FFT plan configuration.
 
-    plan = ctypes.c_uint()
-    status = _libcufft.cufftPlan1d(ctypes.byref(plan), nx, fft_type, batch)
+    Parameters
+    ----------
+    nx : int
+        Transform size.
+    fft_type : int
+        Transform type.
+    batch : int
+        Transform batch size.
+    """
+
+    plan = _ffi.new('cufftHandle *')
+    status = _ffi_lib.cufftPlan1d(plan, nx, fft_type, batch)
     cufftCheckStatus(status)
-    return plan
+    return plan[0]
 
-_libcufft.cufftPlan2d.restype = int
-_libcufft.cufftPlan2d.argtypes = [ctypes.c_void_p,
-                                  ctypes.c_int,
-                                  ctypes.c_int,
-                                  ctypes.c_int]
 def cufftPlan2d(nx, ny, fft_type):
-    """Create 2D FFT plan configuration."""
+    """
+    Create 2D FFT plan configuration.
 
-    plan = ctypes.c_uint()
-    status = _libcufft.cufftPlan2d(ctypes.byref(plan), nx, ny,
-                                   fft_type)
+    Parameters
+    ----------
+    nx : int
+        Transform size in x direction.
+    ny : int
+        Transform size in y direction.
+    fft_type : int
+        Transform type.
+    """
+
+    plan = _ffi.new('cufftHandle *')
+    status = _ffi_lib.cufftPlan2d(ctypes.byref(plan), nx, ny,
+                                  fft_type)
     cufftCheckStatus(status)
     return plan
 
-_libcufft.cufftPlan3d.restype = int
-_libcufft.cufftPlan3d.argtypes = [ctypes.c_void_p,
-                                  ctypes.c_int,
-                                  ctypes.c_int,
-                                  ctypes.c_int,
-                                  ctypes.c_int]
 def cufftPlan3d(nx, ny, nz, fft_type):
-    """Create 3D FFT plan configuration."""
+    """
+    Create 3D FFT plan configuration.
 
-    plan = ctypes.c_uint()
-    status = _libcufft.cufftPlan3d(ctypes.byref(plan), nx, ny, nz,
-                                   fft_type)
+    Parameters
+    ----------
+    nx : int
+        Transform size in x direction.
+    ny : int
+        Transform size in y direction.
+    nz : int
+        Transform size in z direction.
+    fft_type : int
+        Transform type.
+    """
+
+    plan = _ffi.new('cufftHandle *')
+    status = _ffi_lib.cufftPlan3d(plan, nx, ny, nz,
+                                  fft_type)
     cufftCheckStatus(status)
-    return plan
+    return plan[0]
 
-_libcufft.cufftPlanMany.restype = int
-_libcufft.cufftPlanMany.argtypes = [ctypes.c_void_p,
-                                    ctypes.c_int,
-                                    ctypes.c_void_p,
-                                    ctypes.c_void_p,
-                                    ctypes.c_int,
-                                    ctypes.c_int,
-                                    ctypes.c_void_p,
-                                    ctypes.c_int,
-                                    ctypes.c_int,
-                                    ctypes.c_int,
-                                    ctypes.c_int]                                    
 def cufftPlanMany(rank, n, 
                   inembed, istride, idist, 
                   onembed, ostride, odist, fft_type, batch):
-    """Create batched FFT plan configuration."""
-
-    plan = ctypes.c_uint()
-    status = _libcufft.cufftPlanMany(ctypes.byref(plan), rank, n,
-                                     inembed, istride, idist, 
-                                     onembed, ostride, odist, 
-                                     fft_type, batch)
-    cufftCheckStatus(status)
-    return plan
-
-_libcufft.cufftDestroy.restype = int
-_libcufft.cufftDestroy.argtypes = [ctypes.c_uint]
-def cufftDestroy(plan):
-    """Destroy FFT plan."""
+    """
+    Create batched FFT plan configuration.
     
-    status = _libcufft.cufftDestroy(plan)
+    Parameters
+    ----------
+    rank : int
+        Dimensionality of transform.
+    n : int
+        Array of size `rank` describing the size of each dimension.
+    inembed : int
+        Pointer of size `rank` that indicates the storage dimensions 
+        of the input data in memory.
+    istride : int
+        Distance between two successive input elements in the innermost
+        dimension.
+    idist : int
+        Distance between the first element of two consecutive sequences in a
+        batch of input data.
+    onembed : int
+        Pointer of size `rank` that indicates the storage dimensions 
+        of the output data in memory.
+    ostride : int
+        Distance between two successive output elements in the innermost
+        dimension.
+    odist : int
+        Distance between the first element of two consecutive sequences in a
+        batch of output data.
+    type : int
+        Transform type.
+    batch : int
+        Transform batch size.
+    """
+
+    plan = _ffi.new('cufftHandle *')
+    if inembed is None:
+        inembed = 0
+    if onembed is None:
+        onembed = 0
+    status = _ffi_lib.cufftPlanMany(plan, rank, 
+                                    _ffi.cast('int *', n),
+                                    _ffi.cast('int *', inembed), istride, idist, 
+                                    _ffi.cast('int *', onembed), ostride, odist, 
+                                    fft_type, batch)
     cufftCheckStatus(status)
+    return plan[0]
 
-_libcufft.cufftSetCompatibilityMode.restype = int
-_libcufft.cufftSetCompatibilityMode.argtypes = [ctypes.c_uint,
-                                                ctypes.c_int]
-def cufftSetCompatibilityMode(plan, mode):
-    """Set FFTW compatibility mode."""
-
-    status = _libcufft.cufftSetCompatibilityMode(plan, mode)
-    cufftCheckStatus(status)
-
-_libcufft.cufftExecC2C.restype = int
-_libcufft.cufftExecC2C.argtypes = [ctypes.c_uint,
-                                   ctypes.c_void_p,
-                                   ctypes.c_void_p,
-                                   ctypes.c_int]
 def cufftExecC2C(plan, idata, odata, direction):
     """Execute single precision complex-to-complex transform plan as
     specified by `direction`."""
     
-    status = _libcufft.cufftExecC2C(plan, idata, odata,
-                                    direction)
+    status = _ffi_lib.cufftExecC2C(plan, 
+                                   _ffi.cast('cufftComplex *', idata), 
+                                   _ffi.cast('cufftComplex *', odata),
+                                   direction)
     cufftCheckStatus(status)
 
-_libcufft.cufftExecR2C.restype = int
-_libcufft.cufftExecR2C.argtypes = [ctypes.c_uint,
-                                   ctypes.c_void_p,
-                                   ctypes.c_void_p]
 def cufftExecR2C(plan, idata, odata):
     """Execute single precision real-to-complex forward transform plan."""
     
-    status = _libcufft.cufftExecR2C(plan, idata, odata)
+    status = _ffi_lib.cufftExecR2C(plan, 
+                                   _ffi.cast('cufftReal *', idata), 
+                                   _ffi.cast('cufftComplex *', odata))
     cufftCheckStatus(status)
 
-_libcufft.cufftExecC2R.restype = int
-_libcufft.cufftExecC2R.argtypes = [ctypes.c_uint,
-                                   ctypes.c_void_p,
-                                   ctypes.c_void_p]
 def cufftExecC2R(plan, idata, odata):
     """Execute single precision complex-to-real reverse transform plan."""
     
-    status = _libcufft.cufftExecC2R(plan, idata, odata)
+    status = _ffi_lib.cufftExecC2R(plan, 
+                                   _ffi.cast('cufftComplex *', idata), 
+                                   _ffi.cast('cufftReal *', odata))
     cufftCheckStatus(status)
 
-_libcufft.cufftExecZ2Z.restype = int
-_libcufft.cufftExecZ2Z.argtypes = [ctypes.c_uint,
-                                   ctypes.c_void_p,
-                                   ctypes.c_void_p,
-                                   ctypes.c_int]
 def cufftExecZ2Z(plan, idata, odata, direction):
     """Execute double precision complex-to-complex transform plan as
     specified by `direction`."""
     
-    status = _libcufft.cufftExecZ2Z(plan, idata, odata,
-                                    direction)
+    status = _ffi_lib.cufftExecZ2Z(plan, 
+                                   _ffi.cast('cufftDoubleComplex *', idata), 
+                                   _ffi.cast('cufftDoubleComplex *', odata),
+                                   direction)
     cufftCheckStatus(status)
 
-_libcufft.cufftExecD2Z.restype = int
-_libcufft.cufftExecD2Z.argtypes = [ctypes.c_uint,
-                                   ctypes.c_void_p,
-                                   ctypes.c_void_p]
 def cufftExecD2Z(plan, idata, odata):
     """Execute double precision real-to-complex forward transform plan."""
     
-    status = _libcufft.cufftExecD2Z(plan, idata, odata)
+    status = _ffi_lib.cufftExecD2Z(plan, 
+                                   _ffi.cast('cufftDoubleReal *', idata), 
+                                   _ffi.cast('cufftDoubleComplex *', odata))
     cufftCheckStatus(status)
 
-_libcufft.cufftExecZ2D.restype = int
-_libcufft.cufftExecZ2D.argtypes = [ctypes.c_uint,
-                                   ctypes.c_void_p,
-                                   ctypes.c_void_p]
 def cufftExecZ2D(plan, idata, odata):
     """Execute double precision complex-to-real transform plan."""
     
-    status = _libcufft.cufftExecZ2D(plan, idata, odata)
+    status = _ffi_lib.cufftExecZ2D(plan, 
+                                   _ffi.cast('cufftDoubleComplex *', idata), 
+                                   _ffi.cast('cufftDoubleReal *', odata))
     cufftCheckStatus(status)
 
-_libcufft.cufftSetStream.restype = int
-_libcufft.cufftSetStream.argtypes = [ctypes.c_uint,
-                                     ctypes.c_int]
-def cufftSetStream(plan, stream):
-    """Associate a CUDA stream with a CUFFT plan."""
+def cufftDestroy(plan):
+    """
+    Destroy FFT plan.
+
+    Parameters
+    ----------
+    plan : int
+        CUFFT plan handle.
+    """
     
-    status = _libcufft.cufftSetStream(plan, stream)
+    status = _ffi_lib.cufftDestroy(plan)
     cufftCheckStatus(status)
+
+def cufftSetStream(plan, stream):
+    """
+    Associate a CUDA stream with a CUFFT plan.
+
+    Parameters
+    ----------
+    plan : int
+        CUFFT plan handle.
+    stream : int
+        CUDA stream identifier.
+    """
+
+    status = _ffi_lib.cufftSetStream(plan, mode)
+    cufftCheckStatus(status)
+
+def cufftSetCompatibilityMode(plan, mode):
+    """
+    Set FFTW compatibility mode.
+
+    Parameters
+    ----------
+    plan : int
+        CUFFT plan handle
+    mode : int
+        FFTW compatibility mode.    
+    """
+
+    status = _ffi_lib.cufftSetCompatibilityMode(plan, mode)
+    cufftCheckStatus(status)
+
+def cufftGetVersion():
+    """
+    Get CUFFT version.
+
+    Returns
+    -------
+    version : int
+        CUFFT version.
+    """
+
+    version = ffi.new('int *');    
+    status = _ffi_lib.cufftGetVersion(version)
+    cufftCheckStatus(status)
+    return version[0]
