@@ -144,7 +144,7 @@ def cudaGetErrorString(e):
 
     return _ffi.string(_ffi_lib.cudaGetErrorString(e))
 
-# Generic CUDA error:
+# Generic CUDA runtime error:
 class cudaError(Exception):
     """CUDA error."""
     pass
@@ -161,7 +161,7 @@ for k, v in _ffi_lib.__dict__.iteritems():
 
 def cudaCheckStatus(status):
     """
-    Raise CUDA exception.
+    Raise CUDA runtime exception.
 
     Raise an exception corresponding to the specified CUDA runtime error
     code.
