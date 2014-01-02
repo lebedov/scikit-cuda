@@ -176,121 +176,121 @@ cusparseStatus_t cusparseCdoti(cusparseHandle_t handle,
                                cusparseIndexBase_t idxBase);
 
 cusparseStatus_t cusparseZdoti(cusparseHandle_t handle, 
-                                           int nnz, 
-                                           const cuDoubleComplex *xVal, 
-                                           const int *xInd, 
-                                           const cuDoubleComplex *y, 
-                                           cuDoubleComplex *resultHostPtr,
-                                           cusparseIndexBase_t idxBase);
+                               int nnz, 
+                               const cuDoubleComplex *xVal, 
+                               const int *xInd, 
+                               const cuDoubleComplex *y, 
+                               cuDoubleComplex *resultHostPtr,
+                               cusparseIndexBase_t idxBase);
 
 cusparseStatus_t cusparseCdotci(cusparseHandle_t handle, 
-                                            int nnz, 
-                                            const cuComplex *xVal, 
-                                            const int *xInd, 
-                                            const cuComplex *y, 
-                                            cuComplex *resultHostPtr,
-                                            cusparseIndexBase_t idxBase);
+                                int nnz, 
+                                const cuComplex *xVal, 
+                                const int *xInd, 
+                                const cuComplex *y, 
+                                cuComplex *resultHostPtr,
+                                cusparseIndexBase_t idxBase);
     
 cusparseStatus_t cusparseZdotci(cusparseHandle_t handle, 
-                                            int nnz, 
-                                            const cuDoubleComplex *xVal, 
-                                            const int *xInd, 
-                                            const cuDoubleComplex *y, 
-                                            cuDoubleComplex *resultHostPtr,
-                                            cusparseIndexBase_t idxBase);
+                                int nnz, 
+                                const cuDoubleComplex *xVal, 
+                                const int *xInd, 
+                                const cuDoubleComplex *y, 
+                                cuDoubleComplex *resultHostPtr,
+                                cusparseIndexBase_t idxBase);
 
 cusparseStatus_t cusparseSgthr(cusparseHandle_t handle, 
-                                           int nnz, 
-                                           const float *y, 
-                                           float *xVal, 
-                                           const int *xInd, 
-                                           cusparseIndexBase_t idxBase);
+                               int nnz, 
+                               const float *y, 
+                               float *xVal, 
+                               const int *xInd, 
+                               cusparseIndexBase_t idxBase);
     
 cusparseStatus_t cusparseDgthr(cusparseHandle_t handle, 
-                                           int nnz, 
-                                           const double *y, 
-                                           double *xVal, 
-                                           const int *xInd, 
-                                           cusparseIndexBase_t idxBase);
+                               int nnz, 
+                               const double *y, 
+                               double *xVal, 
+                               const int *xInd, 
+                               cusparseIndexBase_t idxBase);
 
 cusparseStatus_t cusparseCgthr(cusparseHandle_t handle, 
-                                           int nnz, 
-                                           const cuComplex *y, 
-                                           cuComplex *xVal, 
-                                           const int *xInd, 
-                                           cusparseIndexBase_t idxBase);
+                               int nnz, 
+                               const cuComplex *y, 
+                               cuComplex *xVal, 
+                               const int *xInd, 
+                               cusparseIndexBase_t idxBase);
 
 cusparseStatus_t cusparseZgthr(cusparseHandle_t handle, 
-                                           int nnz, 
-                                           const cuDoubleComplex *y, 
-                                           cuDoubleComplex *xVal, 
-                                           const int *xInd, 
-                                           cusparseIndexBase_t idxBase);
+                               int nnz, 
+                               const cuDoubleComplex *y, 
+                               cuDoubleComplex *xVal, 
+                               const int *xInd, 
+                               cusparseIndexBase_t idxBase);
 
 cusparseStatus_t cusparseSgthrz(cusparseHandle_t handle, 
-                                            int nnz, 
-                                            float *y, 
-                                            float *xVal, 
-                                            const int *xInd, 
-                                            cusparseIndexBase_t idxBase);
+                                int nnz, 
+                                float *y, 
+                                float *xVal, 
+                                const int *xInd, 
+                                cusparseIndexBase_t idxBase);
     
 cusparseStatus_t cusparseDgthrz(cusparseHandle_t handle, 
-                                            int nnz, 
-                                            double *y, 
-                                            double *xVal, 
-                                            const int *xInd, 
-                                            cusparseIndexBase_t idxBase);
+                                int nnz, 
+                                double *y, 
+                                double *xVal, 
+                                const int *xInd, 
+                                cusparseIndexBase_t idxBase);
 
 cusparseStatus_t cusparseCgthrz(cusparseHandle_t handle, 
-                                            int nnz, 
-                                            cuComplex *y, 
-                                            cuComplex *xVal, 
-                                            const int *xInd, 
-                                            cusparseIndexBase_t idxBase);
+                                int nnz, 
+                                cuComplex *y, 
+                                cuComplex *xVal, 
+                                const int *xInd, 
+                                cusparseIndexBase_t idxBase);
 
 cusparseStatus_t cusparseZgthrz(cusparseHandle_t handle, 
-                                            int nnz, 
-                                            cuDoubleComplex *y, 
-                                            cuDoubleComplex *xVal, 
-                                            const int *xInd, 
-                                            cusparseIndexBase_t idxBase);
+                                int nnz, 
+                                cuDoubleComplex *y, 
+                                cuDoubleComplex *xVal, 
+                                const int *xInd, 
+                                cusparseIndexBase_t idxBase);
 
 cusparseStatus_t cusparseSsctr(cusparseHandle_t handle, 
-                                           int nnz, 
-                                           const float *xVal, 
-                                           const int *xInd, 
-                                           float *y, 
-                                           cusparseIndexBase_t idxBase);
+                               int nnz, 
+                               const float *xVal, 
+                               const int *xInd, 
+                               float *y, 
+                               cusparseIndexBase_t idxBase);
     
 cusparseStatus_t cusparseDsctr(cusparseHandle_t handle, 
-                                           int nnz, 
-                                           const double *xVal, 
-                                           const int *xInd, 
-                                           double *y, 
-                                           cusparseIndexBase_t idxBase);
+                               int nnz, 
+                               const double *xVal, 
+                               const int *xInd, 
+                               double *y, 
+                               cusparseIndexBase_t idxBase);
 
 cusparseStatus_t cusparseCsctr(cusparseHandle_t handle, 
-                                           int nnz, 
-                                           const cuComplex *xVal, 
-                                           const int *xInd, 
-                                           cuComplex *y, 
-                                           cusparseIndexBase_t idxBase);
+                               int nnz, 
+                               const cuComplex *xVal, 
+                               const int *xInd, 
+                               cuComplex *y, 
+                               cusparseIndexBase_t idxBase);
 
 cusparseStatus_t cusparseZsctr(cusparseHandle_t handle, 
-                                           int nnz, 
-                                           const cuDoubleComplex *xVal, 
-                                           const int *xInd, 
-                                           cuDoubleComplex *y, 
-                                           cusparseIndexBase_t idxBase);
+                               int nnz, 
+                               const cuDoubleComplex *xVal, 
+                               const int *xInd, 
+                               cuDoubleComplex *y, 
+                               cusparseIndexBase_t idxBase);
 
 cusparseStatus_t cusparseSroti(cusparseHandle_t handle, 
-                                           int nnz, 
-                                           float *xVal, 
-                                           const int *xInd, 
-                                           float *y, 
-                                           float c, 
-                                           float s, 
-                                           cusparseIndexBase_t idxBase);
+                               int nnz, 
+                               float *xVal, 
+                               const int *xInd, 
+                               float *y, 
+                               float c, 
+                               float s, 
+                               cusparseIndexBase_t idxBase);
 
 cusparseStatus_t cusparseDroti(cusparseHandle_t handle, 
                                int nnz, 
@@ -323,24 +323,24 @@ cusparseStatus_t cusparseDnnz(cusparseHandle_t handle,
                               int *nnzTotalHostPtr);
 
 cusparseStatus_t cusparseCnnz(cusparseHandle_t handle, 
-                                          cusparseDirection_t dirA,  
-                                          int m, 
-                                          int n, 
-                                          const cusparseMatDescr_t  descrA,
-                                          const cuComplex *A,
-                                          int lda, 
-                                          int *nnzPerRowCol, 
-                                          int *nnzTotalHostPtr);
+                              cusparseDirection_t dirA,  
+                              int m, 
+                              int n, 
+                              const cusparseMatDescr_t  descrA,
+                              const cuComplex *A,
+                              int lda, 
+                              int *nnzPerRowCol, 
+                              int *nnzTotalHostPtr);
 
 cusparseStatus_t cusparseZnnz(cusparseHandle_t handle, 
-                                          cusparseDirection_t dirA,  
-                                          int m, 
-                                          int n, 
-                                          const cusparseMatDescr_t  descrA,
-                                          const cuDoubleComplex *A,
-                                          int lda, 
-                                          int *nnzPerRowCol, 
-                                          int *nnzTotalHostPtr);
+                              cusparseDirection_t dirA,  
+                              int m, 
+                              int n, 
+                              const cusparseMatDescr_t  descrA,
+                              const cuDoubleComplex *A,
+                              int lda, 
+                              int *nnzPerRowCol, 
+                              int *nnzTotalHostPtr);
 
 cusparseStatus_t cusparseSdense2csr(cusparseHandle_t handle,
                                     int m, 
@@ -354,239 +354,223 @@ cusparseStatus_t cusparseSdense2csr(cusparseHandle_t handle,
                                     int *csrColIndA);
  
 cusparseStatus_t cusparseDdense2csr(cusparseHandle_t handle,
-                                                int m, 
-                                                int n, 
-                                                const cusparseMatDescr_t descrA,                                     
-                                                const double *A, 
-                                                int lda, 
-                                                const int *nnzPerRow,                                                 
-                                                double *csrValA, 
-                                                int *csrRowPtrA, 
-                                                int *csrColIndA);
+                                    int m, 
+                                    int n, 
+                                    const cusparseMatDescr_t descrA,
+                                    const double *A, 
+                                    int lda, 
+                                    const int *nnzPerRow,                      
+                                    double *csrValA, 
+                                    int *csrRowPtrA, 
+                                    int *csrColIndA);
     
 cusparseStatus_t cusparseCdense2csr(cusparseHandle_t handle,
-                                                int m, 
-                                                int n, 
-                                                const cusparseMatDescr_t descrA,                                     
-                                                const cuComplex *A, 
-                                                int lda, 
-                                                const int *nnzPerRow,                                                 
-                                                cuComplex *csrValA, 
-                                                int *csrRowPtrA, 
-                                                int *csrColIndA);
+                                    int m, 
+                                    int n, 
+                                    const cusparseMatDescr_t descrA,
+                                    const cuComplex *A,
+                                    int lda,
+                                    const int *nnzPerRow,
+                                    cuComplex *csrValA, 
+                                    int *csrRowPtrA, 
+                                    int *csrColIndA);
  
 cusparseStatus_t cusparseZdense2csr(cusparseHandle_t handle,
-                                                int m, 
-                                                int n,  
-                                                const cusparseMatDescr_t descrA,                                    
-                                                const cuDoubleComplex *A, 
-                                                int lda, 
-                                                const int *nnzPerRow,                                                 
-                                                cuDoubleComplex *csrValA, 
-                                                int *csrRowPtrA, 
-                                                int *csrColIndA);
+                                    int m,
+                                    int n,  
+                                    const cusparseMatDescr_t descrA,
+                                    const cuDoubleComplex *A, 
+                                    int lda, 
+                                    const int *nnzPerRow,                      
+                                    cuDoubleComplex *csrValA, 
+                                    int *csrRowPtrA, 
+                                    int *csrColIndA);
 
-/* Description: This routine converts a sparse matrix in CSR storage format
-   to a dense matrix. */
 cusparseStatus_t cusparseScsr2dense(cusparseHandle_t handle,
-                                                int m, 
-                                                int n, 
-                                                const cusparseMatDescr_t descrA,  
-                                                const float *csrValA, 
-                                                const int *csrRowPtrA, 
-                                                const int *csrColIndA,
-                                                float *A, 
-                                                int lda);
+                                    int m, 
+                                    int n, 
+                                    const cusparseMatDescr_t descrA,  
+                                    const float *csrValA, 
+                                    const int *csrRowPtrA, 
+                                    const int *csrColIndA,
+                                    float *A, 
+                                    int lda);
     
 cusparseStatus_t cusparseDcsr2dense(cusparseHandle_t handle, 
-                                                int m, 
-                                                int n, 
-                                                const cusparseMatDescr_t descrA, 
-                                                const double *csrValA, 
-                                                const int *csrRowPtrA, 
-                                                const int *csrColIndA,
-                                                double *A, 
-                                                int lda);
+                                    int m, 
+                                    int n, 
+                                    const cusparseMatDescr_t descrA, 
+                                    const double *csrValA, 
+                                    const int *csrRowPtrA, 
+                                    const int *csrColIndA,
+                                    double *A, 
+                                    int lda);
     
 cusparseStatus_t cusparseCcsr2dense(cusparseHandle_t handle, 
-                                                int m, 
-                                                int n, 
-                                                const cusparseMatDescr_t descrA, 
-                                                const cuComplex *csrValA, 
-                                                const int *csrRowPtrA, 
-                                                const int *csrColIndA,
-                                                cuComplex *A, 
-                                                int lda);
+                                    int m, 
+                                    int n, 
+                                    const cusparseMatDescr_t descrA, 
+                                    const cuComplex *csrValA, 
+                                    const int *csrRowPtrA, 
+                                    const int *csrColIndA,
+                                    cuComplex *A, 
+                                    int lda);
     
 cusparseStatus_t cusparseZcsr2dense(cusparseHandle_t handle,
-                                                int m, 
-                                                int n, 
-                                                const cusparseMatDescr_t descrA, 
-                                                const cuDoubleComplex *csrValA, 
-                                                const int *csrRowPtrA, 
-                                                const int *csrColIndA,
-                                                cuDoubleComplex *A, 
-                                                int lda); 
+                                    int m, 
+                                    int n, 
+                                    const cusparseMatDescr_t descrA, 
+                                    const cuDoubleComplex *csrValA, 
+                                    const int *csrRowPtrA, 
+                                    const int *csrColIndA,
+                                    cuDoubleComplex *A, 
+                                    int lda); 
                                  
-/* Description: This routine converts a dense matrix to a sparse matrix 
-   in the CSC storage format, using the information computed by the 
-   nnz routine. */
 cusparseStatus_t cusparseSdense2csc(cusparseHandle_t handle,
-                                                int m, 
-                                                int n,  
-                                                const cusparseMatDescr_t descrA,                            
-                                                const float *A, 
-                                                int lda,
-                                                const int *nnzPerCol,                                                 
-                                                float *cscValA, 
-                                                int *cscRowIndA, 
-                                                int *cscColPtrA);
+                                    int m,
+                                    int n,
+                                    const cusparseMatDescr_t descrA,
+                                    const float *A, 
+                                    int lda,
+                                    const int *nnzPerCol,
+                                    float *cscValA,
+                                    int *cscRowIndA,
+                                    int *cscColPtrA);
  
 cusparseStatus_t cusparseDdense2csc(cusparseHandle_t handle,
-                                                int m, 
-                                                int n, 
-                                                const cusparseMatDescr_t descrA,                                     
-                                                const double *A, 
-                                                int lda,
-                                                const int *nnzPerCol,                                                
-                                                double *cscValA, 
-                                                int *cscRowIndA, 
-                                                int *cscColPtrA); 
+                                    int m,
+                                    int n,
+                                    const cusparseMatDescr_t descrA,
+                                    const double *A,
+                                    int lda,
+                                    const int *nnzPerCol,                     
+                                    double *cscValA, 
+                                    int *cscRowIndA, 
+                                    int *cscColPtrA); 
 
 cusparseStatus_t cusparseCdense2csc(cusparseHandle_t handle,
-                                                int m, 
-                                                int n, 
-                                                const cusparseMatDescr_t descrA,                                     
-                                                const cuComplex *A, 
-                                                int lda, 
-                                                const int *nnzPerCol,                                                 
-                                                cuComplex *cscValA, 
-                                                int *cscRowIndA, 
-                                                int *cscColPtrA);
+                                    int m, 
+                                    int n,
+                                    const cusparseMatDescr_t descrA,
+                                    const cuComplex *A,
+                                    int lda,
+                                    const int *nnzPerCol,                      
+                                    cuComplex *cscValA, 
+                                    int *cscRowIndA, 
+                                    int *cscColPtrA);
     
 cusparseStatus_t cusparseZdense2csc(cusparseHandle_t handle,
-                                                int m, 
-                                                int n,  
-                                                const cusparseMatDescr_t descrA,                                    
-                                                const cuDoubleComplex *A, 
-                                                int lda, 
-                                                const int *nnzPerCol,
-                                                cuDoubleComplex *cscValA, 
-                                                int *cscRowIndA, 
-                                                int *cscColPtrA);
+                                    int m, 
+                                    int n,
+                                    const cusparseMatDescr_t descrA,
+                                    const cuDoubleComplex *A,
+                                    int lda,
+                                    const int *nnzPerCol,
+                                    cuDoubleComplex *cscValA,
+                                    int *cscRowIndA,
+                                    int *cscColPtrA);
 
-/* Description: This routine converts a sparse matrix in CSC storage format
-   to a dense matrix. */
 cusparseStatus_t cusparseScsc2dense(cusparseHandle_t handle,
-                                                int m, 
-                                                int n, 
-                                                const cusparseMatDescr_t descrA,  
-                                                const float *cscValA, 
-                                                const int *cscRowIndA, 
-                                                const int *cscColPtrA,
-                                                float *A, 
-                                                int lda);
+                                    int m, 
+                                    int n, 
+                                    const cusparseMatDescr_t descrA,  
+                                    const float *cscValA, 
+                                    const int *cscRowIndA, 
+                                    const int *cscColPtrA,
+                                    float *A, 
+                                    int lda);
     
 cusparseStatus_t cusparseDcsc2dense(cusparseHandle_t handle,
-                                                int m, 
-                                                int n, 
-                                                const cusparseMatDescr_t descrA, 
-                                                const double *cscValA, 
-                                                const int *cscRowIndA, 
-                                                const int *cscColPtrA,
-                                                double *A, 
-                                                int lda);
+                                    int m, 
+                                    int n, 
+                                    const cusparseMatDescr_t descrA, 
+                                    const double *cscValA, 
+                                    const int *cscRowIndA, 
+                                    const int *cscColPtrA,
+                                    double *A, 
+                                    int lda);
 
 cusparseStatus_t cusparseCcsc2dense(cusparseHandle_t handle,
-                                                int m, 
-                                                int n, 
-                                                const cusparseMatDescr_t descrA, 
-                                                const cuComplex *cscValA, 
-                                                const int *cscRowIndA, 
-                                                const int *cscColPtrA,
-                                                cuComplex *A, 
-                                                int lda);
+                                    int m, 
+                                    int n, 
+                                    const cusparseMatDescr_t descrA, 
+                                    const cuComplex *cscValA, 
+                                    const int *cscRowIndA, 
+                                    const int *cscColPtrA,
+                                    cuComplex *A, 
+                                    int lda);
 
 cusparseStatus_t cusparseZcsc2dense(cusparseHandle_t handle,
-                                                int m, 
-                                                int n, 
-                                                const cusparseMatDescr_t descrA, 
-                                                const cuDoubleComplex *cscValA, 
-                                                const int *cscRowIndA, 
-                                                const int *cscColPtrA,
-                                                cuDoubleComplex *A, 
-                                                int lda);
+                                    int m, 
+                                    int n, 
+                                    const cusparseMatDescr_t descrA, 
+                                    const cuDoubleComplex *cscValA, 
+                                    const int *cscRowIndA, 
+                                    const int *cscColPtrA,
+                                    cuDoubleComplex *A, 
+                                    int lda);
     
-/* Description: This routine compresses the indecis of rows or columns.
-   It can be interpreted as a conversion from COO to CSR sparse storage
-   format. */
 cusparseStatus_t cusparseXcoo2csr(cusparseHandle_t handle,
-                                              const int *cooRowInd, 
-                                              int nnz, 
-                                              int m, 
-                                              int *csrRowPtr, 
-                                              cusparseIndexBase_t idxBase);
+                                  const int *cooRowInd, 
+                                  int nnz, 
+                                  int m, 
+                                  int *csrRowPtr, 
+                                  cusparseIndexBase_t idxBase);
     
-/* Description: This routine uncompresses the indecis of rows or columns.
-   It can be interpreted as a conversion from CSR to COO sparse storage
-   format. */
 cusparseStatus_t cusparseXcsr2coo(cusparseHandle_t handle,
-                                              const int *csrRowPtr, 
-                                              int nnz, 
-                                              int m, 
-                                              int *cooRowInd, 
-                                              cusparseIndexBase_t idxBase);     
+                                  const int *csrRowPtr, 
+                                  int nnz, 
+                                  int m, 
+                                  int *cooRowInd, 
+                                  cusparseIndexBase_t idxBase);     
     
-/* Description: This routine converts a matrix from CSR to CSC sparse 
-   storage format. The resulting matrix can be re-interpreted as a 
-   transpose of the original matrix in CSR storage format. */
 cusparseStatus_t cusparseScsr2csc(cusparseHandle_t handle,
-                                              int m, 
-                                              int n, 
-                                              const float  *csrValA, 
-                                              const int *csrRowPtrA, 
-                                              const int *csrColIndA, 
-                                              float *cscValA, 
-                                              int *cscRowIndA, 
-                                              int *cscColPtrA, 
-                                              int copyValues, 
-                                              cusparseIndexBase_t idxBase);
+                                  int m, 
+                                  int n, 
+                                  const float  *csrValA, 
+                                  const int *csrRowPtrA, 
+                                  const int *csrColIndA, 
+                                  float *cscValA, 
+                                  int *cscRowIndA, 
+                                  int *cscColPtrA, 
+                                  int copyValues, 
+                                  cusparseIndexBase_t idxBase);
 
 cusparseStatus_t cusparseDcsr2csc(cusparseHandle_t handle,
-                                              int m, 
-                                              int n,
-                                              const double  *csrValA, 
-                                              const int *csrRowPtrA, 
-                                              const int *csrColIndA,
-                                              double *cscValA, 
-                                              int *cscRowIndA, 
-                                              int *cscColPtrA,
-                                              int copyValues, 
-                                              cusparseIndexBase_t idxBase);
+                                  int m, 
+                                  int n,
+                                  const double  *csrValA, 
+                                  const int *csrRowPtrA, 
+                                  const int *csrColIndA,
+                                  double *cscValA, 
+                                  int *cscRowIndA, 
+                                  int *cscColPtrA,
+                                  int copyValues, 
+                                  cusparseIndexBase_t idxBase);
 
 cusparseStatus_t cusparseCcsr2csc(cusparseHandle_t handle,
-                                              int m, 
-                                              int n,
-                                              const cuComplex  *csrValA, 
-                                              const int *csrRowPtrA, 
-                                              const int *csrColIndA,
-                                              cuComplex *cscValA, 
-                                              int *cscRowIndA, 
-                                              int *cscColPtrA, 
-                                              int copyValues, 
-                                              cusparseIndexBase_t idxBase);
+                                  int m, 
+                                  int n,
+                                  const cuComplex  *csrValA, 
+                                  const int *csrRowPtrA, 
+                                  const int *csrColIndA,
+                                  cuComplex *cscValA, 
+                                  int *cscRowIndA, 
+                                  int *cscColPtrA, 
+                                  int copyValues, 
+                                  cusparseIndexBase_t idxBase);
 
 cusparseStatus_t cusparseZcsr2csc(cusparseHandle_t handle,
-                                              int m, 
-                                              int n, 
-                                              const cuDoubleComplex *csrValA, 
-                                              const int *csrRowPtrA, 
-                                              const int *csrColIndA, 
-                                              cuDoubleComplex *cscValA, 
-                                              int *cscRowIndA, 
-                                              int *cscColPtrA,
-                                              int copyValues, 
-                                              cusparseIndexBase_t idxBase);
+                                  int m, 
+                                  int n, 
+                                  const cuDoubleComplex *csrValA, 
+                                  const int *csrRowPtrA, 
+                                  const int *csrColIndA, 
+                                  cuDoubleComplex *cscValA, 
+                                  int *cscRowIndA, 
+                                  int *cscColPtrA,
+                                  int copyValues, 
+                                  cusparseIndexBase_t idxBase);
 
 """)
 
@@ -878,6 +862,65 @@ def cusparseGetMatIndexBase(desc):
     """
 
     return _ffi_lib.cusparseGetMatIndexBase(desc)
+
+# Level 1 functions:
+def cusparseSaxpyi(handle, nnz, alpha, xVal, xInd, y, idxBase):
+    handle = _ffi.cast('cusparseHandle_t', handle)
+    xVal = _ffi.cast('float *', xVal)
+    xInd = _ffi.cast('int *', xInd)
+    xInd = _ffi.cast('int *', xInd)
+    y = _ffi.cast('float *', y)
+    idxBase = _ffi.cast('cusparseIndexBase_t', idxBase)
+
+    status = _ffi_lib.cusparseSaxpyi(handle, nnz, alpha, xVal, xInd, y, idxBase)
+    cusparseCheckStatus(status)
+
+def cusparseDaxpyi(handle, nnz, alpha, xVal, xInd, y, idxBase):
+    handle = _ffi.cast('cusparseHandle_t', handle)
+    xVal = _ffi.cast('double *', xVal)
+    xInd = _ffi.cast('int *', xInd)
+    xInd = _ffi.cast('int *', xInd)
+    y = _ffi.cast('double *', y)
+    idxBase = _ffi.cast('cusparseIndexBase_t', idxBase)
+
+    status = _ffi_lib.cusparseDaxpyi(handle, nnz, alpha, xVal, xInd, y, idxBase)
+    cusparseCheckStatus(status)
+
+def cusparseCaxpyi(handle, nnz, alpha, xVal, xInd, y, idxBase):
+    handle = _ffi.cast('cusparseHandle_t', handle)
+
+    # Can't directly cast complex values because of the cuComplex struct's 
+    # alignment (which can't currently be manually set because cffi doesn't 
+    # support GCC-specific directives):
+    alpha_ffi = _ffi.new('cuComplex *')
+    _ffi.buffer(alpha_ffi)[:] = np.complex64(alpha).tostring()
+
+    xVal = _ffi.cast('cuComplex *', xVal)
+    xInd = _ffi.cast('int *', xInd)
+    xInd = _ffi.cast('int *', xInd)
+    y = _ffi.cast('cuComplex *', y)
+    idxBase = _ffi.cast('cusparseIndexBase_t', idxBase)
+
+    status = _ffi_lib.cusparseCaxpyi(handle, nnz, alpha_ffi, xVal, xInd, y, idxBase)
+    cusparseCheckStatus(status)
+
+def cusparseZaxpyi(handle, nnz, alpha, xVal, xInd, y, idxBase):
+    handle = _ffi.cast('cusparseHandle_t', handle)
+
+    # Can't directly cast complex values because of the cuComplex struct's 
+    # alignment (which can't currently be manually set because cffi doesn't 
+    # support GCC-specific directives):
+    alpha_ffi = _ffi.new('cuDoubleComplex *')
+    _ffi.buffer(alpha_ffi)[:] = np.complex128(alpha).tostring()
+
+    xVal = _ffi.cast('cuDoubleComplex *', xVal)
+    xInd = _ffi.cast('int *', xInd)
+    xInd = _ffi.cast('int *', xInd)
+    y = _ffi.cast('cuDoubleComplex *', y)
+    idxBase = _ffi.cast('cusparseIndexBase_t', idxBase)
+
+    status = _ffi_lib.cusparseZaxpyi(handle, nnz, alpha_ffi, xVal, xInd, y, idxBase)
+    cusparseCheckStatus(status)
 
 # Format conversion functions:
 def cusparseSnnz(handle, dirA, m, n, descrA, A, lda):
