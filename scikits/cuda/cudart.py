@@ -5,6 +5,7 @@ Python interface to CUDA runtime functions.
 """
 
 import re
+import struct
 
 import cffi
 _ffi = cffi.FFI()
@@ -86,6 +87,36 @@ enum cudaError {
 };
 typedef enum cudaError cudaError_t;
 const char* cudaGetErrorString(cudaError_t error);
+
+enum cudaMemoryType {
+    cudaMemoryTypeHost   = 1, /**< Host memory */
+    cudaMemoryTypeDevice = 2  /**< Device memory */
+};
+enum cudaMemcpyKind {
+    cudaMemcpyHostToHost          =   0,
+    cudaMemcpyHostToDevice        =   1,
+    cudaMemcpyDeviceToHost        =   2,
+    cudaMemcpyDeviceToDevice      =   3,
+    cudaMemcpyDefault             =   4
+};
+struct cudaPointerAttributes {
+    enum cudaMemoryType memoryType;
+    int device;
+    void *devicePointer;
+    void *hostPointer;
+};
+
+cudaError_t cudaMalloc(void **devPtr, size_t size);
+cudaError_t cudaFree(void *devPtr);
+cudaError_t cudaMallocPitch(void **devPtr, size_t *pitch, size_t width, size_t height);
+cudaError_t cudaMemcpy(void *dst, const void *src, size_t count,
+                       enum cudaMemcpyKind kind);
+cudaError_t cudaMemGetInfo(size_t *free, size_t *total);
+cudaError_t cudaSetDevice(int device);
+cudaError_t cudaGetDevice(int *device);
+cudaError_t cudaDriverGetVersion(int *device);
+cudaError_t cudaPointerGetAttributes(struct cudaPointerAttributes *attributes,
+                                     const void *ptr);
 """)
 
 _ffi_lib = _ffi.verify("""
@@ -376,3 +407,43 @@ def cudaCheckStatus(status):
         except KeyError:
             raise cudaError
                   
+def cudaMalloc(count):
+    """
+    Allocate device memory.
+
+    Allocate memory on the device associated with the current active
+    context.
+
+    Parameters
+    ----------
+    count : int
+        Number of bytes of memory to allocate
+
+    Returns
+    -------
+    ptr : int
+        Pointer to allocated device memory.
+
+    """
+
+    ptr = _ffi.new('void **')
+    status = _ffi_lib.cudaMalloc(ptr, count)
+    cudaCheckStatus(status)
+    return struct.Struct('L').unpack(_ffi.buffer(ptr))[0]
+
+def cudaFree(ptr):
+    """
+    Free device memory.
+
+    Free allocated memory on the device associated with the current active
+    context.
+
+    Parameters
+    ----------
+    ptr : int
+        Pointer to allocated device memory.
+    """
+
+    status = _ffi_lib.cudaFree(_ffi.cast('void *', ptr))
+    cudaCheckStatus(status)
+
