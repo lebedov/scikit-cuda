@@ -124,11 +124,6 @@ _ffi_lib = _ffi.verify("""
 #include <driver_types.h>
 """, libraries=['cudart'])
 
-# Import all cudaError* definitions directly into module namespace:
-for k, v in _ffi_lib.__dict__.iteritems():
-    if re.match('cudaError.*', k):
-        vars()[k] = v
-
 def cudaGetErrorString(e):
     """
     Retrieve CUDA error string.
@@ -145,7 +140,6 @@ def cudaGetErrorString(e):
     -------
     s : str
         Error string.
-
     """
 
     return _ffi.string(_ffi_lib.cudaGetErrorString(e))
@@ -155,233 +149,15 @@ class cudaError(Exception):
     """CUDA error."""
     pass
 
-# Exceptions corresponding to various CUDA runtime errors:
-class cudaErrorMissingConfiguration(cudaError):
-    __doc__ = cudaGetErrorString(1)
-    pass
-
-class cudaErrorMemoryAllocation(cudaError):
-    __doc__ = cudaGetErrorString(2)
-    pass
-
-class cudaErrorInitializationError(cudaError):
-    __doc__ = cudaGetErrorString(3)
-    pass
-
-class cudaErrorLaunchFailure(cudaError):
-    __doc__ = cudaGetErrorString(4)
-    pass
-
-class cudaErrorPriorLaunchFailure(cudaError):
-    __doc__ = cudaGetErrorString(5)
-    pass
-
-class cudaErrorLaunchTimeout(cudaError):
-    __doc__ = cudaGetErrorString(6)
-    pass
-
-class cudaErrorLaunchOutOfResources(cudaError):
-    __doc__ = cudaGetErrorString(7)
-    pass
-
-class cudaErrorInvalidDeviceFunction(cudaError):
-    __doc__ = cudaGetErrorString(8)
-    pass
-
-class cudaErrorInvalidConfiguration(cudaError):
-    __doc__ = cudaGetErrorString(9)
-    pass
-
-class cudaErrorInvalidDevice(cudaError):
-    __doc__ = cudaGetErrorString(10)
-    pass
-
-class cudaErrorInvalidValue(cudaError):
-    __doc__ = cudaGetErrorString(11)
-    pass
-
-class cudaErrorInvalidPitchValue(cudaError):
-    __doc__ = cudaGetErrorString(12)
-    pass
-
-class cudaErrorInvalidSymbol(cudaError):
-    __doc__ = cudaGetErrorString(13)
-    pass
-
-class cudaErrorMapBufferObjectFailed(cudaError):
-    __doc__ = cudaGetErrorString(14)
-    pass
-
-class cudaErrorUnmapBufferObjectFailed(cudaError):
-    __doc__ = cudaGetErrorString(15)
-    pass
-
-class cudaErrorInvalidHostPointer(cudaError):
-    __doc__ = cudaGetErrorString(16)
-    pass
-
-class cudaErrorInvalidDevicePointer(cudaError):
-    __doc__ = cudaGetErrorString(17)
-    pass
-
-class cudaErrorInvalidTexture(cudaError):
-    __doc__ = cudaGetErrorString(18)
-    pass
-
-class cudaErrorInvalidTextureBinding(cudaError):
-    __doc__ = cudaGetErrorString(19)
-    pass
-
-class cudaErrorInvalidChannelDescriptor(cudaError):
-    __doc__ = cudaGetErrorString(20)
-    pass
-
-class cudaErrorInvalidMemcpyDirection(cudaError):
-    __doc__ = cudaGetErrorString(21)
-    pass
-
-class cudaErrorTextureFetchFailed(cudaError):
-    __doc__ = cudaGetErrorString(23)
-    pass
-
-class cudaErrorTextureNotBound(cudaError):
-    __doc__ = cudaGetErrorString(24)
-    pass
-
-class cudaErrorSynchronizationError(cudaError):
-    __doc__ = cudaGetErrorString(25)
-    pass
-
-class cudaErrorInvalidFilterSetting(cudaError):
-    __doc__ = cudaGetErrorString(26)
-    pass
-
-class cudaErrorInvalidNormSetting(cudaError):
-    __doc__ = cudaGetErrorString(27)
-    pass
-
-class cudaErrorMixedDeviceExecution(cudaError):
-    __doc__ = cudaGetErrorString(28)
-    pass
-
-class cudaErrorCudartUnloading(cudaError):
-    __doc__ = cudaGetErrorString(29)
-    pass
-
-class cudaErrorUnknown(cudaError):
-    __doc__ = cudaGetErrorString(30)
-    pass
-
-class cudaErrorNotYetImplemented(cudaError):
-    __doc__ = cudaGetErrorString(31)
-    pass
-
-class cudaErrorMemoryValueTooLarge(cudaError):
-    __doc__ = cudaGetErrorString(32)
-    pass
-
-class cudaErrorInvalidResourceHandle(cudaError):
-    __doc__ = cudaGetErrorString(33)
-    pass
-
-class cudaErrorNotReady(cudaError):
-    __doc__ = cudaGetErrorString(34)
-    pass
-
-class cudaErrorInsufficientDriver(cudaError):
-    __doc__ = cudaGetErrorString(35)
-    pass
-
-class cudaErrorSetOnActiveProcess(cudaError):
-    __doc__ = cudaGetErrorString(36)
-    pass
-
-class cudaErrorInvalidSurface(cudaError):
-    __doc__ = cudaGetErrorString(37)
-    pass
-
-class cudaErrorNoDevice(cudaError):
-    __doc__ = cudaGetErrorString(38)
-    pass
-
-class cudaErrorECCUncorrectable(cudaError):
-    __doc__ = cudaGetErrorString(39)
-    pass
-
-class cudaErrorSharedObjectSymbolNotFound(cudaError):
-    __doc__ = cudaGetErrorString(40)
-    pass
-
-class cudaErrorSharedObjectInitFailed(cudaError):
-    __doc__ = cudaGetErrorString(41)
-    pass
-
-class cudaErrorUnsupportedLimit(cudaError):
-    __doc__ = cudaGetErrorString(42)
-    pass
-
-class cudaErrorDuplicateVariableName(cudaError):
-    __doc__ = cudaGetErrorString(43)
-    pass
-
-class cudaErrorDuplicateTextureName(cudaError):
-    __doc__ = cudaGetErrorString(44)
-    pass
-
-class cudaErrorDuplicateSurfaceName(cudaError):
-    __doc__ = cudaGetErrorString(45)
-    pass
-
-class cudaErrorDevicesUnavailable(cudaError):
-    __doc__ = cudaGetErrorString(46)
-    pass
-
-class cudaErrorInvalidKernelImage(cudaError):
-    __doc__ = cudaGetErrorString(47)
-    pass
-
-class cudaErrorNoKernelImageForDevice(cudaError):
-    __doc__ = cudaGetErrorString(48)
-    pass
-
-class cudaErrorIncompatibleDriverContext(cudaError):
-    __doc__ = cudaGetErrorString(49)
-    pass
-
-class cudaErrorPeerAccessAlreadyEnabled(cudaError):
-    __doc__ = cudaGetErrorString(50)
-    pass
-
-class cudaErrorPeerAccessNotEnabled(cudaError):
-    __doc__ = cudaGetErrorString(51)
-    pass
-
-class cudaErrorDeviceAlreadyInUse(cudaError):
-    __doc__ = cudaGetErrorString(54)
-    pass
-
-class cudaErrorProfilerDisabled(cudaError):
-    __doc__ = cudaGetErrorString(55)
-    pass
-
-class cudaErrorProfilerNotInitialized(cudaError):
-    __doc__ = cudaGetErrorString(56)
-    pass
-
-class cudaErrorProfilerAlreadyStarted(cudaError):
-    __doc__ = cudaGetErrorString(57)
-    pass
-
-class cudaErrorProfilerAlreadyStopped(cudaError):
-    __doc__ = cudaGetErrorString(58)
-    pass
-
-class cudaErrorStartupFailure(cudaError):
-    __doc__ = cudaGetErrorString(127)
-    pass
-
-cudaExceptions = \
-    {k:v for k,v in _ffi_lib.__dict__.iteritems() if re.match('cudaError.*', k)}
+# Use cudaError* definitions to dynamically create corresponding exception
+# classes and populate dictionary used to raise appropriate exception in
+# response to the corresponding runtime error code:
+cudaExceptions = {-1: cudaError}
+for k, v in _ffi_lib.__dict__.iteritems():
+    if re.match('cudaError.*', k):
+        vars()[k] = type(k, (cudaError,), 
+                         {'__doc__': cudaGetErrorString(v)})
+        cudaExceptions[v] = k
 
 def cudaCheckStatus(status):
     """
@@ -398,7 +174,6 @@ def cudaCheckStatus(status):
     See Also
     --------
     cudaExceptions
-
     """
 
     if status != 0:
@@ -423,7 +198,6 @@ def cudaMalloc(count):
     -------
     ptr : int
         Pointer to allocated device memory.
-
     """
 
     ptr = _ffi.new('void **')
