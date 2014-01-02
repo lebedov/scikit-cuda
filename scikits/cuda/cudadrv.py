@@ -105,9 +105,8 @@ class CUDA_ERROR(Exception):
 # response to the corresponding runtime error code:
 CUDA_EXCEPTIONS = {-1: CUDA_ERROR}
 for k, v in _ffi_lib.__dict__.iteritems():
-    if re.match('CUDA_ERROR.*', k):
-        vars()[k] = type(k, (CUDA_ERROR,), {})
-        CUDA_EXCEPTIONS[v] = k
+    if re.match('CUDA_ERROR.*', k):        
+        CUDA_EXCEPTIONS[v] = vars()[k] = type(k, (CUDA_ERROR,), {})
 
 # Import various enum values into module namespace:
 for k, v in _ffi_lib.__dict__.iteritems():

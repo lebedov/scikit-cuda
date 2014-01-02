@@ -155,9 +155,8 @@ class cudaError(Exception):
 cudaExceptions = {-1: cudaError}
 for k, v in _ffi_lib.__dict__.iteritems():
     if re.match('cudaError.*', k):
-        vars()[k] = type(k, (cudaError,), 
-                         {'__doc__': cudaGetErrorString(v)})
-        cudaExceptions[v] = k
+        cudaExceptions[v] = vars()[k] = type(k, (cudaError,), 
+                                             {'__doc__': cudaGetErrorString(v)})
 
 def cudaCheckStatus(status):
     """
