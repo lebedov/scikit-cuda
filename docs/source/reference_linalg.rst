@@ -16,9 +16,9 @@ Linear Algebra Routines
    dot
    eye
    hermitian
-   init
    mdot
    multiply
+   norm
    pinv
    svd
    transpose
