@@ -8,6 +8,7 @@ Special thanks are due to the following parties for their contributions:
 
 - Ying Wei (Daniel) Fan - kindly permitted reuse of CUBLAS wrapper code in his 
   PARRET [2]_ software)
+- Michael M. Forbes - improved MacOSX compatibility, bug fixes
 - Jacob Frelinger - various enhancements
 - Eric Larson - various enhancements
 - Teodor Mihai Moldovan - CUBLAS 5 bindings

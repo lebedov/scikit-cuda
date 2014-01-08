@@ -535,7 +535,8 @@ def cumsum(x_gpu):
     try:
         func = cumsum.cache[x_gpu.dtype]
     except KeyError:
-        func = scan.InclusiveScanKernel(x_gpu.dtype, "a+b")
+        func = scan.InclusiveScanKernel(x_gpu.dtype, 'a+b',
+                                        preamble='#include <pycuda-complex.hpp>')
         cumsum.cache[x_gpu.dtype] = func
     return func(x_gpu)
 cumsum.cache = {}

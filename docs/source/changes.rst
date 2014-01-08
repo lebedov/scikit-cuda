@@ -16,6 +16,7 @@ Release 0.043 - (under development)
 * Use ldconfig to find library paths rather than libdl (#39).
 * Fix win32 platform detection.
 * Add Cholesky factorization/solve routines (enh. by Steve Taylor).
+* Improved MacOSX compatibility (enh. by Michael M. Forbes).
 
 Release 0.042 - (March 10, 2013)
 --------------------------------
