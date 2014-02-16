@@ -1,4 +1,4 @@
-include AUTHORS CHANGES INSTALL LICENSE README.rst
+include AUTHORS CHANGES INSTALL LICENSE README.rst TODO
 recursive-include scikits *.h
 recursive-include demos *.py
 recursive-include tests *.py
