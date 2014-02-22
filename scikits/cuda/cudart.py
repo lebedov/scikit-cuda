@@ -8,7 +8,7 @@ import atexit, ctypes, sys, warnings
 import numpy as np
 
 # Load CUDA runtime library:
-if sys.platform == 'linux2':
+if sys.platform == 'linux2' or sys.platform == 'linux':
     _libcudart_libname_list = ['libcudart.so', 'libcudart.so.3', 'libcudart.so.4']
 elif sys.platform == 'darwin':
     _libcudart_libname_list = ['libcudart.dylib']
@@ -717,4 +717,3 @@ def cudaPointerGetAttributes(ptr):
         _libcudart.cudaPointerGetAttributes(ctypes.byref(attributes), ptr)
     cudaCheckStatus(status)
     return attributes.memoryType, attributes.device
-

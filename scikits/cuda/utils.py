@@ -4,6 +4,8 @@
 Utility functions.
 """
 
+from __future__ import unicode_literals
+
 import sys
 import ctypes
 import os
@@ -16,7 +18,7 @@ try:
 except ImportError:
     import re
 
-    
+
     def get_soname(filename):
         """
         Retrieve SONAME of shared library.
@@ -35,7 +37,7 @@ except ImportError:
         -----
         This function uses the `objdump` system command on linux and
         'otool' on Mac OS X (darwin).
-        
+
         """
         if sys.platform == 'darwin':
             cmds = ['otool', '-L', filename]
@@ -45,7 +47,7 @@ except ImportError:
 
         try:
             p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
-            out = p.communicate()[0]
+            out = p.communicate()[0].decode()
         except:
             raise RuntimeError('error executing {0}'.format(cmds))
 
@@ -53,7 +55,7 @@ except ImportError:
             result = re.search('^\s@rpath/(lib.+.dylib)', out, re.MULTILINE)
         else:
             result = re.search('^\s+SONAME\s+(.+)$',out,re.MULTILINE)
-        
+
         if result:
             return result.group(1)
         else:
@@ -88,7 +90,7 @@ else:
         References
         ----------
         .. [ELF] http://pypi.python.org/pypi/pyelftools
-        
+
         """
 
         stream = open(filename, 'rb')
@@ -96,7 +98,7 @@ else:
         dynamic = f.get_section_by_name('.dynamic')
         dynstr = f.get_section_by_name('.dynstr')
 
-        # Handle libraries built for different machine architectures:         
+        # Handle libraries built for different machine architectures:
         if f.header['e_machine'] == 'EM_X86_64':
             st = structs.Struct('Elf64_Dyn',
                                 macros.ULInt64('d_tag'),
@@ -112,7 +114,7 @@ else:
         for k in xrange(dynamic['sh_size']/entsize):
             result = st.parse(dynamic.data()[k*entsize:(k+1)*entsize])
 
-            # The following value for the SONAME tag is specified in elf.h:  
+            # The following value for the SONAME tag is specified in elf.h:
             if result.d_tag == 14:
                 return dynstr.get_string(result.d_val)
 

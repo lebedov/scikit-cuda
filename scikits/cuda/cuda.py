@@ -4,6 +4,7 @@
 Python interface to CUDA functions.
 """
 
-from cudart import *
-from cudadrv import *
+from __future__ import absolute_import
 
+from .cudart import *
+from .cudadrv import *

@@ -7,7 +7,7 @@ Python interface to CUDA driver functions.
 import sys, ctypes
 
 # Load CUDA driver library:
-if sys.platform == 'linux2':
+if sys.platform == 'linux2' or sys.platform == 'linux':
     _libcuda_libname_list = ['libcuda.so', 'libcuda.so.3', 'libcuda.so.4']
 elif sys.platform == 'darwin':
     _libcuda_libname_list = ['libcuda.dylib']
@@ -195,9 +195,9 @@ def cuCheckStatus(status):
         except KeyError:
             raise CUDA_ERROR
 
-        
+
 CU_POINTER_ATTRIBUTE_CONTEXT = 1
-CU_POINTER_ATTRIBUTE_MEMORY_TYPE = 2 
+CU_POINTER_ATTRIBUTE_MEMORY_TYPE = 2
 CU_POINTER_ATTRIBUTE_DEVICE_POINTER = 3
 CU_POINTER_ATTRIBUTE_HOST_POINTER = 4
 
