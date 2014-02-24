@@ -929,260 +929,120 @@ def culaDeviceZposv(upio, n, nrhs, a, lda, b, ldb):
     culaCheckStatus(status)
 
 # SPOTRF, CPOTRF, DPOTRF, ZPOTRF        
-try:
-    _ffi_lib.culaDeviceSpotrf.restype = \
-    _ffi_lib.culaDeviceCpotrf.restype = \
-    _ffi_lib.culaDeviceDpotrf.restype = \
-    _ffi_lib.culaDeviceZpotrf.restype = int
-    _ffi_lib.culaDeviceSpotrf.argtypes = \
-    _ffi_lib.culaDeviceCpotrf.argtypes = \
-    _ffi_lib.culaDeviceDpotrf.argtypes = \
-    _ffi_lib.culaDeviceZpotrf.argtypes = [ctypes.c_char,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int]
-except AttributeError:
-    def culaDeviceSpotrf(uplo, n, a, lda):
-        """
-        Cholesky factorization.
+@_cula_standard_req
+def culaDeviceSpotrf(uplo, n, a, lda):
+    """
+    Cholesky factorization.
+    """
 
-        """
+    status = _ffi_lib.culaDeviceSpotrf(uplo, n, 
+                                       _ffi.cast('culaDeviceFloat *', a), lda)
+    culaCheckStatus(status)
 
-        raise NotImplementedError('CULA Dense required')
+@_cula_standard_req
+def culaDeviceCpotrf(uplo, n, a, lda):
+    """
+    Cholesky factorization.
+    """
 
-    def culaDeviceCpotrf(uplo, n, a, lda):
-        """
-        Cholesky factorization.
+    status = _ffi_lib.culaDeviceCpotrf(uplo, n,
+                                       _ffi.cast('culaDeviceFloatComplex *', a), lda)
+    culaCheckStatus(status)
 
-        """
+@_cula_standard_req
+def culaDeviceDpotrf(uplo, n, a, lda):
+    """
+    Cholesky factorization.
+    """
 
-        raise NotImplementedError('CULA Dense required')
+    status = _ffi_lib.culaDeviceDpotrf(uplo, n,
+                                       _ffi.cast('culaDeviceDouble *', a), lda)
+    culaCheckStatus(status)
 
-    def culaDeviceDpotrf(uplo, n, a, lda):
-        """
-        Cholesky factorization.
+@_cula_standard_req
+def culaDeviceZpotrf(uplo, n, a, lda):
+    """
+    Cholesky factorization.
+    """
 
-        """
-        
-        raise NotImplementedError('CULA Dense required')
-
-    def culaDeviceZpotrf(uplo, n, a, lda):
-        """
-        Cholesky factorization.
-
-        """
-        
-        raise NotImplementedError('CULA Dense required')    
-else:            
-    def culaDeviceSpotrf(uplo, n, a, lda):
-        """
-        Cholesky factorization.
-
-        """
-
-        status = _ffi_lib.culaDeviceSpotrf(uplo, n, int(a), lda)
-        culaCheckStatus(status)
-
-    def culaDeviceCpotrf(uplo, n, a, lda):
-        """
-        Cholesky factorization.
-
-        """
-
-        status = _ffi_lib.culaDeviceCpotrf(uplo, n, int(a), lda)
-        culaCheckStatus(status)
-
-    def culaDeviceDpotrf(uplo, n, a, lda):
-        """
-        Cholesky factorization.
-
-        """
-
-        status = _ffi_lib.culaDeviceDpotrf(uplo, n, int(a), lda)
-        culaCheckStatus(status)
-
-    def culaDeviceZpotrf(uplo, n, a, lda):
-        """
-        Cholesky factorization.
-
-        """
-
-        status = _ffi_lib.culaDeviceZpotrf(uplo, n, int(a), lda)
-        culaCheckStatus(status)
+    status = _ffi_lib.culaDeviceZpotrf(uplo, n,
+                                       _ffi.cast('culaDeviceDouble *', a), lda)
+    culaCheckStatus(status)
 
 # SSYEV, DSYEV, CHEEV, ZHEEV        
-try:
-    _ffi_lib.culaDeviceSsyev.restype = \
-    _ffi_lib.culaDeviceDsyev.restype = \
-    _ffi_lib.culaDeviceCheev.restype = \
-    _ffi_lib.culaDeviceZheev.restype = int
-    _ffi_lib.culaDeviceSsyev.argtypes = \
-    _ffi_lib.culaDeviceDsyev.argtypes = \
-    _ffi_lib.culaDeviceCheev.argtypes = \
-    _ffi_lib.culaDeviceZheev.argtypes = [ctypes.c_char,
-                                         ctypes.c_char,
-                                         ctypes.c_int,
-                                         ctypes.c_void_p,
-                                         ctypes.c_int,
-                                         ctypes.c_void_p]
-except AttributeError:
-    def culaDeviceSsyev(jobz, uplo, n, a, lda, w):
-        """
-        Symmetric eigenvalue decomposition.
+@_cula_standard_req
+def culaDeviceSsyev(jobz, uplo, n, a, lda, w):
+    """
+    Symmetric eigenvalue decomposition.
+    """
 
-        """
+    status = _ffi_lib.culaDeviceSsyev(jobz, uplo, n, 
+                                      _ffi.cast('culaDeviceFloat *', a), lda,
+                                      _ffi.cast('culaDeviceFloat *', w))
+    culaCheckStatus(status)
 
-        raise NotImplementedError('CULA Dense required')
+@_cula_standard_req
+def culaDeviceDsyev(jobz, uplo, n, a, lda, w):
+    """
+    Symmetric eigenvalue decomposition.
+    """
 
-    def culaDeviceDsyev(jobz, uplo, n, a, lda, w):
-        """
-        Symmetric eigenvalue decomposition.
+    status = _ffi_lib.culaDeviceDsyev(jobz, uplo, n,
+                                      _ffi.cast('culaDeviceDouble *', a), lda,
+                                      _ffi.cast('culaDeviceDouble *', w))
+    culaCheckStatus(status)
 
-        """
+@_cula_standard_req
+def culaDeviceCheev(jobz, uplo, n, a, lda, w):
+    """
+    Hermitian eigenvalue decomposition.
+    """
 
-        raise NotImplementedError('CULA Dense required')
+    status = _ffi_lib.culaDeviceCheev(jobz, uplo, n,
+                                      _ffi.cast('culaDeviceFloatComplex *', a), lda,
+                                      int(w))
+    culaCheckStatus(status)
 
-    def culaDeviceCheev(jobz, uplo, n, a, lda, w):
-        """
-        Hermitian eigenvalue decomposition.
+@_cula_standard_req
+def culaDeviceZheev(jobz, uplo, n, a, lda, w):
+    """
+    Hermitian eigenvalue decomposition.
 
-        """
-        
-        raise NotImplementedError('CULA Dense required')
+    """
 
-    def culaDeviceZheev(jobz, uplo, n, a, lda, w):
-        """
-        Hermitian eigenvalue decomposition.
-
-        """
-        
-        raise NotImplementedError('CULA Dense required')    
-else:
-    
-    def culaDeviceSsyev(jobz, uplo, n, a, lda, w):
-        """
-        Symmetric eigenvalue decomposition.
-
-        """
-
-        status = _ffi_lib.culaDeviceSsyev(jobz, uplo, n, int(a), lda, int(w))
-        culaCheckStatus(status)
-
-    def culaDeviceDsyev(jobz, uplo, n, a, lda, w):
-        """
-        Symmetric eigenvalue decomposition.
-
-        """
-
-        status = _ffi_lib.culaDeviceDsyev(jobz, uplo, n, int(a), lda, int(w))
-        culaCheckStatus(status)
-
-    def culaDeviceCheev(jobz, uplo, n, a, lda, w):
-        """
-        Hermitian eigenvalue decomposition.
-
-        """
-
-        status = _ffi_lib.culaDeviceCheev(jobz, uplo, n, int(a), lda, int(w))
-        culaCheckStatus(status)
-
-    def culaDeviceZheev(jobz, uplo, n, a, lda, w):
-        """
-        Hermitian eigenvalue decomposition.
-
-        """
-
-        status = _ffi_lib.culaDeviceZheev(jobz, uplo, n, int(a), lda, int(w))
-        culaCheckStatus(status)
+    status = _ffi_lib.culaDeviceZheev(jobz, uplo, n,
+                                      _ffi.cast('culaDeviceDoubleComplex *', a), lda,
+                                      _ffi.cast('culaDeviceDoubleComplex *', w))
+    culaCheckStatus(status)
 
 # BLAS routines provided by CULA:
 
 # SGEMM, DGEMM, CGEMM, ZGEMM
-_ffi_lib.culaDeviceSgemm.restype = \
-_ffi_lib.culaDeviceDgemm.restype = \
-_ffi_lib.culaDeviceCgemm.restype = \
-_ffi_lib.culaDeviceZgemm.restype = int
-
-_ffi_lib.culaDeviceSgemm.argtypes = [ctypes.c_char,
-                                     ctypes.c_char,
-                                     ctypes.c_int,
-                                     ctypes.c_int,
-                                     ctypes.c_int,
-                                     ctypes.c_float,
-                                     ctypes.c_void_p,
-                                     ctypes.c_int,
-                                     ctypes.c_void_p,
-                                     ctypes.c_int,
-                                     ctypes.c_float,
-                                     ctypes.c_void_p,
-                                     ctypes.c_int]
-
-_ffi_lib.culaDeviceDgemm.argtypes = [ctypes.c_char,
-                                     ctypes.c_char,
-                                     ctypes.c_int,
-                                     ctypes.c_int,
-                                     ctypes.c_int,
-                                     ctypes.c_double,
-                                     ctypes.c_void_p,
-                                     ctypes.c_int,
-                                     ctypes.c_void_p,
-                                     ctypes.c_int,
-                                     ctypes.c_double,
-                                     ctypes.c_void_p,
-                                     ctypes.c_int]
-
-_ffi_lib.culaDeviceCgemm.argtypes = [ctypes.c_char,
-                                     ctypes.c_char,
-                                     ctypes.c_int,
-                                     ctypes.c_int,
-                                     ctypes.c_int,
-                                     cuda.cuFloatComplex,
-                                     ctypes.c_void_p,
-                                     ctypes.c_int,
-                                     ctypes.c_void_p,
-                                     ctypes.c_int,
-                                     cuda.cuFloatComplex,
-                                     ctypes.c_void_p,
-                                     ctypes.c_int]
-
-_ffi_lib.culaDeviceZgemm.argtypes = [ctypes.c_char,
-                                     ctypes.c_char,
-                                     ctypes.c_int,
-                                     ctypes.c_int,
-                                     ctypes.c_int,
-                                     cuda.cuDoubleComplex,
-                                     ctypes.c_void_p,
-                                     ctypes.c_int,
-                                     ctypes.c_void_p,
-                                     ctypes.c_int,
-                                     cuda.cuDoubleComplex,
-                                     ctypes.c_void_p,
-                                     ctypes.c_int]
-
 def culaDeviceSgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
     """
     Matrix-matrix product for general matrix.
-
     """
     
     status = _ffi_lib.culaDeviceSgemm(transa, transb, m, n, k, alpha,
-                           int(A), lda, int(B), ldb, beta, int(C), ldc)
+                                      int(A), lda,
+                                      int(B), ldb, beta,
+                                      int(C), ldc)
     culaCheckStatus(status)
 
 def culaDeviceDgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
     """
     Matrix-matrix product for general matrix.
-
     """
     
     status = _ffi_lib.culaDeviceDgemm(transa, transb, m, n, k, alpha,
-                           int(A), lda, int(B), ldb, beta, int(C), ldc)
+                                      int(A), lda,
+                                      int(B), ldb, beta,
+                                      int(C), ldc)
     culaCheckStatus(status)
 
 def culaDeviceCgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
     """
     Matrix-matrix product for complex general matrix.
-
     """
     
     status = _ffi_lib.culaDeviceCgemm(transa, transb, m, n, k,
@@ -1197,7 +1057,6 @@ def culaDeviceCgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc
 def culaDeviceZgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
     """
     Matrix-matrix product for complex general matrix.
-
     """
     
     status = _ffi_lib.culaDeviceZgemm(transa, transb, m, n, k,
