@@ -49,7 +49,7 @@ typedef cuDoubleComplex culaDoubleComplex;
 typedef culaFloatComplex culaDeviceFloatComplex;
 typedef culaDoubleComplex culaDeviceDoubleComplex;
 """
-_ffi.cdf(_cula_type_str + """
+_ffi.cdef(_cula_type_str + """
 culaStatus culaDeviceMalloc(void **mem, int *pitch, int rows, int cols, int elesize);
 """)
 try:
@@ -659,7 +659,7 @@ def culaDeviceCgels(trans, m, n, nrhs, a, lda, b, ldb):
     """
 
     status = _ffi_lib.culaDeviceCgels(trans, m, n, nrhs,
-                                      _ffi.cast('culaDeviceFloatComplex *', a), lda
+                                      _ffi.cast('culaDeviceFloatComplex *', a), lda,
                                       _ffi.cast('culaDeviceFloatComplex *', b), ldb)
     culaCheckStatus(status)
 
