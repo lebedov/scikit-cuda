@@ -4,6 +4,31 @@
 Python interface to CUDA runtime functions.
 """
 
+
+#####FIXME: needed for compatibility with cublas.py
+import ctypes
+class float2(ctypes.Structure):
+    _fields_ = [
+        ('x', ctypes.c_float),
+        ('y', ctypes.c_float)
+        ]
+class cuFloatComplex(float2):
+    @property
+    def value(self):
+        return complex(self.x, self.y)
+class double2(ctypes.Structure):
+    _fields_ = [
+        ('x', ctypes.c_double),
+        ('y', ctypes.c_double)
+        ]
+class cuDoubleComplex(double2):
+    @property
+    def value(self):
+        return complex(self.x, self.y)
+
+
+
+
 import re
 import struct
 
