@@ -1128,7 +1128,7 @@ else:
         culaCheckStatus(status)
 
 # BLAS routines provided by CULA:
-
+'''
 # SGEMM, DGEMM, CGEMM, ZGEMM
 _ffi_lib.culaDeviceSgemm.restype = \
 _ffi_lib.culaDeviceDgemm.restype = \
@@ -1783,7 +1783,7 @@ else:
         except culaDataError:
             return True
         return False
-
+'''
         
 if __name__ == "__main__":
     import doctest
