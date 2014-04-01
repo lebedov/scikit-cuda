@@ -70,8 +70,14 @@ typedef int culaVersion;
 typedef int culaInt;
 typedef culaInt culaDeviceInt;
 
-typedef cuFloatComplex culaFloatComplex;
-typedef cuDoubleComplex culaDoubleComplex;
+typedef float culaFloat;
+typedef culaFloat culaDeviceFloat;
+
+typedef float culaDouble;
+typedef culaDouble culaDeviceDouble;
+
+typedef ... culaFloatComplex;
+typedef ... culaDoubleComplex;
 
 typedef culaFloatComplex culaDeviceFloatComplex;
 typedef culaDoubleComplex culaDeviceDoubleComplex;
@@ -121,7 +127,7 @@ culaStatus culaInitialize();
 void culaShutdown();
 
 const char *culaGetStatusString(culaStatus e);
-const char *culaGetStatusAsString(culaStatus e);
+//const char *culaGetStatusAsString(culaStatus e);
 culaInfo culaGetErrorInfo();
 culaStatus culaGetErrorInfoString(culaStatus e, culaInfo i, char* buf, int bufsize);
 void culaFreeBuffers();
