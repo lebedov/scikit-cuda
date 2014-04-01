@@ -750,21 +750,20 @@ def culaDeviceCgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
 
 # LAPACK functions available in CULA Dense:
 
-class _cula_standard_req(object):
+def _cula_standard_req(f):
     """
     Decorator to replace function with a placeholder that raises an exception
     if the standard version of CULA is not installed:
     """
     
-    def __call__(self,f):
-        def f_new(*args,**kwargs):
-            raise NotImplementedError('CULA Dense required')
-        f_new.__doc__ = f.__doc__
+    def f_new(*args,**kwargs):
+        raise NotImplementedError('CULA Dense required')
+    f_new.__doc__ = f.__doc__
 
-        if _libcula_toolkit == 'standard':
-            return f
-        else:
-            return f_new
+    if _libcula_toolkit == 'standard':
+        return f
+    else:
+        return f_new
 
 # DGESV, ZGESV
 @_cula_standard_req
