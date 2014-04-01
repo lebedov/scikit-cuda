@@ -89,7 +89,7 @@ try:
     _ffi_lib = _ffi.verify("""
 #include <cuComplex.h>
 #include <cula.h>
-""", libraries=['cula_lapack'])
+""", libraries=['cula_lapack_basic'], library_dirs=['/usr/local/cuda/lib64', '/usr/local/cula/lib64'], include_dirs=['/usr/local/cuda/include', '/usr/local/cula/include'])
 except cffi.ffiplatform.VerificationError:
     _libcula_toolkit = 'free'
 else:
@@ -111,11 +111,11 @@ class culaStandardNotFound(culaError):
 
 # Import all CULA status definitions directly into module namespace:
 culaExceptions = {}
-_ffi = FFI()
+_ffi = cffi.FFI()
 _ffi_lib = _ffi.verify("""
 #include <cuComplex.h>
 #include <cula.h>
-""", libraries=['cula_lapack'])
+""", libraries=['cula_lapack_basic'], library_dirs=['/usr/local/cuda/lib64', '/usr/local/cula/lib64'], include_dirs=['/usr/local/cuda/include', '/usr/local/cula/include'])
                        
 for k, v in _ffi_lib.__dict__.iteritems():
     culaExceptions[v] = type(k, (culaError,), {})
@@ -408,10 +408,10 @@ culaStatus culaDeviceZunmrq(char side, char trans, int m, int n, int k, culaDevi
 """
 
 # Access CULA functions:
-_ffi = FFI()
+_ffi = cffi.FFI()
 _ffi.cdef(_cula_type_str + _cula_dense_free_str)
-_ffi_lib = _ffi.verify('#include <cula.h>',
-                       libraries=['cula_lapack'])
+_ffi_lib = _ffi.verify('#include <cula.h>', \
+    libraries=['cula_lapack_basic'], library_dirs=['/usr/local/cuda/lib64', '/usr/local/cula/lib64'], include_dirs=['/usr/local/cuda/include', '/usr/local/cula/include'])
 
 # Function for retrieving string associated with specific CULA error
 # code:

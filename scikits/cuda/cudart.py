@@ -147,7 +147,7 @@ cudaError_t cudaPointerGetAttributes(struct cudaPointerAttributes *attributes,
 _ffi_lib = _ffi.verify("""
 #include <cuda_runtime_api.h>
 #include <driver_types.h>
-""", libraries=['cudart'])
+""", libraries=['cudart'], library_dirs=['/usr/local/cuda/lib64/'], include_dirs=['/usr/local/cuda/include/'])
 
 def cudaGetErrorString(e):
     """

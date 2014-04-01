@@ -93,7 +93,7 @@ CUresult cuPointerGetAttribute(void *data, CUpointer_attribute attribute,
 
 _ffi_lib = _ffi.verify("""
 #include <cuda.h>
-""", libraries=['cuda', 'cudart'])
+""", libraries=['cuda', 'cudart'], library_dirs=['/usr/local/cuda/lib64/'], include_dirs=['/usr/local/cuda/include/'])
 
 # Generic CUDA driver error:
 class CUDA_ERROR(Exception):
