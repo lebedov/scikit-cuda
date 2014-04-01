@@ -220,3 +220,21 @@ def cudaFree(ptr):
     status = _ffi_lib.cudaFree(_ffi.cast('void *', ptr))
     cudaCheckStatus(status)
 
+
+def cudaGetDevice():
+    """
+Get current CUDA device.
+
+Return the identifying number of the device currently used to
+process CUDA operations.
+
+Returns
+-------
+dev : int
+Device number.
+
+"""
+    dev = _ffi.new('int[1]')
+    status = _ffi_lib.cudaGetDevice(dev)
+    cudaCheckStatus(status)
+    return dev[0]
