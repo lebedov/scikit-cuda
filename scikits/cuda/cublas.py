@@ -5153,6 +5153,78 @@ def cublasDgemmBatched(handle, transa, transb, m, n, k,
                                            ctypes.byref(ctypes.c_double(beta)),
                                            int(C), ldc, batchCount)
     cublasCheckStatus(status)
+
+# CgemmBatched, ZgemmBatched
+
+if _cublas_version >= 5000:
+    _libcublas.cublasCgemmBatched.restype = int
+    _libcublas.cublasCgemmBatched.argtypes = [_types.handle,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_int]
+@_cublas_version_req(5.0)
+def cublasCgemmBatched(handle, transa, transb, m, n, k, 
+                       alpha, A, lda, B, ldb, beta, C, ldc, batchCount):
+    """
+    Matrix-matrix product for arrays of real general matrices.
+
+    """
+
+    status = _libcublas.cublasCgemmBatched(handle,
+                                           _CUBLAS_OP[transa],
+                                           _CUBLAS_OP[transb], m, n, k, 
+                                           ctypes.byref(cuda.cuFloatComplex(alpha.real,
+                                                                        alpha.imag)),
+                                           int(A), lda, int(B), ldb,
+                                           ctypes.byref(cuda.cuFloatComplex(beta.real,
+                                                                        beta.imag)),
+                                           int(C), ldc, batchCount)
+
+if _cublas_version >= 5000:
+    _libcublas.cublasZgemmBatched.restype = int
+    _libcublas.cublasZgemmBatched.argtypes = [_types.handle,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_int]
+@_cublas_version_req(5.0)
+def cublasZgemmBatched(handle, transa, transb, m, n, k, 
+                       alpha, A, lda, B, ldb, beta, C, ldc, batchCount):
+    """
+    Matrix-matrix product for arrays of real general matrices.
+
+    """
+
+    status = _libcublas.cublasZgemmBatched(handle,
+                                           _CUBLAS_OP[transa],
+                                           _CUBLAS_OP[transb], m, n, k, 
+                                           ctypes.byref(cuda.cuDoubleComplex(alpha.real,
+                                                                        alpha.imag)),
+                                           int(A), lda, int(B), ldb,
+                                           ctypes.byref(cuda.cuDoubleComplex(beta.real,
+                                                                        beta.imag)),
+                                           int(C), ldc, batchCount)
     
 # StrsmBatched, DtrsmBatched
 if _cublas_version >= 5000:
