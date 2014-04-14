@@ -5177,7 +5177,7 @@ if _cublas_version >= 5000:
 def cublasCgemmBatched(handle, transa, transb, m, n, k, 
                        alpha, A, lda, B, ldb, beta, C, ldc, batchCount):
     """
-    Matrix-matrix product for arrays of real general matrices.
+    Matrix-matrix product for arrays of complex general matrices.
 
     """
 
@@ -5212,7 +5212,7 @@ if _cublas_version >= 5000:
 def cublasZgemmBatched(handle, transa, transb, m, n, k, 
                        alpha, A, lda, B, ldb, beta, C, ldc, batchCount):
     """
-    Matrix-matrix product for arrays of real general matrices.
+    Matrix-matrix product for arrays of complex general matrices.
 
     """
 
