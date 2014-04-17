@@ -229,6 +229,7 @@ Single-Precision BLAS-like Extension Routines
    cublasSdgmm
    cublasSgeam
    cublasSgemmBatched
+   cublasCgemmBatched
    cublasStrsmBatched
    cublasSgetrfBatched
    cublasCdgmm
@@ -243,6 +244,7 @@ Double-Precision BLAS-like Extension Routines
    cublasDdgmm
    cublasDgeam
    cublasDgemmBatched
+   cublasZgemmBatched
    cublasDtrsmBatched
    cublasDgetrfBatched
    cublasZdgmm
