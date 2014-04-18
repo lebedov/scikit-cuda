@@ -1814,8 +1814,7 @@ _SCAL_doc = Template(
     >>> ${func}(h, x.size, alpha, x_gpu.gpudata, 1)
     >>> cublasDestroy(h)
     >>> np.allclose(x_gpu.get(), alpha*x)
-    True
-    
+    True    
 """)
 
 _libcublas.cublasSscal_v2.restype = int
@@ -4836,6 +4835,60 @@ def cublasZher2k(handle, uplo, trans, n, k, alpha, A, lda, B, ldb, beta, C, ldc)
 ### BLAS-like extension routines ###
 
 # SGEAM, DGEAM, CGEAM, ZGEAM
+_GEAM_doc = Template(
+"""
+    Matrix-matrix addition/transposition (${precision} ${real}).
+
+    Computes the sum of two ${precision} ${real} scaled (and possibly transposed/conjugated) matrices.
+
+    Parameters
+    ----------
+    handle : int
+        CUBLAS context
+    transa, transb : char
+        'n' if the respective matrices to multiply are not transposed,
+        't' if they are, 'c' if they are conjugated.
+    m : int
+        Number of rows in `A` and `C`.
+    n : int
+        Number of columns in `B` and `C`.
+    alpha : ${num_type}
+        Constant by which to scale `A`.
+    A : ctypes.c_void_p
+        Pointer to first matrix operand (`A`).
+    lda : int
+        Leading dimension of `A`.
+    beta : ${num_type}
+        Constant by which to scale `B`.
+    B : ctypes.c_void_p
+        Pointer to second matrix operand (`B`).
+    ldb : int
+        Leading dimension of `A`.
+    C : ctypes.c_void_p
+        Pointer to result matrix (`C`).
+    ldc : int
+        Leading dimension of `C`.
+    
+    Examples
+    --------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import numpy as np
+    >>> a = ${a_data} 
+    >>> b = ${b_data}
+    >>> alpha = ${alpha_data}
+    >>> beta = ${beta_data}
+    >>> c = alpha*a+beta*b
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> b_gpu = gpuarray.to_gpu(b)
+    >>> c_gpu = gpuarray.empty_like(a_gpu)
+    >>> h = cublasCreate()
+    >>> ${func}(h, 'n', 'n', a.shape[0], b.shape[1], alpha, a_gpu.gpudata, a.shape[0], beta, b_gpu.gpudata, b.shape[0], c_gpu.gpudata, c.shape[0])    
+    >>> cublasDestroy(h)
+    >>> np.allclose(c_gpu.get(), c)
+    True
+""")
+
 if _cublas_version >= 5000:
     _libcublas.cublasSgeam.restype = int
     _libcublas.cublasSgeam.argtypes = [_types.handle,
@@ -4853,12 +4906,7 @@ if _cublas_version >= 5000:
                                        ctypes.c_int]
 @_cublas_version_req(5.0)                                   
 def cublasSgeam(handle, transa, transb,
-                m, n, alpha, A, lda, beta, B, ldb, C, ldc):
-    """
-    Real matrix-matrix addition/transposition.
-
-    """
-    
+                m, n, alpha, A, lda, beta, B, ldb, C, ldc):    
     status = _libcublas.cublasSgeam(handle,
                                     _CUBLAS_OP[transa],
                                     _CUBLAS_OP[transb],
@@ -4868,7 +4916,15 @@ def cublasSgeam(handle, transa, transb,
                                     int(B), ldb,
                                     int(C), ldc)
     cublasCheckStatus(status)
-    
+cublasSgeam.__doc__ = _GEAM_doc.substitute(precision='single-precision',
+                                           real='real',
+                                           num_type='numpy.float32',
+                                           a_data='np.random.rand(2, 3).astype(np.float32)',
+                                           b_data='np.random.rand(2, 3).astype(np.float32)',
+                                           alpha_data='np.float32(np.random.rand())',
+                                           beta_data='np.float32(np.random.rand())',
+                                           func='cublasSgeam')
+                                           
 if _cublas_version >= 5000:                                    
     _libcublas.cublasDgeam.restype = int
     _libcublas.cublasDgeam.argtypes = [_types.handle,
@@ -4887,11 +4943,6 @@ if _cublas_version >= 5000:
 @_cublas_version_req(5.0)                                   
 def cublasDgeam(handle, transa, transb,
                 m, n, alpha, A, lda, beta, B, ldb, C, ldc):
-    """
-    Real matrix-matrix addition/transposition.
-
-    """
-    
     status = _libcublas.cublasDgeam(handle,
                                     _CUBLAS_OP[transa],
                                     _CUBLAS_OP[transb],
@@ -4901,6 +4952,14 @@ def cublasDgeam(handle, transa, transb,
                                     int(B), ldb,
                                     int(C), ldc)
     cublasCheckStatus(status)
+cublasDgeam.__doc__ = _GEAM_doc.substitute(precision='double-precision',
+                                           real='real',
+                                           num_type='numpy.float64',
+                                           a_data='np.random.rand(2, 3).astype(np.float64)',
+                                           b_data='np.random.rand(2, 3).astype(np.float64)',
+                                           alpha_data='np.float64(np.random.rand())',
+                                           beta_data='np.float64(np.random.rand())',
+                                           func='cublasDgeam')
     
 if _cublas_version >= 5000:                                    
     _libcublas.cublasCgeam.restype = int
@@ -4920,11 +4979,6 @@ if _cublas_version >= 5000:
 @_cublas_version_req(5.0)                                   
 def cublasCgeam(handle, transa, transb,
                 m, n, alpha, A, lda, beta, B, ldb, C, ldc):
-    """
-    Complex matrix-matrix addition/transposition.
-
-    """
-    
     status = _libcublas.cublasCgeam(handle,
                                     _CUBLAS_OP[transa],
                                     _CUBLAS_OP[transb],
@@ -4937,6 +4991,14 @@ def cublasCgeam(handle, transa, transb,
                                     int(B), ldb,
                                     int(C), ldc)
     cublasCheckStatus(status)
+cublasCgeam.__doc__ = _GEAM_doc.substitute(precision='single-precision',
+                                           real='complex',
+                                           num_type='numpy.complex64',
+                                           a_data='(np.random.rand(2, 3)+1j*np.random.rand(2, 3)).astype(np.complex64)',
+                                           b_data='(np.random.rand(2, 3)+1j*np.random.rand(2, 3)).astype(np.complex64)',
+                                           alpha_data='np.complex64(np.random.rand()+1j*np.random.rand())',
+                                           beta_data='np.complex64(np.random.rand()+1j*np.random.rand())',
+                                           func='cublasCgeam')
     
 if _cublas_version >= 5000:                                    
     _libcublas.cublasZgeam.restype = int
@@ -4956,11 +5018,6 @@ if _cublas_version >= 5000:
 @_cublas_version_req(5.0)                                   
 def cublasZgeam(handle, transa, transb,
                 m, n, alpha, A, lda, beta, B, ldb, C, ldc):
-    """
-    Complex matrix-matrix addition/transposition.
-
-    """
-    
     status = _libcublas.cublasZgeam(handle,
                                     _CUBLAS_OP[transa],
                                     _CUBLAS_OP[transb],
@@ -4973,6 +5030,14 @@ def cublasZgeam(handle, transa, transb,
                                     int(B), ldb,
                                     int(C), ldc)
     cublasCheckStatus(status)
+cublasZgeam.__doc__ = _GEAM_doc.substitute(precision='double-precision',
+                                           real='complex',
+                                           num_type='numpy.complex128',
+                                           a_data='(np.random.rand(2, 3)+1j*np.random.rand(2, 3)).astype(np.complex128)',
+                                           b_data='(np.random.rand(2, 3)+1j*np.random.rand(2, 3)).astype(np.complex128)',
+                                           alpha_data='np.complex128(np.random.rand()+1j*np.random.rand())',
+                                           beta_data='np.complex128(np.random.rand()+1j*np.random.rand())',
+                                           func='cublasZgeam')
     
 # SDGMM, DDGMM, CDGMM, ZDGMM
 if _cublas_version >= 5000:
