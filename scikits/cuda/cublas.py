@@ -4839,15 +4839,16 @@ _GEAM_doc = Template(
 """
     Matrix-matrix addition/transposition (${precision} ${real}).
 
-    Computes the sum of two ${precision} ${real} scaled (and possibly transposed/conjugated) matrices.
+    Computes the sum of two ${precision} ${real} scaled and possibly (conjugate)
+    transposed matrices.
 
     Parameters
     ----------
     handle : int
         CUBLAS context
-    transa, transb : char
-        'n' if the respective matrices to multiply are not transposed,
-        't' if they are, 'c' if they are conjugated.
+    transa, transb : char        
+        't' if they are transposed, 'c' if they are conjugate transposed,
+        'n' if otherwise.
     m : int
         Number of rows in `A` and `C`.
     n : int
@@ -4874,19 +4875,29 @@ _GEAM_doc = Template(
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> a = ${a_data} 
-    >>> b = ${b_data}
     >>> alpha = ${alpha_data}
     >>> beta = ${beta_data}
-    >>> c = alpha*a+beta*b
+    >>> a = ${a_data_1} 
+    >>> b = ${b_data_1}
+    >>> c = ${c_data_1}
     >>> a_gpu = gpuarray.to_gpu(a)
     >>> b_gpu = gpuarray.to_gpu(b)
-    >>> c_gpu = gpuarray.empty_like(a_gpu)
+    >>> c_gpu = gpuarray.empty(c.shape, c.dtype)
     >>> h = cublasCreate()
-    >>> ${func}(h, 'n', 'n', a.shape[0], b.shape[1], alpha, a_gpu.gpudata, a.shape[0], beta, b_gpu.gpudata, b.shape[0], c_gpu.gpudata, c.shape[0])    
-    >>> cublasDestroy(h)
+    >>> ${func}(h, 'n', 'n', c.shape[0], c.shape[1], alpha, a_gpu.gpudata, a.shape[0], beta, b_gpu.gpudata, b.shape[0], c_gpu.gpudata, c.shape[0])    
     >>> np.allclose(c_gpu.get(), c)
     True
+    >>> a = ${a_data_2}
+    >>> b = ${b_data_2}
+    >>> c = ${c_data_2}
+    >>> a_gpu = gpuarray.to_gpu(a.T.copy())
+    >>> b_gpu = gpuarray.to_gpu(b.T.copy())
+    >>> c_gpu = gpuarray.empty(c.T.shape, c.dtype)
+    >>> transa = 'c' if np.iscomplexobj(a) else 't'
+    >>> ${func}(h, transa, 'n', c.shape[0], c.shape[1], alpha, a_gpu.gpudata, a.shape[0], beta, b_gpu.gpudata, b.shape[0], c_gpu.gpudata, c.shape[0])    
+    >>> np.allclose(c_gpu.get().T, c)
+    True
+    >>> cublasDestroy(h)
 """)
 
 if _cublas_version >= 5000:
@@ -4919,10 +4930,14 @@ def cublasSgeam(handle, transa, transb,
 cublasSgeam.__doc__ = _GEAM_doc.substitute(precision='single-precision',
                                            real='real',
                                            num_type='numpy.float32',
-                                           a_data='np.random.rand(2, 3).astype(np.float32)',
-                                           b_data='np.random.rand(2, 3).astype(np.float32)',
                                            alpha_data='np.float32(np.random.rand())',
                                            beta_data='np.float32(np.random.rand())',
+                                           a_data_1='np.random.rand(2, 3).astype(np.float32)',
+                                           b_data_1='np.random.rand(2, 3).astype(np.float32)',
+                                           a_data_2='np.random.rand(2, 3).astype(np.float32)',
+                                           b_data_2='np.random.rand(3, 2).astype(np.float32)',
+                                           c_data_1='alpha*a+beta*b',
+                                           c_data_2='alpha*a.T+beta*b',
                                            func='cublasSgeam')
                                            
 if _cublas_version >= 5000:                                    
@@ -4955,10 +4970,14 @@ def cublasDgeam(handle, transa, transb,
 cublasDgeam.__doc__ = _GEAM_doc.substitute(precision='double-precision',
                                            real='real',
                                            num_type='numpy.float64',
-                                           a_data='np.random.rand(2, 3).astype(np.float64)',
-                                           b_data='np.random.rand(2, 3).astype(np.float64)',
                                            alpha_data='np.float64(np.random.rand())',
                                            beta_data='np.float64(np.random.rand())',
+                                           a_data_1='np.random.rand(2, 3).astype(np.float64)',
+                                           b_data_1='np.random.rand(2, 3).astype(np.float64)',
+                                           a_data_2='np.random.rand(2, 3).astype(np.float64)',
+                                           b_data_2='np.random.rand(3, 2).astype(np.float64)',
+                                           c_data_1='alpha*a+beta*b',
+                                           c_data_2='alpha*a.T+beta*b',
                                            func='cublasDgeam')
     
 if _cublas_version >= 5000:                                    
@@ -4994,10 +5013,14 @@ def cublasCgeam(handle, transa, transb,
 cublasCgeam.__doc__ = _GEAM_doc.substitute(precision='single-precision',
                                            real='complex',
                                            num_type='numpy.complex64',
-                                           a_data='(np.random.rand(2, 3)+1j*np.random.rand(2, 3)).astype(np.complex64)',
-                                           b_data='(np.random.rand(2, 3)+1j*np.random.rand(2, 3)).astype(np.complex64)',
                                            alpha_data='np.complex64(np.random.rand()+1j*np.random.rand())',
                                            beta_data='np.complex64(np.random.rand()+1j*np.random.rand())',
+                                           a_data_1='(np.random.rand(2, 3)+1j*np.random.rand(2, 3)).astype(np.complex64)',
+                                           a_data_2='(np.random.rand(2, 3)+1j*np.random.rand(2, 3)).astype(np.complex64)',
+                                           b_data_1='(np.random.rand(2, 3)+1j*np.random.rand(2, 3)).astype(np.complex64)',
+                                           b_data_2='(np.random.rand(3, 2)+1j*np.random.rand(3, 2)).astype(np.complex64)',
+                                           c_data_1='alpha*a+beta*b',
+                                           c_data_2='alpha*np.conj(a).T+beta*b',
                                            func='cublasCgeam')
     
 if _cublas_version >= 5000:                                    
@@ -5033,10 +5056,14 @@ def cublasZgeam(handle, transa, transb,
 cublasZgeam.__doc__ = _GEAM_doc.substitute(precision='double-precision',
                                            real='complex',
                                            num_type='numpy.complex128',
-                                           a_data='(np.random.rand(2, 3)+1j*np.random.rand(2, 3)).astype(np.complex128)',
-                                           b_data='(np.random.rand(2, 3)+1j*np.random.rand(2, 3)).astype(np.complex128)',
                                            alpha_data='np.complex128(np.random.rand()+1j*np.random.rand())',
                                            beta_data='np.complex128(np.random.rand()+1j*np.random.rand())',
+                                           a_data_1='(np.random.rand(2, 3)+1j*np.random.rand(2, 3)).astype(np.complex128)',
+                                           a_data_2='(np.random.rand(2, 3)+1j*np.random.rand(2, 3)).astype(np.complex128)',
+                                           b_data_1='(np.random.rand(2, 3)+1j*np.random.rand(2, 3)).astype(np.complex128)',
+                                           b_data_2='(np.random.rand(3, 2)+1j*np.random.rand(3, 2)).astype(np.complex128)',
+                                           c_data_1='alpha*a+beta*b',
+                                           c_data_2='alpha*np.conj(a).T+beta*b',
                                            func='cublasZgeam')
     
 # SDGMM, DDGMM, CDGMM, ZDGMM
