@@ -13,12 +13,39 @@ import ctypes
 import atexit
 import numpy as np
 
+
+#####FIXME: needed for compatibility with linalg.py
+import sys
+import ctypes
+import atexit
+import numpy as np
+import cuda
+if sys.platform == 'linux2':
+    _libcula_libname_list = ['libcula_lapack.so', 'libcula_lapack_basic.so', 'libcula.so']
+elif sys.platform == 'darwin':
+    _libcula_libname_list = ['libcula_lapack.so', 'libcula.dylib']
+else:
+    raise RuntimeError('unsupported platform')
+_load_err = ''
+for _lib in _libcula_libname_list:
+    try:
+        _libcula = ctypes.cdll.LoadLibrary(_lib)
+    except OSError:
+        _load_err += ('' if _load_err == '' else ', ') + _lib
+    else:
+        _load_err = ''
+        break
+if _load_err:
+    raise OSError('%s not found' % _load_err)
+
+
 import cuda
 
 # Check whether the free or standard version of the toolkit is
 # installed by trying to access a function that is only available in
 # the latter:
 _cula_type_str = """
+
 typedef enum
 {
     culaNoError,                       // No error
@@ -43,20 +70,26 @@ typedef int culaVersion;
 typedef int culaInt;
 typedef culaInt culaDeviceInt;
 
-typedef cuFloatComplex culaFloatComplex;
-typedef cuDoubleComplex culaDoubleComplex;
+typedef float culaFloat;
+typedef culaFloat culaDeviceFloat;
+
+typedef float culaDouble;
+typedef culaDouble culaDeviceDouble;
+
+typedef ... culaFloatComplex;
+typedef ... culaDoubleComplex;
 
 typedef culaFloatComplex culaDeviceFloatComplex;
 typedef culaDoubleComplex culaDeviceDoubleComplex;
 """
-_ffi.cdf(_cula_type_str + """
+_ffi.cdef(_cula_type_str + """
 culaStatus culaDeviceMalloc(void **mem, int *pitch, int rows, int cols, int elesize);
 """)
 try:
     _ffi_lib = _ffi.verify("""
 #include <cuComplex.h>
 #include <cula.h>
-""", libraries=['cula_lapack'])
+""", libraries=['cula_lapack_basic'], library_dirs=['/usr/local/cuda/lib64', '/usr/local/cula/lib64'], include_dirs=['/usr/local/cuda/include', '/usr/local/cula/include'])
 except cffi.ffiplatform.VerificationError:
     _libcula_toolkit = 'free'
 else:
@@ -78,11 +111,11 @@ class culaStandardNotFound(culaError):
 
 # Import all CULA status definitions directly into module namespace:
 culaExceptions = {}
-_ffi = FFI()
+_ffi = cffi.FFI()
 _ffi_lib = _ffi.verify("""
 #include <cuComplex.h>
 #include <cula.h>
-""", libraries=['cula_lapack'])
+""", libraries=['cula_lapack_basic'], library_dirs=['/usr/local/cuda/lib64', '/usr/local/cula/lib64'], include_dirs=['/usr/local/cuda/include', '/usr/local/cula/include'])
                        
 for k, v in _ffi_lib.__dict__.iteritems():
     culaExceptions[v] = type(k, (culaError,), {})
@@ -94,7 +127,7 @@ culaStatus culaInitialize();
 void culaShutdown();
 
 const char *culaGetStatusString(culaStatus e);
-const char *culaGetStatusAsString(culaStatus e);
+//const char *culaGetStatusAsString(culaStatus e);
 culaInfo culaGetErrorInfo();
 culaStatus culaGetErrorInfoString(culaStatus e, culaInfo i, char* buf, int bufsize);
 void culaFreeBuffers();
@@ -375,10 +408,10 @@ culaStatus culaDeviceZunmrq(char side, char trans, int m, int n, int k, culaDevi
 """
 
 # Access CULA functions:
-_ffi = FFI()
+_ffi = cffi.FFI()
 _ffi.cdef(_cula_type_str + _cula_dense_free_str)
-_ffi_lib = _ffi.verify('#include <cula.h>',
-                       libraries=['cula_lapack'])
+_ffi_lib = _ffi.verify('#include <cula.h>', \
+    libraries=['cula_lapack_basic'], library_dirs=['/usr/local/cuda/lib64', '/usr/local/cula/lib64'], include_dirs=['/usr/local/cuda/include', '/usr/local/cula/include'])
 
 # Function for retrieving string associated with specific CULA error
 # code:
@@ -659,7 +692,7 @@ def culaDeviceCgels(trans, m, n, nrhs, a, lda, b, ldb):
     """
 
     status = _ffi_lib.culaDeviceCgels(trans, m, n, nrhs,
-                                      _ffi.cast('culaDeviceFloatComplex *', a), lda
+                                      _ffi.cast('culaDeviceFloatComplex *', a), lda,
                                       _ffi.cast('culaDeviceFloatComplex *', b), ldb)
     culaCheckStatus(status)
 
@@ -717,21 +750,20 @@ def culaDeviceCgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
 
 # LAPACK functions available in CULA Dense:
 
-class _cula_standard_req(object):
+def _cula_standard_req(f):
     """
     Decorator to replace function with a placeholder that raises an exception
     if the standard version of CULA is not installed:
     """
     
-    def __call__(self,f):
-        def f_new(*args,**kwargs):
-            raise NotImplementedError('CULA Dense required')
-        f_new.__doc__ = f.__doc__
+    def f_new(*args,**kwargs):
+        raise NotImplementedError('CULA Dense required')
+    f_new.__doc__ = f.__doc__
 
-        if _libcula_toolkit == 'standard':
-            return f
-        else:
-            return f_new
+    if _libcula_toolkit == 'standard':
+        return f
+    else:
+        return f_new
 
 # DGESV, ZGESV
 @_cula_standard_req
@@ -1016,7 +1048,7 @@ def culaDeviceZheev(jobz, uplo, n, a, lda, w):
     culaCheckStatus(status)
 
 # BLAS routines provided by CULA:
-
+'''
 # SGEMM, DGEMM, CGEMM, ZGEMM
 def culaDeviceSgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc):
     """
@@ -1610,7 +1642,7 @@ else:
         except culaDataError:
             return True
         return False
-
+'''
         
 if __name__ == "__main__":
     import doctest

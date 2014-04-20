@@ -4,6 +4,31 @@
 Python interface to CUDA runtime functions.
 """
 
+
+#####FIXME: needed for compatibility with cublas.py
+import ctypes
+class float2(ctypes.Structure):
+    _fields_ = [
+        ('x', ctypes.c_float),
+        ('y', ctypes.c_float)
+        ]
+class cuFloatComplex(float2):
+    @property
+    def value(self):
+        return complex(self.x, self.y)
+class double2(ctypes.Structure):
+    _fields_ = [
+        ('x', ctypes.c_double),
+        ('y', ctypes.c_double)
+        ]
+class cuDoubleComplex(double2):
+    @property
+    def value(self):
+        return complex(self.x, self.y)
+
+
+
+
 import re
 import struct
 
@@ -122,7 +147,7 @@ cudaError_t cudaPointerGetAttributes(struct cudaPointerAttributes *attributes,
 _ffi_lib = _ffi.verify("""
 #include <cuda_runtime_api.h>
 #include <driver_types.h>
-""", libraries=['cudart'])
+""", libraries=['cudart'], library_dirs=['/usr/local/cuda/lib64/'], include_dirs=['/usr/local/cuda/include/'])
 
 def cudaGetErrorString(e):
     """
@@ -220,3 +245,21 @@ def cudaFree(ptr):
     status = _ffi_lib.cudaFree(_ffi.cast('void *', ptr))
     cudaCheckStatus(status)
 
+
+def cudaGetDevice():
+    """
+Get current CUDA device.
+
+Return the identifying number of the device currently used to
+process CUDA operations.
+
+Returns
+-------
+dev : int
+Device number.
+
+"""
+    dev = _ffi.new('int[1]')
+    status = _ffi_lib.cudaGetDevice(dev)
+    cudaCheckStatus(status)
+    return dev[0]

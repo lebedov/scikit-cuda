@@ -147,7 +147,7 @@ cufftResult cufftGetVersion(int *version);
 _ffi_lib = _ffi.verify("""
 #include <cuda.h>
 #include <cufft.h>
-""", libraries=['cufft'])
+""", libraries=['cufft'], library_dirs=['/usr/local/cuda/lib64/'], include_dirs=['/usr/local/cuda/include/'])
 
 # Import all CUFFT* definitions directly into module namespace:
 for k, v in _ffi_lib.__dict__.iteritems():

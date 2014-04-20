@@ -364,8 +364,8 @@ void magma_zswap(
 _ffi_lib = _ffi.verify("""
 #include <magma.h>
 """, 
-include_dirs=['/home/lev/Work/prod-root/usr/include/'], 
-     library_dirs=['/home/lev/Work/prod-root/usr/lib/'], 
+include_dirs=['/usr/local/magma/include/'], 
+     library_dirs=['/usr/local/magma/lib/'], 
      extra_compile_args=['-DHAVE_CUBLAS=1'], 
      libraries=['magma'])
 

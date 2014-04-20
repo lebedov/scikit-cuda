@@ -366,7 +366,7 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
     # and in the input vector.
 
 
-def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None):
+def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
     """
     Dot product of two arrays.
 
@@ -389,6 +389,8 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None):
     handle : int
         CUBLAS context. If no context is specified, the default handle from
         `scikits.cuda.misc._global_cublas_handle` is used.
+    out : pycuda.gpuarray.GPUArray, optional
+        Output argument. Will be used to store the result.
 
     Returns
     -------
@@ -512,7 +514,12 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None):
 
         # Note that the desired shape of the output matrix is the transpose
         # of what CUBLAS assumes:
-        c_gpu = gpuarray.empty((n, ldc), x_gpu.dtype)
+        if out is None:
+            c_gpu = gpuarray.empty((n, ldc), x_gpu.dtype)
+        else:
+            if out.shape != (n, ldc) or out.dtype != x_gpu.dtype:
+                raise ValueError('invalid value for out')
+            c_gpu = out
         cublas_func(handle, transb, transa, m, n, k, alpha, y_gpu.gpudata,
                     lda, x_gpu.gpudata, ldb, beta, c_gpu.gpudata, ldc)
 
