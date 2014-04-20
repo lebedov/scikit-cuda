@@ -581,7 +581,7 @@ _ffi_lib = _ffi.verify("""
 #include <cusparse.h>
 #include <driver_types.h>
 #include <cuComplex.h>
-""", libraries=['cusparse'])
+""", libraries=['cusparse'], library_dirs=['/usr/local/cuda/lib64/'], include_dirs=['/usr/local/cuda/include/'])
 
 class CUSPARSE_ERROR(Exception):
     """CUSPARSE error"""
