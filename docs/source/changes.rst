@@ -12,6 +12,7 @@ Release 0.043 - (under development)
 * Speed up misc.maxabs using reduction and kernel memoization.
 * Speed up misc.cumsum using scan and kernel memoization.
 * Speed up linalg.conj and misc.diff using elementwise kernel and memoization.
+* Speed up special.{sici,exp1,expi} using elementwise kernel and memoization.
 * Add wrappers for experimental multi-GPU CULA routines in CULA Dense R14+.
 * Use ldconfig to find library paths rather than libdl (#39).
 * Fix win32 platform detection.
