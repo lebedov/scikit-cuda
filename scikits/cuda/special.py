@@ -5,9 +5,8 @@ PyCUDA-based special functions.
 """
 
 import os
-from string import Template
 import pycuda.gpuarray as gpuarray
-from pycuda.compiler import SourceModule
+import pycuda.elementwise as elementwise
 import numpy as np
 
 import misc
@@ -16,32 +15,6 @@ from misc import init
 
 # Get installation location of C headers:
 from . import install_headers
-
-# Adapted from Cephes library:
-sici_template = Template("""
-#include "cuSpecialFuncs.h"
-
-#if ${use_double}
-#define FLOAT double
-#define SICI(x, si, ci) sici(x, si, ci)
-#else
-#define FLOAT float
-#define SICI(x, si, ci) sicif(x, si, ci)
-#endif
-
-__global__ void sici_array(FLOAT *x, FLOAT *si,
-                           FLOAT *ci, unsigned int N) {
-    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
-                       blockIdx.x*blockDim.x+threadIdx.x;
-    FLOAT si_temp, ci_temp;
-
-    if (idx < N) {         
-        SICI(x[idx], &si_temp, &ci_temp);
-        si[idx] = si_temp;
-        ci[idx] = ci_temp;
-    }
-}
-""")
 
 def sici(x_gpu):
     """
@@ -76,71 +49,31 @@ def sici(x_gpu):
     True
     >>> np.allclose(ci, ci_gpu.get())
     True
-    
     """
 
     if x_gpu.dtype == np.float32:
-        use_double = 0
+        args = 'float *x, float *si, float *ci'
+        op = 'sicif(x[i], &si[i], &ci[i])'
     elif x_gpu.dtype == np.float64:
-        use_double = 1
+        args = 'double *x, double *si, double *ci'
+        op = 'sici(x[i], &si[i], &ci[i])'
     else:
         raise ValueError('unsupported type')
     
-    # Get block/grid sizes:
-    dev = misc.get_current_device()
-    block_dim, grid_dim = misc.select_block_grid_sizes(dev, x_gpu.shape)
-
-    # Set this to False when debugging to make sure the compiled kernel is
-    # not cached:
-    cache_dir=None
-    sici_mod = \
-             SourceModule(sici_template.substitute(use_double=use_double),
-                          cache_dir=cache_dir,
-                          options=["-I", install_headers])
-    sici_func = sici_mod.get_function("sici_array")
+    try:
+        func = sici.cache[x_gpu.dtype]
+    except KeyError:
+        func = elementwise.ElementwiseKernel(args, op,
+                                 options=["-I", install_headers],
+                                 preamble='#include "cuSpecialFuncs.h"')
+        sici.cache[x_gpu.dtype] = func
 
     si_gpu = gpuarray.empty_like(x_gpu)
     ci_gpu = gpuarray.empty_like(x_gpu)
-    sici_func(x_gpu, si_gpu, ci_gpu,
-              np.uint32(x_gpu.size),
-              block=block_dim,
-              grid=grid_dim)
+    func(x_gpu, si_gpu, ci_gpu)
+        
     return (si_gpu, ci_gpu)
-
-expi_template = Template("""
-#include <pycuda-complex.hpp>
-#include "cuSpecialFuncs.h"
-
-#if ${use_double}
-#define FLOAT double
-#define COMPLEX pycuda::complex<double>
-#define EXP1(z) exp1(z)
-#define EXPI(z) expi(z)
-#else
-#define FLOAT float
-#define COMPLEX pycuda::complex<float>
-#define EXP1(z) exp1(z)
-#define EXPI(z) expi(z)
-#endif
-
-__global__ void exp1_array(COMPLEX *z, COMPLEX *e,
-                          unsigned int N) {
-    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
-                       blockIdx.x*blockDim.x+threadIdx.x;
-
-    if (idx < N) 
-        e[idx] = EXP1(z[idx]);
-}
-
-__global__ void expi_array(COMPLEX *z, COMPLEX *e,
-                           unsigned int N) {
-    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
-                       blockIdx.x*blockDim.x+threadIdx.x;
-
-    if (idx < N) 
-        e[idx] = EXPI(z[idx]);
-}
-""")
+sici.cache = {}
 
 def exp1(z_gpu):
     """
@@ -170,40 +103,29 @@ def exp1(z_gpu):
     >>> e_sp = scipy.special.exp1(z)
     >>> np.allclose(e_sp, e_gpu.get())
     True
-
     """
 
     if z_gpu.dtype == np.complex64:
-        use_double = 0
+        args = 'pycuda::complex<float> *z, pycuda::complex<float> *e' 
     elif z_gpu.dtype == np.complex128:
-        use_double = 1
+        args = 'pycuda::complex<double> *z, pycuda::complex<double> *e' 
     else:
         raise ValueError('unsupported type')
-
+    op = 'e[i] = exp1(z[i])'
     
-    # Get block/grid sizes; the number of threads per block is limited
-    # to 256 because the kernel defined above uses too many
-    # registers to be invoked more threads per block:
-    dev = misc.get_current_device()
-    max_threads_per_block = 256
-    block_dim, grid_dim = \
-               misc.select_block_grid_sizes(dev, z_gpu.shape, max_threads_per_block)
-
-    # Set this to False when debugging to make sure the compiled kernel is
-    # not cached:
-    cache_dir=None
-    expi_mod = \
-             SourceModule(expi_template.substitute(use_double=use_double),
-                          cache_dir=cache_dir,
-                          options=["-I", install_headers])
-    exp1_func = expi_mod.get_function("exp1_array")
+    try:
+        func = exp1.cache[z_gpu.dtype]
+    except KeyError:
+        func = elementwise.ElementwiseKernel(args, op,
+                                 options=["-I", install_headers],
+                                 preamble='#include "cuSpecialFuncs.h"')
+        exp1.cache[z_gpu.dtype] = func
 
     e_gpu = gpuarray.empty_like(z_gpu)
-    exp1_func(z_gpu, e_gpu,
-              np.uint32(z_gpu.size),
-              block=block_dim,
-              grid=grid_dim)
+    func(z_gpu, e_gpu)
+
     return e_gpu
+exp1.cache = {}
 
 def expi(z_gpu):
     """
@@ -233,39 +155,29 @@ def expi(z_gpu):
     >>> e_sp = scipy.special.expi(z)
     >>> np.allclose(e_sp, e_gpu.get())
     True
-
     """
 
     if z_gpu.dtype == np.complex64:
-        use_double = 0
+        args = 'pycuda::complex<float> *z, pycuda::complex<float> *e' 
     elif z_gpu.dtype == np.complex128:
-        use_double = 1
+        args = 'pycuda::complex<double> *z, pycuda::complex<double> *e' 
     else:
         raise ValueError('unsupported type')
+    op = 'e[i] = expi(z[i])'
    
-    # Get block/grid sizes; the number of threads per block is limited
-    # to 128 because the kernel defined above uses too many
-    # registers to be invoked more threads per block:
-    dev = misc.get_current_device()
-    max_threads_per_block = 128
-    block_dim, grid_dim = \
-               misc.select_block_grid_sizes(dev, z_gpu.shape, max_threads_per_block)
-
-    # Set this to False when debugging to make sure the compiled kernel is
-    # not cached:
-    cache_dir=None
-    expi_mod = \
-             SourceModule(expi_template.substitute(use_double=use_double),
-                          cache_dir=cache_dir,
-                          options=["-I", install_headers])
-    expi_func = expi_mod.get_function("expi_array")
+    try:
+        func = expi.cache[z_gpu.dtype]
+    except KeyError:
+        func = elementwise.ElementwiseKernel(args, op,
+                                 options=["-I", install_headers],
+                                 preamble='#include "cuSpecialFuncs.h"')
+        expi.cache[z_gpu.dtype] = func
 
     e_gpu = gpuarray.empty_like(z_gpu)
-    expi_func(z_gpu, e_gpu,
-              np.uint32(z_gpu.size),
-              block=block_dim,
-              grid=grid_dim)
+    func(z_gpu, e_gpu)
+
     return e_gpu
+expi.cache = {}
     
 if __name__ == "__main__":
     import doctest
