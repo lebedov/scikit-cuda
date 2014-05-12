@@ -99,26 +99,31 @@ typedef struct cusparseMatDescr *cusparseMatDescr_t;
 cusparseStatus_t cusparseCreate(cusparseHandle_t *handle);
 cusparseStatus_t cusparseDestroy(cusparseHandle_t handle);
 cusparseStatus_t cusparseGetVersion(cusparseHandle_t handle, int *version);
-cusparseStatus_t cusparseSetStream(cusparseHandle_t handle, cudaStream_t streamId);
+cusparseStatus_t cusparseSetStream(cusparseHandle_t handle,
+                                   cudaStream_t streamId);
 
 // matrix descriptor routines
 cusparseStatus_t cusparseCreateMatDescr(cusparseMatDescr_t *descrA);
 cusparseStatus_t cusparseDestroyMatDescr(cusparseMatDescr_t descrA);
 
-cusparseStatus_t cusparseSetMatType(cusparseMatDescr_t descrA, cusparseMatrixType_t type);
+cusparseStatus_t cusparseSetMatType(cusparseMatDescr_t descrA,
+                                    cusparseMatrixType_t type);
 cusparseMatrixType_t cusparseGetMatType(const cusparseMatDescr_t descrA);
 
-cusparseStatus_t cusparseSetMatFillMode(cusparseMatDescr_t descrA, cusparseFillMode_t fillMode);
+cusparseStatus_t cusparseSetMatFillMode(cusparseMatDescr_t descrA,
+                                        cusparseFillMode_t fillMode);
 cusparseFillMode_t cusparseGetMatFillMode(const cusparseMatDescr_t descrA);
 
-cusparseStatus_t cusparseSetMatDiagType(cusparseMatDescr_t descrA, cusparseDiagType_t diagType);
+cusparseStatus_t cusparseSetMatDiagType(cusparseMatDescr_t descrA,
+                                        cusparseDiagType_t diagType);
 cusparseDiagType_t cusparseGetMatDiagType(const cusparseMatDescr_t descrA);
 
-cusparseStatus_t cusparseSetMatIndexBase(cusparseMatDescr_t descrA, cusparseIndexBase_t base);
+cusparseStatus_t cusparseSetMatIndexBase(cusparseMatDescr_t descrA,
+                                         cusparseIndexBase_t base);
 cusparseIndexBase_t cusparseGetMatIndexBase(const cusparseMatDescr_t descrA);
 
 cusparseStatus_t cusparseCreateSolveAnalysisInfo(cusparseSolveAnalysisInfo_t *info);
-cusparseStatus_t  cusparseDestroySolveAnalysisInfo(cusparseSolveAnalysisInfo_t info);
+cusparseStatus_t cusparseDestroySolveAnalysisInfo(cusparseSolveAnalysisInfo_t info);
 
 // level 1 routines
 cusparseStatus_t cusparseSaxpyi(cusparseHandle_t handle,
@@ -581,19 +586,24 @@ cusparseStatus_t cusparseZcsr2csc(cusparseHandle_t handle,
 # Get the address in a cdata pointer:
 _ptr_to_long = lambda ptr: struct.Struct('L').unpack(_ffi.buffer(ptr))[0]
 
-_ffi_lib = _ffi.verify("""
+__verify_scr = """
 #include <cusparse_v2.h>
 #include <driver_types.h>
 #include <cuComplex.h>
-""", libraries=['cusparse'], include_dirs=['/usr/local/cuda/include'], library_dirs=['/usr/local/cuda/lib64/'])
+"""
+_ffi_lib = _ffi.verify(__verify_scr, libraries=['cusparse'],
+                       include_dirs=['/usr/local/cuda/include'],
+                       library_dirs=['/usr/local/cuda/lib64/'])
+
 
 class CUSPARSE_ERROR(Exception):
+
     """CUSPARSE error"""
     pass
 
-# Use CUSPARSE_STATUS* definitions to dynamically create corresponding exception
-# classes and populate dictionary used to raise appropriate exception in
-# response to the corresponding CUSPARSE error code:
+# Use CUSPARSE_STATUS* definitions to dynamically create corresponding
+# exception classes and populate dictionary used to raise appropriate
+# exception in response to the corresponding CUSPARSE error code:
 CUSPARSE_EXCEPTIONS = {-1: CUSPARSE_ERROR}
 for k, v in _ffi_lib.__dict__.iteritems():
 
@@ -602,8 +612,9 @@ for k, v in _ffi_lib.__dict__.iteritems():
         CUSPARSE_EXCEPTIONS[v] = vars()[k] = type(k, (CUSPARSE_ERROR,), {})
 
 # Import various enum values into module namespace:
+regex = 'CUSPARSE_(?:MATRIX|FILL|DIAG|INDEX|OPERATION|DIRECTION).*'
 for k, v in _ffi_lib.__dict__.iteritems():
-    if re.match('CUSPARSE_(?:MATRIX|FILL|DIAG|INDEX|OPERATION|DIRECTION).*', k):
+    if re.match(regex, k):
         vars()[k] = v
 
 
@@ -629,6 +640,7 @@ def cusparseCheckStatus(status):
             raise CUSPARSE_EXCEPTIONS[status]
         except KeyError:
             raise CUSPARSE_ERROR
+
 
 def cusparseCreate():
     """
@@ -667,6 +679,7 @@ def cusparseDestroy(handle):
     status = _ffi_lib.cusparseDestroy(handle)
     cusparseCheckStatus(status)
 
+
 def cusparseGetVersion(handle):
     """
     Return CUSPARSE library version.
@@ -692,6 +705,7 @@ def cusparseGetVersion(handle):
     cusparseCheckStatus(status)
     return version[0]
 
+
 def cusparseSetStream(handle, stream_id):
     """
     Sets the CUSPARSE stream in which kernels will run.
@@ -709,6 +723,7 @@ def cusparseSetStream(handle, stream_id):
     sid = _ffi.cast('cudaStream_t', stream_id)
     status = _ffi_lib.cusparseSetStream(handle, sid)
     cusparseCheckStatus(status)
+
 
 def cusparseCreateMatDescr():
     """
@@ -729,6 +744,7 @@ def cusparseCreateMatDescr():
     cusparseCheckStatus(status)
     return desc[0]
 
+
 def cusparseDestroyMatDescr(desc):
     """
     Releases the memory allocated for the matrix descriptor.
@@ -741,6 +757,7 @@ def cusparseDestroyMatDescr(desc):
 
     status = _ffi_lib.cusparseDestroyMatDescr(desc)
     cusparseCheckStatus(status)
+
 
 def cusparseSetMatType(desc, type):
     """
@@ -756,6 +773,7 @@ def cusparseSetMatType(desc, type):
 
     status = _ffi_lib.cusparseSetMatType(desc, type)
     cusparseCheckStatus(status)
+
 
 def cusparseGetMatType(desc):
     """
@@ -774,6 +792,7 @@ def cusparseGetMatType(desc):
 
     return _ffi_lib.cusparseGetMatType(desc)
 
+
 def cusparseSetMatFillMode(desc, mode):
     """
     Sets the fill mode of the specified matrix.
@@ -788,6 +807,7 @@ def cusparseSetMatFillMode(desc, mode):
 
     status = _ffi_lib.cusparseSetMatFillMode(desc, mode)
     cusparseCheckStatus(status)
+
 
 def cusparseGetMatFillMode(desc):
     """
@@ -806,6 +826,7 @@ def cusparseGetMatFillMode(desc):
 
     return _ffi_lib.cusparseGetMatFillMode(desc)
 
+
 def cusparseSetMatDiagType(desc, type):
     """
     Sets the diagonal type of the specified matrix.
@@ -820,6 +841,7 @@ def cusparseSetMatDiagType(desc, type):
 
     status = _ffi_lib.cusparseSetMatDiagType(desc, type)
     cusparseCheckStatus(status)
+
 
 def cusparseGetMatDiagType(desc):
     """
@@ -838,6 +860,7 @@ def cusparseGetMatDiagType(desc):
 
     return _ffi_lib.cusparseGetMatFillMode(desc)
 
+
 def cusparseSetMatIndexBase(desc, base):
     """
     Sets the index base of the specified matrix.
@@ -852,6 +875,7 @@ def cusparseSetMatIndexBase(desc, base):
 
     status = _ffi_lib.cusparseSetMatIndexBase(desc, base)
     cusparseCheckStatus(status)
+
 
 def cusparseGetMatIndexBase(desc):
     """
@@ -871,6 +895,8 @@ def cusparseGetMatIndexBase(desc):
     return _ffi_lib.cusparseGetMatIndexBase(desc)
 
 # Level 1 functions:
+
+
 def cusparseSaxpyi(handle, nnz, alpha, xVal, xInd, y, idxBase):
     handle = _ffi.cast('cusparseHandle_t', handle)
     xVal = _ffi.cast('float *', xVal)
@@ -878,9 +904,10 @@ def cusparseSaxpyi(handle, nnz, alpha, xVal, xInd, y, idxBase):
     xInd = _ffi.cast('int *', xInd)
     y = _ffi.cast('float *', y)
     idxBase = _ffi.cast('cusparseIndexBase_t', idxBase)
-
-    status = _ffi_lib.cusparseSaxpyi(handle, nnz, alpha, xVal, xInd, y, idxBase)
+    status = _ffi_lib.cusparseZaxpyi(handle, nnz, alpha_ffi, xVal,
+                                     xInd, y, idxBase)
     cusparseCheckStatus(status)
+
 
 def cusparseDaxpyi(handle, nnz, alpha, xVal, xInd, y, idxBase):
     handle = _ffi.cast('cusparseHandle_t', handle)
@@ -889,9 +916,10 @@ def cusparseDaxpyi(handle, nnz, alpha, xVal, xInd, y, idxBase):
     xInd = _ffi.cast('int *', xInd)
     y = _ffi.cast('double *', y)
     idxBase = _ffi.cast('cusparseIndexBase_t', idxBase)
-
-    status = _ffi_lib.cusparseDaxpyi(handle, nnz, alpha, xVal, xInd, y, idxBase)
+    status = _ffi_lib.cusparseZaxpyi(handle, nnz, alpha_ffi, xVal,
+                                     xInd, y, idxBase)
     cusparseCheckStatus(status)
+
 
 def cusparseCaxpyi(handle, nnz, alpha, xVal, xInd, y, idxBase):
     handle = _ffi.cast('cusparseHandle_t', handle)
@@ -901,15 +929,15 @@ def cusparseCaxpyi(handle, nnz, alpha, xVal, xInd, y, idxBase):
     # support GCC-specific directives):
     alpha_ffi = _ffi.new('cuComplex *')
     _ffi.buffer(alpha_ffi)[:] = np.complex64(alpha).tostring()
-
     xVal = _ffi.cast('cuComplex *', xVal)
     xInd = _ffi.cast('int *', xInd)
     xInd = _ffi.cast('int *', xInd)
     y = _ffi.cast('cuComplex *', y)
     idxBase = _ffi.cast('cusparseIndexBase_t', idxBase)
-
-    status = _ffi_lib.cusparseCaxpyi(handle, nnz, alpha_ffi, xVal, xInd, y, idxBase)
+    status = _ffi_lib.cusparseZaxpyi(handle, nnz, alpha_ffi, xVal,
+                                     xInd, y, idxBase)
     cusparseCheckStatus(status)
+
 
 def cusparseZaxpyi(handle, nnz, alpha, xVal, xInd, y, idxBase):
     handle = _ffi.cast('cusparseHandle_t', handle)
@@ -919,17 +947,18 @@ def cusparseZaxpyi(handle, nnz, alpha, xVal, xInd, y, idxBase):
     # support GCC-specific directives):
     alpha_ffi = _ffi.new('cuDoubleComplex *')
     _ffi.buffer(alpha_ffi)[:] = np.complex128(alpha).tostring()
-
     xVal = _ffi.cast('cuDoubleComplex *', xVal)
     xInd = _ffi.cast('int *', xInd)
     xInd = _ffi.cast('int *', xInd)
     y = _ffi.cast('cuDoubleComplex *', y)
     idxBase = _ffi.cast('cusparseIndexBase_t', idxBase)
-
-    status = _ffi_lib.cusparseZaxpyi(handle, nnz, alpha_ffi, xVal, xInd, y, idxBase)
+    status = _ffi_lib.cusparseZaxpyi(handle, nnz, alpha_ffi, xVal,
+                                     xInd, y, idxBase)
     cusparseCheckStatus(status)
 
 # Format conversion functions:
+
+
 def cusparseSnnz(handle, dirA, m, n, descrA, A, lda):
     """
     Compute number of non-zero elements per row, column, or dense matrix.
@@ -984,7 +1013,8 @@ def cusparseSdense2csr(handle, m, n, descrA, A, lda,
     pass
 
 
-def cusparseScsr2dense(handle, m, n, descrA, csrValA, csrRowPtrA, csrColIndA, A, lda):
+def cusparseScsr2dense(
+        handle, m, n, descrA, csrValA, csrRowPtrA, csrColIndA, A, lda):
     """
     Converts sparse matrix in CSR format into dense matrix.
 
@@ -1008,7 +1038,7 @@ def cusparseScsr2dense(handle, m, n, descrA, csrValA, csrRowPtrA, csrColIndA, A,
     csrRowPtrA : pycuda.gpuarray.GPUArray (dtype=np.int)
         integer array of m + 1 elements that contains the start of every row
     csrColIndA : pycuda.gpuarray.GPUArray (dtype=np.int)
-         	integer array of nnz ( = csrRowPtrA(m) - csrRowPtrA(0) ) column
+                integer array of nnz ( = csrRowPtrA(m) - csrRowPtrA(0) ) column
             indices of the non-zero elements of matrix A .
     A : pycuda.gpuarray.GPUArray.gpudata
         Device pointer to dense matrix of dimensions (lda, n).
@@ -1027,15 +1057,16 @@ def cusparseScsr2dense(handle, m, n, descrA, csrValA, csrRowPtrA, csrColIndA, A,
     csrRowPtrA = _ffi.cast('int *', csrRowPtrA)
     csrColIndA = _ffi.cast('int *', csrColIndA)
     A = _ffi.cast('float *', A)
-    status = _ffi_lib.cusparseScsr2dense(handle, int(m), int(n), descrA, csrValA, csrRowPtrA, csrColIndA, A, int(lda))
+    status = _ffi_lib.cusparseScsr2dense(handle, int(m), int(n), descrA,
+                                         csrValA, csrRowPtrA, csrColIndA,
+                                         A, int(lda))
     cusparseCheckStatus(status)
     return A
 
 
-
-### cuSPARSE level 3
+# cuSPARSE level 3
 def cusparseScsrmm(handle, transA, m, n, k, nnz, alpha, descrA, csrValA,
-                      csrRowPtrA, csrColIndA, B, ldb, beta, C, ldc):
+                   csrRowPtrA, csrColIndA, B, ldb, beta, C, ldc):
     """
     Computes C = alpha * op(A) * B + beta*C
 
@@ -1096,10 +1127,11 @@ def cusparseScsrmm(handle, transA, m, n, k, nnz, alpha, descrA, csrValA,
     C = _ffi.cast('float *', C)
     beta = _ffi.new("float[1]", [np.float32(beta)])
 
-    status = _ffi_lib.cusparseScsrmm(handle, transA, m, n, k, nnz, alpha, descrA, csrValA, csrRowPtrA, csrColIndA, B, ldb, beta, C, ldc)
+    status = _ffi_lib.cusparseScsrmm(handle, transA, m, n, k, nnz, alpha,
+                                     descrA, csrValA, csrRowPtrA, csrColIndA,
+                                     B, ldb, beta, C, ldc)
     cusparseCheckStatus(status)
     return C
-
 
 
 def cusparseScsrmm2(handle, transA, transB, m, n, k, nnz, alpha, descrA,
@@ -1119,6 +1151,8 @@ def cusparseScsrmm2(handle, transA, transB, m, n, k, nnz, alpha, descrA,
     C = _ffi.cast('float *', C)
     beta = _ffi.new("float[1]", [np.float32(beta)])
 
-    status = _ffi_lib.cusparseScsrmm2(handle, transA, transB, m, n, k, nnz, alpha, descrA, csrValA, csrRowPtrA, csrColIndA, B, ldb, beta, C, ldc)
+    status = _ffi_lib.cusparseScsrmm2(handle, transA, transB, m, n, k, nnz,
+                                      alpha, descrA, csrValA, csrRowPtrA,
+                                      csrColIndA, B, ldb, beta, C, ldc)
     cusparseCheckStatus(status)
     return C
