@@ -6,6 +6,7 @@ This software was written and packaged by Lev Givon [1]_.
 
 Special thanks are due to the following parties for their contributions:
 
+- Frédéric Bastien - CUBLAS version detection enhancements
 - Sander Dieleman - CUBLAS 5 bindings
 - Ying Wei (Daniel) Fan - kindly permitted reuse of CUBLAS wrapper code in his 
   PARRET [2]_ software)

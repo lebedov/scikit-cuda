@@ -241,7 +241,6 @@ else:
         finally:
             f.close()
         expr = r'(\s+libcublas\.so.)([0123456789.]+)(.+)'
-        import pdb;pdb.set_trace()
         res = re.search(expr, data)
         if not res:
             raise Exception("Unable to find cuda version")
@@ -249,14 +248,14 @@ else:
     else:
         raise Exception("Unable to find cuda version")
 
-    _cublas_version = "unknow"
+    _cublas_version = "unknown"
 
 class _cublas_version_req(object):
     """
     Decorator to replace function with a placeholder that raises an exception
-    if the installed CUBLAS version is not greater than `v`.     
+    if the installed CUBLAS version is not greater than `v`.
     """
-    
+
     def __init__(self, v):
         self.vs = str( v)
         self.vi = int(v*1000)

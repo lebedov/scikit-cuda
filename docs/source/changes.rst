@@ -18,6 +18,7 @@ Release 0.043 - (under development)
 * Fix win32 platform detection.
 * Add Cholesky factorization/solve routines (enh. by Steve Taylor).
 * Improved MacOSX compatibility (enh. by Michael M. Forbes).
+* Find CUBLAS version even when it is only accessible via LD_LIBRARY_PATH (enh. by Frédéric Bastien).
 
 Release 0.042 - (March 10, 2013)
 --------------------------------
