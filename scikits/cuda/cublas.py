@@ -227,28 +227,8 @@ def cublasGetVersion(handle):
 # XXX This approach to obtaining the CUBLAS version number
 # may break Windows/MacOSX compatibility XXX
 _cublas_path = utils.find_lib_path('cublas')
-if _cublas_path:
-    _cublas_version = int(re.search('[\D\.]\.+(\d)',
+_cublas_version = int(re.search('[\D\.]\.+(\d)',
                                 utils.get_soname(_cublas_path)).group(1) + '000')
-else:
-    # If nvcc isn't installed system wide, the code above won't find it.
-    # Check the LD_LIBRARY_PATH env variable for nvcc
-    var = os.environ['LD_LIBRARY_PATH'].replace(":", " ")
-    if var:
-        f = os.popen('/sbin/ldconfig -vN %s 2>/dev/null' % var)
-        try:
-            data = f.read()
-        finally:
-            f.close()
-        expr = r'(\s+libcublas\.so.)([0123456789.]+)(.+)'
-        res = re.search(expr, data)
-        if not res:
-            raise Exception("Unable to find cuda version")
-        _cublas_version = res.groups()[1].replace('.', '') + "00"
-    else:
-        raise Exception("Unable to find cuda version")
-
-    _cublas_version = "unknown"
 
 class _cublas_version_req(object):
     """

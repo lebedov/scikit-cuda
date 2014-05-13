@@ -123,6 +123,9 @@ def find_lib_path(name):
     """
     Find full path of a shared library.
 
+    Searches for the full path of a shared library in the directories
+    listed in LD_LIBRARY_PATH (if any) and in the ld.so cache.
+
     Parameter
     ---------
     name : str
@@ -135,10 +138,24 @@ def find_lib_path(name):
 
     Notes
     -----
-    Code adapted from ctyles.util module.
-
+    Code adapted from ctypes.util module. Doesn't check whether the 
+    architectures of libraries found in LD_LIBRARY_PATH directories conform
+    to that of the machine.
     """
 
+    # First, check the directories in LD_LIBRARY_PATH:
+    expr = r'\s+(lib%s\.[^\s]+)\s+\-\>' % re.escape(name)
+    for dir_path in os.environ['LD_LIBRARY_PATH'].split(':'):
+        f = os.popen('/sbin/ldconfig -Nv %s 2>/dev/null' % dir_path)
+        try:
+            data = f.read()
+        finally:
+            f.close()
+        res = re.search(expr, data)
+        if res:
+            return os.path.join(dir_path, res.group(1))
+
+    # Next, check the ld.so cache:
     uname = os.uname()[4]
     if uname.startswith("arm"):
         uname = "arm"
