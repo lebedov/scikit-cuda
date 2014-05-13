@@ -21,7 +21,8 @@ import cuda
 import utils
 
 if sys.platform == 'linux2':
-    _libcublas_libname_list = ['libcublas.so', 'libcublas.so.4', 'libcublas.so.5']
+    _libcublas_libname_list = ['libcublas.so', 'libcublas.so.4.0',
+                               'libcublas.so.5.0', 'libcublas.so.6.0']
 elif sys.platform == 'darwin':
     _libcublas_libname_list = ['libcublas.dylib']
 elif sys.platform == 'Windows':

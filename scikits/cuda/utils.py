@@ -146,7 +146,7 @@ def find_lib_path(name):
     # First, check the directories in LD_LIBRARY_PATH:
     expr = r'\s+(lib%s\.[^\s]+)\s+\-\>' % re.escape(name)
     for dir_path in os.environ['LD_LIBRARY_PATH'].split(':'):
-        f = os.popen('/sbin/ldconfig -Nv %s 2>/dev/null' % dir_path)
+        f = os.popen('/sbin/ldconfig -Nnv %s 2>/dev/null' % dir_path)
         try:
             data = f.read()
         finally:
