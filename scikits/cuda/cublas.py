@@ -241,7 +241,6 @@ else:
         finally:
             f.close()
         expr = r'(\s+libcublas\.so.)([0123456789.]+)(.+)'
-        import pdb;pdb.set_trace()
         res = re.search(expr, data)
         if not res:
             raise Exception("Unable to find cuda version")
