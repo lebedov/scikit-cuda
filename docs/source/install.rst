@@ -28,8 +28,8 @@ Installation Dependencies
 installed:
 
 * `Python <http://www.python.org>`_ 2.5 or later.
-* `setuptools <http://peak.telecommunity.com/DevCenter/setuptools>`_ 0.6c10 or later.
-* `NumPy <http://numpy.scipy.org>`_ 1.2.0 or later.
+* `setuptools <http://pythonhosted.org/setuptools>`_ 0.6c10 or later.
+* `NumPy <http://www.numpy.org>`_ 1.2.0 or later.
 * `PyCUDA <http://mathema.tician.de/software/pycuda>`_ 0.94.2 or later (some
   parts of ``scikits.cuda`` might not work properly with earlier versions).
 * `NIVIDIA CUDA Toolkit <http://www.nvidia.com/object/cuda_home_new.html>`_ 4.0 or later.

@@ -3,8 +3,10 @@
 Change Log
 ==========
 
-Release 0.043 - (under development)
+Release 0.5.0 - (under development)
 -----------------------------------
+* Switch to PEP 440 version numbering.
+* Replace distribute_setup.py with ez_setup.py.
 * Improve support for latest NVIDIA GPUs.
 * Add more wrappers for CUBLAS 5 functions (enh. by Teodor Moldovan, Sander Dieleman).
 * Add support for CULA Dense Free R17 (enh. by Alex Rubinsteyn).

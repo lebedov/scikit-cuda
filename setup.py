@@ -7,7 +7,7 @@ from glob import glob
 try:
     import setuptools
 except ImportError:
-    from distribute_setup import use_setuptools
+    from ez_setup import use_setuptools
     use_setuptools()
 
 from distutils.command.install import INSTALL_SCHEMES
@@ -16,7 +16,7 @@ from setuptools import find_packages
 from setuptools import setup
 
 NAME =               'scikits.cuda'
-VERSION =            '0.043'
+VERSION =            '0.5.0'
 AUTHOR =             'Lev Givon'
 AUTHOR_EMAIL =       'lev@columbia.edu'
 URL =                'http://github.com/lebedov/scikits.cuda/'
