@@ -16,7 +16,7 @@ try:
 except ImportError:
     import re
 
-    
+
     def get_soname(filename):
         """
         Retrieve SONAME of shared library.
@@ -35,7 +35,7 @@ except ImportError:
         -----
         This function uses the `objdump` system command on linux and
         'otool' on Mac OS X (darwin).
-        
+
         """
         if sys.platform == 'darwin':
             cmds = ['otool', '-L', filename]
@@ -53,7 +53,7 @@ except ImportError:
             result = re.search('^\s@rpath/(lib.+.dylib)', out, re.MULTILINE)
         else:
             result = re.search('^\s+SONAME\s+(.+)$',out,re.MULTILINE)
-        
+
         if result:
             return result.group(1)
         else:
@@ -88,7 +88,7 @@ else:
         References
         ----------
         .. [ELF] http://pypi.python.org/pypi/pyelftools
-        
+
         """
 
         stream = open(filename, 'rb')
@@ -96,7 +96,7 @@ else:
         dynamic = f.get_section_by_name('.dynamic')
         dynstr = f.get_section_by_name('.dynstr')
 
-        # Handle libraries built for different machine architectures:         
+        # Handle libraries built for different machine architectures:
         if f.header['e_machine'] == 'EM_X86_64':
             st = structs.Struct('Elf64_Dyn',
                                 macros.ULInt64('d_tag'),
@@ -112,7 +112,7 @@ else:
         for k in xrange(dynamic['sh_size']/entsize):
             result = st.parse(dynamic.data()[k*entsize:(k+1)*entsize])
 
-            # The following value for the SONAME tag is specified in elf.h:  
+            # The following value for the SONAME tag is specified in elf.h:
             if result.d_tag == 14:
                 return dynstr.get_string(result.d_val)
 
@@ -138,10 +138,20 @@ def find_lib_path(name):
 
     Notes
     -----
-    Code adapted from ctypes.util module. Doesn't check whether the 
+    Code adapted from ctypes.util module. Doesn't check whether the
     architectures of libraries found in LD_LIBRARY_PATH directories conform
     to that of the machine.
     """
+
+    # OSX has no ldconfig, search the DYLD_LIBRARY_PATH directories
+    if sys.platform == 'darwin':
+        # hacky, but as far as I know this is always a symlink
+        # to the latest version of the library available
+        libname = 'lib' + name + '.dylib'
+        for dir_path in os.environ['DYLD_LIBRARY_PATH'].split(':'):
+            if libname in os.listdir(dir_path):
+                return os.path.join(dir_path, libname)
+        return None
 
     # First, check the directories in LD_LIBRARY_PATH:
     expr = r'\s+(lib%s\.[^\s]+)\s+\-\>' % re.escape(name)
