@@ -21,6 +21,7 @@ Release 0.5.0 - (under development)
 * Add Cholesky factorization/solve routines (enh. by Steve Taylor).
 * Improved MacOSX compatibility (enh. by Michael M. Forbes).
 * Find CUBLAS version even when it is only accessible via LD_LIBRARY_PATH (enh. by Frédéric Bastien).
+* Handle unset LD_LIBRARY_PATH variable (fix by Jan Schlüter).
 
 Release 0.042 - (March 10, 2013)
 --------------------------------
