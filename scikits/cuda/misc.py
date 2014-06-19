@@ -585,13 +585,6 @@ def diff(x_gpu):
     return y_gpu
 diff.cache = {}
         
-# List of available numerical types provided by numpy:
-num_types = [np.typeDict[t] for t in \
-             np.typecodes['AllInteger']+np.typecodes['AllFloat']]
-
-# Numbers of bytes occupied by each numerical type:
-num_nbytes = dict((np.dtype(t),t(1).nbytes) for t in num_types)
-
 def set_realloc(x_gpu, data):
     """
     Transfer data into a GPUArray instance.
