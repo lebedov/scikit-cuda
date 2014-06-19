@@ -53,19 +53,19 @@ ctypes.cdll.LoadLibrary = Mock()
 import pkg_resources
 pkg_resources.require = Mock()
 
-# Prevent cublas library load from interfering with doc build:
-import scikits.cuda.utils
-def __temp(filename):
-    return None
-__temp.__doc__ = scikits.cuda.utils.get_soname.__doc__
-scikits.cuda.utils.get_soname = __temp
-
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.append(os.path.abspath('../sphinxext'))
 sys.path.append(os.path.abspath('../../scikits/cuda'))
 sys.path.append(os.path.abspath('../../'))
+
+# Prevent cublas library load from interfering with doc build:
+import scikits.cuda.utils
+def __temp(filename):
+    return None
+__temp.__doc__ = scikits.cuda.utils.get_soname.__doc__
+scikits.cuda.utils.get_soname = __temp
 
 # -- General configuration -----------------------------------------------------
 
