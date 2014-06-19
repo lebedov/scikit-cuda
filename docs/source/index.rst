@@ -2,7 +2,6 @@
 
 CUDA SciKit
 ===========
-
 This SciKit (toolkit for `SciPy <http://www.scipy.org>`_)
 provides Python interfaces to a subset of the functions in the CUDA, CUDART,
 CUBLAS, and CUFFT libraries distributed as part of `NVIDIA's CUDA Programming
@@ -16,7 +15,6 @@ high-level functions comparable to those in the `NumPy
 
 Contents
 --------
-
 .. toctree::
    :maxdepth: 2
 
@@ -28,8 +26,4 @@ Contents
 
 Index
 -----
-
 * :ref:`genindex`
-* :ref:`search`
-
-

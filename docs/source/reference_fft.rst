@@ -4,7 +4,6 @@
 
 Fast Fourier Transform
 ======================
-
 .. autosummary::
    :toctree: generated/
    :nosignatures:

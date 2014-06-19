@@ -4,7 +4,6 @@
 
 Special Math Functions
 ======================
-
 .. autosummary::
    :toctree: generated/
    :nosignatures:

@@ -4,7 +4,6 @@
 
 Miscellaneous Routines
 ======================
-
 .. autosummary::
    :toctree: generated/
    :nosignatures:

@@ -5,7 +5,6 @@ Reference
 
 Library Wrapper Routines
 ------------------------
-
 .. toctree::
    :maxdepth: 2
 
@@ -16,7 +15,6 @@ Library Wrapper Routines
 
 High-Level Routines
 -------------------
-
 .. toctree::
    :maxdepth: 2
 
@@ -27,7 +25,6 @@ High-Level Routines
 
 Other Routines
 --------------
-
 .. toctree::
    :maxdepth: 2
 
