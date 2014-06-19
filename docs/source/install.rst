@@ -1,7 +1,7 @@
 .. -*- rst -*-
 
-Installation Instructions
-=========================
+Installation
+============
 
 Quick Installation
 ------------------
