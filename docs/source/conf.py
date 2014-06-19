@@ -34,9 +34,13 @@ class Mock(object):
         else:
             return Mock()
 
+    def __getitem__(self, v):
+        return Mock()
+
 MOCK_MODULES = ['pycuda', 'pycuda.compiler', 'pycuda.driver', 
                 'pycuda.elementwise', 'pycuda.gpuarray',
-                'pycuda.reduction', 'pycuda.scan', 'pycuda.tools', 'pytools']
+                'pycuda.reduction', 'pycuda.scan', 'pycuda.tools', 'pytools', 
+                'pkg_resources']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()
 
@@ -44,8 +48,7 @@ for mod_name in MOCK_MODULES:
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.append(os.path.abspath('../sphinxext'))
-sys.path.append(os.path.abspath('../../scikits/cuda'))
-print sys.path
+sys.path.append(os.path.abspath('../../'))
 
 # -- General configuration -----------------------------------------------------
 
@@ -134,7 +137,8 @@ pygments_style = 'sphinx'
 # -- Options for HTML output ---------------------------------------------------
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-if on_rtd:
+if True:
+#if on_rtd:
     html_theme = 'default'
 else:
 
