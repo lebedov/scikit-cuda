@@ -67,6 +67,8 @@ def __temp(filename):
 __temp.__doc__ = scikits.cuda.utils.get_soname.__doc__
 scikits.cuda.utils.get_soname = __temp
 
+import scikits.cuda.cublas
+print scikits.cuda.cublas.__dict__
 # -- General configuration -----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
