@@ -48,6 +48,7 @@ for mod_name in MOCK_MODULES:
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.append(os.path.abspath('../sphinxext'))
+sys.path.append(os.path.abspath('../../scikits/cuda'))
 sys.path.append(os.path.abspath('../../'))
 
 # -- General configuration -----------------------------------------------------
