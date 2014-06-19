@@ -39,8 +39,7 @@ class Mock(object):
 
 MOCK_MODULES = ['pycuda', 'pycuda.compiler', 'pycuda.driver', 
                 'pycuda.elementwise', 'pycuda.gpuarray',
-                'pycuda.reduction', 'pycuda.scan', 'pycuda.tools', 'pytools', 
-                'pkg_resources']
+                'pycuda.reduction', 'pycuda.scan', 'pycuda.tools', 'pytools']
 for mod_name in MOCK_MODULES:
     sys.modules[mod_name] = Mock()
 
@@ -48,6 +47,11 @@ for mod_name in MOCK_MODULES:
 # import exceptions:
 import ctypes
 ctypes.cdll.LoadLibrary = Mock()
+
+# Prevent pkg_resources requirements checking from raising exceptions due to
+# missing dependencies:
+import pkg_resources
+pkg_resources.require = Mock()
 
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
