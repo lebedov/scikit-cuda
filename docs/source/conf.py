@@ -67,8 +67,6 @@ def __temp(filename):
 __temp.__doc__ = scikits.cuda.utils.get_soname.__doc__
 scikits.cuda.utils.get_soname = __temp
 
-import scikits.cuda.cublas
-print scikits.cuda.cublas.__dict__
 # -- General configuration -----------------------------------------------------
 
 # If your documentation needs a minimal Sphinx version, state it here.
@@ -156,8 +154,7 @@ pygments_style = 'sphinx'
 # -- Options for HTML output ---------------------------------------------------
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
-if True:
-#if on_rtd:
+if on_rtd:
     html_theme = 'default'
 else:
 
