@@ -20,6 +20,7 @@ Release 0.5.0 - (under development)
 * Fix win32 platform detection.
 * Add Cholesky factorization/solve routines (enh. by Steve Taylor).
 * Fix Cholesky factorization/solve routines (fix by Thomas Unterthiner).
+* Enable dot() function to operate inplace (enh. by Thomas Unterthiner).
 * Improved MacOSX compatibility (enh. by Michael M. Forbes).
 * Find CUBLAS version even when it is only accessible via LD_LIBRARY_PATH (enh. by Frédéric Bastien).
 * Handle unset LD_LIBRARY_PATH variable (fix by Jan Schlüter).
