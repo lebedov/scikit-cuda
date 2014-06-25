@@ -242,7 +242,7 @@ def cho_factor(a_gpu, uplo='L'):
             cula_func = cula._libcula.culaDeviceCpotrf
         elif data_type == np.float32:
             cula_func = cula._libcula.culaDeviceSpotrf
-        if data_type == np.complex128:
+        elif data_type == np.complex128:
             cula_func = cula._libcula.culaDeviceZpotrf
         elif data_type == np.float64:
             cula_func = cula._libcula.culaDeviceDpotrf
@@ -331,7 +331,7 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
             cula_func = cula._libcula.culaDeviceCposv
         elif data_type == np.float32:
             cula_func = cula._libcula.culaDeviceSposv
-        if data_type == np.complex128:
+        elif data_type == np.complex128:
             cula_func = cula._libcula.culaDeviceZposv
         elif data_type == np.float64:
             cula_func = cula._libcula.culaDeviceDposv
@@ -345,7 +345,7 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
     # format, the input matrix is assumed to be transposed:
     na, ma = a_gpu.shape
     square = (na == ma)
-    
+
     if (na!=ma):
         raise ValueError('Matrix must be symmetric positive-definite')
 
@@ -354,7 +354,7 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
     ldb = lda
 
     # Assuming we are only solving for a vector. Hence, nrhs = 1
-    status = cula_func(uplo, na, 1, int(a_gpu.gpudata), lda, 
+    status = cula_func(uplo, na, 1, int(a_gpu.gpudata), lda,
                        int(b_gpu.gpudata), ldb)
 
     cula.culaCheckStatus(status)
@@ -571,7 +571,7 @@ def mdot(*args, **kwargs):
         handle = kwargs['handle']
     else:
         handle = misc._global_cublas_handle
-        
+
     # Free the temporary matrix allocated when computing the dot
     # product:
     out_gpu = args[0]
@@ -917,7 +917,7 @@ def conj(x_gpu, overwrite=True):
     # Don't attempt to process non-complex matrix types:
     if x_gpu.dtype in [np.float32, np.float64]:
         return x_gpu
-    
+
     try:
         func = conj.cache[x_gpu.dtype]
     except KeyError:
@@ -968,14 +968,14 @@ def diag(v_gpu):
     Construct a diagonal matrix if input array is one-dimensional,
     or extracts diagonal entries of a two-dimensional array.
 
-    --- If input-array is one-dimensional: 
+    --- If input-array is one-dimensional:
     Constructs a matrix in device memory whose diagonal elements
     correspond to the elements in the specified array; all
     non-diagonal elements are set to 0.
-    
-    --- If input-array is two-dimensional: 
+
+    --- If input-array is two-dimensional:
     Constructs an array in device memory whose elements
-    correspond to the elements along the main-diagonal of the specified 
+    correspond to the elements along the main-diagonal of the specified
     array.
 
     Parameters
@@ -986,9 +986,9 @@ def diag(v_gpu):
     Returns
     -------
     d_gpu : pycuda.gpuarray.GPUArray
-            ---If v_obj has shape `(n,1)`, output is 
+            ---If v_obj has shape `(n,1)`, output is
                diagonal matrix of dimensions `[n, n]`.
-            ---If v_obj has shape `(n,m)`, output is 
+            ---If v_obj has shape `(n,m)`, output is
                array of length `min(n,m)`.
 
     Examples
@@ -1329,7 +1329,7 @@ def tril(a_gpu, overwrite=True, handle=None):
 
     if handle is None:
         handle = misc._global_cublas_handle
-        
+
     if len(a_gpu.shape) != 2 or a_gpu.shape[0] != a_gpu.shape[1]:
         raise ValueError('matrix must be square')
 
@@ -1533,7 +1533,7 @@ def norm(x_gpu, handle=None):
     85.0
 
     """
-    
+
     if handle is None:
         handle = misc._global_cublas_handle
 
@@ -1552,7 +1552,7 @@ def norm(x_gpu, handle=None):
     else:
         raise ValueError('unsupported input type')
 
-    return cublas_func(handle, x_gpu.size, x_gpu.gpudata, 1) 
+    return cublas_func(handle, x_gpu.size, x_gpu.gpudata, 1)
 
 def scale(alpha, x_gpu, alpha_real=False, handle=None):
     """
@@ -1565,10 +1565,10 @@ def scale(alpha, x_gpu, alpha_real=False, handle=None):
     x_gpu : pycuda.gpuarray.GPUArray
         Input array.
     alpha_real : bool
-        If `True` and `x_gpu` is complex, then one of the specialized versions 
+        If `True` and `x_gpu` is complex, then one of the specialized versions
         `cublasCsscal` or `cublasZdscal` is used which might improve
         performance for large arrays.  (By default, `alpha` is coerced to
-        the corresponding complex type.) 
+        the corresponding complex type.)
     handle : int
         CUBLAS context. If no context is specified, the default handle from
         `scikits.misc._global_cublas_handle` is used.
@@ -1587,7 +1587,7 @@ def scale(alpha, x_gpu, alpha_real=False, handle=None):
     >>> np.allclose(x_gpu.get(), alpha*x)
     True
     """
-    
+
     if handle is None:
         handle = misc._global_cublas_handle
 
@@ -1597,14 +1597,14 @@ def scale(alpha, x_gpu, alpha_real=False, handle=None):
     cublas_func = {
         np.float32: cublas.cublasSscal,
         np.float64: cublas.cublasDscal,
-        np.complex64: cublas.cublasCsscal if alpha_real else 
-                      cublas.cublasCscal, 
-        np.complex128: cublas.cublasZdscal if alpha_real else 
-                       cublas.cublasZscal 
+        np.complex64: cublas.cublasCsscal if alpha_real else
+                      cublas.cublasCscal,
+        np.complex128: cublas.cublasZdscal if alpha_real else
+                       cublas.cublasZscal
     }.get(x_gpu.dtype.type, None)
 
     if cublas_func:
-        return cublas_func(handle, x_gpu.size, alpha, x_gpu.gpudata, 1) 
+        return cublas_func(handle, x_gpu.size, alpha, x_gpu.gpudata, 1)
     else:
         raise ValueError('unsupported input type')
 
