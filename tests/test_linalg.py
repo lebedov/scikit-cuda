@@ -531,6 +531,36 @@ class test_linalg(TestCase):
         z_gpu = linalg.multiply(x_gpu, y_gpu)
         assert np.allclose(x*y, z_gpu.get())
 
+    def test_cho_factor_float32(self):
+        from scipy.linalg import cho_factor as cpu_cho_factor
+        x = np.asarray(np.random.rand(4, 4), np.float32)
+        x = np.dot(x.T, x)
+        x_gpu = gpuarray.to_gpu(x)
+        linalg.cho_factor(x_gpu)
+        c = np.triu(cpu_cho_factor(x)[0])
+        assert np.allclose(c, np.triu(x_gpu.get()))
+
+    def test_cho_solve_float32(self):
+        x = np.asarray(np.random.rand(4, 4), np.float32)
+        x = np.dot(x.T, x)
+        y = np.asarray(np.random.rand(4), np.float32)
+        c = np.linalg.inv(x).dot(y)
+
+        x_gpu = gpuarray.to_gpu(x)
+        y_gpu = gpuarray.to_gpu(y)
+        linalg.cho_solve(x_gpu, y_gpu)
+        assert np.allclose(c, y_gpu.get(), atol=1e-5)
+
+        x = np.asarray(np.random.rand(4, 4), np.float32)
+        x = np.dot(x.T, x).astype(np.float32, order="F", copy=True)
+        y = np.asarray(np.random.rand(4, 4), np.float32, order="F")
+        c = np.linalg.inv(x).dot(y)
+
+        x_gpu = gpuarray.to_gpu(x)
+        y_gpu = gpuarray.to_gpu(y)
+        linalg.cho_solve(x_gpu, y_gpu)
+        assert np.allclose(c, y_gpu.get(), atol=1e-5)
+
 
 def suite():
     s = TestSuite()
@@ -564,6 +594,8 @@ def suite():
     s.addTest(test_linalg('test_tril_complex64'))
     s.addTest(test_linalg('test_multiply_float32'))
     s.addTest(test_linalg('test_multiply_complex64'))
+    s.addTest(test_linalg('test_cho_factor_float32'))
+    s.addTest(test_linalg('test_cho_solve_float32'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_linalg('test_svd_ss_float64'))
         s.addTest(test_linalg('test_svd_ss_complex128'))

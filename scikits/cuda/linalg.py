@@ -255,8 +255,6 @@ def cho_factor(a_gpu, uplo='L'):
     # Since CUDA assumes that arrays are stored in column-major
     # format, the input matrix is assumed to be transposed:
     n, m = a_gpu.shape
-    square = (n == m)
-
     if (n!=m):
         raise ValueError('Matrix must be symmetric positive-definite')
 
@@ -344,17 +342,28 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
     # Since CUDA assumes that arrays are stored in column-major
     # format, the input matrix is assumed to be transposed:
     na, ma = a_gpu.shape
-    square = (na == ma)
-
     if (na!=ma):
         raise ValueError('Matrix must be symmetric positive-definite')
 
-    # Set the leading dimension of the input matrix:
-    lda = max(1, ma)
-    ldb = lda
+    if a_gpu.flags.c_contiguous != b_gpu.flags.c_contiguous:
+        print a_gpu.flags.c_contiguous, b_gpu.flags.c_contiguous
+        raise ValueError('unsupported combination of input order')
+
+    b_shape = b_gpu.shape
+    if len(b_shape) == 1:
+        b_shape = (b_shape[0], 1)
+
+    if a_gpu.flags.f_contiguous:
+        lda = max(1, na)
+        ldb = max(1, b_shape[0])
+    else:
+        lda = max(1, ma)
+        ldb = lda
+        if b_shape[1] > 1:
+            raise ValueError('only vectors allowed in c-order RHS')
 
     # Assuming we are only solving for a vector. Hence, nrhs = 1
-    status = cula_func(uplo, na, 1, int(a_gpu.gpudata), lda,
+    status = cula_func(uplo, na, b_shape[1], int(a_gpu.gpudata), lda,
                        int(b_gpu.gpudata), ldb)
 
     cula.culaCheckStatus(status)
