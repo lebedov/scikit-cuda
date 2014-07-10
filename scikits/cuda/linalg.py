@@ -483,44 +483,74 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
         transa = lower(transa)
         transb = lower(transb)
 
-        if transb in ['t', 'c']:
-            m, k = y_shape
-        elif transb in ['n']:
-            k, m = y_shape
+        if x_gpu.flags.c_contiguous != y_gpu.flags.c_contiguous:
+            raise ValueError('unsupported combination of input order')
+
+        if x_gpu.flags.f_contiguous:
+            if transa in ['t', 'c']:
+                k, m = x_shape
+            elif transa in ['n']:
+                m, k = x_shape
+            else:
+                raise ValueError('invalid value for transa')
+
+            if transb in ['t', 'c']:
+                n, l = y_shape
+            elif transb in ['n']:
+                l, n = y_shape
+            else:
+                raise ValueError('invalid value for transb')
+
+            if l != k:
+                raise ValueError('objects are not aligned')
+
+            lda = max(1, x_shape[0])
+            ldb = max(1, y_shape[0])
+            ldc = max(1, m)
+
+            if out is None:
+                c_gpu = gpuarray.empty((m, n), x_gpu.dtype, order="F")
+            else:
+                if out.shape != (m, n) or out.dtype != x_gpu.dtype:
+                    raise ValueError('invalid value for out')
+                if x_gpu.f_contiguous != out.f_contiguous:
+                    raise ValueError('invalid order for out')
+                c_gpu = out
+            cublas_func(handle, transa, transb, m, n, k, alpha, x_gpu.gpudata,
+                    lda, y_gpu.gpudata, ldb, beta, c_gpu.gpudata, ldc)
         else:
-            raise ValueError('invalid value for transb')
+            if transb in ['t', 'c']:
+                m, k = y_shape
+            elif transb in ['n']:
+                k, m = y_shape
+            else:
+                raise ValueError('invalid value for transb')
 
-        if transa in ['t', 'c']:
-            l, n = x_shape
-        elif transa in ['n']:
-            n, l = x_shape
-        else:
-            raise ValueError('invalid value for transa')
+            if transa in ['t', 'c']:
+                l, n = x_shape
+            elif transa in ['n']:
+                n, l = x_shape
+            else:
+                raise ValueError('invalid value for transa')
 
-        if l != k:
-            raise ValueError('objects are not aligned')
+            if l != k:
+                raise ValueError('objects are not aligned')
 
-        if transb == 'n':
-            lda = max(1, m)
-        else:
-            lda = max(1, k)
+            lda = max(1, y_shape[1])
+            ldb = max(1, x_shape[1])
+            ldc = max(1, m)
 
-        if transa == 'n':
-            ldb = max(1, k)
-        else:
-            ldb = max(1, n)
-
-        ldc = max(1, m)
-
-        # Note that the desired shape of the output matrix is the transpose
-        # of what CUBLAS assumes:
-        if out is None:
-            c_gpu = gpuarray.empty((n, ldc), x_gpu.dtype)
-        else:
-            if out.shape != (n, ldc) or out.dtype != x_gpu.dtype:
-                raise ValueError('invalid value for out')
-            c_gpu = out
-        cublas_func(handle, transb, transa, m, n, k, alpha, y_gpu.gpudata,
+            # Note that the desired shape of the output matrix is the transpose
+            # of what CUBLAS assumes:
+            if out is None:
+                c_gpu = gpuarray.empty((n, ldc), x_gpu.dtype)
+            else:
+                if out.shape != (n, ldc) or out.dtype != x_gpu.dtype:
+                    raise ValueError('invalid value for out')
+                if x_gpu.f_contiguous != out.f_contiguous:
+                    raise ValueError('invalid order for out')
+                c_gpu = out
+            cublas_func(handle, transb, transa, m, n, k, alpha, y_gpu.gpudata,
                     lda, x_gpu.gpudata, ldb, beta, c_gpu.gpudata, ldc)
 
         return c_gpu
