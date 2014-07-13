@@ -680,10 +680,12 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
     if len(a_gpu.shape) != 2:
         raise ValueError('a_gpu must be a matrix')
 
-    if lower(trans) == 'n':
+    trans = trans.lower()
+    if trans == 'n':
         rows, cols = a_gpu.shape
     else:
         cols, rows = a_gpu.shape
+
     N = d_gpu.size
     if N != rows:
         raise ValueError('incompatible dimensions')
@@ -726,7 +728,8 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
         copy_func(handle, a_gpu.size, int(a_gpu.gpudata), 1,
                   int(r_gpu.gpudata), 1)
 
-    if lower(trans) == 'n':
+    if (trans == 'n' and a_gpu.flags.c_contiguous) \
+        or (trans == 't' and a_gpu.flags.f_contiguous):
         incx = 1
         bytes_step = cols*float_type().itemsize
     else:
