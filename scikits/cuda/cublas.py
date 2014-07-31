@@ -2092,7 +2092,7 @@ def cublasSgbmv(handle, trans, m, n, kl, ku, alpha, A, lda,
     Matrix-vector product for real general banded matrix.
 
     """
-
+    trans = trans.encode('ascii')
     status = _libcublas.cublasSgbmv_v2(handle,
                                        trans, m, n, kl, ku,
                                        ctypes.byref(ctypes.c_float(alpha)),
@@ -2123,7 +2123,7 @@ def cublasDgbmv(handle, trans, m, n, kl, ku, alpha, A, lda,
     Matrix-vector product for real general banded matrix.
 
     """
-
+    trans = trans.encode('ascii')
     status = _libcublas.cublasDgbmv_v2(handle,
                                        trans, m, n, kl, ku,
                                        ctypes.byref(ctypes.c_float(alpha)),
@@ -2153,7 +2153,7 @@ def cublasCgbmv(handle, trans, m, n, kl, ku, alpha, A, lda,
     Matrix-vector product for complex general banded matrix.
 
     """
-
+    trans = trans.encode('ascii')
     status = _libcublas.cublasCgbmv_v2(handle,
                                        trans, m, n, kl, ku,
                                        ctypes.byref(cuda.cuFloatComplex(alpha.real,
@@ -2184,7 +2184,7 @@ def cublasZgbmv(handle, trans, m, n, kl, ku, alpha, A, lda,
     Matrix-vector product for complex general banded matrix.
 
     """
-
+    trans = trans.encode('ascii')
     status = _libcublas.cublasZgbmv_v2(handle,
                                        trans, m, n, kl, ku,
                                        ctypes.byref(cuda.cuDoubleComplex(alpha.real,

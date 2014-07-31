@@ -505,7 +505,7 @@ def culaDeviceSgels(trans, m, n, nrhs, a, lda, b, ldb):
     Solve linear system with QR or LQ factorization.
 
     """
-
+    trans = trans.encode('ascii')
     status = _libcula.culaDeviceSgels(trans, m, n, nrhs, int(a),
                                       lda, int(b), ldb)
     culaCheckStatus(status)
@@ -515,7 +515,7 @@ def culaDeviceCgels(trans, m, n, nrhs, a, lda, b, ldb):
     Solve linear system with QR or LQ factorization.
 
     """
-
+    trans = trans.encode('ascii')
     status = _libcula.culaDeviceCgels(trans, m, n, nrhs, int(a),
                                       lda, int(b), ldb)
     culaCheckStatus(status)
@@ -574,7 +574,8 @@ def culaDeviceSgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
     SVD decomposition.
 
     """
-
+    jobu = jobu.encode('ascii')
+    jobvt = jobvt.encode('ascii')
     status = _libcula.culaDeviceSgesvd(jobu, jobvt, m, n, int(a), lda,
                                        int(s), int(u), ldu, int(vt),
                                        ldvt)
@@ -585,7 +586,8 @@ def culaDeviceCgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
     SVD decomposition.
 
     """
-
+    jobu = jobu.encode('ascii')
+    jobvt = jobvt.encode('ascii')
     status = _libcula.culaDeviceCgesvd(jobu, jobvt, m, n, int(a), lda,
                                        int(s), int(u), ldu, int(vt),
                                        ldvt)
@@ -750,7 +752,6 @@ except AttributeError:
         Solve linear system with QR or LQ factorization.
 
         """
-
         raise NotImplementedError('CULA Dense required')
 
     def culaDeviceZgels(trans, m, n, nrhs, a, lda, b, ldb):
@@ -765,7 +766,7 @@ else:
         Solve linear system with QR or LQ factorization.
 
         """
-
+        trans = trans.encode('ascii')
         status = _libcula.culaDeviceDgels(trans, m, n, nrhs, int(a),
                                           lda, int(b), ldb)
         culaCheckStatus(status)
@@ -775,7 +776,7 @@ else:
         Solve linear system with QR or LQ factorization.
 
         """
-
+        trans = trans.encode('ascii')
         status = _libcula.culaDeviceZgels(trans, m, n, nrhs, int(a),
                                           lda, int(b), ldb)
         culaCheckStatus(status)
@@ -870,7 +871,8 @@ else:
         SVD decomposition.
 
         """
-
+        jobu = jobu.encode('ascii')
+        jobvt = jobvt.encode('ascii')
         status = _libcula.culaDeviceDgesvd(jobu, jobvt, m, n, int(a), lda,
                                            int(s), int(u), ldu, int(vt),
                                            ldvt)
@@ -881,7 +883,8 @@ else:
         SVD decomposition.
 
         """
-
+        jobu = jobu.encode('ascii')
+        jobvt = jobvt.encode('ascii')
         status = _libcula.culaDeviceZgesvd(jobu, jobvt, m, n, int(a), lda,
                                            int(s), int(u), ldu, int(vt),
                                            ldvt)
@@ -909,7 +912,6 @@ except AttributeError:
         Solve positive definite linear system with Cholesky factorization.
 
         """
-
         raise NotImplementedError('CULA Dense required')
 
     def culaDeviceCposv(upio, n, nrhs, a, lda, b, ldb):
@@ -941,7 +943,7 @@ else:
         Solve positive definite linear system with Cholesky factorization.
 
         """
-
+        upio = upio.encode('ascii')
         status = _libcula.culaDeviceSposv(upio, n, nrhs, int(a), lda, int(b),
                                           ldb)
         culaCheckStatus(status)
@@ -951,7 +953,7 @@ else:
         Solve positive definite linear system with Cholesky factorization.
 
         """
-
+        upio = upio.encode('ascii')
         status = _libcula.culaDeviceCposv(upio, n, nrhs, int(a), lda, int(b),
                                           ldb)
         culaCheckStatus(status)
@@ -961,7 +963,7 @@ else:
         Solve positive definite linear system with Cholesky factorization.
 
         """
-
+        upio = upio.encode('ascii')
         status = _libcula.culaDeviceDposv(upio, n, nrhs, int(a), lda, int(b),
                                           ldb)
         culaCheckStatus(status)
@@ -971,7 +973,7 @@ else:
         Solve positive definite linear system with Cholesky factorization.
 
         """
-
+        upio = upio.encode('ascii')
         status = _libcula.culaDeviceZposv(upio, n, nrhs, int(a), lda, int(b),
                                           ldb)
         culaCheckStatus(status)
@@ -1027,7 +1029,7 @@ else:
         Cholesky factorization.
 
         """
-
+        uplo = uplo.encode('ascii')
         status = _libcula.culaDeviceSpotrf(uplo, n, int(a), lda)
         culaCheckStatus(status)
 
@@ -1036,7 +1038,7 @@ else:
         Cholesky factorization.
 
         """
-
+        uplo = uplo.encode('ascii')
         status = _libcula.culaDeviceCpotrf(uplo, n, int(a), lda)
         culaCheckStatus(status)
 
@@ -1045,7 +1047,7 @@ else:
         Cholesky factorization.
 
         """
-
+        uplo = uplo.encode('ascii')
         status = _libcula.culaDeviceDpotrf(uplo, n, int(a), lda)
         culaCheckStatus(status)
 
@@ -1054,7 +1056,7 @@ else:
         Cholesky factorization.
 
         """
-
+        uplo = uplo.encode('ascii')
         status = _libcula.culaDeviceZpotrf(uplo, n, int(a), lda)
         culaCheckStatus(status)
 
@@ -1112,7 +1114,8 @@ else:
         Symmetric eigenvalue decomposition.
 
         """
-
+        jobz = jobz.encode('ascii')
+        uplo = uplo.encode('ascii')
         status = _libcula.culaDeviceSsyev(jobz, uplo, n, int(a), lda, int(w))
         culaCheckStatus(status)
 
@@ -1121,7 +1124,8 @@ else:
         Symmetric eigenvalue decomposition.
 
         """
-
+        jobz = jobz.encode('ascii')
+        uplo = uplo.encode('ascii')
         status = _libcula.culaDeviceDsyev(jobz, uplo, n, int(a), lda, int(w))
         culaCheckStatus(status)
 
@@ -1130,7 +1134,8 @@ else:
         Hermitian eigenvalue decomposition.
 
         """
-
+        jobz = jobz.encode('ascii')
+        uplo = uplo.encode('ascii')
         status = _libcula.culaDeviceCheev(jobz, uplo, n, int(a), lda, int(w))
         culaCheckStatus(status)
 
@@ -1139,7 +1144,8 @@ else:
         Hermitian eigenvalue decomposition.
 
         """
-
+        jobz = jobz.encode('ascii')
+        uplo = uplo.encode('ascii')
         status = _libcula.culaDeviceZheev(jobz, uplo, n, int(a), lda, int(w))
         culaCheckStatus(status)
 
@@ -1212,7 +1218,8 @@ def culaDeviceSgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc
     Matrix-matrix product for general matrix.
 
     """
-
+    transa = transa.encode('ascii')
+    transb = transb.encode('ascii')
     status = _libcula.culaDeviceSgemm(transa, transb, m, n, k, alpha,
                            int(A), lda, int(B), ldb, beta, int(C), ldc)
     culaCheckStatus(status)
@@ -1222,7 +1229,8 @@ def culaDeviceDgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc
     Matrix-matrix product for general matrix.
 
     """
-
+    transa = transa.encode('ascii')
+    transb = transb.encode('ascii')
     status = _libcula.culaDeviceDgemm(transa, transb, m, n, k, alpha,
                            int(A), lda, int(B), ldb, beta, int(C), ldc)
     culaCheckStatus(status)
@@ -1232,7 +1240,8 @@ def culaDeviceCgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc
     Matrix-matrix product for complex general matrix.
 
     """
-
+    transa = transa.encode('ascii')
+    transb = transb.encode('ascii')
     status = _libcula.culaDeviceCgemm(transa, transb, m, n, k,
                                       cuda.cuFloatComplex(alpha.real,
                                                         alpha.imag),
@@ -1247,7 +1256,8 @@ def culaDeviceZgemm(transa, transb, m, n, k, alpha, A, lda, B, ldb, beta, C, ldc
     Matrix-matrix product for complex general matrix.
 
     """
-
+    transa = transa.encode('ascii')
+    transb = transb.encode('ascii')
     status = _libcula.culaDeviceZgemm(transa, transb, m, n, k,
                                       cuda.cuDoubleComplex(alpha.real,
                                                         alpha.imag),
@@ -1316,7 +1326,7 @@ def culaDeviceSgemv(trans, m, n, alpha, A, lda, x, incx, beta, y, incy):
     Matrix-vector product for real general matrix.
 
     """
-
+    trans = trans.encode('ascii')
     status = _libcula.culaDeviceSgemv(trans, m, n, alpha, int(A), lda,
                            int(x), incx, beta, int(y), incy)
     culaCheckStatus(status)
@@ -1326,7 +1336,7 @@ def culaDeviceDgemv(trans, m, n, alpha, A, lda, x, incx, beta, y, incy):
     Matrix-vector product for real general matrix.
 
     """
-
+    trans = trans.encode('ascii')
     status = _libcula.culaDeviceDgemv(trans, m, n, alpha, int(A), lda,
                            int(x), incx, beta, int(y), incy)
     culaCheckStatus(status)
@@ -1337,7 +1347,7 @@ def culaDeviceCgemv(trans, m, n, alpha, A, lda, x, incx, beta, y, incy):
     Matrix-vector product for complex general matrix.
 
     """
-
+    trans = trans.encode('ascii')
     status = _libcula.culaDeviceCgemv(trans, m, n,
                            cuda.cuFloatComplex(alpha.real,
                                                alpha.imag),
@@ -1352,7 +1362,7 @@ def culaDeviceZgemv(trans, m, n, alpha, A, lda, x, incx, beta, y, incy):
     Matrix-vector product for complex general matrix.
 
     """
-
+    trans = trans.encode('ascii')
     status = _libcula.culaDeviceZgemv(trans, m, n,
                            cuda.cuDoubleComplex(alpha.real,
                                                alpha.imag),
@@ -1690,7 +1700,7 @@ else:
         Conjugate of complex upper or lower triangle matrix.
 
         """
-
+        uplo = uplo.encode('ascii')
         status = _libcula.culaDeviceCtrConjugate(uplo, diag, m, n, int(A), lda)
         culaCheckStatus(status)
 
@@ -1699,7 +1709,7 @@ else:
         Conjugate of complex upper or lower triangle matrix.
 
         """
-
+        uplo = uplo.encode('ascii')
         status = _libcula.culaDeviceZtrConjugate(uplo, diag, m, n, int(A), lda)
         culaCheckStatus(status)
 
