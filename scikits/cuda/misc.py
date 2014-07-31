@@ -6,7 +6,6 @@ Miscellaneous PyCUDA functions.
 
 from __future__ import absolute_import
 
-import string
 from string import Template
 import atexit
 
@@ -195,8 +194,8 @@ def get_compute_capability(dev):
 
     """
 
-    return np.float(string.join([str(i) for i in
-                                 dev.compute_capability()], '.'))
+    return np.float('.'.join([str(i) for i in
+                                 dev.compute_capability()]))
 
 def get_current_device():
     """
