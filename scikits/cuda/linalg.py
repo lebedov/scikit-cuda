@@ -351,7 +351,6 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
         raise ValueError('Matrix must be symmetric positive-definite')
 
     if a_gpu.flags.c_contiguous != b_gpu.flags.c_contiguous:
-        print a_gpu.flags.c_contiguous, b_gpu.flags.c_contiguous
         raise ValueError('unsupported combination of input order')
 
     b_shape = b_gpu.shape
