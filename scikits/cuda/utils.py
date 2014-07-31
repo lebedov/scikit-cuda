@@ -144,7 +144,7 @@ def find_lib_path(name):
 
     Notes
     -----
-    Code adapted from ctypes.util module. Doesn't check whether the 
+    Code adapted from ctypes.util module. Doesn't check whether the
     architectures of libraries found in LD_LIBRARY_PATH directories conform
     to that of the machine.
     """
