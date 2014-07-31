@@ -138,8 +138,8 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     s_gpu = gpuarray.empty(min(m, n), real_type)
 
     # Set the leading dimension and allocate u:
-    jobu = upper(jobu)
-    jobvt = upper(jobvt)
+    jobu = jobu.upper()
+    jobvt = jobvt.upper()
     ldu = m
     if jobu == 'A':
         u_gpu = gpuarray.empty((ldu, m), data_type)
