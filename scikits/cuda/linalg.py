@@ -15,10 +15,12 @@ import pycuda.elementwise as el
 import pycuda.tools as tools
 import numpy as np
 
-#import .cuda
 from . import cublas
 from . import misc
-#import .cublas as cublas
+
+import sys
+if sys.version_info < (3,):
+    range = xrange
 
 
 try:
@@ -740,7 +742,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
         incx = rows
         bytes_step = float_type().itemsize
 
-    for i in xrange(N):
+    for i in range(N):
         scal_func(handle, cols, d[i], int(r_gpu.gpudata)+i*bytes_step, incx)
     return r_gpu
 
