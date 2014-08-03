@@ -24,7 +24,7 @@ if sys.version_info < (3,):
 
 
 try:
-    import cula
+    from . import cula
     _has_cula = True
 except (ImportError, OSError):
     _has_cula = False
