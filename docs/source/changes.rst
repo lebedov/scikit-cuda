@@ -21,6 +21,7 @@ Release 0.5.0 - (under development)
 * Add Cholesky factorization/solve routines (enh. by Steve Taylor).
 * Fix Cholesky factorization/solve routines (fix by Thomas Unterthiner).
 * Enable dot() function to operate inplace (enh. by Thomas Unterthiner).
+* Python 3 compatibility improvements (enh. by Thomas Unterthiner).
 * Support for Fortran-order arrays in dot() and cho_solve() (enh. by Thomas Unterthiner)
 * Improved MacOSX compatibility (enh. by Michael M. Forbes).
 * Find CUBLAS version even when it is only accessible via LD_LIBRARY_PATH (enh. by Frédéric Bastien).
