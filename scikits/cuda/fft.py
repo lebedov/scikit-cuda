@@ -10,13 +10,13 @@ import pycuda.elementwise as el
 import pycuda.tools as tools
 import numpy as np
 
-import cufft
-from cufft import CUFFT_COMPATIBILITY_NATIVE, \
+from . import cufft
+from .cufft import CUFFT_COMPATIBILITY_NATIVE, \
      CUFFT_COMPATIBILITY_FFTW_PADDING, \
      CUFFT_COMPATIBILITY_FFTW_ASYMMETRIC, \
      CUFFT_COMPATIBILITY_FFTW_ALL
 
-import misc
+from . import misc
 
 class Plan:
     """
