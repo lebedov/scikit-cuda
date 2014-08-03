@@ -23,6 +23,9 @@ class Mock(object):
     def __call__(self, *args, **kwargs):
         return Mock()
 
+    def __add__(self, y):
+        return Mock()
+
     @classmethod
     def __getattr__(cls, name):
         if name in ('__file__', '__path__'):
@@ -37,7 +40,7 @@ class Mock(object):
     def __getitem__(self, v):
         return Mock()
 
-MOCK_MODULES = ['numpy', 'pycuda', 'pycuda.compiler', 'pycuda.driver', 
+MOCK_MODULES = ['numpy', 'pycuda', 'pycuda.compiler', 'pycuda.driver',
                 'pycuda.elementwise', 'pycuda.gpuarray',
                 'pycuda.reduction', 'pycuda.scan', 'pycuda.tools', 'pytools']
 for mod_name in MOCK_MODULES:
