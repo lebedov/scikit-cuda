@@ -27,7 +27,8 @@ Installation Dependencies
 ``scikits.cuda`` requires that the following software packages be
 installed:
 
-* `Python <http://www.python.org>`_ 2.5 or later.
+* `Python <http://www.python.org>`_ 2.5 or later (some parts of the package may
+  not work with Python 3).
 * `setuptools <http://pythonhosted.org/setuptools>`_ 0.6c10 or later.
 * `NumPy <http://www.numpy.org>`_ 1.2.0 or later.
 * `PyCUDA <http://mathema.tician.de/software/pycuda>`_ 0.94.2 or later (some
