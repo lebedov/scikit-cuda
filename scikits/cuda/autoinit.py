@@ -4,8 +4,10 @@
 Autoinitialize CUDA tools.
 """
 
+from __future__ import absolute_import
+
 import atexit
-import misc
+from . import misc
 
 try:
     import cula

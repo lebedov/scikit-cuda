@@ -4,8 +4,10 @@
 PyCUDA-based linear algebra functions.
 """
 
+from __future__ import absolute_import
+
 from pprint import pprint
-from string import Template, lower, upper
+from string import Template
 from pycuda.compiler import SourceModule
 import pycuda.gpuarray as gpuarray
 import pycuda.driver as drv
@@ -13,9 +15,13 @@ import pycuda.elementwise as el
 import pycuda.tools as tools
 import numpy as np
 
-import cuda
-import cublas
-import misc
+from . import cublas
+from . import misc
+
+import sys
+if sys.version_info < (3,):
+    range = xrange
+
 
 try:
     import cula
@@ -23,7 +29,7 @@ try:
 except (ImportError, OSError):
     _has_cula = False
 
-from misc import init
+from .misc import init
 
 # Get installation location of C headers:
 from . import install_headers
@@ -132,8 +138,8 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     s_gpu = gpuarray.empty(min(m, n), real_type)
 
     # Set the leading dimension and allocate u:
-    jobu = upper(jobu)
-    jobvt = upper(jobvt)
+    jobu = jobu.upper()
+    jobvt = jobvt.upper()
     ldu = m
     if jobu == 'A':
         u_gpu = gpuarray.empty((ldu, m), data_type)
@@ -342,11 +348,11 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
     # Since CUDA assumes that arrays are stored in column-major
     # format, the input matrix is assumed to be transposed:
     na, ma = a_gpu.shape
+
     if (na!=ma):
         raise ValueError('Matrix must be symmetric positive-definite')
 
     if a_gpu.flags.c_contiguous != b_gpu.flags.c_contiguous:
-        print a_gpu.flags.c_contiguous, b_gpu.flags.c_contiguous
         raise ValueError('unsupported combination of input order')
 
     b_shape = b_gpu.shape
@@ -489,8 +495,8 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
         else:
             raise ValueError('unsupported combination of input types')
 
-        transa = lower(transa)
-        transb = lower(transb)
+        transa = transa.lower()
+        transb = transb.lower()
 
         if x_gpu.flags.c_contiguous != y_gpu.flags.c_contiguous:
             raise ValueError('unsupported combination of input order')
@@ -736,7 +742,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
         incx = rows
         bytes_step = float_type().itemsize
 
-    for i in xrange(N):
+    for i in range(N):
         scal_func(handle, cols, d[i], int(r_gpu.gpudata)+i*bytes_step, incx)
     return r_gpu
 

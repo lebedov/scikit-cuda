@@ -4,7 +4,8 @@
 Miscellaneous PyCUDA functions.
 """
 
-import string
+from __future__ import absolute_import
+
 from string import Template
 import atexit
 
@@ -18,11 +19,11 @@ from pycuda.compiler import SourceModule
 from pytools import memoize
 import numpy as np
 
-import cuda
-import cublas
+from . import cuda
+from . import cublas
 
 try:
-    import cula
+    from . import cula
     _has_cula = True
 except (ImportError, OSError):
     _has_cula = False
@@ -134,7 +135,7 @@ def init():
 
     Initialize the CUBLAS and CULA libraries used by high-level functions
     provided by scikits.cuda.
-    
+
     Notes
     -----
     This function does not initialize PyCUDA; it uses whatever device
@@ -172,8 +173,8 @@ def shutdown():
         _global_cublas_handle = None
 
     if _has_cula:
-        cula.culaShutdown()    
-    
+        cula.culaShutdown()
+
 def get_compute_capability(dev):
     """
     Get the compute capability of the specified device.
@@ -193,8 +194,8 @@ def get_compute_capability(dev):
 
     """
 
-    return np.float(string.join([str(i) for i in
-                                 dev.compute_capability()], '.'))
+    return np.float('.'.join([str(i) for i in
+                                 dev.compute_capability()]))
 
 def get_current_device():
     """
@@ -317,7 +318,7 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
 
     # Actual number of thread blocks needed:
     blocks_needed = N/max_threads_per_block+1
-    
+
     # Assume that the maximum X dimension of a grid
     # is always at least as large as the maximum Y dimension:
     assert max_grid_dim[0] >= max_grid_dim[1]
@@ -472,7 +473,7 @@ def maxabs(x_gpu):
     Returns
     -------
     m_gpu : pycuda.gpuarray.GPUArray
-        Array containing maximum absolute value in `x_gpu`.        
+        Array containing maximum absolute value in `x_gpu`.
 
     Examples
     --------
@@ -490,10 +491,10 @@ def maxabs(x_gpu):
         func = maxabs.cache[x_gpu.dtype]
     except KeyError:
         ctype = tools.dtype_to_ctype(x_gpu.dtype)
-        use_double = int(x_gpu.dtype in [np.float64, np.complex128])        
+        use_double = int(x_gpu.dtype in [np.float64, np.complex128])
         ret_type = np.float64 if use_double else np.float32
         func = reduction.ReductionKernel(ret_type, neutral="0",
-                                           reduce_expr="max(a,b)", 
+                                           reduce_expr="max(a,b)",
                                            map_expr="abs(x[i])",
                                            arguments="{ctype} *x".format(ctype=ctype))
         maxabs.cache[x_gpu.dtype] = func
@@ -584,7 +585,16 @@ def diff(x_gpu):
     func(x_gpu, y_gpu)
     return y_gpu
 diff.cache = {}
-        
+
+
+# List of available numerical types provided by numpy:
+num_types = [np.typeDict[t] for t in \
+             np.typecodes['AllInteger']+np.typecodes['AllFloat']]
+
+# Numbers of bytes occupied by each numerical type:
+num_nbytes = dict((np.dtype(t),t(1).nbytes) for t in num_types)
+
+
 def set_realloc(x_gpu, data):
     """
     Transfer data into a GPUArray instance.
@@ -635,7 +645,7 @@ def set_realloc(x_gpu, data):
 
     # Update the GPU memory:
     x_gpu.set(data)
-    
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
