@@ -23,6 +23,11 @@ if sys.version_info < (3,):
     range = xrange
 
 
+class LinAlgError(Exception):
+    """Linear Algebra Error."""
+    pass
+
+
 try:
     from . import cula
     _has_cula = True
@@ -1655,6 +1660,64 @@ def scale(alpha, x_gpu, alpha_real=False, handle=None):
         return cublas_func(handle, x_gpu.size, alpha, x_gpu.gpudata, 1)
     else:
         raise ValueError('unsupported input type')
+
+
+def inv(a_gpu, overwrite_a=False, ipiv_gpu=None):
+    """
+    Compute the inverse of a matrix.
+
+    Parameters
+    ----------
+    a_gpu : pycuda.gpuarray.GPUArray
+        Square (n, n) matrix to be inverted.
+    overwrite_a : bool, optional
+        Discard data in `a` (may improve performance). Default is False.
+    ipiv_gpu : pycuda.gpuarray.GPUArray (optional)
+        Temporary array of size n, can be supplied to save allocations.
+
+    Returns
+    -------
+    ainv_gpu : pycuda.gpuarray.GPUArray
+        Inverse of the matrix `a`.
+
+    Raises
+    ------
+    LinAlgError :
+        If `a` is singular.
+    ValueError :
+        * If `a` is not square, or not 2-dimensional.
+        * If ipiv was not None but had the wrong dtype or shape.
+    """
+
+    if len(a_gpu.shape) != 2 or a_gpu.shape[0] != a_gpu.shape[1]:
+        raise ValueError('expected square matrix')
+
+    if (a_gpu.dtype == np.complex64):
+        getrf = cula.culaDeviceCgetrf
+        getri = cula.culaDeviceCgetri
+    elif (a_gpu.dtype == np.float32):
+        getrf = cula.culaDeviceSgetrf
+        getri = cula.culaDeviceSgetri
+    elif (a_gpu.dtype == np.complex128):
+        getrf = cula.culaDeviceZgetrf
+        getri = cula.culaDeviceZgetri
+    elif (a_gpu.dtype == np.float64):
+        getrf = cula.culaDeviceDgetrf
+        getri = cula.culaDeviceDgetri
+
+    n = a_gpu.shape[0]
+    if ipiv_gpu is None:
+        ipiv_gpu = gpuarray.empty((n, 1), a_gpu.dtype)
+    elif ipiv_gpu.dtype != a_gpu.dtype or np.prod(ipiv_gpu.shape) < n:
+        raise ValueError('invalid ipiv provided')
+
+    out = a_gpu if overwrite_a else a_gpu.copy()
+    try:
+        getrf(n, n, out.gpudata, n, ipiv_gpu.gpudata)
+        getri(n, out.gpudata, n, ipiv_gpu.gpudata)
+    except cula.culaDataError as e:
+        raise LinAlgError(e)
+    return out
 
 
 if __name__ == "__main__":

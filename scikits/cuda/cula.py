@@ -689,6 +689,7 @@ else:
         status = _libcula.culaDeviceZgetrf(m, n, int(a), lda, int(ipiv))
         culaCheckStatus(status)
 
+
 # DGEQRF, ZGEQRF
 try:
     _libcula.culaDeviceDgeqrf.restype = \
@@ -732,6 +733,82 @@ else:
 
         status = _libcula.culaDeviceZgeqrf(m, n, int(a), lda, int(tau))
         culaCheckStatus(status)
+
+
+# SGETRI, CGETRI, DGETRI, ZGETRI
+try:
+    _libcula.culaDeviceSgetri.restype = \
+    _libcula.culaDeviceCgetri.restype = \
+    _libcula.culaDeviceDgetri.restype = \
+    _libcula.culaDeviceZgetri.restype = int
+    _libcula.culaDeviceSgetri.argtypes = \
+    _libcula.culaDeviceCgetri.argtypes = \
+    _libcula.culaDeviceDgetri.argtypes = \
+    _libcula.culaDeviceZgetri.argtypes = [ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p]
+except AttributeError:
+    def culaDeviceSgetri(n, a, lda, ipiv):
+        """
+        Compute Inverse Matrix.
+        """
+
+        raise NotImplementedError('CULA Dense required')
+
+    def culaDeviceCgetri(n, a, lda, ipiv):
+        """
+        Compute Inverse Matrix.
+        """
+
+        raise NotImplementedError('CULA Dense required')
+
+    def culaDeviceDgetri(n, a, lda, ipiv):
+        """
+        Compute Inverse Matrix.
+        """
+
+        raise NotImplementedError('CULA Dense required')
+
+    def culaDeviceZgetri(n, a, lda, ipiv):
+        """
+        Compute Inverse Matrix.
+        """
+
+        raise NotImplementedError('CULA Dense required')
+else:
+    def culaDeviceSgetri(n, a, lda, ipiv):
+        """
+        Compute Inverse Matrix.
+        """
+
+        status = _libcula.culaDeviceSgetri(n, int(a), lda, int(ipiv))
+        culaCheckStatus(status)
+
+    def culaDeviceCgetri(n, a, lda, ipiv):
+        """
+        Compute Inverse Matrix.
+        """
+
+        status = _libcula.culaDeviceCgetri(n, int(a), lda, int(ipiv))
+        culaCheckStatus(status)
+
+    def culaDeviceDgetri(n, a, lda, ipiv):
+        """
+        Compute Inverse Matrix.
+        """
+
+        status = _libcula.culaDeviceDgetri(n, int(a), lda, int(ipiv))
+        culaCheckStatus(status)
+
+    def culaDeviceZgetri(n, a, lda, ipiv):
+        """
+        Compute Inverse Matrix.
+        """
+
+        status = _libcula.culaDeviceZgetri(n, int(a), lda, int(ipiv))
+        culaCheckStatus(status)
+
 
 # DGELS, ZGELS
 try:
