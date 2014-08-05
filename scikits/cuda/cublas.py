@@ -124,7 +124,7 @@ _CUBLAS_SIDE_MODE = {
     'L': 0,
     1: 1,   # CUBLAS_SIDE_RIGHT
     'r': 1,
-    'r': 1
+    'R': 1
     }
 
 class _types:
@@ -5159,7 +5159,7 @@ if _cublas_version >= 5000:
                                        ctypes.c_void_p,
                                        ctypes.c_int]
 @_cublas_version_req(5)
-def cublasCdgmm(mode, m, n, A, lda, x, incx, C, ldc):
+def cublasCdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc):
     """
     Matrix-diagonal matrix product for complex general matrix.
 
@@ -5186,7 +5186,7 @@ if _cublas_version >= 5000:
                                        ctypes.c_void_p,
                                        ctypes.c_int]
 @_cublas_version_req(5)
-def cublasZdgmm(mode, m, n, A, lda, x, incx, C, ldc):
+def cublasZdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc):
     """
     Matrix-diagonal matrix product for complex general matrix.
 
@@ -5453,6 +5453,70 @@ def cublasDgetrfBatched(handle, n, A, lda, P, info, batchSize):
                                             int(A), lda, int(P),
                                             int(info), batchSize)
     cublasCheckStatus(status)
+
+
+if _cublas_version >= 5000:
+    _libcublas.cublasSdgmm.restype = \
+    _libcublas.cublasDdgmm.restype = \
+    _libcublas.cublasCdgmm.restype = \
+    _libcublas.cublasZdgmm.restype = int
+
+    _libcublas.cublasSdgmm.argtypes = \
+    _libcublas.cublasDdgmm.argtypes = \
+    _libcublas.cublasCdgmm.argtypes = \
+    _libcublas.cublasZdgmm.argtypes =  [_types.handle,
+                                        ctypes.c_int,
+                                        ctypes.c_int,
+                                        ctypes.c_int,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int]
+@_cublas_version_req(5.0)
+def cublasSdgmm(handle, side, m, n, A, lda, x, incx, C, ldc):
+    """
+    Multiplies a matrix with a diagonal matrix
+    """
+
+    status = _libcublas.cublasSdgmm(handle, _CUBLAS_SIDE_MODE[side], m, n,
+                                    int(A), lda, int(x), incx, int(C), ldc)
+    cublasCheckStatus(status)
+
+
+@_cublas_version_req(5.0)
+def cublasDdgmm(handle, side, m, n, A, lda, x, incx, C, ldc):
+    """
+    Multiplies a matrix with a diagonal matrix
+    """
+
+    status = _libcublas.cublasDdgmm(handle, _CUBLAS_SIDE_MODE[side], m, n,
+                                    int(A), lda, int(x), incx, int(C), ldc)
+    cublasCheckStatus(status)
+
+
+@_cublas_version_req(5.0)
+def cublasCdgmm(handle, side, m, n, A, lda, x, incx, C, ldc):
+    """
+    Multiplies a matrix with a diagonal matrix
+    """
+
+    status = _libcublas.cublasCdgmm(handle, _CUBLAS_SIDE_MODE[side], m, n,
+                                    int(A), lda, int(x), incx, int(C), ldc)
+    cublasCheckStatus(status)
+
+
+@_cublas_version_req(5.0)
+def cublasSZgmm(handle, side, m, n, A, lda, x, incx, C, ldc):
+    """
+    Multiplies a matrix with a diagonal matrix
+    """
+
+    status = _libcublas.cublasZdgmm(handle, _CUBLAS_SIDE_MODE[side], m, n,
+                                    int(A), lda, int(x), incx, int(C), ldc)
+    cublasCheckStatus(status)
+
 
 if __name__ == "__main__":
     import doctest

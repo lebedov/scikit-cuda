@@ -660,12 +660,6 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
     r_gpu : pycuda.gpuarray.GPUArray
         The computed matrix product.
 
-    Notes
-    -----
-    `d_gpu` and `a_gpu` must have the same precision data
-    type. `d_gpu` may be real and `a_gpu` may be complex, but not
-    vice-versa.
-
     Examples
     --------
     >>> import pycuda.autoinit
@@ -686,7 +680,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
     if handle is None:
         handle = misc._global_cublas_handle
 
-    if len(d_gpu.shape) != 1:
+    if not (len(d_gpu.shape) == 1 or (d_gpu.shape[0] == 1 or d_gpu.shape[1] == 1)):
         raise ValueError('d_gpu must be a vector')
     if len(a_gpu.shape) != 2:
         raise ValueError('a_gpu must be a matrix')
@@ -701,54 +695,38 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
     if N != rows:
         raise ValueError('incompatible dimensions')
 
-    float_type = a_gpu.dtype.type
-    if float_type == np.float32:
-        if d_gpu.dtype != np.float32:
-            raise ValueError('precision of argument types must be the same')
-        scal_func = cublas.cublasSscal
-        copy_func = cublas.cublasScopy
-    elif float_type == np.float64:
-        if d_gpu.dtype != np.float64:
-            raise ValueError('precision of argument types must be the same')
-        scal_func = cublas.cublasDscal
-        copy_func = cublas.cublasDcopy
-    elif float_type == np.complex64:
-        if d_gpu.dtype == np.complex64:
-            scal_func = cublas.cublasCscal
-        elif d_gpu.dtype == np.float32:
-            scal_func = cublas.cublasCsscal
-        else:
-            raise ValueError('precision of argument types must be the same')
-        copy_func = cublas.cublasCcopy
-    elif float_type == np.complex128:
-        if d_gpu.dtype == np.complex128:
-            scal_func = cublas.cublasZscal
-        elif d_gpu.dtype == np.float64:
-            scal_func = cublas.cublasZdscal
-        else:
-            raise ValueError('precision of argument types must be the same')
-        copy_func = cublas.cublasZcopy
-    else:
-        raise ValueError('unrecognized type')
+    if a_gpu.dtype != d_gpu.dtype:
+        raise ValueError('precision of argument types must be the same')
 
-    d = d_gpu.get()
+    if (a_gpu.dtype == np.complex64):
+        cublas_func = cublas.cublasCdgmm
+    elif (a_gpu.dtype == np.float32):
+        cublas_func = cublas.cublasSdgmm
+    elif (a_gpu.dtype == np.complex128):
+        cublas_func = cublas.cublasZdgmm
+    elif (a_gpu.dtype == np.float64):
+        cublas_func = cublas.cublasDdgmm
+    else:
+        raise ValueError('unsupported input type')
+
+
     if overwrite:
         r_gpu = a_gpu
     else:
-        r_gpu = gpuarray.empty_like(a_gpu)
-        copy_func(handle, a_gpu.size, int(a_gpu.gpudata), 1,
-                  int(r_gpu.gpudata), 1)
+        r_gpu = a_gpu.copy()
 
     if (trans == 'n' and a_gpu.flags.c_contiguous) \
         or (trans == 't' and a_gpu.flags.f_contiguous):
-        incx = 1
-        bytes_step = cols*float_type().itemsize
+        side = "R"
     else:
-        incx = rows
-        bytes_step = float_type().itemsize
+        side = "L"
 
-    for i in range(N):
-        scal_func(handle, cols, d[i], int(r_gpu.gpudata)+i*bytes_step, incx)
+    lda = a_gpu.shape[1] if a_gpu.flags.c_contiguous else a_gpu.shape[0]
+    ldr = lda
+
+    n, m = a_gpu.shape if a_gpu.flags.f_contiguous else (a_gpu.shape[1], a_gpu.shape[0])
+    cublas_func(handle, side, n, m, a_gpu.gpudata, lda,
+                d_gpu.gpudata, 1, r_gpu.gpudata, ldr)
     return r_gpu
 
 
@@ -1235,7 +1213,7 @@ def eye(N, dtype=np.float32):
 
     e_gpu = misc.zeros((N, N), dtype)
     func = el.ElementwiseKernel("{ctype} *e".format(ctype=tools.dtype_to_ctype(dtype)),
-                                "e[i] = 1")                            
+                                "e[i] = 1")
     func(e_gpu, slice=slice(0, N*N, N+1))
     return e_gpu
 
