@@ -10,6 +10,8 @@ import pycuda.autoinit
 import pycuda.gpuarray as gpuarray
 import numpy as np
 
+from numpy.testing import assert_raises
+
 import scikits.cuda.linalg as linalg
 import scikits.cuda.misc as misc
 
@@ -597,6 +599,40 @@ class test_linalg(TestCase):
         assert np.allclose(c, y_gpu.get(), atol=1e-5)
 
 
+    def impl_test_inv(self, dtype):
+        from scipy.linalg import inv as cpu_inv
+        x = np.asarray(np.random.rand(4, 4), dtype)
+        x = np.dot(x.T, x)
+        x_gpu = gpuarray.to_gpu(x)
+        xinv = cpu_inv(x)
+        xinv_gpu = linalg.inv(x_gpu)
+        assert np.allclose(xinv, xinv_gpu.get(), atol=1e-5)
+        assert xinv_gpu is not x_gpu
+        xinv_gpu = linalg.inv(x_gpu, overwrite_a=True)
+        assert np.allclose(xinv, xinv_gpu.get(), atol=1e-5)
+        assert xinv_gpu is x_gpu
+
+
+    def test_inv_exceptions(self):
+        x = np.asarray([[1, 2], [2, 4]], np.float32)
+        x_gpu = gpuarray.to_gpu(x)
+        assert_raises(linalg.LinAlgError, linalg.inv, x_gpu)
+
+
+    def test_inv_float32(self):
+        self.impl_test_inv(np.float32)
+
+    def test_inv_float64(self):
+        self.impl_test_inv(np.float64)
+
+    def test_inv_complex64(self):
+        self.impl_test_inv(np.complex64)
+
+    def test_inv_complex128(self):
+        self.impl_test_inv(np.complex128)
+
+
+
 def suite():
     s = TestSuite()
     s.addTest(test_linalg('test_svd_ss_float32'))
@@ -631,6 +667,9 @@ def suite():
     s.addTest(test_linalg('test_multiply_complex64'))
     s.addTest(test_linalg('test_cho_factor_float32'))
     s.addTest(test_linalg('test_cho_solve_float32'))
+    s.addTest(test_linalg('test_inv_float32'))
+    s.addTest(test_linalg('test_inv_complex64'))
+    s.addTest(test_linalg('test_inv_exceptions'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_linalg('test_svd_ss_float64'))
         s.addTest(test_linalg('test_svd_ss_complex128'))
@@ -662,6 +701,8 @@ def suite():
         s.addTest(test_linalg('test_tril_complex128'))
         s.addTest(test_linalg('test_multiply_float64'))
         s.addTest(test_linalg('test_multiply_complex128'))
+        s.addTest(test_linalg('test_inv_float64'))
+        s.addTest(test_linalg('test_inv_complex128'))
     return s
 
 if __name__ == '__main__':
