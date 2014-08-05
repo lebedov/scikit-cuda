@@ -18,6 +18,7 @@ Special thanks are due to the following parties for their contributions:
 - Alex Rubinsteyn - Support for CULA Dense Free R17
 - Steve Taylor - Cholesky factorization/solve functions
 - Rob Turetsky - useful feedback
+- Thomas Unterthiner - additional high-level and wrapper functions
 - Stefan van der Walt - bug fixes 
 - Feng Wang - bug reports
 - Yiyin Zhou - patches, bug reports, and function wrappers 
