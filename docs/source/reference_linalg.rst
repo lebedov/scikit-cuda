@@ -9,10 +9,12 @@ Linear Algebra Routines
    :toctree: generated/
    :nosignatures:
 
+   add_diag
    cho_factor
    cho_solve
    conj
    diag
+   dot_diag
    dot
    eye
    hermitian
@@ -20,6 +22,7 @@ Linear Algebra Routines
    multiply
    norm
    pinv
+   scale
    svd
    transpose
    tril

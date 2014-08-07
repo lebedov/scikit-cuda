@@ -752,7 +752,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
     return r_gpu
 
 
-def add_diag(d_gpu, a_gpu, overwrite=False, handle=None):
+def add_diag(d_gpu, a_gpu, overwrite=True, handle=None):
     """
     Adds a vector to the diagonal of an array.
 
@@ -766,7 +766,7 @@ def add_diag(d_gpu, a_gpu, overwrite=False, handle=None):
     a_gpu : pycuda.gpuarray.GPUArray
         Summand array with shape `(N, N)`.
     overwrite : bool
-        If true, save the result in `a_gpu` (default: False).
+        If true, save the result in `a_gpu` (default: True).
     handle : int
         CUBLAS context. If no context is specified, the default handle from
         `scikits.cuda.misc._global_cublas_handle` is used.
