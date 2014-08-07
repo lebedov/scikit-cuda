@@ -632,6 +632,30 @@ class test_linalg(TestCase):
         self.impl_test_inv(np.complex128)
 
 
+    def impl_test_add_diag(self, dtype):
+        x = np.asarray(np.random.rand(4, 4), dtype)
+        d = np.asarray(np.random.rand(1, 4), dtype).reshape(-1)
+        x_gpu = gpuarray.to_gpu(x)
+        d_gpu = gpuarray.to_gpu(d)
+        res_gpu = linalg.add_diag(d_gpu, x_gpu)
+        res_cpu = x + np.diag(d)
+        assert np.allclose(res_cpu, res_gpu.get(), atol=1e-5)
+        assert res_gpu is not x_gpu
+        res_gpu = linalg.add_diag(d_gpu, x_gpu, overwrite=True)
+        assert np.allclose(res_cpu, res_gpu.get(), atol=1e-5)
+        assert res_gpu is x_gpu
+
+    def test_add_diag_float32(self):
+        self.impl_test_add_diag(np.float32)
+
+    def test_add_diag_float64(self):
+        self.impl_test_add_diag(np.float64)
+
+    def test_add_diag_complex64(self):
+        self.impl_test_add_diag(np.complex64)
+
+    def test_add_diag_complex128(self):
+        self.impl_test_add_diag(np.complex128)
 
 def suite():
     s = TestSuite()
@@ -669,6 +693,8 @@ def suite():
     s.addTest(test_linalg('test_cho_solve_float32'))
     s.addTest(test_linalg('test_inv_float32'))
     s.addTest(test_linalg('test_inv_complex64'))
+    s.addTest(test_linalg('test_add_diag_float32'))
+    s.addTest(test_linalg('test_add_diag_complex64'))
     s.addTest(test_linalg('test_inv_exceptions'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_linalg('test_svd_ss_float64'))
@@ -703,6 +729,8 @@ def suite():
         s.addTest(test_linalg('test_multiply_complex128'))
         s.addTest(test_linalg('test_inv_float64'))
         s.addTest(test_linalg('test_inv_complex128'))
+        s.addTest(test_linalg('test_add_diag_float64'))
+        s.addTest(test_linalg('test_add_diag_complex128'))
     return s
 
 if __name__ == '__main__':

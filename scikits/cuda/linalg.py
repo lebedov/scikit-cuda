@@ -751,6 +751,73 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
         scal_func(handle, cols, d[i], int(r_gpu.gpudata)+i*bytes_step, incx)
     return r_gpu
 
+
+def add_diag(d_gpu, a_gpu, overwrite=False, handle=None):
+    """
+    Adds a vector to the diagonal of an array.
+
+    This is the same as A + diag(D), but faster.
+
+    Parameters
+    ----------
+    d_gpu : pycuda.gpuarray.GPUArray
+        Array of length `N` corresponding to the vector to be added to the
+        diagonal.
+    a_gpu : pycuda.gpuarray.GPUArray
+        Summand array with shape `(N, N)`.
+    overwrite : bool
+        If true, save the result in `a_gpu` (default: False).
+    handle : int
+        CUBLAS context. If no context is specified, the default handle from
+        `scikits.cuda.misc._global_cublas_handle` is used.
+
+    Returns
+    -------
+    r_gpu : pycuda.gpuarray.GPUArray
+        The computed sum product.
+
+    Notes
+    -----
+    `d_gpu` and `a_gpu` must have the same precision data type.
+    """
+
+    if handle is None:
+        handle = misc._global_cublas_handle
+
+    if not (len(d_gpu.shape) == 1 or (d_gpu.shape[0] == 1 or d_gpu.shape[1] == 1)):
+        raise ValueError('d_gpu must be a vector')
+    if len(a_gpu.shape) != 2:
+        raise ValueError('a_gpu must be a matrix')
+    if a_gpu.shape[0] != a_gpu.shape[1]:
+        raise ValueError('a_gpu must be square')
+
+    if d_gpu.size != a_gpu.shape[0]:
+        raise ValueError('incompatible dimensions')
+
+    if a_gpu.dtype != d_gpu.dtype:
+        raise ValueError('precision of argument types must be the same')
+
+    if (a_gpu.dtype == np.complex64):
+        axpy = cublas.cublasCaxpy
+    elif (a_gpu.dtype == np.float32):
+        axpy = cublas.cublasSaxpy
+    elif (a_gpu.dtype == np.complex128):
+        axpy = cublas.cublasZaxpy
+    elif (a_gpu.dtype == np.float64):
+        axpy = cublas.cublasDaxpy
+    else:
+        raise ValueError('unsupported input type')
+
+    if overwrite:
+        r_gpu = a_gpu
+    else:
+        r_gpu = a_gpu.copy()
+
+    n = a_gpu.shape[0]
+    axpy(handle, n, 1.0, d_gpu.gpudata, int(1), r_gpu.gpudata, int(n+1))
+    return r_gpu
+
+
 transpose_template = Template("""
 #include <pycuda-complex.hpp>
 
