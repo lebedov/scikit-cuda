@@ -1,5 +1,5 @@
 PYTHON = /usr/bin/python
-DESTDIR = /usr
+DESTDIR = /
 
 NAME = scikits.cuda
 VERSION = $(shell $(PYTHON) -c 'import setup; print setup.VERSION')
