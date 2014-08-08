@@ -1142,17 +1142,24 @@ def diag(v_gpu):
         raise ValueError('unrecognized type')
 
     if (len(v_gpu.shape) > 1) and (len(v_gpu.shape) < 3):
-        # Since CUDA assumes that arrays are stored in column-major
-        # format, the input matrix is assumed to be transposed:
-        n, m = v_gpu.shape
-        square = (n == m)
+        if (v_gpu.dtype == np.complex64):
+            func = cublas.cublasCcopy
+        elif (v_gpu.dtype == np.float32):
+            func = cublas.cublasScopy
+        elif (v_gpu.dtype == np.complex128):
+            func = cublas.cublasZcopy
+        elif (v_gpu.dtype == np.float64):
+            func = cublas.cublasDcopy
+        else:
+            raise ValueError('unsupported input type')
 
+        n = min(v_gpu.shape)
+        m = max(v_gpu.shape)
         # Allocate the output array
-        d_gpu = gpuarray.empty(min(m, n), v_gpu.dtype.type)
+        d_gpu = gpuarray.empty(n, v_gpu.dtype.type)
 
-        diag_kernel = el.ElementwiseKernel("double *x, double *y, int z", "y[i] = x[(z+1)*i]", "diakernel")
-        diag_kernel(v_gpu,d_gpu,max(m,n))
-
+        handle = misc._global_cublas_handle
+        func(handle, n, v_gpu.gpudata, m+1, d_gpu.gpudata, 1)
         return d_gpu
     elif len(v_gpu.shape) >= 3:
         raise ValueError('input array cannot have greater than 2-dimensions')
