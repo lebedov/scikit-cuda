@@ -4,8 +4,6 @@
 Utility functions.
 """
 
-from __future__ import unicode_literals
-
 import sys
 import ctypes
 import os
