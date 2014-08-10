@@ -1189,34 +1189,6 @@ def diag(v_gpu):
 
     return d_gpu
 
-eye_template = Template("""
-#include <pycuda-complex.hpp>
-
-#if ${use_double}
-#if ${use_complex}
-#define FLOAT pycuda::complex<double>
-#else
-#define FLOAT double
-#endif
-#else
-#if ${use_complex}
-#define FLOAT pycuda::complex<float>
-#else
-#define FLOAT float
-#endif
-#endif
-
-// Assumes that d already contains zeros in all positions.
-// N must contain the number of rows or columns in the matrix.
-__global__ void eye(FLOAT *d, int N) {
-    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
-                       blockIdx.x*blockDim.x+threadIdx.x;
-    if (idx < N)
-        d[idx*(N+1)] = FLOAT(1.0);
-}
-
-""")
-
 def eye(N, dtype=np.float32):
     """
     Construct a 2D matrix with ones on the diagonal and zeros elsewhere.
@@ -1261,29 +1233,10 @@ def eye(N, dtype=np.float32):
     if N <= 0:
         raise ValueError('N must be greater than 0')
 
-    use_double = int(dtype in [np.float64, np.complex128])
-    use_complex = int(dtype in [np.complex64, np.complex128])
-
-    # Initialize output matrix:
     e_gpu = misc.zeros((N, N), dtype)
-
-    # Get block/grid sizes:
-    dev = misc.get_current_device()
-    block_dim, grid_dim = misc.select_block_grid_sizes(dev, e_gpu.shape)
-
-    # Set this to False when debugging to make sure the compiled kernel is
-    # not cached:
-    cache_dir=None
-    eye_mod = \
-             SourceModule(eye_template.substitute(use_double=use_double,
-                                                   use_complex=use_complex),
-                          cache_dir=cache_dir)
-
-    eye = eye_mod.get_function("eye")
-    eye(e_gpu, np.uint32(N),
-        block=block_dim,
-        grid=grid_dim)
-
+    func = el.ElementwiseKernel("{ctype} *e".format(ctype=tools.dtype_to_ctype(dtype)),
+                                "e[i*%s] = 1" % (N+1))
+    func(e_gpu)
     return e_gpu
 
 cutoff_invert_s_template = Template("""
