@@ -444,6 +444,12 @@ class test_linalg(TestCase):
         d_gpu = linalg.diag(v_gpu)
         assert np.all(np.diag(v) == d_gpu.get())
 
+    def test_diag_float32_large(self):
+        v = np.array(np.random.rand(64, 64), np.float32)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert np.all(np.diag(v) == d_gpu.get())
+
     def test_diag_float64(self):
         v = np.array([1, 2, 3, 4, 5, 6], np.float64)
         v_gpu = gpuarray.to_gpu(v)
@@ -680,6 +686,7 @@ def suite():
     s.addTest(test_linalg('test_hermitian_complex64'))
     s.addTest(test_linalg('test_conj_complex64'))
     s.addTest(test_linalg('test_diag_float32'))
+    s.addTest(test_linalg('test_diag_float32_large'))
     s.addTest(test_linalg('test_diag_complex64'))
     s.addTest(test_linalg('test_eye_float32'))
     s.addTest(test_linalg('test_eye_complex64'))
