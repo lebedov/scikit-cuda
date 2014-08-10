@@ -1239,26 +1239,6 @@ def eye(N, dtype=np.float32):
     func(e_gpu)
     return e_gpu
 
-cutoff_invert_s_template = Template("""
-#if ${use_double}
-#define FLOAT double
-#else
-#define FLOAT float
-#endif
-
-// N must equal the length of s:
-__global__ void cutoff_invert_s(FLOAT *s, FLOAT *cutoff, unsigned int N) {
-    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
-                       blockIdx.x*blockDim.x+threadIdx.x;
-
-    if (idx < N)
-        if (s[idx] > cutoff[0])
-            s[idx] = 1/s[idx];
-        else
-            s[idx] = 0.0;
-}
-""")
-
 def pinv(a_gpu, rcond=1e-15):
     """
     Moore-Penrose pseudoinverse.
@@ -1317,24 +1297,12 @@ def pinv(a_gpu, rcond=1e-15):
     else:
         u_gpu, s_gpu, vh_gpu = svd(a_gpu, 's', 's')
 
-    # Get block/grid sizes; the number of threads per block is limited
-    # to 512 because the cutoff_invert_s kernel defined above uses too
-    # many registers to be invoked in 1024 threads per block (i.e., on
-    # GPUs with compute capability >= 2.x):
-    dev = misc.get_current_device()
-    max_threads_per_block = 512
-    block_dim, grid_dim = misc.select_block_grid_sizes(dev, s_gpu.shape, max_threads_per_block)
-
     # Suppress very small singular values:
-    use_double = 1 if s_gpu.dtype == np.float64 else 0
-    cutoff_invert_s_mod = \
-        SourceModule(cutoff_invert_s_template.substitute(use_double=use_double))
-    cutoff_invert_s = \
-                    cutoff_invert_s_mod.get_function('cutoff_invert_s')
     cutoff_gpu = gpuarray.max(s_gpu)*rcond
-    cutoff_invert_s(s_gpu, cutoff_gpu,
-                    np.uint32(s_gpu.size),
-                    block=block_dim, grid=grid_dim)
+    ctype = tools.dtype_to_ctype(s_gpu.dtype)
+    cutoff_func = el.ElementwiseKernel("{ctype} *s, {ctype} *cutoff".format(ctype=ctype),
+        "if (s[i] > cutoff[0]) {s[i] = 1/s[i];} else {s[i] = 0;}")
+    cutoff_func(s_gpu, cutoff_gpu)
 
     # Compute the pseudoinverse without allocating a new diagonal matrix:
     return dot(vh_gpu, dot_diag(s_gpu, u_gpu, 't'), 'c', 'c')
