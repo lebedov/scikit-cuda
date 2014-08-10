@@ -1735,8 +1735,7 @@ def scale(alpha, x_gpu, alpha_real=False, handle=None):
     else:
         raise ValueError('unsupported input type')
 
-
-def inv(a_gpu, overwrite_a=False, ipiv_gpu=None):
+def inv(a_gpu, overwrite=False, ipiv_gpu=None):
     """
     Compute the inverse of a matrix.
 
@@ -1744,7 +1743,7 @@ def inv(a_gpu, overwrite_a=False, ipiv_gpu=None):
     ----------
     a_gpu : pycuda.gpuarray.GPUArray
         Square (n, n) matrix to be inverted.
-    overwrite_a : bool, optional
+    overwrite : bool, optional
         Discard data in `a` (may improve performance). Default is False.
     ipiv_gpu : pycuda.gpuarray.GPUArray (optional)
         Temporary array of size n, can be supplied to save allocations.
@@ -1785,14 +1784,13 @@ def inv(a_gpu, overwrite_a=False, ipiv_gpu=None):
     elif ipiv_gpu.dtype != a_gpu.dtype or np.prod(ipiv_gpu.shape) < n:
         raise ValueError('invalid ipiv provided')
 
-    out = a_gpu if overwrite_a else a_gpu.copy()
+    out = a_gpu if overwrite else a_gpu.copy()
     try:
         getrf(n, n, out.gpudata, n, ipiv_gpu.gpudata)
         getri(n, out.gpudata, n, ipiv_gpu.gpudata)
     except cula.culaDataError as e:
         raise LinAlgError(e)
     return out
-
 
 if __name__ == "__main__":
     import doctest

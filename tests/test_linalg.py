@@ -614,7 +614,7 @@ class test_linalg(TestCase):
         xinv_gpu = linalg.inv(x_gpu)
         assert np.allclose(xinv, xinv_gpu.get(), atol=1e-5)
         assert xinv_gpu is not x_gpu
-        xinv_gpu = linalg.inv(x_gpu, overwrite_a=True)
+        xinv_gpu = linalg.inv(x_gpu, overwrite=True)
         assert np.allclose(xinv, xinv_gpu.get(), atol=1e-5)
         assert xinv_gpu is x_gpu
 
