@@ -1515,44 +1515,6 @@ def tril(a_gpu, overwrite=True, handle=None):
         swap_func(handle, a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
         return a_orig_gpu
 
-multiply_template = Template("""
-#include <pycuda-complex.hpp>
-
-#if ${use_double}
-#if ${use_complex}
-#define FLOAT pycuda::complex<double>
-#else
-#define FLOAT double
-#endif
-#else
-#if ${use_complex}
-#define FLOAT pycuda::complex<float>
-#else
-#define FLOAT float
-#endif
-#endif
-
-// Stores result in y
-__global__ void multiply_inplace(FLOAT *x, FLOAT *y,
-                                 unsigned int N) {
-    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
-                       blockIdx.x*blockDim.x+threadIdx.x;
-    if (idx < N) {
-        y[idx] *= x[idx];
-    }
-}
-
-// Stores result in z
-__global__ void multiply(FLOAT *x, FLOAT *y, FLOAT *z,
-                         unsigned int N) {
-    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
-                       blockIdx.x*blockDim.x+threadIdx.x;
-    if (idx < N) {
-        z[idx] = x[idx]*y[idx];
-    }
-}
-""")
-
 def multiply(x_gpu, y_gpu, overwrite=True):
     """
     Multiply arguments element-wise.
@@ -1596,32 +1558,24 @@ def multiply(x_gpu, y_gpu, overwrite=True):
                            np.complex128]:
         raise ValueError('unrecognized type')
 
-    use_double = int(x_gpu.dtype in [np.float64, np.complex128])
-    use_complex = int(x_gpu.dtype in [np.complex64, np.complex128])
+    x_ctype = tools.dtype_to_ctype(x_gpu.dtype)
+    y_ctype = tools.dtype_to_ctype(y_gpu.dtype)
 
-    # Get block/grid sizes:
-    dev = misc.get_current_device()
-    block_dim, grid_dim = misc.select_block_grid_sizes(dev, x_gpu.shape)
-
-    # Set this to False when debugging to make sure the compiled kernel is
-    # not cached:
-    cache_dir=None
-    multiply_mod = \
-             SourceModule(multiply_template.substitute(use_double=use_double,
-                                                       use_complex=use_complex),
-                          cache_dir=cache_dir)
     if overwrite:
-        multiply = multiply_mod.get_function("multiply_inplace")
-        multiply(x_gpu, y_gpu, np.uint32(x_gpu.size),
-                 block=block_dim,
-                 grid=grid_dim)
+        func = el.ElementwiseKernel("{x_ctype} *x, {y_ctype} *y".format(x_ctype=x_ctype,
+                                                                        y_ctype=y_ctype),
+                                    "y[i] *= x[i]")
+        func(x_gpu, y_gpu)
         return y_gpu
     else:
-        multiply = multiply_mod.get_function("multiply")
-        z_gpu = gpuarray.empty(x_gpu.shape, x_gpu.dtype)
-        multiply(x_gpu, y_gpu, z_gpu, np.uint32(x_gpu.size),
-                 block=block_dim,
-                 grid=grid_dim)
+        result_type = np.result_type(x_gpu.dtype, y_gpu.dtype)
+        z_gpu = gpuarray.empty(x_gpu.shape, result_type)
+        func = \
+               el.ElementwiseKernel("{x_ctype} *x, {y_ctype} *y, {z_type} *z".format(x_ctype=x_ctype,
+                                                                                     y_ctype=y_ctype,
+                                                                                     z_type=tools.dtype_to_ctype(result_type)),
+                                    "z[i] = x[i]*y[i]")
+        func(x_gpu, y_gpu, z_gpu)
         return z_gpu
 
 def norm(x_gpu, handle=None):
