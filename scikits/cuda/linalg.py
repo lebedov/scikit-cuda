@@ -1235,8 +1235,8 @@ def eye(N, dtype=np.float32):
 
     e_gpu = misc.zeros((N, N), dtype)
     func = el.ElementwiseKernel("{ctype} *e".format(ctype=tools.dtype_to_ctype(dtype)),
-                                "e[i*%s] = 1" % (N+1))
-    func(e_gpu)
+                                "e[i] = 1")                            
+    func(e_gpu, slice=slice(0, N*N, N+1))
     return e_gpu
 
 def pinv(a_gpu, rcond=1e-15):

@@ -662,6 +662,11 @@ class test_linalg(TestCase):
 
     def test_add_diag_complex128(self):
         self.impl_test_add_diag(np.complex128)
+      
+    def test_eye_large_float32(self):
+        N = 128
+        e_gpu = linalg.eye(N, dtype=np.float32)
+        assert np.all(np.eye(N, dtype=np.float32) == e_gpu.get())		
 
 def suite():
     s = TestSuite()
@@ -703,6 +708,7 @@ def suite():
     s.addTest(test_linalg('test_add_diag_float32'))
     s.addTest(test_linalg('test_add_diag_complex64'))
     s.addTest(test_linalg('test_inv_exceptions'))
+    s.addTest(test_linalg('test_eye_large_float32'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_linalg('test_svd_ss_float64'))
         s.addTest(test_linalg('test_svd_ss_complex128'))
