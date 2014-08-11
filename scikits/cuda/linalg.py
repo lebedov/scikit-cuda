@@ -9,6 +9,7 @@ from __future__ import absolute_import
 from pprint import pprint
 from string import Template
 from pycuda.compiler import SourceModule
+
 import pycuda.gpuarray as gpuarray
 import pycuda.driver as drv
 import pycuda.elementwise as el
@@ -106,6 +107,8 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     if not _has_cula:
         raise NotImplementError('CULA not installed')
 
+    alloc = misc._global_cublas_allocator
+
     # The free version of CULA only supports single precision floating
     # point numbers:
     data_type = a_gpu.dtype.type
@@ -140,16 +143,16 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     lda = max(1, m)
 
     # Allocate the array of singular values:
-    s_gpu = gpuarray.empty(min(m, n), real_type)
+    s_gpu = gpuarray.empty(min(m, n), real_type, allocator=alloc)
 
     # Set the leading dimension and allocate u:
     jobu = jobu.upper()
     jobvt = jobvt.upper()
     ldu = m
     if jobu == 'A':
-        u_gpu = gpuarray.empty((ldu, m), data_type)
+        u_gpu = gpuarray.empty((ldu, m), data_type, allocator=alloc)
     elif jobu == 'S':
-        u_gpu = gpuarray.empty((min(m, n), ldu), data_type)
+        u_gpu = gpuarray.empty((min(m, n), ldu), data_type, allocator=alloc)
     elif jobu == 'O':
         if not square:
             raise ValueError('in-place computation of singular vectors '+
@@ -158,15 +161,15 @@ def svd(a_gpu, jobu='A', jobvt='A'):
         u_gpu = a_gpu
     else:
         ldu = 1
-        u_gpu = gpuarray.empty((), data_type)
+        u_gpu = gpuarray.empty((), data_type, allocator=alloc)
 
     # Set the leading dimension and allocate vh:
     if jobvt == 'A':
         ldvt = n
-        vh_gpu = gpuarray.empty((n, n), data_type)
+        vh_gpu = gpuarray.empty((n, n), data_type, allocator=alloc)
     elif jobvt == 'S':
         ldvt = min(m, n)
-        vh_gpu = gpuarray.empty((n, ldvt), data_type)
+        vh_gpu = gpuarray.empty((n, ldvt), data_type, allocator=alloc)
     elif jobvt == 'O':
         if jobu == 'O':
             raise ValueError('jobu and jobvt cannot both be O')
@@ -177,7 +180,7 @@ def svd(a_gpu, jobu='A', jobvt='A'):
         vh_gpu = a_gpu
     else:
         ldvt = 1
-        vh_gpu = gpuarray.empty((), data_type)
+        vh_gpu = gpuarray.empty((), data_type, allocator=alloc)
 
     # Compute SVD and check error status:
 
@@ -450,6 +453,8 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
     if handle is None:
         handle = misc._global_cublas_handle
 
+    alloc = misc._global_cublas_allocator
+
     if len(x_gpu.shape) == 1 and len(y_gpu.shape) == 1:
 
         if x_gpu.size != y_gpu.size:
@@ -529,7 +534,7 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
             ldc = max(1, m)
 
             if out is None:
-                c_gpu = gpuarray.empty((m, n), x_gpu.dtype, order="F")
+                c_gpu = gpuarray.empty((m, n), x_gpu.dtype, order="F", allocator=alloc)
             else:
                 if out.shape != (m, n) or out.dtype != x_gpu.dtype:
                     raise ValueError('invalid value for out')
@@ -563,7 +568,7 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
             # Note that the desired shape of the output matrix is the transpose
             # of what CUBLAS assumes:
             if out is None:
-                c_gpu = gpuarray.empty((n, ldc), x_gpu.dtype)
+                c_gpu = gpuarray.empty((n, ldc), x_gpu.dtype, allocator=alloc)
             else:
                 if out.shape != (n, ldc) or out.dtype != x_gpu.dtype:
                     raise ValueError('invalid value for out')
@@ -735,7 +740,8 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
     if overwrite:
         r_gpu = a_gpu
     else:
-        r_gpu = gpuarray.empty_like(a_gpu)
+        r_gpu = gpuarray.empty((a_gpu.shape[0], a_gpu.shape[1]),
+                               a_gpu.dtype, allocator=alloc)
         copy_func(handle, a_gpu.size, int(a_gpu.gpudata), 1,
                   int(r_gpu.gpudata), 1)
 
@@ -896,6 +902,8 @@ def transpose(a_gpu):
 
     """
 
+    alloc = misc._global_cublas_allocator
+
     if a_gpu.dtype not in [np.float32, np.float64, np.complex64,
                            np.complex128]:
         raise ValueError('unrecognized type')
@@ -919,7 +927,7 @@ def transpose(a_gpu):
                                cache_dir=cache_dir)
 
     transpose = transpose_mod.get_function("transpose")
-    at_gpu = gpuarray.empty(a_gpu.shape[::-1], a_gpu.dtype)
+    at_gpu = gpuarray.empty(a_gpu.shape[::-1], a_gpu.dtype, allocator=alloc)
     transpose(at_gpu, a_gpu, np.uint32(a_gpu.size),
               block=block_dim,
               grid=grid_dim)
@@ -968,6 +976,8 @@ def hermitian(a_gpu):
 
     """
 
+    alloc = misc._global_cublas_allocator
+
     if a_gpu.dtype not in [np.float32, np.float64, np.complex64,
                            np.complex128]:
         raise ValueError('unrecognized type')
@@ -991,7 +1001,7 @@ def hermitian(a_gpu):
                                cache_dir=cache_dir)
 
     transpose = transpose_mod.get_function("transpose")
-    at_gpu = gpuarray.empty(a_gpu.shape[::-1], a_gpu.dtype)
+    at_gpu = gpuarray.empty(a_gpu.shape[::-1], a_gpu.dtype, allocator=alloc)
     transpose(at_gpu, a_gpu, np.uint32(a_gpu.size),
               block=block_dim,
               grid=grid_dim)
@@ -1141,6 +1151,8 @@ def diag(v_gpu):
                            np.complex128]:
         raise ValueError('unrecognized type')
 
+    alloc = misc._global_cublas_allocator
+
     if (len(v_gpu.shape) > 1) and (len(v_gpu.shape) < 3):
         if (v_gpu.dtype == np.complex64):
             func = cublas.cublasCcopy
@@ -1156,7 +1168,7 @@ def diag(v_gpu):
         n = min(v_gpu.shape)
         m = max(v_gpu.shape)
         # Allocate the output array
-        d_gpu = gpuarray.empty(n, v_gpu.dtype.type)
+        d_gpu = gpuarray.empty(n, v_gpu.dtype.type, allocator=alloc)
 
         handle = misc._global_cublas_handle
         func(handle, n, v_gpu.gpudata, m+1, d_gpu.gpudata, 1)
@@ -1168,7 +1180,7 @@ def diag(v_gpu):
     use_complex = int(v_gpu.dtype in [np.complex64, np.complex128])
 
     # Initialize output matrix:
-    d_gpu = misc.zeros((v_gpu.size, v_gpu.size), v_gpu.dtype)
+    d_gpu = misc.zeros((v_gpu.size, v_gpu.size), v_gpu.dtype, allocator=alloc)
 
     # Get block/grid sizes:
     dev = misc.get_current_device()
@@ -1232,10 +1244,11 @@ def eye(N, dtype=np.float32):
         raise ValueError('unrecognized type')
     if N <= 0:
         raise ValueError('N must be greater than 0')
+    alloc = misc._global_cublas_allocator
 
-    e_gpu = misc.zeros((N, N), dtype)
+    e_gpu = misc.zeros((N, N), dtype, allocator=alloc)
     func = el.ElementwiseKernel("{ctype} *e".format(ctype=tools.dtype_to_ctype(dtype)),
-                                "e[i] = 1")                            
+                                "e[i] = 1")
     func(e_gpu, slice=slice(0, N*N, N+1))
     return e_gpu
 
@@ -1378,6 +1391,8 @@ def tril(a_gpu, overwrite=True, handle=None):
     if handle is None:
         handle = misc._global_cublas_handle
 
+    alloc = misc._global_cublas_allocator
+
     if len(a_gpu.shape) != 2 or a_gpu.shape[0] != a_gpu.shape[1]:
         raise ValueError('matrix must be square')
 
@@ -1421,7 +1436,7 @@ def tril(a_gpu, overwrite=True, handle=None):
     tril = tril_mod.get_function("tril")
 
     if not overwrite:
-        a_orig_gpu = gpuarray.empty(a_gpu.shape, a_gpu.dtype)
+        a_orig_gpu = gpuarray.empty(a_gpu.shape, a_gpu.dtype, allocator=alloc)
         copy_func(handle, a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
 
     tril(a_gpu, np.uint32(a_gpu.size),
@@ -1472,6 +1487,8 @@ def multiply(x_gpu, y_gpu, overwrite=True):
 
     """
 
+    alloc = misc._global_cublas_allocator
+
     if x_gpu.shape != y_gpu.shape:
         raise ValueError('input arrays must have the same shape')
 
@@ -1490,7 +1507,7 @@ def multiply(x_gpu, y_gpu, overwrite=True):
         return y_gpu
     else:
         result_type = np.result_type(x_gpu.dtype, y_gpu.dtype)
-        z_gpu = gpuarray.empty(x_gpu.shape, result_type)
+        z_gpu = gpuarray.empty(x_gpu.shape, result_type, allocator=alloc)
         func = \
                el.ElementwiseKernel("{x_ctype} *x, {y_ctype} *y, {z_type} *z".format(x_ctype=x_ctype,
                                                                                      y_ctype=y_ctype,
@@ -1637,6 +1654,8 @@ def inv(a_gpu, overwrite=False, ipiv_gpu=None):
         * If ipiv was not None but had the wrong dtype or shape.
     """
 
+    alloc = misc._global_cublas_allocator
+
     if len(a_gpu.shape) != 2 or a_gpu.shape[0] != a_gpu.shape[1]:
         raise ValueError('expected square matrix')
 
@@ -1655,7 +1674,7 @@ def inv(a_gpu, overwrite=False, ipiv_gpu=None):
 
     n = a_gpu.shape[0]
     if ipiv_gpu is None:
-        ipiv_gpu = gpuarray.empty((n, 1), a_gpu.dtype)
+        ipiv_gpu = gpuarray.empty((n, 1), a_gpu.dtype, allocator=alloc)
     elif ipiv_gpu.dtype != a_gpu.dtype or np.prod(ipiv_gpu.shape) < n:
         raise ValueError('invalid ipiv provided')
 
