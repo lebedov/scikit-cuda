@@ -542,37 +542,29 @@ class test_linalg(TestCase):
         l_gpu = linalg.tril(a_gpu)
         assert np.allclose(np.tril(a), l_gpu.get())
 
-    def test_multiply_float32(self):
-        x = np.asarray(np.random.rand(4, 4), np.float32)
-        y = np.asarray(np.random.rand(4, 4), np.float32)
+    def impl_test_multiply(self, N, dtype):
+        mk_matrix = lambda N, dtype: np.asarray(np.random.rand(N, N), dtype)
+        x = mk_matrix(N, dtype)
+        y = mk_matrix(N, dtype)
+        if np.iscomplexobj(x):
+            x += 1j*mk_matrix(N, dtype)
+            y += 1j*mk_matrix(N, dtype)
         x_gpu = gpuarray.to_gpu(x)
         y_gpu = gpuarray.to_gpu(y)
         z_gpu = linalg.multiply(x_gpu, y_gpu)
         assert np.allclose(x*y, z_gpu.get())
+
+    def test_multiply_float32(self):
+        self.impl_test_multiply(4, np.float32)
 
     def test_multiply_float64(self):
-        x = np.asarray(np.random.rand(4, 4), np.float64)
-        y = np.asarray(np.random.rand(4, 4), np.float64)
-        x_gpu = gpuarray.to_gpu(x)
-        y_gpu = gpuarray.to_gpu(y)
-        z_gpu = linalg.multiply(x_gpu, y_gpu)
-        assert np.allclose(x*y, z_gpu.get())
+        self.impl_test_multiply(4, np.float64)
 
     def test_multiply_complex64(self):
-        x = np.asarray(np.random.rand(4, 4) + 1j*np.random.rand(4, 4), np.complex64)
-        y = np.asarray(np.random.rand(4, 4) + 1j*np.random.rand(4, 4), np.complex64)
-        x_gpu = gpuarray.to_gpu(x)
-        y_gpu = gpuarray.to_gpu(y)
-        z_gpu = linalg.multiply(x_gpu, y_gpu)
-        assert np.allclose(x*y, z_gpu.get())
+        self.impl_test_multiply(4, np.complex64)
 
     def test_multiply_complex128(self):
-        x = np.asarray(np.random.rand(4, 4) + 1j*np.random.rand(4, 4), np.complex128)
-        y = np.asarray(np.random.rand(4, 4) + 1j*np.random.rand(4, 4), np.complex128)
-        x_gpu = gpuarray.to_gpu(x)
-        y_gpu = gpuarray.to_gpu(y)
-        z_gpu = linalg.multiply(x_gpu, y_gpu)
-        assert np.allclose(x*y, z_gpu.get())
+        self.impl_test_multiply(4, np.complex128)
 
     def test_cho_factor_float32(self):
         from scipy.linalg import cho_factor as cpu_cho_factor
