@@ -643,13 +643,14 @@ class test_linalg(TestCase):
         d = np.asarray(np.random.rand(1, 4), dtype).reshape(-1)
         x_gpu = gpuarray.to_gpu(x)
         d_gpu = gpuarray.to_gpu(d)
-        res_gpu = linalg.add_diag(d_gpu, x_gpu)
         res_cpu = x + np.diag(d)
-        assert np.allclose(res_cpu, res_gpu.get(), atol=1e-5)
-        assert res_gpu is x_gpu
         res_gpu = linalg.add_diag(d_gpu, x_gpu, overwrite=False)
         assert np.allclose(res_cpu, res_gpu.get(), atol=1e-5)
         assert res_gpu is not x_gpu
+        res_gpu = linalg.add_diag(d_gpu, x_gpu, overwrite=True)
+        assert np.allclose(res_cpu, res_gpu.get(), atol=1e-5)
+        assert res_gpu is x_gpu
+
 
     def test_add_diag_float32(self):
         self.impl_test_add_diag(np.float32)
