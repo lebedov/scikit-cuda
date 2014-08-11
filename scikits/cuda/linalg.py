@@ -533,7 +533,7 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
             else:
                 if out.shape != (m, n) or out.dtype != x_gpu.dtype:
                     raise ValueError('invalid value for out')
-                if x_gpu.f_contiguous != out.f_contiguous:
+                if x_gpu.flags.f_contiguous != out.flags.f_contiguous:
                     raise ValueError('invalid order for out')
                 c_gpu = out
             cublas_func(handle, transa, transb, m, n, k, alpha, x_gpu.gpudata,
@@ -567,7 +567,7 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
             else:
                 if out.shape != (n, ldc) or out.dtype != x_gpu.dtype:
                     raise ValueError('invalid value for out')
-                if x_gpu.f_contiguous != out.f_contiguous:
+                if x_gpu.flags.f_contiguous != out.flags.f_contiguous:
                     raise ValueError('invalid order for out')
                 c_gpu = out
             cublas_func(handle, transb, transa, m, n, k, alpha, y_gpu.gpudata,
