@@ -473,6 +473,59 @@ class test_cublas(TestCase):
                            beta, b_gpu.gpudata, 2,
                            c_gpu.gpudata, 2)
         assert np.allclose(c_gpu.get(), alpha*a+beta*b)
+
+    # CgemmBatched, ZgemmBatched
+    def test_cublasCgemmBatched(self):        
+        l, m, k, n = 11, 7, 5, 3
+        A = (np.random.rand(l, m, k)+1j*np.random.rand(l, m, k)).astype(np.complex64)
+        B = (np.random.rand(l, k, n)+1j*np.random.rand(l, k, n)).astype(np.complex64)
+        
+        C_res = np.einsum('nij,njk->nik', A, B)
+        
+        a_gpu = gpuarray.to_gpu(A)
+        b_gpu = gpuarray.to_gpu(B)
+        c_gpu = gpuarray.empty((l, m, n), np.complex64)
+        
+        alpha = np.complex64(1.0)
+        beta = np.complex64(0.0)
+
+        a_arr = bptrs(a_gpu)
+        b_arr = bptrs(b_gpu)
+        c_arr = bptrs(c_gpu)
+
+        cublas.cublasCgemmBatched(self.cublas_handle, 'n','n', 
+                                  n, m, k, alpha, 
+                                  b_arr.gpudata, n, 
+                                  a_arr.gpudata, k, 
+                                  beta, c_arr.gpudata, n, l)
+
+        assert np.allclose(C_res, c_gpu.get())
+
+    def test_cublasZgemmBatched(self):        
+        l, m, k, n = 11, 7, 5, 3
+        A = (np.random.rand(l, m, k)+1j*np.random.rand(l, m, k)).astype(np.complex128)
+        B = (np.random.rand(l, k, n)+1j*np.random.rand(l, k, n)).astype(np.complex128)
+        
+        C_res = np.einsum('nij,njk->nik', A, B)
+        
+        a_gpu = gpuarray.to_gpu(A)
+        b_gpu = gpuarray.to_gpu(B)
+        c_gpu = gpuarray.empty((l, m, n), np.complex128)
+        
+        alpha = np.complex128(1.0)
+        beta = np.complex128(0.0)
+
+        a_arr = bptrs(a_gpu)
+        b_arr = bptrs(b_gpu)
+        c_arr = bptrs(c_gpu)
+
+        cublas.cublasZgemmBatched(self.cublas_handle, 'n','n', 
+                                  n, m, k, alpha, 
+                                  b_arr.gpudata, n, 
+                                  a_arr.gpudata, k, 
+                                  beta, c_arr.gpudata, n, l)
+
+        assert np.allclose(C_res, c_gpu.get())
         
     # SgemmBatched, DgemmBatched
     def test_cublasSgemmBatched(self):        
@@ -643,6 +696,7 @@ def suite():
     s.addTest(test_cublas('test_cublasSgeam'))
     s.addTest(test_cublas('test_cublasCgeam'))
     s.addTest(test_cublas('test_cublasSgemmBatched'))
+    s.addTest(test_cublas('test_cublasCgemmBatched'))
     s.addTest(test_cublas('test_cublasStrsmBatched'))
     s.addTest(test_cublas('test_cublasSgetrfBatched'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
@@ -671,6 +725,7 @@ def suite():
         s.addTest(test_cublas('test_cublasDgeam'))
         s.addTest(test_cublas('test_cublasZgeam'))        
         s.addTest(test_cublas('test_cublasDgemmBatched'))
+        s.addTest(test_cublas('test_cublasZgemmBatched'))
         s.addTest(test_cublas('test_cublasDtrsmBatched'))
         s.addTest(test_cublas('test_cublasDgetrfBatched'))        
     return s
