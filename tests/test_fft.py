@@ -4,6 +4,7 @@
 Unit tests for scikits.cuda.fft
 """
 
+from __future__ import division
 
 from unittest import main, makeSuite, TestCase, TestSuite
 
@@ -28,7 +29,7 @@ class test_fft(TestCase):
         x = np.asarray(np.random.rand(self.N), np.float32)
         xf = np.fft.rfftn(x)
         x_gpu = gpuarray.to_gpu(x)
-        xf_gpu = gpuarray.empty(self.N/2+1, np.complex64)
+        xf_gpu = gpuarray.empty(self.N//2+1, np.complex64)
         plan = fft.Plan(x.shape, np.float32, np.complex64)
         fft.fft(x_gpu, xf_gpu, plan)
         assert np.allclose(xf, xf_gpu.get(), atol=atol_float32)
@@ -37,7 +38,7 @@ class test_fft(TestCase):
         x = np.asarray(np.random.rand(self.N, self.M), np.float32)
         xf = np.fft.rfftn(x)
         x_gpu = gpuarray.to_gpu(x)
-        xf_gpu = gpuarray.empty((self.N, self.M/2+1), np.complex64)
+        xf_gpu = gpuarray.empty((self.N, self.M//2+1), np.complex64)
         plan = fft.Plan(x.shape, np.float32, np.complex64)
         fft.fft(x_gpu, xf_gpu, plan)
         assert np.allclose(xf, xf_gpu.get(), atol=atol_float32)
@@ -46,7 +47,7 @@ class test_fft(TestCase):
         x = np.asarray(np.random.rand(self.B, self.N), np.float32)
         xf = np.fft.rfft(x, axis=1)
         x_gpu = gpuarray.to_gpu(x)
-        xf_gpu = gpuarray.empty((self.B, self.N/2+1), np.complex64)
+        xf_gpu = gpuarray.empty((self.B, self.N//2+1), np.complex64)
         plan = fft.Plan(x.shape[1], np.float32, np.complex64, batch=self.B)
         fft.fft(x_gpu, xf_gpu, plan)
         assert np.allclose(xf, xf_gpu.get(), atol=atol_float32)
@@ -55,16 +56,16 @@ class test_fft(TestCase):
         x = np.asarray(np.random.rand(self.B, self.N, self.M), np.float32)
         xf = np.fft.rfftn(x, axes=(1,2))
         x_gpu = gpuarray.to_gpu(x)
-        xf_gpu = gpuarray.empty((self.B, self.N, self.M/2+1), np.complex64)
+        xf_gpu = gpuarray.empty((self.B, self.N, self.M//2+1), np.complex64)
         plan = fft.Plan([self.N, self.M], np.float32, np.complex64, batch=self.B)
         fft.fft(x_gpu, xf_gpu, plan)
         assert np.allclose(xf, xf_gpu.get(), atol=atol_float32)
-        
+
     def test_fft_float64_to_complex128_1d(self):
         x = np.asarray(np.random.rand(self.N), np.float64)
         xf = np.fft.rfftn(x)
         x_gpu = gpuarray.to_gpu(x)
-        xf_gpu = gpuarray.empty(self.N/2+1, np.complex128)
+        xf_gpu = gpuarray.empty(self.N//2+1, np.complex128)
         plan = fft.Plan(x.shape, np.float64, np.complex128)
         fft.fft(x_gpu, xf_gpu, plan)
         assert np.allclose(xf, xf_gpu.get(), atol=atol_float64)
@@ -73,7 +74,7 @@ class test_fft(TestCase):
         x = np.asarray(np.random.rand(self.N, self.M), np.float64)
         xf = np.fft.rfftn(x)
         x_gpu = gpuarray.to_gpu(x)
-        xf_gpu = gpuarray.empty((self.N, self.M/2+1), np.complex128)
+        xf_gpu = gpuarray.empty((self.N, self.M//2+1), np.complex128)
         plan = fft.Plan(x.shape, np.float64, np.complex128)
         fft.fft(x_gpu, xf_gpu, plan)
         assert np.allclose(xf, xf_gpu.get(), atol=atol_float64)
@@ -82,7 +83,7 @@ class test_fft(TestCase):
         x = np.asarray(np.random.rand(self.B, self.N), np.float64)
         xf = np.fft.rfft(x, axis=1)
         x_gpu = gpuarray.to_gpu(x)
-        xf_gpu = gpuarray.empty((self.B, self.N/2+1), np.complex128)
+        xf_gpu = gpuarray.empty((self.B, self.N//2+1), np.complex128)
         plan = fft.Plan(x.shape[1], np.float64, np.complex128, batch=self.B)
         fft.fft(x_gpu, xf_gpu, plan)
         assert np.allclose(xf, xf_gpu.get(), atol=atol_float64)
@@ -91,11 +92,11 @@ class test_fft(TestCase):
         x = np.asarray(np.random.rand(self.B, self.N, self.M), np.float64)
         xf = np.fft.rfftn(x, axes=(1,2))
         x_gpu = gpuarray.to_gpu(x)
-        xf_gpu = gpuarray.empty((self.B, self.N, self.M/2+1), np.complex128)
+        xf_gpu = gpuarray.empty((self.B, self.N, self.M//2+1), np.complex128)
         plan = fft.Plan([self.N, self.M], np.float64, np.complex128, batch=self.B)
         fft.fft(x_gpu, xf_gpu, plan)
         assert np.allclose(xf, xf_gpu.get(), atol=atol_float64)
-        
+
     def test_ifft_complex64_to_float32_1d(self):
         x = np.asarray(np.random.rand(self.N), np.float32)
         xf = np.asarray(np.fft.rfftn(x), np.complex64)
@@ -191,7 +192,7 @@ class test_fft(TestCase):
         plan = fft.Plan([self.N, self.M], np.complex128, np.float64, batch=self.B)
         fft.ifft(xf_gpu, x_gpu, plan, True)
         assert np.allclose(x, x_gpu.get(), atol=atol_float64)
-        
+
     def test_multiple_streams(self):
         x = np.asarray(np.random.rand(self.N), np.float32)
         xf = np.fft.rfftn(x)
@@ -199,8 +200,8 @@ class test_fft(TestCase):
         yf = np.fft.rfftn(y)
         x_gpu = gpuarray.to_gpu(x)
         y_gpu = gpuarray.to_gpu(y)
-        xf_gpu = gpuarray.empty(self.N/2+1, np.complex64)
-        yf_gpu = gpuarray.empty(self.N/2+1, np.complex64)
+        xf_gpu = gpuarray.empty(self.N//2+1, np.complex64)
+        yf_gpu = gpuarray.empty(self.N//2+1, np.complex64)
         stream0 = drv.Stream()
         stream1 = drv.Stream()
         plan1 = fft.Plan(x.shape, np.float32, np.complex64, stream=stream0)
@@ -213,7 +214,7 @@ class test_fft(TestCase):
 def suite():
     s = TestSuite()
     s.addTest(test_fft('test_fft_float32_to_complex64_1d'))
-    s.addTest(test_fft('test_fft_float32_to_complex64_2d')) 
+    s.addTest(test_fft('test_fft_float32_to_complex64_2d'))
     s.addTest(test_fft('test_batch_fft_float32_to_complex64_1d'))
     s.addTest(test_fft('test_batch_fft_float32_to_complex64_2d'))
     s.addTest(test_fft('test_ifft_complex64_to_float32_1d'))
