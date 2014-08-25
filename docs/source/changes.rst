@@ -28,6 +28,8 @@ Release 0.5.0 - (under development)
 * Use cublas*copy in diag() function (enh. by Thomas Unterthiner).
 * Improved MacOSX compatibility (enh. by Michael M. Forbes).
 * Find CUBLAS version even when it is only accessible via LD_LIBRARY_PATH (enh. by Frédéric Bastien).
+* Get both major and minor version numbers from CUBLAS library when determining 
+  version.
 * Handle unset LD_LIBRARY_PATH variable (fix by Jan Schlüter).
 
 Release 0.042 - (March 10, 2013)

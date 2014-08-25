@@ -24,7 +24,8 @@ from . import utils
 
 if sys.platform == 'linux2' or sys.platform == 'linux':
     _libcublas_libname_list = ['libcublas.so', 'libcublas.so.4.0',
-                               'libcublas.so.5.0', 'libcublas.so.6.0']
+                               'libcublas.so.5.0', 'libcublas.so.5.5',
+                               'libcublas.so.6.0']
 elif sys.platform == 'darwin':
     _libcublas_libname_list = ['libcublas.dylib']
 elif sys.platform == 'Windows':
@@ -222,16 +223,32 @@ def cublasGetVersion(handle):
     cublasCheckStatus(status)
     return version.value
 
+def _get_cublas_version():
+    """
+    Get and save CUBLAS version using the CUBLAS library's SONAME.
 
-# Get and save CUBLAS major version using the CUBLAS library's SONAME;
-# this is done because creating a CUBLAS context can subtly affect the
-# performance of subsequent CUDA operations in certain circumstances.
-# We append zeros to match format of version returned by cublasGetVersion():
-# XXX This approach to obtaining the CUBLAS version number
-# may break Windows/MacOSX compatibility XXX
-_cublas_path = utils.find_lib_path('cublas')
-_cublas_version = int(re.search('[\D\.]\.+(\d)',
-                                utils.get_soname(_cublas_path)).group(1) + '000')
+    This function does not call cublasGetVersion because creating a 
+    CUBLAS context can subtly affect the performance of subsequent 
+    CUDA operations in certain circumstances. 
+
+    Results
+    -------
+    version : str
+        Zeros are appended to match format of version returned 
+        by cublasGetVersion().
+
+    Notes
+    -----
+    This approach to obtaining the CUBLAS version number
+    may break Windows/MacOSX compatibility.
+    """
+
+    cublas_path = utils.find_lib_path('cublas')
+    major, minor = re.search('[\D\.]+\.+(\d+)\.(\d+)',
+                             utils.get_soname(cublas_path)).groups()
+    return major.ljust(2, '0')+minor.ljust(2, '0')
+
+_cublas_version = _get_cublas_version()
 
 class _cublas_version_req(object):
     """
@@ -240,8 +257,13 @@ class _cublas_version_req(object):
     """
 
     def __init__(self, v):
-        self.vs = str( v)
-        self.vi = int(v*1000)
+        self.vs = str(v)
+        if isinstance(v, int):
+            major = str(v)
+            minor = '0'
+        else:
+            major, minor = re.search('(\d+)\.(\d+)', self.vs).groups()
+        self.vi = major.ljust(2, '0')+minor.ljust(2, '0')
 
     def __call__(self,f):
         def f_new(*args,**kwargs):
