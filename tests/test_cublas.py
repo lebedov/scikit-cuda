@@ -17,12 +17,12 @@ _DEPS = np.finfo(np.float64).eps
 
 import scikits.cuda.cublas as cublas
 import scikits.cuda.misc as misc
-    
+
 def bptrs(a):
     """
     Pointer array when input represents a batch of matrices.
     """
-    
+
     return gpuarray.arange(a.ptr,a.ptr+a.shape[0]*a.strides[0],a.strides[0],
                 dtype=cublas.ctypes.c_void_p)
 
@@ -33,7 +33,7 @@ class test_cublas(TestCase):
 
     def tearDown(self):
         cublas.cublasDestroy(self.cublas_handle)
-        
+
     # ISAMAX, IDAMAX, ICAMAX, IZAMAX
     def test_cublasIsamax(self):
         x = np.random.rand(5).astype(np.float32)
@@ -271,7 +271,7 @@ class test_cublas(TestCase):
         cublas.cublasSscal(self.cublas_handle, x_gpu.size, alpha,
                            x_gpu.gpudata, 1)
         assert np.allclose(x_gpu.get(), alpha*x)
-        
+
     def test_cublasCscal(self):
         x = (np.random.rand(5)+1j*np.random.rand(5)).astype(np.complex64)
         x_gpu = gpuarray.to_gpu(x)
@@ -320,13 +320,13 @@ class test_cublas(TestCase):
         c = 3.0
         x_gpu = gpuarray.to_gpu(x)
         y_gpu = gpuarray.to_gpu(x)
-        cublas.cublasSrot(self.cublas_handle, x_gpu.size, 
-                          x_gpu.gpudata, 1, 
+        cublas.cublasSrot(self.cublas_handle, x_gpu.size,
+                          x_gpu.gpudata, 1,
                           y_gpu.gpudata, 1,
                           c, s)
         assert np.allclose(x_gpu.get(), [5, 10, 15])
         assert np.allclose(y_gpu.get(), [1, 2, 3])
-        
+
     # SSWAP, DSWAP, CSWAP, ZSWAP
     def test_cublasSswap(self):
         x = np.random.rand(5).astype(np.float32)
@@ -373,7 +373,7 @@ class test_cublas(TestCase):
         y_gpu = gpuarray.empty((2, 1), np.float32)
         alpha = np.float32(1.0)
         beta = np.float32(0.0)
-        cublas.cublasSgemv(self.cublas_handle, 'n', 2, 3, alpha, 
+        cublas.cublasSgemv(self.cublas_handle, 'n', 2, 3, alpha,
                            a_gpu.gpudata, 2, x_gpu.gpudata,
                            1, beta, y_gpu.gpudata, 1)
         assert np.allclose(y_gpu.get(), np.dot(a, x))
@@ -386,7 +386,7 @@ class test_cublas(TestCase):
         y_gpu = gpuarray.empty((2, 1), np.float64)
         alpha = np.float64(1.0)
         beta = np.float64(0.0)
-        cublas.cublasDgemv(self.cublas_handle, 'n', 2, 3, alpha, 
+        cublas.cublasDgemv(self.cublas_handle, 'n', 2, 3, alpha,
                            a_gpu.gpudata, 2, x_gpu.gpudata,
                            1, beta, y_gpu.gpudata, 1)
         assert np.allclose(y_gpu.get(), np.dot(a, x))
@@ -399,7 +399,7 @@ class test_cublas(TestCase):
         y_gpu = gpuarray.empty((2, 1), np.complex64)
         alpha = np.complex64(1.0)
         beta = np.complex64(0.0)
-        cublas.cublasCgemv(self.cublas_handle, 'n', 2, 3, alpha, 
+        cublas.cublasCgemv(self.cublas_handle, 'n', 2, 3, alpha,
                            a_gpu.gpudata, 2, x_gpu.gpudata,
                            1, beta, y_gpu.gpudata, 1)
         assert np.allclose(y_gpu.get(), np.dot(a, x))
@@ -412,7 +412,7 @@ class test_cublas(TestCase):
         y_gpu = gpuarray.empty((2, 1), np.complex128)
         alpha = np.complex128(1.0)
         beta = np.complex128(0.0)
-        cublas.cublasZgemv(self.cublas_handle, 'n', 2, 3, alpha, 
+        cublas.cublasZgemv(self.cublas_handle, 'n', 2, 3, alpha,
                            a_gpu.gpudata, 2, x_gpu.gpudata,
                            1, beta, y_gpu.gpudata, 1)
         assert np.allclose(y_gpu.get(), np.dot(a, x))
@@ -475,17 +475,17 @@ class test_cublas(TestCase):
         assert np.allclose(c_gpu.get(), alpha*a+beta*b)
 
     # CgemmBatched, ZgemmBatched
-    def test_cublasCgemmBatched(self):        
+    def test_cublasCgemmBatched(self):
         l, m, k, n = 11, 7, 5, 3
         A = (np.random.rand(l, m, k)+1j*np.random.rand(l, m, k)).astype(np.complex64)
         B = (np.random.rand(l, k, n)+1j*np.random.rand(l, k, n)).astype(np.complex64)
-        
+
         C_res = np.einsum('nij,njk->nik', A, B)
-        
+
         a_gpu = gpuarray.to_gpu(A)
         b_gpu = gpuarray.to_gpu(B)
         c_gpu = gpuarray.empty((l, m, n), np.complex64)
-        
+
         alpha = np.complex64(1.0)
         beta = np.complex64(0.0)
 
@@ -493,25 +493,25 @@ class test_cublas(TestCase):
         b_arr = bptrs(b_gpu)
         c_arr = bptrs(c_gpu)
 
-        cublas.cublasCgemmBatched(self.cublas_handle, 'n','n', 
-                                  n, m, k, alpha, 
-                                  b_arr.gpudata, n, 
-                                  a_arr.gpudata, k, 
+        cublas.cublasCgemmBatched(self.cublas_handle, 'n','n',
+                                  n, m, k, alpha,
+                                  b_arr.gpudata, n,
+                                  a_arr.gpudata, k,
                                   beta, c_arr.gpudata, n, l)
 
         assert np.allclose(C_res, c_gpu.get())
 
-    def test_cublasZgemmBatched(self):        
+    def test_cublasZgemmBatched(self):
         l, m, k, n = 11, 7, 5, 3
         A = (np.random.rand(l, m, k)+1j*np.random.rand(l, m, k)).astype(np.complex128)
         B = (np.random.rand(l, k, n)+1j*np.random.rand(l, k, n)).astype(np.complex128)
-        
+
         C_res = np.einsum('nij,njk->nik', A, B)
-        
+
         a_gpu = gpuarray.to_gpu(A)
         b_gpu = gpuarray.to_gpu(B)
         c_gpu = gpuarray.empty((l, m, n), np.complex128)
-        
+
         alpha = np.complex128(1.0)
         beta = np.complex128(0.0)
 
@@ -519,26 +519,26 @@ class test_cublas(TestCase):
         b_arr = bptrs(b_gpu)
         c_arr = bptrs(c_gpu)
 
-        cublas.cublasZgemmBatched(self.cublas_handle, 'n','n', 
-                                  n, m, k, alpha, 
-                                  b_arr.gpudata, n, 
-                                  a_arr.gpudata, k, 
+        cublas.cublasZgemmBatched(self.cublas_handle, 'n','n',
+                                  n, m, k, alpha,
+                                  b_arr.gpudata, n,
+                                  a_arr.gpudata, k,
                                   beta, c_arr.gpudata, n, l)
 
         assert np.allclose(C_res, c_gpu.get())
-        
+
     # SgemmBatched, DgemmBatched
-    def test_cublasSgemmBatched(self):        
+    def test_cublasSgemmBatched(self):
         l, m, k, n = 11, 7, 5, 3
         A = np.random.rand(l, m, k).astype(np.float32)
         B = np.random.rand(l, k, n).astype(np.float32)
-        
+
         C_res = np.einsum('nij,njk->nik', A, B)
-        
+
         a_gpu = gpuarray.to_gpu(A)
         b_gpu = gpuarray.to_gpu(B)
         c_gpu = gpuarray.empty((l, m, n), np.float32)
-        
+
         alpha = np.float32(1.0)
         beta = np.float32(0.0)
 
@@ -546,25 +546,25 @@ class test_cublas(TestCase):
         b_arr = bptrs(b_gpu)
         c_arr = bptrs(c_gpu)
 
-        cublas.cublasSgemmBatched(self.cublas_handle, 'n','n', 
-                                  n, m, k, alpha, 
-                                  b_arr.gpudata, n, 
-                                  a_arr.gpudata, k, 
+        cublas.cublasSgemmBatched(self.cublas_handle, 'n','n',
+                                  n, m, k, alpha,
+                                  b_arr.gpudata, n,
+                                  a_arr.gpudata, k,
                                   beta, c_arr.gpudata, n, l)
 
         assert np.allclose(C_res, c_gpu.get())
 
-    def test_cublasDgemmBatched(self):        
+    def test_cublasDgemmBatched(self):
         l, m, k, n = 11, 7, 5, 3
         A = np.random.rand(l, m, k).astype(np.float64)
         B = np.random.rand(l, k, n).astype(np.float64)
-        
+
         C_res = np.einsum('nij,njk->nik',A,B)
-        
+
         a_gpu = gpuarray.to_gpu(A)
         b_gpu = gpuarray.to_gpu(B)
         c_gpu = gpuarray.empty((l, m, n), np.float64)
-        
+
         alpha = np.float64(1.0)
         beta = np.float64(0.0)
 
@@ -572,59 +572,59 @@ class test_cublas(TestCase):
         b_arr = bptrs(b_gpu)
         c_arr = bptrs(c_gpu)
 
-        cublas.cublasDgemmBatched(self.cublas_handle, 'n','n', 
-                                  n, m, k, alpha, 
-                                  b_arr.gpudata, n, 
-                                  a_arr.gpudata, k, 
+        cublas.cublasDgemmBatched(self.cublas_handle, 'n','n',
+                                  n, m, k, alpha,
+                                  b_arr.gpudata, n,
+                                  a_arr.gpudata, k,
                                   beta, c_arr.gpudata, n, l)
 
         assert np.allclose(C_res, c_gpu.get())
 
     # StrsmBatched, DtrsmBatched
-    def test_cublasStrsmBatched(self):        
+    def test_cublasStrsmBatched(self):
         l, m, n = 11, 7, 5
         A = np.random.rand(l, m, m).astype(np.float32)
         B = np.random.rand(l, m, n).astype(np.float32)
 
-        A = np.array(map(np.triu, A))
+        A = np.array(list(map(np.triu, A)))
         X = np.array([np.linalg.solve(a, b) for a, b in zip(A, B)])
-       
+
         alpha = np.float32(1.0)
 
         a_gpu = gpuarray.to_gpu(A)
         b_gpu = gpuarray.to_gpu(B)
-        
+
         a_arr = bptrs(a_gpu)
         b_arr = bptrs(b_gpu)
 
         cublas.cublasStrsmBatched(self.cublas_handle, 'r', 'l', 'n', 'n',
-                                  n, m, alpha, 
-                                  a_arr.gpudata, m, 
+                                  n, m, alpha,
+                                  a_arr.gpudata, m,
                                   b_arr.gpudata, n, l)
-                                  
+
         assert np.allclose(X, b_gpu.get(), 5)
 
-    def test_cublasDtrsmBatched(self):        
+    def test_cublasDtrsmBatched(self):
         l, m, n = 11, 7, 5
         A = np.random.rand(l, m, m).astype(np.float64)
         B = np.random.rand(l, m, n).astype(np.float64)
 
-        A = np.array(map(np.triu, A))
+        A = np.array(list(map(np.triu, A)))
         X = np.array([np.linalg.solve(a, b) for a, b in zip(A, B)])
-       
+
         alpha = np.float64(1.0)
 
         a_gpu = gpuarray.to_gpu(A)
         b_gpu = gpuarray.to_gpu(B)
-        
+
         a_arr = bptrs(a_gpu)
         b_arr = bptrs(b_gpu)
 
         cublas.cublasDtrsmBatched(self.cublas_handle, 'r', 'l', 'n', 'n',
-                                  n, m, alpha, 
-                                  a_arr.gpudata, m, 
+                                  n, m, alpha,
+                                  a_arr.gpudata, m,
                                   b_arr.gpudata, n, l)
-                                  
+
         assert np.allclose(X, b_gpu.get(), 5)
 
     # SgetrfBatched, DgetrfBatched
@@ -633,17 +633,17 @@ class test_cublas(TestCase):
         l, m = 11, 7
         A = np.random.rand(l, m, m).astype(np.float32)
         A = np.array([np.matrix(a)*np.matrix(a).T for a in A])
-        
+
         a_gpu = gpuarray.to_gpu(A)
         a_arr = bptrs(a_gpu)
         p_gpu = gpuarray.empty((l, m), np.int32)
         i_gpu = gpuarray.zeros(1, np.int32)
         X = np.array([ lu_factor(a)[0] for a in A])
 
-        cublas.cublasSgetrfBatched(self.cublas_handle, 
+        cublas.cublasSgetrfBatched(self.cublas_handle,
                                    m, a_arr.gpudata, m,
                                    p_gpu.gpudata, i_gpu.gpudata, l)
-        
+
         X_ = np.array([a.T for a in a_gpu.get()])
 
         assert np.allclose(X, X_, atol=10*_SEPS)
@@ -653,21 +653,21 @@ class test_cublas(TestCase):
         l, m = 11, 7
         A = np.random.rand(l, m, m).astype(np.float64)
         A = np.array([np.matrix(a)*np.matrix(a).T for a in A])
-        
+
         a_gpu = gpuarray.to_gpu(A)
         a_arr = bptrs(a_gpu)
         p_gpu = gpuarray.empty((l, m), np.int32)
         i_gpu = gpuarray.zeros(1, np.int32)
         X = np.array([ lu_factor(a)[0] for a in A])
 
-        cublas.cublasDgetrfBatched(self.cublas_handle, 
+        cublas.cublasDgetrfBatched(self.cublas_handle,
                                    m, a_arr.gpudata, m,
                                    p_gpu.gpudata, i_gpu.gpudata, l)
-        
+
         X_ = np.array([a.T for a in a_gpu.get()])
 
         assert np.allclose(X,X_)
-        
+
 
 def suite():
     s = TestSuite()
@@ -680,7 +680,7 @@ def suite():
     s.addTest(test_cublas('test_cublasSaxpy'))
     s.addTest(test_cublas('test_cublasCaxpy'))
     s.addTest(test_cublas('test_cublasScopy'))
-    s.addTest(test_cublas('test_cublasCcopy'))    
+    s.addTest(test_cublas('test_cublasCcopy'))
     s.addTest(test_cublas('test_cublasSdot'))
     s.addTest(test_cublas('test_cublasCdotu'))
     s.addTest(test_cublas('test_cublasCdotc'))
@@ -723,11 +723,11 @@ def suite():
         s.addTest(test_cublas('test_cublasDgemv'))
         s.addTest(test_cublas('test_cublasZgemv'))
         s.addTest(test_cublas('test_cublasDgeam'))
-        s.addTest(test_cublas('test_cublasZgeam'))        
+        s.addTest(test_cublas('test_cublasZgeam'))
         s.addTest(test_cublas('test_cublasDgemmBatched'))
         s.addTest(test_cublas('test_cublasZgemmBatched'))
         s.addTest(test_cublas('test_cublasDtrsmBatched'))
-        s.addTest(test_cublas('test_cublasDgetrfBatched'))        
+        s.addTest(test_cublas('test_cublasDgetrfBatched'))
     return s
 
 if __name__ == '__main__':
