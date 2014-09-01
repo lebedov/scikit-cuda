@@ -147,6 +147,16 @@ def find_lib_path(name):
     to that of the machine.
     """
 
+    # OSX has no ldconfig, search the DYLD_LIBRARY_PATH directories
+    if sys.platform == 'darwin':
+        # hacky, but as far as I know this is always a symlink
+        # to the latest version of the library available
+        libname = 'lib' + name + '.dylib'
+        for dir_path in os.environ['DYLD_LIBRARY_PATH'].split(':'):
+            if libname in os.listdir(dir_path):
+                return os.path.join(dir_path, libname)
+        return None
+
     # First, check the directories in LD_LIBRARY_PATH:
     expr = r'\s+(lib%s\.[^\s]+)\s+\-\>' % re.escape(name)
     for dir_path in filter(len,
