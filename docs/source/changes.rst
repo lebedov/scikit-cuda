@@ -31,7 +31,8 @@ Release 0.5.0 - (under development)
 * Get both major and minor version numbers from CUBLAS library when determining 
   version.
 * Handle unset LD_LIBRARY_PATH variable (fix by Jan Schlüter).
-
+* Fix finding libraries on MacOS X (fix by capdevc).
+  
 Release 0.042 - (March 10, 2013)
 --------------------------------
 * Add complex exponential integral.
