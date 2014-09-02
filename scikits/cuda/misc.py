@@ -129,12 +129,19 @@ def done_context(ctx):
 
 global _global_cublas_handle
 _global_cublas_handle = None
-def init():
+global _global_cublas_allocator
+_global_cublas_allocator = None
+def init(allocator=drv.mem_alloc):
     """
     Initialize libraries used by scikits.cuda.
 
     Initialize the CUBLAS and CULA libraries used by high-level functions
     provided by scikits.cuda.
+
+    Parameters
+    ----------
+    allocator : an allocator used internally by some of the high-level
+        functions.
 
     Notes
     -----
@@ -144,9 +151,12 @@ def init():
     """
 
     # CUBLAS uses whatever device is being used by the host thread:
-    global _global_cublas_handle
+    global _global_cublas_handle, _global_cublas_allocator
     if not _global_cublas_handle:
         _global_cublas_handle = cublas.cublasCreate()
+
+    if _global_cublas_allocator is None:
+        _global_cublas_allocator = allocator
 
     # culaSelectDevice() need not (and, in fact, cannot) be called
     # here because the host thread has already been bound to a GPU
