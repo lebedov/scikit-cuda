@@ -32,7 +32,10 @@ Release 0.5.0 - (under development)
   version.
 * Handle unset LD_LIBRARY_PATH variable (fix by Jan Schlüter).
 * Fix finding libraries on MacOS X (fix by capdevc).
+* Enable specification of memory pool allocator to linalg functions (enh. by 
+  Thomas Unterthiner).
   
+
 Release 0.042 - (March 10, 2013)
 --------------------------------
 * Add complex exponential integral.
