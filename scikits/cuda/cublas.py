@@ -5476,6 +5476,57 @@ def cublasDgetrfBatched(handle, n, A, lda, P, info, batchSize):
                                             int(info), batchSize)
     cublasCheckStatus(status)
 
+
+# SgetriBatched, Dgetribatched
+if _cublas_version >= 5000:
+    _libcublas.cublasSgetriBatched.restype = int
+    _libcublas.cublasSgetriBatched.argtypes = [_types.handle,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int]
+@_cublas_version_req(5.0)
+def cublasSgetriBatched(handle, n, A, lda, P, C, ldc, info, batchSize):
+    """
+    This function performs the inversion of an array of n x n matrices.
+    The matrices must be factorized first using cublasSgetrfBatched.
+    """
+
+    status = _libcublas.cublasSgetriBatched(handle, n,
+                                            int(A), lda, int(P),
+                                            int(C), ldc, int(info),
+                                            batchSize)
+    cublasCheckStatus(status)
+
+if _cublas_version >= 5000:
+    _libcublas.cublasDgetriBatched.restype = int
+    _libcublas.cublasDgetriBatched.argtypes = [_types.handle,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int]
+@_cublas_version_req(5.0)
+def cublasDgetriBatched(handle, n, A, lda, P, C, ldc, info, batchSize):
+    """
+    This function performs the inversion of an array of n x n matrices.
+    The matrices must be factorized first using cublasDgetrfBatched.
+    """
+
+    status = _libcublas.cublasDgetriBatched(handle, n,
+                                            int(A), lda, int(P),
+                                            int(C), ldc, int(info),
+                                            batchSize)
+    cublasCheckStatus(status)
+
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
