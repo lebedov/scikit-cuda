@@ -153,7 +153,7 @@ def find_lib_path(name):
         # to the latest version of the library available
         libname = 'lib' + name + '.dylib'
         for dir_path in os.environ['DYLD_LIBRARY_PATH'].split(':'):
-            if libname in os.listdir(dir_path):
+            if len(dir_path) > 0 and libname in os.listdir(dir_path):
                 return os.path.join(dir_path, libname)
         return None
 
