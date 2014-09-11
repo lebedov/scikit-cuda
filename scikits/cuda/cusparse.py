@@ -17,9 +17,13 @@ from string import Template
 
 import cuda
 
-if sys.platform == 'linux2':
-    _libcusparse_libname_list = ['libcusparse.so', 'libcusparse.so.3',
-                                 'libcusparse.so.4', 'libcusparse.so.5']
+if 'linux' in sys.platform:
+    _libcusparse_libname_list = ['libcusparse.so',
+                                 'libcusparse.so.6.5',
+                                 'libcusparse.so.6.0',
+                                 'libcusparse.so.5.5',
+                                 'libcusparse.so.5.0',
+                                 'libcusparse.so.4.0']
 elif sys.platform == 'darwin':
     _libcusparse_libname_list = ['libcusparse.dylib']
 elif sys.platform == 'Windows':

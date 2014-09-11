@@ -14,8 +14,10 @@ import numpy as np
 from . import cuda
 
 # Load CULA library:
-if sys.platform == 'linux2' or sys.platform == 'linux':
-    _libcula_libname_list = ['libcula_lapack.so', 'libcula_lapack_basic.so', 'libcula.so']
+if 'linux' in sys.platform:
+    _libcula_libname_list = ['libcula_lapack.so',
+                             'libcula_lapack_basic.so',
+                             'libcula.so']
 elif sys.platform == 'darwin':
     _libcula_libname_list = ['libcula_lapack.so', 'libcula.dylib']
 else:

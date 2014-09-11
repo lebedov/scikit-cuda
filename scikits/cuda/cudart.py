@@ -8,8 +8,13 @@ import atexit, ctypes, sys, warnings
 import numpy as np
 
 # Load CUDA runtime library:
-if sys.platform == 'linux2' or sys.platform == 'linux':
-    _libcudart_libname_list = ['libcudart.so', 'libcudart.so.3', 'libcudart.so.4']
+if 'linux' in sys.platform:
+    _libcudart_libname_list = ['libcudart.so',
+                               'libcudart.so.6.5',
+                               'libcudart.so.6.0',
+                               'libcudart.so.5.5',
+                               'libcudart.so.5.0',
+                               'libcudart.so.4.0']
 elif sys.platform == 'darwin':
     _libcudart_libname_list = ['libcudart.dylib']
 elif sys.platform == 'win32':

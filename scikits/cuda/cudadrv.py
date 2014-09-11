@@ -7,8 +7,8 @@ Python interface to CUDA driver functions.
 import sys, ctypes
 
 # Load CUDA driver library:
-if sys.platform == 'linux2' or sys.platform == 'linux':
-    _libcuda_libname_list = ['libcuda.so', 'libcuda.so.3', 'libcuda.so.4']
+if 'linux' in sys.platform:
+    _libcuda_libname_list = ['libcuda.so']
 elif sys.platform == 'darwin':
     _libcuda_libname_list = ['libcuda.dylib']
 elif sys.platform == 'Windows':
@@ -27,7 +27,6 @@ for _libcuda_libname in _libcuda_libname_list:
         break
 if _libcuda == None:
     raise OSError('CUDA driver library not found')
-
 
 # Exceptions corresponding to various CUDA driver errors:
 

@@ -9,7 +9,12 @@ Note: this module does not explicitly depend on PyCUDA.
 import ctypes, sys
 
 if 'linux' in sys.platform:
-    _libcufft_libname_list = ['libcufft.so', 'libcufft.so.3', 'libcufft.so.4']
+    _libcufft_libname_list = ['libcufft.so',
+                              'libcufft.so.6.5',
+                              'libcufft.so.6.0',
+                              'libcufft.so.5.5',
+                              'libcufft.so.5.0',
+                              'libcufft.so.4.0']
 elif sys.platform == 'darwin':
     _libcufft_libname_list = ['libcufft.dylib']
 elif sys.platform == 'Windows':

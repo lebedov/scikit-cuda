@@ -22,10 +22,13 @@ from string import Template
 from . import cuda
 from . import utils
 
-if sys.platform == 'linux2' or sys.platform == 'linux':
-    _libcublas_libname_list = ['libcublas.so', 'libcublas.so.4.0',
-                               'libcublas.so.5.0', 'libcublas.so.5.5',
-                               'libcublas.so.6.0']
+if 'linux' in sys.platform:
+    _libcublas_libname_list = ['libcublas.so',
+                               'libcublas.so.6.5',
+                               'libcublas.so.6.0',
+                               'libcublas.so.5.5',
+                               'libcublas.so.5.0', 
+                               'libcublas.so.4.0']
 elif sys.platform == 'darwin':
     _libcublas_libname_list = ['libcublas.dylib']
 elif sys.platform == 'Windows':

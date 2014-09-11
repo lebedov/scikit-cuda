@@ -10,7 +10,7 @@ import sys
 import cuda
 from cula import culaCheckStatus
 
-if sys.platform == 'linux2':
+if 'linux' in sys.platform:
     _libpcula_libname_list = ['libcula_scalapack.so']
 elif sys.platform == 'darwin':
     _libpcula_libname_list = ['libcula_scalapack.dylib']
