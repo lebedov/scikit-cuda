@@ -358,6 +358,89 @@ class cudaErrorProfilerAlreadyStopped(cudaError):
     __doc__ = _libcudart.cudaGetErrorString(58)
     pass
 
+class cudaErrorAssert(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(59)
+    pass
+
+class cudaErrorTooManyPeers(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(60)
+    pass
+
+class cudaErrorHostMemoryAlreadyRegistered(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(61)
+    pass
+
+class cudaErrorHostMemoryNotRegistered(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(62)
+    pass
+
+class cudaErrorOperatingSystem(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(63)
+    pass
+
+class cudaErrorPeerAccessUnsupported(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(64)
+    pass
+
+class cudaErrorLaunchMaxDepthExceeded(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(65)
+    pass
+
+class cudaErrorLaunchFileScopedTex(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(66)
+    pass
+
+class cudaErrorLaunchFileScopedSurf(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(67)
+    pass
+
+class cudaErrorSyncDepthExceeded(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(68)
+    pass
+
+class cudaErrorLaunchPendingCountExceeded(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(69)
+    pass
+
+class cudaErrorNotPermitted(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(70)
+    pass
+
+class cudaErrorNotSupported(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(71)
+    pass
+
+class cudaErrorHardwareStackError(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(72)
+    pass
+
+class cudaErrorIllegalInstruction(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(73)
+    pass
+
+class cudaErrorMisalignedAddress(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(74)
+    pass
+
+class cudaErrorInvalidAddressSpace(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(75)
+    pass
+
+class cudaErrorInvalidPc(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(76)
+    pass
+
+class cudaErrorIllegalAddress(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(77)
+    pass
+
+class cudaErrorInvalidPtx(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(78)
+    pass
+
+class cudaErrorInvalidGraphicsContext(cudaError):
+    __doc__ = _libcudart.cudaGetErrorString(79)
+
 class cudaErrorStartupFailure(cudaError):
     __doc__ = _libcudart.cudaGetErrorString(127)
     pass
@@ -421,6 +504,27 @@ cudaExceptions = {
     56: cudaErrorProfilerNotInitialized,
     57: cudaErrorProfilerAlreadyStarted,
     58: cudaErrorProfilerAlreadyStopped,
+    59: cudaErrorAssert,
+    60: cudaErrorTooManyPeers,
+    61: cudaErrorHostMemoryAlreadyRegistered,
+    62: cudaErrorHostMemoryNotRegistered,
+    63: cudaErrorOperatingSystem,
+    64: cudaErrorPeerAccessUnsupported,
+    65: cudaErrorLaunchMaxDepthExceeded,
+    66: cudaErrorLaunchFileScopedTex,
+    67: cudaErrorLaunchFileScopedSurf,
+    68: cudaErrorSyncDepthExceeded,
+    69: cudaErrorLaunchPendingCountExceeded,
+    70: cudaErrorNotPermitted,
+    71: cudaErrorNotSupported,
+    72: cudaErrorHardwareStackError,
+    73: cudaErrorIllegalInstruction,
+    74: cudaErrorMisalignedAddress,
+    75: cudaErrorInvalidAddressSpace,
+    76: cudaErrorInvalidPc,
+    77: cudaErrorIllegalAddress,
+    78: cudaErrorInvalidPtx,
+    79: cudaErrorInvalidGraphicsContext,
     127: cudaErrorStartupFailure
     }
 
