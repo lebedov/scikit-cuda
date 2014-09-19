@@ -42,14 +42,64 @@ typedef enum{
     CUSPARSE_STATUS_MAPPING_ERROR=5,
     CUSPARSE_STATUS_EXECUTION_FAILED=6,
     CUSPARSE_STATUS_INTERNAL_ERROR=7,
-    CUSPARSE_STATUS_MATRIX_TYPE_NOT_SUPPORTED=8
+    CUSPARSE_STATUS_MATRIX_TYPE_NOT_SUPPORTED=8,
+    CUSPARSE_STATUS_ZERO_PIVOT=9
 } cusparseStatus_t;
 
 struct cusparseContext;
 typedef struct cusparseContext *cusparseHandle_t;
 
+// Actual contents of following opaque structure:
+// typedef struct cusparseMatDescr {
+//     cusparseMatrixType_t MatrixType;
+//     cusparseFillMode_t FillMode;
+//     cusparseDiagType_t DiagType;
+//     cusparseIndexBase_t IndexBase;
+// } cusparseMatDescr_t;
+
+struct cusparseMatDescr;
+typedef struct cusparseMatDescr *cusparseMatDescr_t;
+
 struct cusparseSolveAnalysisInfo;
 typedef struct cusparseSolveAnalysisInfo *cusparseSolveAnalysisInfo_t;
+
+/* Opaque structure holding the sparse triangular solve information */
+struct csrsv2Info;
+typedef struct csrsv2Info *csrsv2Info_t;
+
+struct bsrsv2Info;
+typedef struct bsrsv2Info *bsrsv2Info_t;
+
+struct bsrsm2Info;
+typedef struct bsrsm2Info *bsrsm2Info_t;
+
+/* Opaque structure holding incomplete Cholesky information */
+struct csric02Info;
+typedef struct csric02Info *csric02Info_t;
+
+struct bsric02Info;
+typedef struct bsric02Info *bsric02Info_t;
+
+/* Opaque structure holding incomplete LU information */
+struct csrilu02Info;
+typedef struct csrilu02Info *csrilu02Info_t;
+
+struct bsrilu02Info;
+typedef struct bsrilu02Info *bsrilu02Info_t;
+
+/* Opaque structure holding the hybrid (HYB) storage information */
+struct cusparseHybMat;
+typedef struct cusparseHybMat *cusparseHybMat_t;
+
+typedef enum { 
+    CUSPARSE_POINTER_MODE_HOST = 0,  
+    CUSPARSE_POINTER_MODE_DEVICE = 1        
+} cusparsePointerMode_t;
+
+typedef enum {
+    CUSPARSE_ACTION_SYMBOLIC = 0,
+    CUSPARSE_ACTION_NUMERIC = 1
+} cusparseAction_t;
 
 typedef enum {
     CUSPARSE_MATRIX_TYPE_GENERAL = 0,
@@ -84,16 +134,16 @@ typedef enum {
     CUSPARSE_DIRECTION_COLUMN = 1
 } cusparseDirection_t;
 
-// Actual contents of following opaque structure:
-// typedef struct cusparseMatDescr {
-//     cusparseMatrixType_t MatrixType;
-//     cusparseFillMode_t FillMode;
-//     cusparseDiagType_t DiagType;
-//     cusparseIndexBase_t IndexBase;
-// } cusparseMatDescr_t;
+typedef enum {
+    CUSPARSE_HYB_PARTITION_AUTO = 0,
+    CUSPARSE_HYB_PARTITION_USER = 1,
+    CUSPARSE_HYB_PARTITION_MAX = 2,
+} cusparseHybPartition_t;
 
-struct cusparseMatDescr;
-typedef struct cusparseMatDescr *cusparseMatDescr_t;
+typedef enum {
+    CUSPARSE_SOLVE_POLICY_NO_LEVEL = 0,
+    CUSPARSE_SOLVE_POLICY_USE_LEVEL = 1  
+} cusparseSolvePolicy_t;
 
 // initialization and management routines
 cusparseStatus_t cusparseCreate(cusparseHandle_t *handle);
@@ -122,8 +172,42 @@ cusparseStatus_t cusparseSetMatIndexBase(cusparseMatDescr_t descrA,
                                          cusparseIndexBase_t base);
 cusparseIndexBase_t cusparseGetMatIndexBase(const cusparseMatDescr_t descrA);
 
+/* sparse triangular solve */
 cusparseStatus_t cusparseCreateSolveAnalysisInfo(cusparseSolveAnalysisInfo_t *info);
 cusparseStatus_t cusparseDestroySolveAnalysisInfo(cusparseSolveAnalysisInfo_t info);
+cusparseStatus_t cusparseGetLevelInfo(cusparseHandle_t handle, 
+                                      cusparseSolveAnalysisInfo_t info,
+                                      int *nlevels,
+                                      int **levelPtr,
+                                      int **levelInd);
+
+cusparseStatus_t cusparseCreateCsrsv2Info(csrsv2Info_t *info);
+cusparseStatus_t cusparseDestroyCsrsv2Info(csrsv2Info_t info);
+
+/* incomplete Cholesky */
+cusparseStatus_t cusparseCreateCsric02Info(csric02Info_t *info);
+cusparseStatus_t cusparseDestroyCsric02Info(csric02Info_t info);
+
+cusparseStatus_t cusparseCreateBsric02Info(bsric02Info_t *info);
+cusparseStatus_t cusparseDestroyBsric02Info(bsric02Info_t info);
+
+/* incomplete LU */
+cusparseStatus_t cusparseCreateCsrilu02Info(csrilu02Info_t *info);
+cusparseStatus_t cusparseDestroyCsrilu02Info(csrilu02Info_t info);
+
+cusparseStatus_t cusparseCreateBsrilu02Info(bsrilu02Info_t *info);
+cusparseStatus_t cusparseDestroyBsrilu02Info(bsrilu02Info_t info);
+
+/* BSR triangular solber */
+cusparseStatus_t cusparseCreateBsrsv2Info(bsrsv2Info_t *info);
+cusparseStatus_t cusparseDestroyBsrsv2Info(bsrsv2Info_t info);
+
+cusparseStatus_t cusparseCreateBsrsm2Info(bsrsm2Info_t *info);
+cusparseStatus_t cusparseDestroyBsrsm2Info(bsrsm2Info_t info);
+
+/* hybrid (HYB) format */
+cusparseStatus_t cusparseCreateHybMat(cusparseHybMat_t *hybA);
+cusparseStatus_t cusparseDestroyHybMat(cusparseHybMat_t hybA);
 
 // level 1 routines
 cusparseStatus_t cusparseSaxpyi(cusparseHandle_t handle,
@@ -144,7 +228,7 @@ cusparseStatus_t cusparseDaxpyi(cusparseHandle_t handle,
 
 cusparseStatus_t cusparseCaxpyi(cusparseHandle_t handle,
                                 int nnz,
-                                cuComplex alpha,
+                                const cuComplex *alpha,
                                 const cuComplex *xVal,
                                 const int *xInd,
                                 cuComplex *y,
@@ -152,7 +236,7 @@ cusparseStatus_t cusparseCaxpyi(cusparseHandle_t handle,
 
 cusparseStatus_t cusparseZaxpyi(cusparseHandle_t handle,
                                 int nnz,
-                                cuDoubleComplex alpha,
+                                const cuDoubleComplex *alpha,
                                 const cuDoubleComplex *xVal,
                                 const int *xInd,
                                 cuDoubleComplex *y,
@@ -541,7 +625,7 @@ cusparseStatus_t cusparseScsr2csc(cusparseHandle_t handle,
                                   float *cscValA,
                                   int *cscRowIndA,
                                   int *cscColPtrA,
-                                  int copyValues,
+                                  cusparseAction_t copyValues,
                                   cusparseIndexBase_t idxBase);
 
 cusparseStatus_t cusparseDcsr2csc(cusparseHandle_t handle,
@@ -554,31 +638,33 @@ cusparseStatus_t cusparseDcsr2csc(cusparseHandle_t handle,
                                   double *cscValA,
                                   int *cscRowIndA,
                                   int *cscColPtrA,
-                                  int copyValues,
+                                  cusparseAction_t copyValues,
                                   cusparseIndexBase_t idxBase);
 
 cusparseStatus_t cusparseCcsr2csc(cusparseHandle_t handle,
                                   int m,
                                   int n,
-                                  const cuComplex  *csrValA,
+                                  int nnz,
+                                  const cuComplex *csrValA,
                                   const int *csrRowPtrA,
                                   const int *csrColIndA,
                                   cuComplex *cscValA,
                                   int *cscRowIndA,
                                   int *cscColPtrA,
-                                  int copyValues,
+                                  cusparseAction_t copyValues,
                                   cusparseIndexBase_t idxBase);
 
 cusparseStatus_t cusparseZcsr2csc(cusparseHandle_t handle,
                                   int m,
                                   int n,
+                                  int nnz,
                                   const cuDoubleComplex *csrValA,
                                   const int *csrRowPtrA,
                                   const int *csrColIndA,
                                   cuDoubleComplex *cscValA,
                                   int *cscRowIndA,
                                   int *cscColPtrA,
-                                  int copyValues,
+                                  cusparseAction_t copyValues,
                                   cusparseIndexBase_t idxBase);
 
 """)
@@ -589,7 +675,6 @@ _ptr_to_long = lambda ptr: struct.Struct('L').unpack(_ffi.buffer(ptr))[0]
 __verify_scr = """
 #include <cusparse_v2.h>
 #include <driver_types.h>
-#include <cuComplex.h>
 """
 _ffi_lib = _ffi.verify(__verify_scr, libraries=['cusparse'],
                        include_dirs=['/usr/local/cuda/include'],
@@ -597,7 +682,6 @@ _ffi_lib = _ffi.verify(__verify_scr, libraries=['cusparse'],
 
 
 class CUSPARSE_ERROR(Exception):
-
     """CUSPARSE error"""
     pass
 
@@ -653,7 +737,6 @@ def cusparseCreate():
     -------
     handle : int
         CUSPARSE library context.
-
     """
 
     handle = _ffi.new('cusparseHandle_t *')
@@ -672,7 +755,6 @@ def cusparseDestroy(handle):
     ----------
     handle : int
         CUSPARSE library context.
-
     """
 
     handle = _ffi.cast('cusparseHandle_t', handle)
@@ -695,7 +777,6 @@ def cusparseGetVersion(handle):
     -------
     version : int
         CUSPARSE library version number.
-
     """
 
     version = _ffi.new('int *')
@@ -716,7 +797,6 @@ def cusparseSetStream(handle, stream_id):
         CUSPARSE library context.
     stream_id : int
         Stream ID.
-
     """
 
     handle = _ffi.cast('cusparseHandle_t', handle)
@@ -895,8 +975,6 @@ def cusparseGetMatIndexBase(desc):
     return _ffi_lib.cusparseGetMatIndexBase(desc)
 
 # Level 1 functions:
-
-
 def cusparseSaxpyi(handle, nnz, alpha, xVal, xInd, y, idxBase):
     handle = _ffi.cast('cusparseHandle_t', handle)
     xVal = _ffi.cast('float *', xVal)
@@ -934,7 +1012,7 @@ def cusparseCaxpyi(handle, nnz, alpha, xVal, xInd, y, idxBase):
     xInd = _ffi.cast('int *', xInd)
     y = _ffi.cast('cuComplex *', y)
     idxBase = _ffi.cast('cusparseIndexBase_t', idxBase)
-    status = _ffi_lib.cusparseZaxpyi(handle, nnz, alpha_ffi, xVal,
+    status = _ffi_lib.cusparseCaxpyi(handle, nnz, alpha_ffi, xVal,
                                      xInd, y, idxBase)
     cusparseCheckStatus(status)
 
@@ -957,8 +1035,6 @@ def cusparseZaxpyi(handle, nnz, alpha, xVal, xInd, y, idxBase):
     cusparseCheckStatus(status)
 
 # Format conversion functions:
-
-
 def cusparseSnnz(handle, dirA, m, n, descrA, A, lda):
     """
     Compute number of non-zero elements per row, column, or dense matrix.
@@ -987,7 +1063,6 @@ def cusparseSnnz(handle, dirA, m, n, descrA, A, lda):
         non-zero elements per row or column, respectively.
     nnzTotalDevHostPtr : pycuda.gpuarray.GPUArray
         Total number of non-zero elements in device or host memory.
-
     """
 
     # Unfinished:
