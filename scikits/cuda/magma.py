@@ -12,7 +12,7 @@ import numpy as np
 import cuda
 
 # Load MAGMA library:
-if sys.platform == 'linux2':
+if 'linux' in sys.platform:
     _libmagma_libname_list = ['libmagma.so']
 elif sys.platform == 'darwin':
     _libmagma_libname_list = ['magma.so', 'libmagma.dylib']
@@ -38,7 +38,7 @@ def magma_strerror(error):
     """
     Return string corresponding to specified MAGMA error code.
     """
-    
+
     return _libmagma.magma_strerror(error)
 
 class magmaError(Exception):
