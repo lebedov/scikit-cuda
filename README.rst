@@ -15,6 +15,10 @@ provide a low-level interface to the actual library functions), this
 package uses PyCUDA [4]_ to provide high-level functions comparable to
 those in the NumPy package [5]_.
 
+.. image:: http://prime4commit.com/projects/102.svg
+    :target: http://prime4commit.com/projects/102
+    :alt: Support the project
+
 Documentation
 -------------
 Package documentation is available at
