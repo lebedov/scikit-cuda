@@ -5,7 +5,7 @@ CUDA SciKit
 
 Package Description
 -------------------
-This SciKit (toolkit for SciPy [1]_) provides Python interfaces to a
+The CUDA SciKit (toolkit for SciPy [1]_) provides Python interfaces to a
 subset of the functions in the CUDA, CUDART, CUBLAS, and CUFFT
 libraries distributed as part of NVIDIA's CUDA Programming Toolkit
 [2]_, as well as interfaces to select functions in the free and
