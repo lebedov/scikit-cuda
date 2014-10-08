@@ -11,7 +11,7 @@ if 'linux' in sys.platform:
     _libcuda_libname_list = ['libcuda.so']
 elif sys.platform == 'darwin':
     _libcuda_libname_list = ['libcuda.dylib']
-elif sys.platform == 'Windows':
+elif sys.platform == 'win32':
     _libcuda_libname_list = ['cuda.lib']
 else:
     raise RuntimeError('unsupported platform')
@@ -20,7 +20,10 @@ else:
 _libcuda = None
 for _libcuda_libname in _libcuda_libname_list:
     try:
-        _libcuda = ctypes.cdll.LoadLibrary(_libcuda_libname)
+        if sys.platform == 'win32':
+            _libcuda = ctypes.windll.LoadLibrary(_libcuda_libname)
+        else:
+            _libcuda = ctypes.cdll.LoadLibrary(_libcuda_libname)
     except OSError:
         pass
     else:

@@ -26,7 +26,7 @@ if 'linux' in sys.platform:
                                  'libcusparse.so.4.0']
 elif sys.platform == 'darwin':
     _libcusparse_libname_list = ['libcusparse.dylib']
-elif sys.platform == 'Windows':
+elif sys.platform == 'win32':
     _libcusparse_libname_list = ['cusparse.lib']
 else:
     raise RuntimeError('unsupported platform')
@@ -35,7 +35,10 @@ else:
 _libcusparse = None
 for _libcusparse_libname in _libcusparse_libname_list:
     try:
-        _libcusparse = ctypes.cdll.LoadLibrary(_libcusparse_libname)
+        if sys.platform == 'win32':
+            _libcusparse = ctypes.windll.LoadLibrary(_libcusparse_libname)
+        else:
+            _libcusparse = ctypes.cdll.LoadLibrary(_libcusparse_libname)
     except OSError:
         pass
     else:

@@ -27,11 +27,11 @@ if 'linux' in sys.platform:
                                'libcublas.so.6.5',
                                'libcublas.so.6.0',
                                'libcublas.so.5.5',
-                               'libcublas.so.5.0', 
+                               'libcublas.so.5.0',
                                'libcublas.so.4.0']
 elif sys.platform == 'darwin':
     _libcublas_libname_list = ['libcublas.dylib']
-elif sys.platform == 'Windows':
+elif sys.platform == 'win32':
     _libcublas_libname_list = ['cublas.lib']
 else:
     raise RuntimeError('unsupported platform')
@@ -40,7 +40,10 @@ else:
 _libcublas = None
 for _libcublas_libname in _libcublas_libname_list:
     try:
-        _libcublas = ctypes.cdll.LoadLibrary(_libcublas_libname)
+        if sys.platform == 'win32':
+            _libcublas = ctypes.windll.LoadLibrary(_libcublas_libname)
+        else:
+            _libcublas = ctypes.cdll.LoadLibrary(_libcublas_libname)
     except OSError:
         pass
     else:

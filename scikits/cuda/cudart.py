@@ -26,7 +26,10 @@ else:
 _libcudart = None
 for _libcudart_libname in _libcudart_libname_list:
     try:
-        _libcudart = ctypes.cdll.LoadLibrary(_libcudart_libname)
+        if sys.platform == 'win32':
+            _libcudart = ctypes.windll.LoadLibrary(_libcudart_libname)
+        else:
+            _libcudart = ctypes.cdll.LoadLibrary(_libcudart_libname)
     except OSError:
         pass
     else:

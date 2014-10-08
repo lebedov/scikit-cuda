@@ -17,7 +17,7 @@ if 'linux' in sys.platform:
                               'libcufft.so.4.0']
 elif sys.platform == 'darwin':
     _libcufft_libname_list = ['libcufft.dylib']
-elif sys.platform == 'Windows':
+elif sys.platform == 'win32':
     _libcufft_libname_list = ['cufft.lib']
 else:
     raise RuntimeError('unsupported platform')
@@ -26,7 +26,10 @@ else:
 _libcufft = None
 for _libcufft_libname in _libcufft_libname_list:
     try:
-        _libcufft = ctypes.cdll.LoadLibrary(_libcufft_libname)
+        if sys.platform == 'win32'
+            _libcufft = ctypes.windll.LoadLibrary(_libcufft_libname)
+        else:
+            _libcufft = ctypes.cdll.LoadLibrary(_libcufft_libname)
     except OSError:
         pass
     else:
