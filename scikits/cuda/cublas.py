@@ -32,7 +32,7 @@ if 'linux' in sys.platform:
 elif sys.platform == 'darwin':
     _libcublas_libname_list = ['libcublas.dylib']
 elif sys.platform == 'win32':
-    _libcublas_libname_list = ['cublas.lib']
+    _libcublas_libname_list = ['cublas.dll']
 else:
     raise RuntimeError('unsupported platform')
 

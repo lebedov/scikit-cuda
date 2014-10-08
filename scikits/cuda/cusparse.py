@@ -27,7 +27,7 @@ if 'linux' in sys.platform:
 elif sys.platform == 'darwin':
     _libcusparse_libname_list = ['libcusparse.dylib']
 elif sys.platform == 'win32':
-    _libcusparse_libname_list = ['cusparse.lib']
+    _libcusparse_libname_list = ['cusparse.dll']
 else:
     raise RuntimeError('unsupported platform')
 

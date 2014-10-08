@@ -18,7 +18,7 @@ if 'linux' in sys.platform:
 elif sys.platform == 'darwin':
     _libcudart_libname_list = ['libcudart.dylib']
 elif sys.platform == 'win32':
-    _libcudart_libname_list = ['cudart.lib']
+    _libcudart_libname_list = ['cudart.dll']
 else:
     raise RuntimeError('unsupported platform')
 
