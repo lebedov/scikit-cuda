@@ -16,10 +16,10 @@ from setuptools import find_packages
 from setuptools import setup
 
 NAME =               'scikits.cuda'
-VERSION =            '0.5.0'
+VERSION =            '0.5.0a1'
 AUTHOR =             'Lev Givon'
 AUTHOR_EMAIL =       'lev@columbia.edu'
-URL =                'http://github.com/lebedov/scikits.cuda/'
+URL =                'https://github.com/lebedov/scikits.cuda/'
 DESCRIPTION =        'Python interface to GPU-powered libraries'
 LONG_DESCRIPTION =   DESCRIPTION
 DOWNLOAD_URL =       URL
@@ -37,7 +37,7 @@ NAMESPACE_PACKAGES = ['scikits']
 PACKAGES =           find_packages()
 
 if __name__ == "__main__":
-    if os.path.exists('MANIFEST'): 
+    if os.path.exists('MANIFEST'):
         os.remove('MANIFEST')
 
     # This enables the installation of scikits/__init__.py as a data
