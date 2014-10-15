@@ -26,7 +26,7 @@ else:
 _libcufft = None
 for _libcufft_libname in _libcufft_libname_list:
     try:
-        if sys.platform == 'win32'
+        if sys.platform == 'win32':
             _libcufft = ctypes.windll.LoadLibrary(_libcufft_libname)
         else:
             _libcufft = ctypes.cdll.LoadLibrary(_libcufft_libname)
