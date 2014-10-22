@@ -7,11 +7,15 @@
 
     :copyright: Copyright 2007-2011 by the Sphinx team, see AUTHORS.
     :license: BSD, see LICENSE for details.
+
 """
+from __future__ import division, absolute_import, print_function
 
 import warnings
-warnings.warn("This extension has been submitted to Sphinx upstream. "
-              "Use the version from there if it is accepted "
+import collections
+
+warnings.warn("This extension has been accepted to Sphinx upstream. "
+              "Use the version from there (Sphinx >= 1.2) "
               "https://bitbucket.org/birkenfeld/sphinx/pull-request/47/sphinxextlinkcode",
               FutureWarning, stacklevel=1)
 
@@ -29,7 +33,7 @@ def doctree_read(app, doctree):
     env = app.builder.env
 
     resolve_target = getattr(env.config, 'linkcode_resolve', None)
-    if not callable(env.config.linkcode_resolve):
+    if not isinstance(env.config.linkcode_resolve, collections.Callable):
         raise LinkcodeError(
             "Function `linkcode_resolve` is not given in conf.py")
 
@@ -76,4 +80,4 @@ def doctree_read(app, doctree):
 
 def setup(app):
     app.connect('doctree-read', doctree_read)
-    app.add_config_value('linkcode_resolve', None, 'env')
+    app.add_config_value('linkcode_resolve', None, '')
