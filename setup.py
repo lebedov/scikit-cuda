@@ -36,6 +36,15 @@ CLASSIFIERS = [
 NAMESPACE_PACKAGES = ['scikits']
 PACKAGES =           find_packages()
 
+on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
+if not on_rtd:
+    install_requires = ['numpy',
+                        'pycuda >= 0.94.2']
+    extras_require = dict(scipy = ['scipy >= 0.8.0'])
+else:
+    install_requires = []
+    extras_require = {}
+
 if __name__ == "__main__":
     if os.path.exists('MANIFEST'):
         os.remove('MANIFEST')
@@ -61,8 +70,5 @@ if __name__ == "__main__":
         # Force installation of __init__.py in namespace package:
         data_files = [('scikits', ['scikits/__init__.py'])],
         include_package_data = True,
-        install_requires = ['numpy',
-                            'pycuda >= 0.94.2'],
-        extras_require = dict(
-            scipy = ['scipy >= 0.8.0']
-        ))
+        install_requires = install_requires,
+        extras_require = extras_require)
