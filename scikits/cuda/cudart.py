@@ -4,7 +4,7 @@
 Python interface to CUDA runtime functions.
 """
 
-import atexit, ctypes, sys, warnings
+import atexit, ctypes, re, sys, warnings
 import numpy as np
 
 # Load CUDA runtime library:
@@ -776,13 +776,38 @@ def cudaDriverGetVersion():
     -------
     version : int
         Driver version.
-
     """
 
     version = ctypes.c_int()
     status = _libcudart.cudaDriverGetVersion(ctypes.byref(version))
     cudaCheckStatus(status)
     return version.value
+
+_cudart_version = str(cudaDriverGetVersion())
+class _cudart_version_req(object):
+    """
+    Decorator to replace function with a placeholder that raises an exception
+    if the installed CUDA Runtime version is not greater than `v`.
+    """
+
+    def __init__(self, v):
+        self.vs = str(v)
+        if isinstance(v, int):
+            major = str(v)
+            minor = '0'
+        else:
+            major, minor = re.search('(\d+)\.(\d+)', self.vs).groups()
+        self.vi = major.ljust(2, '0')+minor.ljust(2, '0')
+
+    def __call__(self,f):
+        def f_new(*args,**kwargs):
+            raise NotImplementedError('CUDART '+self.vs+' required')
+        f_new.__doc__ = f.__doc__
+
+        if _cudart_version >= self.vi:
+            return f
+        else:
+            return f_new
 
 # Memory types:
 cudaMemoryTypeHost = 1
