@@ -42,7 +42,6 @@ Returns
 -------
 result : bool
     Result.
-
 """
 
 iscomplextype = lambda x : True if x == np.complex64 or \
@@ -61,7 +60,7 @@ result : bool
     Result.
 
 """
-
+    
 def init_device(n=0):
     """
     Initialize a GPU device.
@@ -78,7 +77,6 @@ def init_device(n=0):
     -------
     dev : pycuda.driver.Device
         Initialized device.
-
     """
 
     drv.init()
@@ -118,7 +116,6 @@ def done_context(ctx):
     ----------
     ctx : pycuda.driver.Context
         Context from which to detach.
-
     """
 
     for i in xrange(len(atexit._exithandlers)):
@@ -147,7 +144,6 @@ def init(allocator=drv.mem_alloc):
     -----
     This function does not initialize PyCUDA; it uses whatever device
     and context were initialized in the current host thread.
-
     """
 
     # CUBLAS uses whatever device is being used by the host thread:
@@ -174,7 +170,6 @@ def shutdown():
     Notes
     -----
     This function does not shutdown PyCUDA.
-
     """
 
     global _global_cublas_handle
@@ -201,7 +196,6 @@ def get_compute_capability(dev):
     -------
     c : float
         Compute capability.
-
     """
 
     return np.float('.'.join([str(i) for i in
@@ -215,7 +209,6 @@ def get_current_device():
     -------
     d : pycuda.driver.Device
         Device in use by current context.
-
     """
 
     return drv.Device(cuda.cudaGetDevice())
@@ -238,8 +231,7 @@ def get_dev_attrs(dev):
     attrs : list
         List containing [MAX_THREADS_PER_BLOCK,
         (MAX_BLOCK_DIM_X, MAX_BLOCK_DIM_Y, MAX_BLOCK_DIM_Z),
-        (MAX_GRID_DIM_X, MAX_GRID_DIM_Y)]
-
+        (MAX_GRID_DIM_X, MAX_GRID_DIM_Y, MAX_GRID_DIM_Z)]
     """
 
     attrs = dev.get_attributes()
@@ -248,7 +240,10 @@ def get_dev_attrs(dev):
              attrs[drv.device_attribute.MAX_BLOCK_DIM_Y],
              attrs[drv.device_attribute.MAX_BLOCK_DIM_Z]),
             (attrs[drv.device_attribute.MAX_GRID_DIM_X],
-            attrs[drv.device_attribute.MAX_GRID_DIM_Y])]
+             attrs[drv.device_attribute.MAX_GRID_DIM_Y],
+             attrs[drv.device_attribute.MAX_GRID_DIM_Z])]
+
+iceil = lambda n: int(np.ceil(n))
 
 @memoize
 def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
@@ -303,7 +298,6 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
 
     It is advisable that the number of threads per block be a multiple
     of the warp size to fully utilize a device's computing resources.
-
     """
 
     # Sanity checks:
@@ -318,31 +312,28 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
     # Get device constraints:
     max_threads_per_block, max_block_dim, max_grid_dim = get_dev_attrs(dev)
 
-    if threads_per_block != None:
-        max_threads_per_block = threads_per_block
-
-    # Assume that the maximum number of threads per block is no larger
-    # than the maximum X and Y dimension of a thread block:
-    assert max_threads_per_block <= max_block_dim[0]
-    assert max_threads_per_block <= max_block_dim[1]
+    if threads_per_block is not None:
+        if threads_per_block > max_threads_per_block:
+            raise ValueError('threads per block exceeds device maximum')
+        else:
+            max_threads_per_block = threads_per_block
 
     # Actual number of thread blocks needed:
-    blocks_needed = N/max_threads_per_block+1
-
-    # Assume that the maximum X dimension of a grid
-    # is always at least as large as the maximum Y dimension:
-    assert max_grid_dim[0] >= max_grid_dim[1]
-
-    if blocks_needed < max_block_dim[0]:
-        grid_x = blocks_needed
-        grid_y = 1
-    elif blocks_needed < max_grid_dim[0]*max_grid_dim[1]:
-        grid_x = max_grid_dim[0]
-        grid_y = blocks_needed/max_grid_dim[0]+1
+    blocks_needed = iceil(N/float(max_threads_per_block))
+    
+    if blocks_needed <= max_grid_dim[0]:
+        return (max_threads_per_block, 1, 1), (blocks_needed, 1, 1)
+    elif blocks_needed > max_grid_dim[0] and \
+         blocks_needed <= max_grid_dim[0]*max_grid_dim[1]:
+        return (max_threads_per_block, 1, 1), \
+            (max_grid_dim[0], iceil(blocks_needed/float(max_grid_dim[0])), 1)
+    elif blocks_needed > max_grid_dim[0]*max_grid_dim[1] and \
+         blocks_needed <= max_grid_dim[0]*max_grid_dim[1]*max_grid_dim[2]:
+        return (max_threads_per_block, 1, 1), \
+            (max_grid_dim[0], max_grid_dim[1], 
+             iceil(blocks_needed/float(max_grid_dim[0]*max_grid_dim[1])))
     else:
         raise ValueError('array size too large')
-
-    return (max_threads_per_block, 1, 1), (grid_x, grid_y)
 
 def zeros(shape, dtype, allocator=drv.mem_alloc):
     """
@@ -369,7 +360,6 @@ def zeros(shape, dtype, allocator=drv.mem_alloc):
     prevents pycuda.gpuarray.zeros() from working properly with
     complex types in pycuda 2011.1.2:
     http://projects.scipy.org/numpy/ticket/1898
-
     """
 
     out = gpuarray.GPUArray(shape, dtype, allocator)
@@ -391,7 +381,6 @@ def zeros_like(a):
     -------
     out : pycuda.gpuarray.GPUArray
         Array of zeros with the shape and dtype of `a`.
-
     """
 
     out = gpuarray.GPUArray(a.shape, a.dtype, drv.mem_alloc)
@@ -416,7 +405,6 @@ def ones(shape, dtype, allocator=drv.mem_alloc):
     -------
     out : pycuda.gpuarray.GPUArray
         Array of ones with the given shape and dtype.
-
     """
 
     out = gpuarray.GPUArray(shape, dtype, allocator)
@@ -436,7 +424,6 @@ def ones_like(other):
     -------
     out : pycuda.gpuarray.GPUArray
         Array of ones with the shape and dtype of `other`.
-
     """
 
     out = gpuarray.GPUArray(other.shape, other.dtype,
@@ -462,7 +449,6 @@ def inf(shape, dtype, allocator=drv.mem_alloc):
     -------
     out : pycuda.gpuarray.GPUArray
         Array of infs with the given shape and dtype.
-
     """
 
     out = gpuarray.GPUArray(shape, dtype, allocator)
@@ -494,7 +480,6 @@ def maxabs(x_gpu):
     >>> m_gpu = misc.maxabs(x_gpu)
     >>> np.allclose(m_gpu.get(), 3.0)
     True
-
     """
 
     try:
@@ -540,7 +525,6 @@ def cumsum(x_gpu):
     >>> c_gpu = misc.cumsum(x_gpu)
     >>> np.allclose(c_gpu.get(), np.cumsum(x_gpu.get()))
     True
-
     """
 
     try:
@@ -581,7 +565,6 @@ def diff(x_gpu):
     >>> y_gpu = misc.diff(x_gpu)
     >>> np.allclose(np.diff(x), y_gpu.get())
     True
-
     """
 
     y_gpu = gpuarray.empty(len(x_gpu)-1, x_gpu.dtype)
@@ -633,7 +616,6 @@ def set_realloc(x_gpu, data):
     >>> set_realloc(x_gpu, x)
     >>> np.allclose(x, x_gpu.get())
     True
-
     """
 
     # Only reallocate if absolutely necessary:
