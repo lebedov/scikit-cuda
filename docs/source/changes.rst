@@ -34,7 +34,7 @@ Release 0.5.0 - (under development)
 * Fix finding libraries on MacOS X (fix by capdevc).
 * Enable specification of memory pool allocator to linalg functions (enh. by 
   Thomas Unterthiner).
-  
+* Improve misc.select_block_grid_sizes() logic to handle different GPU hardware.
 
 Release 0.042 - (March 10, 2013)
 --------------------------------
