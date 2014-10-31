@@ -233,7 +233,7 @@ def _get_cublas_version():
     """
     Get and save CUBLAS version using the CUBLAS library's SONAME.
 
-    This function does not call cublasGetVersion because creating a 
+    This function tries to avoid calling cublasGetVersion because creating a 
     CUBLAS context can subtly affect the performance of subsequent 
     CUDA operations in certain circumstances. 
 
@@ -241,12 +241,13 @@ def _get_cublas_version():
     -------
     version : str
         Zeros are appended to match format of version returned 
-        by cublasGetVersion().
+        by cublasGetVersion() (e.g., '6050' corresponds to version 6.5).
 
     Notes
     -----
-    This approach to obtaining the CUBLAS version number
-    may break Windows/MacOSX compatibility.
+    Since the version number does not appear to be obtainable from the 
+    MacOSX CUBLAS library, this function must call cublasGetVersion() on
+    MacOSX (but raises a warning to let the user know).
     """
 
     cublas_path = utils.find_lib_path('cublas')
@@ -254,9 +255,15 @@ def _get_cublas_version():
         major, minor = re.search('[\D\.]+\.+(\d+)\.(\d+)',
                                  utils.get_soname(cublas_path)).groups()
     except:
-        raise RuntimeError('cannot get CUBLAS version number '
-                           'from library path %s' % cublas_path)
-    return major.ljust(2, '0')+minor.ljust(2, '0')
+
+        # Create a temporary context to run cublasGetVersion():
+        warnings.warn('creating CUBLAS context to get version number')
+        h = cublasCreate()
+        version = cublasGetVersion(h)
+        cublasDestroy(h)
+        return str(version)
+    else:
+        return major.ljust(2, '0')+minor.ljust(2, '0')
 
 _cublas_version = _get_cublas_version()
 
