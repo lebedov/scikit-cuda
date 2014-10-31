@@ -250,8 +250,12 @@ def _get_cublas_version():
     """
 
     cublas_path = utils.find_lib_path('cublas')
-    major, minor = re.search('[\D\.]+\.+(\d+)\.(\d+)',
-                             utils.get_soname(cublas_path)).groups()
+    try:
+        major, minor = re.search('[\D\.]+\.+(\d+)\.(\d+)',
+                                 utils.get_soname(cublas_path)).groups()
+    except:
+        raise RuntimeError('cannot get CUBLAS version number '
+                           'from library path %s' % cublas_path)
     return major.ljust(2, '0')+minor.ljust(2, '0')
 
 _cublas_version = _get_cublas_version()
