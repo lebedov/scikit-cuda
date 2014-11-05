@@ -6,7 +6,7 @@ Python interface to CUDA driver functions.
 
 import sys, ctypes
 
-# Load CUDA driver library:
+# Load library:
 if 'linux' in sys.platform:
     _libcuda_libname_list = ['libcuda.so']
 elif sys.platform == 'darwin':

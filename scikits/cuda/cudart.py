@@ -7,18 +7,20 @@ Python interface to CUDA runtime functions.
 import atexit, ctypes, re, sys, warnings
 import numpy as np
 
-# Load CUDA runtime library:
+# Load library:
+_version_list = [6.5, 6.0, 5.5, 5.0, 4.0]
 if 'linux' in sys.platform:
-    _libcudart_libname_list = ['libcudart.so',
-                               'libcudart.so.6.5',
-                               'libcudart.so.6.0',
-                               'libcudart.so.5.5',
-                               'libcudart.so.5.0',
-                               'libcudart.so.4.0']
+    _libcudart_libname_list = ['libcudart.so'] + \
+                              ['libcudart.so.%s' % v for v in _version_list]
 elif sys.platform == 'darwin':
     _libcudart_libname_list = ['libcudart.dylib']
 elif sys.platform == 'win32':
-    _libcudart_libname_list = ['cudart.dll']
+    if platform.machine().endswith('64'):        
+        _libcudart_libname_list = ['cudart.dll'] + \
+                                  ['cudart64_%s.dll' % int(10*v) for v in _version_list]
+    else:
+        _libcudart_libname_list = ['cudart.dll'] + \
+                                  ['cudart32_%s.dll' % int(10*v) for v in _version_list]
 else:
     raise RuntimeError('unsupported platform')
 

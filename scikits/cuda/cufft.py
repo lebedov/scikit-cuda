@@ -8,17 +8,21 @@ Note: this module does not explicitly depend on PyCUDA.
 
 import ctypes, sys
 
+# Load library:
+_version_list = [6.5, 6.0, 5.5, 5.0, 4.0]
 if 'linux' in sys.platform:
-    _libcufft_libname_list = ['libcufft.so',
-                              'libcufft.so.6.5',
-                              'libcufft.so.6.0',
-                              'libcufft.so.5.5',
-                              'libcufft.so.5.0',
-                              'libcufft.so.4.0']
+    _libcufft_libname_list = ['libcufft.so'] + \
+                             ['libcufft.so.%s' % v for v in _version_list]
 elif sys.platform == 'darwin':
     _libcufft_libname_list = ['libcufft.dylib']
 elif sys.platform == 'win32':
-    _libcufft_libname_list = ['cufft.dll']
+    if platform.machine().endswith('64'):        
+        _libcufft_libname_list = ['cufft.dll'] + \
+                                 ['cufft64_%s.dll' % int(10*v) for v in _version_list]
+    else:
+        _libcufft_libname_list = ['cufft.dll'] + \
+                                 ['cufft32_%s.dll' % int(10*v) for v in _version_list]
+
 else:
     raise RuntimeError('unsupported platform')
 

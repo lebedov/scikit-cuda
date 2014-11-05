@@ -17,17 +17,20 @@ from string import Template
 
 import cuda
 
+# Load library:
+_version_list = [6.5, 6.0, 5.5, 5.0, 4.0]
 if 'linux' in sys.platform:
-    _libcusparse_libname_list = ['libcusparse.so',
-                                 'libcusparse.so.6.5',
-                                 'libcusparse.so.6.0',
-                                 'libcusparse.so.5.5',
-                                 'libcusparse.so.5.0',
-                                 'libcusparse.so.4.0']
+    _libcusparse_libname_list = ['libcusparse.so'] + \
+                                ['libcusparse.so.%s' % v for v in _version_list]
 elif sys.platform == 'darwin':
     _libcusparse_libname_list = ['libcusparse.dylib']
 elif sys.platform == 'win32':
-    _libcusparse_libname_list = ['cusparse.dll']
+    if platform.machine().endswith('64'):        
+        _libcusparse_libname_list = ['cusparse.dll'] + \
+                                    ['cusparse64_%s.dll' % int(10*v) for v in _version_list]
+    else:
+        _libcusparse_libname_list = ['cusparse.dll'] + \
+                                    ['cusparse32_%s.dll' % int(10*v) for v in _version_list]
 else:
     raise RuntimeError('unsupported platform')
 
