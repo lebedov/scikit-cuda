@@ -19,7 +19,11 @@ if 'linux' in sys.platform:
                              'libcula_lapack_basic.so',
                              'libcula.so']
 elif sys.platform == 'darwin':
-    _libcula_libname_list = ['libcula_lapack.dylib', 'libcula.dylib']
+    _libcula_libname_list = ['libcula_lapack.dylib',
+                             'libcula.dylib']
+elif sys.platform == 'win32':
+    _libcula_libname_list = ['cula_lapack.dll',
+                             'cula_lapack_basic.dll']
 else:
     raise RuntimeError('unsupported platform')
 
