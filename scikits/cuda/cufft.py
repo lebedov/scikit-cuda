@@ -6,7 +6,7 @@ Python interface to CUFFT functions.
 Note: this module does not explicitly depend on PyCUDA.
 """
 
-import ctypes, sys
+import ctypes, platform, sys
 
 # Load library:
 _version_list = [6.5, 6.0, 5.5, 5.0, 4.0]

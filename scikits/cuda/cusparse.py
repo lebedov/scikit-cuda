@@ -6,14 +6,14 @@ Python interface to CUSPARSE functions.
 Note: this module does not explicitly depend on PyCUDA.
 """
 
+import atexit
+import ctypes.util
+import platform
+from string import Template
 import sys
 import warnings
-import ctypes
-import ctypes.util
-import atexit
-import numpy as np
 
-from string import Template
+import numpy as np
 
 import cuda
 
@@ -25,7 +25,7 @@ if 'linux' in sys.platform:
 elif sys.platform == 'darwin':
     _libcusparse_libname_list = ['libcusparse.dylib']
 elif sys.platform == 'win32':
-    if platform.machine().endswith('64'):        
+    if platform.machine().endswith('64'):
         _libcusparse_libname_list = ['cusparse.dll'] + \
                                     ['cusparse64_%s.dll' % int(10*v) for v in _version_list]
     else:
