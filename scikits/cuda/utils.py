@@ -5,7 +5,7 @@ Utility functions.
 """
 
 import sys
-import ctypes
+import ctypes.util
 import os
 import re
 import subprocess
@@ -127,8 +127,9 @@ def find_lib_path(name):
     """
     Find full path of a shared library.
 
-    Searches for the full path of a shared library in the directories
-    listed in LD_LIBRARY_PATH (if any) and in the ld.so cache.
+    Searches for the full path of a shared library. On MacOSX and Posix
+    operating systems, this function checks the directories listed in 
+    LD_LIBRARY_PATH (if any) and in the ld.so cache. 
 
     Parameter
     ---------
@@ -146,6 +147,9 @@ def find_lib_path(name):
     architectures of libraries found in LD_LIBRARY_PATH directories conform
     to that of the machine.
     """
+
+    if sys.platform == 'win32':
+        return ctypes.util.find_library(name)
 
     # OSX has no ldconfig, search the DYLD_LIBRARY_PATH directories
     if sys.platform == 'darwin':

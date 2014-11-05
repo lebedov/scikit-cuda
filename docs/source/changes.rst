@@ -31,8 +31,9 @@ Release 0.5.0 - (under development)
 * Get both major and minor version numbers from CUBLAS library when determining 
   version.
 * Handle unset LD_LIBRARY_PATH variable (fix by Jan Schlüter).
-* Fix finding libraries on MacOS X (fix by capdevc).
-* Enable specification of memory pool allocator to linalg functions (enh. by 
+* Fix library search on MacOS X (fix by capdevc).
+* Fix library search on Windows.
+* Enable specification of memory pool allocator to linalg functions (enh.  by 
   Thomas Unterthiner).
 * Improve misc.select_block_grid_sizes() logic to handle different GPU hardware.
 
