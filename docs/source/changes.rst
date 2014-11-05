@@ -33,6 +33,7 @@ Release 0.5.0 - (under development)
 * Handle unset LD_LIBRARY_PATH variable (fix by Jan Schlüter).
 * Fix library search on MacOS X (fix by capdevc).
 * Fix library search on Windows.
+* Add Windows support to CULA wrappers.
 * Enable specification of memory pool allocator to linalg functions (enh.  by 
   Thomas Unterthiner).
 * Improve misc.select_block_grid_sizes() logic to handle different GPU hardware.
