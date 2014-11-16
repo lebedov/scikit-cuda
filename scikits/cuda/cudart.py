@@ -560,7 +560,7 @@ def cudaCheckStatus(status):
         try:
             raise cudaExceptions[status]
         except KeyError:
-            raise cudaError
+            raise cudaError('unknown CUDA error %s' % status)
 
 # Memory allocation functions (adapted from pystream):
 _libcudart.cudaMalloc.restype = int
@@ -785,7 +785,11 @@ def cudaDriverGetVersion():
     cudaCheckStatus(status)
     return version.value
 
-_cudart_version = str(cudaDriverGetVersion())
+try:
+    _cudart_version = str(cudaDriverGetVersion())
+except:
+    _cudart_version = '9999'
+
 class _cudart_version_req(object):
     """
     Decorator to replace function with a placeholder that raises an exception
