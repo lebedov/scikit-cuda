@@ -21,6 +21,7 @@ atol_float64 = 1e-8
 
 class test_fft(TestCase):
     def setUp(self):
+        np.random.seed(0) # for reproducible tests
         self.N = 8
         self.M = 4
         self.B = 3

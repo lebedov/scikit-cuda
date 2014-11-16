@@ -20,6 +20,7 @@ atol_float64 = 1e-8
 
 class test_linalg(TestCase):
     def setUp(self):
+        np.random.seed(0)
         linalg.init()
 
     def test_svd_ss_float32(self):

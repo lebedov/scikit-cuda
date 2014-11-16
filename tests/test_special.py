@@ -19,8 +19,9 @@ import scikits.cuda.special as special
 
 class test_special(TestCase):
     def setUp(self):
+        np.random.seed(0)
         linalg.init()
-        
+
     def test_sici_float32(self):
         x = np.array([[1, 2], [3, 4]], np.float32)
         x_gpu = gpuarray.to_gpu(x)
