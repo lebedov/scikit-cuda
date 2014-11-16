@@ -823,44 +823,36 @@ def add_diag(d_gpu, a_gpu, overwrite=True, handle=None):
     axpy(handle, n, 1.0, d_gpu.gpudata, int(1), r_gpu.gpudata, int(n+1))
     return r_gpu
 
+def _transpose(a_gpu, conj=False, handle=None):
+    if handle is None:
+        handle = misc._global_cublas_handle
 
-transpose_template = Template("""
-#include <pycuda-complex.hpp>
+    if len(a_gpu.shape) != 2:
+        raise ValueError('a_gpu must be a matrix')
 
-#if ${use_double}
-#if ${use_complex}
-#define FLOAT pycuda::complex<double>
-#define CONJ(x) conj(x)
-#else
-#define FLOAT double
-#define CONJ(x) (x)
-#endif
-#else
-#if ${use_complex}
-#define FLOAT pycuda::complex<float>
-#define CONJ(x) conj(x)
-#else
-#define FLOAT float
-#define CONJ(x) (x)
-#endif
-#endif
+    if (a_gpu.dtype == np.complex64):
+        func = cublas.cublasCgeam
+    elif (a_gpu.dtype == np.float32):
+        func = cublas.cublasSgeam
+    elif (a_gpu.dtype == np.complex128):
+        func = cublas.cublasZgeam
+    elif (a_gpu.dtype == np.float64):
+        func = cublas.cublasDgeam
+    else:
+        raise ValueError('unsupported input type')
+    
+    if conj:
+        transa = 'c'
+    else:
+        transa = 't'
+    M, N = a_gpu.shape
+    at_gpu = gpuarray.empty((N, M), a_gpu.dtype)
+    func(handle, transa, 'n', M, N,
+         1.0, a_gpu.gpudata, N, 0.0, a_gpu.gpudata, N,         
+         at_gpu.gpudata, M)
+    return at_gpu
 
-__global__ void transpose(FLOAT *odata, FLOAT *idata, unsigned int N)
-{
-    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
-                       blockIdx.x*blockDim.x+threadIdx.x;
-    unsigned int ix = idx/${cols};
-    unsigned int iy = idx%${cols};
-
-    if (idx < N)
-        if (${hermitian})
-            odata[iy*${rows}+ix] = CONJ(idata[ix*${cols}+iy]);
-        else
-            odata[iy*${rows}+ix] = idata[ix*${cols}+iy];
-}
-""")
-
-def transpose(a_gpu):
+def transpose(a_gpu, handle=None):
     """
     Matrix transpose.
 
@@ -876,10 +868,9 @@ def transpose(a_gpu):
     -------
     at_gpu : pycuda.gpuarray.GPUArray
         Transposed matrix of shape `(n, m)`.
-
-    Notes
-    -----
-    The current implementation of the transpose operation is relatively inefficient.
+    handle : int
+        CUBLAS context. If no context is specified, the default handle from
+        `scikits.cuda.misc._global_cublas_handle` is used.
 
     Examples
     --------
@@ -899,42 +890,11 @@ def transpose(a_gpu):
     >>> bt_gpu = linalg.transpose(b_gpu)
     >>> np.all(b.T == bt_gpu.get())
     True
-
     """
 
-    alloc = misc._global_cublas_allocator
+    return _transpose(a_gpu, False)
 
-    if a_gpu.dtype not in [np.float32, np.float64, np.complex64,
-                           np.complex128]:
-        raise ValueError('unrecognized type')
-
-    use_double = int(a_gpu.dtype in [np.float64, np.complex128])
-    use_complex = int(a_gpu.dtype in [np.complex64, np.complex128])
-
-    # Get block/grid sizes:
-    dev = misc.get_current_device()
-    block_dim, grid_dim = misc.select_block_grid_sizes(dev, a_gpu.shape)
-
-    # Set this to False when debugging to make sure the compiled kernel is
-    # not cached:
-    cache_dir=None
-    transpose_mod = \
-                  SourceModule(transpose_template.substitute(use_double=use_double,
-                                                             use_complex=use_complex,
-                                                             hermitian=0,
-                               cols=a_gpu.shape[1],
-                               rows=a_gpu.shape[0]),
-                               cache_dir=cache_dir)
-
-    transpose = transpose_mod.get_function("transpose")
-    at_gpu = gpuarray.empty(a_gpu.shape[::-1], a_gpu.dtype, allocator=alloc)
-    transpose(at_gpu, a_gpu, np.uint32(a_gpu.size),
-              block=block_dim,
-              grid=grid_dim)
-
-    return at_gpu
-
-def hermitian(a_gpu):
+def hermitian(a_gpu, handle=None):
     """
     Hermitian (conjugate) matrix transpose.
 
@@ -945,15 +905,14 @@ def hermitian(a_gpu):
     ----------
     a_gpu : pycuda.gpuarray.GPUArray
         Input matrix of shape `(m, n)`.
+    handle : int
+        CUBLAS context. If no context is specified, the default handle from
+        `scikits.cuda.misc._global_cublas_handle` is used.
 
     Returns
     -------
     at_gpu : pycuda.gpuarray.GPUArray
         Transposed matrix of shape `(n, m)`.
-
-    Notes
-    -----
-    The current implementation of the transpose operation is relatively inefficient.
 
     Examples
     --------
@@ -973,40 +932,9 @@ def hermitian(a_gpu):
     >>> bt_gpu = linalg.hermitian(b_gpu)
     >>> np.all(np.conj(b.T) == bt_gpu.get())
     True
-
     """
 
-    alloc = misc._global_cublas_allocator
-
-    if a_gpu.dtype not in [np.float32, np.float64, np.complex64,
-                           np.complex128]:
-        raise ValueError('unrecognized type')
-
-    use_double = int(a_gpu.dtype in [np.float64, np.complex128])
-    use_complex = int(a_gpu.dtype in [np.complex64, np.complex128])
-
-    # Get block/grid sizes:
-    dev = misc.get_current_device()
-    block_dim, grid_dim = misc.select_block_grid_sizes(dev, a_gpu.shape)
-
-    # Set this to False when debugging to make sure the compiled kernel is
-    # not cached:
-    cache_dir=None
-    transpose_mod = \
-                  SourceModule(transpose_template.substitute(use_double=use_double,
-                                                             use_complex=use_complex,
-                                                             hermitian=1,
-                               cols=a_gpu.shape[1],
-                               rows=a_gpu.shape[0]),
-                               cache_dir=cache_dir)
-
-    transpose = transpose_mod.get_function("transpose")
-    at_gpu = gpuarray.empty(a_gpu.shape[::-1], a_gpu.dtype, allocator=alloc)
-    transpose(at_gpu, a_gpu, np.uint32(a_gpu.size),
-              block=block_dim,
-              grid=grid_dim)
-
-    return at_gpu
+    return _transpose(a_gpu, True)
 
 def conj(x_gpu, overwrite=True):
     """
