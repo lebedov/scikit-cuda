@@ -3,7 +3,7 @@
 Authors & Acknowledgments
 =========================
 This software was written and packaged by Lev Givon [1]_. Although it
-depends upon the excellent PyCUDA [2] package by Andreas Klöckner,
+depends upon the excellent PyCUDA [2]_ package by Andreas Klöckner,
 scikits.cuda is developed independently of PyCUDA.
 
 Special thanks are due to the following parties for their contributions:
