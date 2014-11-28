@@ -847,7 +847,7 @@ def _transpose(a_gpu, conj=False, handle=None):
         transa = 't'
     M, N = a_gpu.shape
     at_gpu = gpuarray.empty((N, M), a_gpu.dtype)
-    func(handle, transa, 'n', M, N,
+    func(handle, transa, 't', M, N,
          1.0, a_gpu.gpudata, N, 0.0, a_gpu.gpudata, N,         
          at_gpu.gpudata, M)
     return at_gpu
