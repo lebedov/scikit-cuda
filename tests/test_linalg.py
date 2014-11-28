@@ -362,68 +362,116 @@ class test_linalg(TestCase):
         assert np.allclose(np.dot(np.diag(d), a.T).T, r_gpu.get())
 
     def test_transpose_float32(self):
+        # M < N
         a = np.array([[1, 2, 3, 4, 5, 6],
                       [7, 8, 9, 10, 11, 12]],
                      np.float32)
         a_gpu = gpuarray.to_gpu(a)
         at_gpu = linalg.transpose(a_gpu)
         assert np.all(a.T == at_gpu.get())
+        # M > N
+        b = a.T.copy()
+        b_gpu = gpuarray.to_gpu(b)
+        bt_gpu = linalg.transpose(b_gpu)
+        assert np.all(b.T == bt_gpu.get())
 
     def test_transpose_float64(self):
+        # M < N
         a = np.array([[1, 2, 3, 4, 5, 6],
                       [7, 8, 9, 10, 11, 12]],
                      np.float64)
         a_gpu = gpuarray.to_gpu(a)
         at_gpu = linalg.transpose(a_gpu)
         assert np.all(a.T == at_gpu.get())
+        # M > N
+        b = a.T.copy()
+        b_gpu = gpuarray.to_gpu(b)
+        bt_gpu = linalg.transpose(b_gpu)
+        assert np.all(b.T == bt_gpu.get())
 
     def test_transpose_complex64(self):
+        # M < N
         a = np.array([[1j, 2j, 3j, 4j, 5j, 6j],
                       [7j, 8j, 9j, 10j, 11j, 12j]],
                      np.complex64)
         a_gpu = gpuarray.to_gpu(a)
         at_gpu = linalg.transpose(a_gpu)
         assert np.all(a.T == at_gpu.get())
+        # M > N
+        b = a.T.copy()
+        b_gpu = gpuarray.to_gpu(b)
+        bt_gpu = linalg.transpose(b_gpu)
+        assert np.all(b.T == bt_gpu.get())
 
     def test_transpose_complex128(self):
+        # M < N
         a = np.array([[1j, 2j, 3j, 4j, 5j, 6j],
                       [7j, 8j, 9j, 10j, 11j, 12j]],
                      np.complex128)
         a_gpu = gpuarray.to_gpu(a)
         at_gpu = linalg.transpose(a_gpu)
         assert np.all(a.T == at_gpu.get())
+        # M > N
+        b = a.T.copy()
+        b_gpu = gpuarray.to_gpu(b)
+        bt_gpu = linalg.transpose(b_gpu)
+        assert np.all(b.T == bt_gpu.get())
 
     def test_hermitian_float32(self):
+        # M < N
         a = np.array([[1, 2, 3, 4, 5, 6],
                       [7, 8, 9, 10, 11, 12]],
                      np.float32)
         a_gpu = gpuarray.to_gpu(a)
         at_gpu = linalg.hermitian(a_gpu)
         assert np.all(a.T == at_gpu.get())
+        # M > N
+        b = a.T.copy()
+        b_gpu = gpuarray.to_gpu(b)
+        bt_gpu = linalg.hermitian(b_gpu)
+        assert np.all(b.T == bt_gpu.get())
 
     def test_hermitian_complex64(self):
+        # M < N
         a = np.array([[1j, 2j, 3j, 4j, 5j, 6j],
                       [7j, 8j, 9j, 10j, 11j, 12j]],
                      np.complex64)
         a_gpu = gpuarray.to_gpu(a)
         at_gpu = linalg.hermitian(a_gpu)
         assert np.all(np.conj(a.T) == at_gpu.get())
+        # M > N
+        b = a.T.copy()
+        b_gpu = gpuarray.to_gpu(b)
+        bt_gpu = linalg.hermitian(b_gpu)
+        assert np.all(np.conj(b.T) == bt_gpu.get())
 
     def test_hermitian_float64(self):
+        # M < N
         a = np.array([[1, 2, 3, 4, 5, 6],
                       [7, 8, 9, 10, 11, 12]],
                      np.float64)
         a_gpu = gpuarray.to_gpu(a)
         at_gpu = linalg.hermitian(a_gpu)
         assert np.all(a.T == at_gpu.get())
+        # M > N
+        b = a.T.copy()
+        b_gpu = gpuarray.to_gpu(b)
+        bt_gpu = linalg.hermitian(b_gpu)
+        assert np.all(b.T == bt_gpu.get())
 
     def test_hermitian_complex128(self):
+        # M < N
         a = np.array([[1j, 2j, 3j, 4j, 5j, 6j],
                       [7j, 8j, 9j, 10j, 11j, 12j]],
                      np.complex128)
         a_gpu = gpuarray.to_gpu(a)
         at_gpu = linalg.hermitian(a_gpu)
         assert np.all(np.conj(a.T) == at_gpu.get())
+        # M > N
+        b = a.T.copy()
+        b_gpu = gpuarray.to_gpu(b)
+        bt_gpu = linalg.hermitian(b_gpu)
+        assert np.all(np.conj(b.T) == bt_gpu.get())
 
     def test_conj_complex64(self):
         a = np.array([[1+1j, 2-2j, 3+3j, 4-4j],
