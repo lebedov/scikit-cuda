@@ -892,7 +892,7 @@ def transpose(a_gpu, handle=None):
     True
     """
 
-    return _transpose(a_gpu, False)
+    return _transpose(a_gpu, False, handle)
 
 def hermitian(a_gpu, handle=None):
     """
@@ -934,7 +934,7 @@ def hermitian(a_gpu, handle=None):
     True
     """
 
-    return _transpose(a_gpu, True)
+    return _transpose(a_gpu, True, handle)
 
 def conj(x_gpu, overwrite=True):
     """
