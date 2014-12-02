@@ -38,6 +38,7 @@ Release 0.5.0 - (under development)
   Thomas Unterthiner).
 * Improve misc.select_block_grid_sizes() logic to handle different GPU hardware.
 * Compute transpose using CUDA 5.0 CUBLAS functions rather than with inefficient naive kernel.
+* Use ReadTheDocs theme when building HTML docs locally.
 
 Release 0.042 - (March 10, 2013)
 --------------------------------

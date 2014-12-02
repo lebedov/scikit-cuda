@@ -40,7 +40,8 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if not on_rtd:
     install_requires = ['numpy',
                         'pycuda >= 2013.1']
-    extras_require = dict(scipy = ['scipy >= 0.9.0'])
+    extras_require = dict(scipy = ['scipy >= 0.9.0'],
+                          sphinx_rtd_theme = ['sphinx_rtd_theme >= 0.1.6'])
 else:
     install_requires = []
     extras_require = {}
