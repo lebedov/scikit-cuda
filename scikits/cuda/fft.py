@@ -39,11 +39,27 @@ class Plan:
         the default stream is used.
     mode : int
         FFTW compatibility mode.
-
+    inembed : numpy.array with dtype=numpy.int32
+        number of elements in each dimension of the input array
+    istride : int
+        distance between two successive input elements in the least significant
+        (innermost) dimension
+    idist : int
+        distance between the first element of two consective batches in the
+        input data
+    onembed : numpy.array with dtype=numpy.int32
+        number of elements in each dimension of the output array
+    ostride : int
+        distance between two successive output elements in the least significant
+        (innermost) dimension
+    odist : int
+        distance between the first element of two consective batches in the
+        output data
     """
 
     def __init__(self, shape, in_dtype, out_dtype, batch=1, stream=None,
-                 mode=0x01):
+                 mode=0x01, inembed=None, istride=1, idist=0, onembed=None,
+                 ostride=1, odist=0):
 
         if np.isscalar(shape):
             self.shape = (shape, )
@@ -86,12 +102,17 @@ class Plan:
             raise RuntimeError('double precision requires compute capability '
                                '>= 1.3 (you have %g)' % capability)
 
+        if inembed is not None:
+            inembed = inembed.ctypes.data
+        if onembed is not None:
+            onembed = onembed.ctypes.data
+
         # Set up plan:
         if len(self.shape) > 0:
             n = np.asarray(self.shape, np.int32)
-            self.handle = cufft.cufftPlanMany(len(self.shape), n.ctypes.data,
-                                              None, 1, 0, None, 1, 0,
-                                              self.fft_type, self.batch)
+            self.handle = cufft.cufftPlanMany(
+                len(self.shape), n.ctypes.data, inembed, istride, idist,
+                onembed, ostride, odist, self.fft_type, self.batch)
         else:
             raise ValueError('invalid transform size')
 
