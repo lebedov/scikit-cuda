@@ -39,7 +39,22 @@ class Plan:
         the default stream is used.
     mode : int
         FFTW compatibility mode.
-
+    inembed : numpy.array with dtype=numpy.int32
+        number of elements in each dimension of the input array
+    istride : int
+        distance between two successive input elements in the least significant
+        (innermost) dimension
+    idist : int
+        distance between the first element of two consective batches in the
+        input data
+    onembed : numpy.array with dtype=numpy.int32
+        number of elements in each dimension of the output array
+    ostride : int
+        distance between two successive output elements in the least significant
+        (innermost) dimension
+    odist : int
+        distance between the first element of two consective batches in the
+        output data
     """
 
     def __init__(self, shape, in_dtype, out_dtype, batch=1, stream=None,
