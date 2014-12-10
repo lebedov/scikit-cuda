@@ -269,7 +269,7 @@ def _get_cublas_version():
     else:
         return major.ljust(2, '0')+minor.ljust(2, '0')
 
-_cublas_version = _get_cublas_version()
+_cublas_version = int(_get_cublas_version())
 
 class _cublas_version_req(object):
     """
@@ -291,7 +291,7 @@ class _cublas_version_req(object):
             raise NotImplementedError('CUBLAS '+self.vs+' required')
         f_new.__doc__ = f.__doc__
 
-        if _cublas_version >= self.vi:
+        if _cublas_version >= int(self.vi):
             return f
         else:
             return f_new
