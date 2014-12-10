@@ -41,7 +41,8 @@ Release 0.5.0 - (under development)
 * Use ReadTheDocs theme when building HTML docs locally.
 * Support additional cufftPlanMany() parameters when creating FFT plans (enh. by 
   Gregory R. Lee).
-
+* Improved Python 3.4 compatibility (enh. by Eric Larson).
+  
 Release 0.042 - (March 10, 2013)
 --------------------------------
 * Add complex exponential integral.
