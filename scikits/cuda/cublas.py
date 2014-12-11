@@ -5499,7 +5499,7 @@ def cublasDgetrfBatched(handle, n, A, lda, P, info, batchSize):
 
 
 # SgetriBatched, Dgetribatched
-if _cublas_version >= 5000:
+if _cublas_version >= 5050:
     _libcublas.cublasSgetriBatched.restype = int
     _libcublas.cublasSgetriBatched.argtypes = [_types.handle,
                                                ctypes.c_int,
@@ -5510,7 +5510,7 @@ if _cublas_version >= 5000:
                                                ctypes.c_int,
                                                ctypes.c_void_p,
                                                ctypes.c_int]
-@_cublas_version_req(5.0)
+@_cublas_version_req(5.5)
 def cublasSgetriBatched(handle, n, A, lda, P, C, ldc, info, batchSize):
     """
     This function performs the inversion of an array of n x n matrices.
@@ -5523,7 +5523,7 @@ def cublasSgetriBatched(handle, n, A, lda, P, C, ldc, info, batchSize):
                                             batchSize)
     cublasCheckStatus(status)
 
-if _cublas_version >= 5000:
+if _cublas_version >= 5050:
     _libcublas.cublasDgetriBatched.restype = int
     _libcublas.cublasDgetriBatched.argtypes = [_types.handle,
                                                ctypes.c_int,
@@ -5534,7 +5534,7 @@ if _cublas_version >= 5000:
                                                ctypes.c_int,
                                                ctypes.c_void_p,
                                                ctypes.c_int]
-@_cublas_version_req(5.0)
+@_cublas_version_req(5.5)
 def cublasDgetriBatched(handle, n, A, lda, P, C, ldc, info, batchSize):
     """
     This function performs the inversion of an array of n x n matrices.
