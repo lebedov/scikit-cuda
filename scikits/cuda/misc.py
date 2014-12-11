@@ -20,7 +20,6 @@ from pytools import memoize
 import numpy as np
 
 from . import cuda
-from . import cublas
 
 try:
     from . import cula
@@ -149,6 +148,7 @@ def init(allocator=drv.mem_alloc):
     # CUBLAS uses whatever device is being used by the host thread:
     global _global_cublas_handle, _global_cublas_allocator
     if not _global_cublas_handle:
+        from . import cublas  # nest to avoid requiring cublas e.g. for FFT
         _global_cublas_handle = cublas.cublasCreate()
 
     if _global_cublas_allocator is None:
@@ -174,6 +174,7 @@ def shutdown():
 
     global _global_cublas_handle
     if _global_cublas_handle:
+        from . import cublas  # nest to avoid requiring cublas e.g. for FFT
         cublas.cublasDestroy(_global_cublas_handle)
         _global_cublas_handle = None
 
