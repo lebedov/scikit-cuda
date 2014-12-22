@@ -38,12 +38,56 @@ def test_get_version():
 
 
 def test_create_destroy_hyb():
-    # wrappers to functions added in CUDA Toolkit v5.5
+    # HyB format added in CUDA Toolkit v4.1
     if toolkit_version < (4, 1, 0):
         # skip for old CUDA versions
         return
     HybA = cusparseCreateHybMat()
     cusparseDestroyHybMat(HybA)
+
+
+def test_create_destroy_AnalysisInfo():
+    # Analysis Info added in CUDA v4.0
+    if toolkit_version < (4, 0, 0):
+        # skip for old CUDA versions
+        return
+    info = cusparseCreateSolveAnalysisInfo()
+    cusparseDestroySolveAnalysisInfo(info)
+
+
+def test_create_destroy_SolveInfo_v6():
+    # additional solve info types introduced in CUDA v6.0
+    if toolkit_version < (6, 0, 0):
+        return
+
+    # CSR cases
+    info = cusparse.cusparseCreateCsrsv2Info()
+    cusparse.cusparseDestroyCsrsv2Info(info)
+
+    info = cusparse.cusparseCreateCsrilu02Info()
+    cusparse.cusparseDestroyCsrilu02Info(info)
+
+    info = cusparse.cusparseCreateCsric02Info()
+    cusparse.cusparseDestroyCsric02Info(info)
+
+    # BSR cases
+    info = cusparse.cusparseCreateBsrsv2Info()
+    cusparse.cusparseDestroyBsrsv2Info(info)
+
+    info = cusparse.cusparseCreateBsrilu02Info()
+    cusparse.cusparseDestroyBsrilu02Info(info)
+
+    info = cusparse.cusparseCreateBsric02Info()
+    cusparse.cusparseDestroyBsric02Info(info)
+
+
+def test_create_destroy_SolveInfo_v65():
+    # additional solve info types introduced in CUDA v6.5
+    if toolkit_version < (6, 5, 0):
+        return
+
+    info = cusparse.cusparseCreateBsrsm2Info()
+    cusparse.cusparseDestroyBsrsm2Info(info)
 
 
 def test_set_stream():
