@@ -5,6 +5,18 @@ import pycuda.autoinit
 import pycuda.gpuarray as gpuarray
 import pycuda.driver as drv
 
+try:
+    import scipy.sparse
+    from scipy.sparse.sputils import isscalarlike
+    has_scipy = True
+except ImportError:
+    has_scipy = False
+
+    # copy of isscalarlike from scipy.sparse.sputils
+    def isscalarlike(x):
+        """Is x either a scalar, an array scalar, or a 0-dim array?"""
+        return np.isscalar(x) or (isdense(x) and x.ndim == 0)
+
 toolkit_version = drv.get_version()
 
 if toolkit_version < (3, 2, 0):
@@ -895,3 +907,468 @@ if toolkit_version >= (5, 0, 0):
            csrColIndA, descrB, nnzB, csrValB, csrRowPtrB, csrColIndB, descrC,
            csrValC, csrRowPtrC, csrColIndC)
         return (descrC, csrValC, csrRowPtrC, csrColIndC)
+
+
+class CSR(object):
+    """ cuSPARSE CSR (compressed sparse row) matrix object """
+    def __init__(self, handle, descr, csrVal, csrRowPtr, csrColInd, shape):
+
+        if csrRowPtr.size != (shape[0] + 1):
+            raise ValueError("size of RowPtr inconsistent with shape")
+        if csrVal.size != csrColInd.size:
+            raise ValueError("size of csrVal and csrColInd inconsistent")
+        if csrColInd.dtype != np.int32:
+            raise ValueError("csrColInd must be a 32-bit integer array")
+        if csrRowPtr.dtype != np.int32:
+            raise ValueError("csrRowPtr must be a 32-bit integer array")
+        # if input arrays are on the host, transfer them to the GPU
+        if isinstance(csrVal, np.ndarray):
+            csrVal = gpuarray.to_gpu(csrVal)
+        if isinstance(csrRowPtr, np.ndarray):
+            csrRowPtr = gpuarray.to_gpu(csrRowPtr)
+        if isinstance(csrColInd, np.ndarray):
+            csrColInd = gpuarray.to_gpu(csrColInd)
+
+        self.handle = handle
+        self.descr = descr
+        self.Val = csrVal
+        self.RowPtr = csrRowPtr
+        self.ColInd = csrColInd
+        self.dtype = csrVal.dtype
+        self.shape = shape
+
+        # also mirror scipy.sparse.csr_matrix property names for convenience
+        self.data = csrVal
+        self.indices = csrColInd
+        self.indptr = csrRowPtr
+
+        # properties
+        self.__matrix_type = None
+        self.__index_base = None
+        self.__diag_type = None
+        self.__fill_mode = None
+
+    # alternative constructor from dense ndarray, gpuarray or cuSPARSE matrix
+    @classmethod
+    def to_CSR(cls, A, handle):
+        """ convert dense numpy or gpuarray matrices as well as any
+        scipy.sparse matrix formats to cuSPARSE CSR.
+        """
+        if has_scipy and isinstance(A, scipy.sparse.spmatrix):
+            """Convert scipy.sparse CSR, COO, BSR, etc to cuSPARSE CSR"""
+            # converting BSR, COO, etc to CSR
+            if A.dtype.char not in ['f', 'd', 'F', 'D']:
+                raise ValueError("unsupported numpy dtype {}".format(A.dtype))
+
+            if not isinstance(A, scipy.sparse.csr_matrix):
+                A = A.tocsr()
+
+            # avoid .astype() calls if possible for speed
+            if A.indptr.dtype != np.int32:
+                csrRowPtr = gpuarray.to_gpu(A.indptr.astype(np.int32))
+            else:
+                csrRowPtr = gpuarray.to_gpu(A.indptr)
+
+            if A.indices.dtype != np.int32:
+                csrColInd = gpuarray.to_gpu(A.indices.astype(np.int32))
+            else:
+                csrColInd = gpuarray.to_gpu(A.indices)
+
+            csrVal = gpuarray.to_gpu(A.data)
+            descr = cusparseCreateMatDescr()
+            cusparseSetMatType(descr, CUSPARSE_MATRIX_TYPE_GENERAL)
+            cusparseSetMatIndexBase(descr, CUSPARSE_INDEX_BASE_ZERO)
+        else:
+            """Take dense numpy array or pyCUDA gpuarray and convert to CSR """
+            if not isinstance(A, pycuda.gpuarray.GPUArray):
+                A = np.asfortranarray(np.atleast_2d(A))
+                A = gpuarray.to_gpu(A)
+            else:
+                # dense matrix must be column-major
+                if not A.flags.f_contiguous:
+                    # TODO :an change to Fortran ordering be done directly on
+                    # the gpuarray without going back to numpy?
+                    A = A.get()
+                    A = np.asfortranarray(A)
+                    A = gpuarray.to_gpu(A)
+
+            (handle, descr, csrVal, csrRowPtr, csrColInd) = dense2csr(A,
+                                                                      handle)
+        return cls(handle, descr, csrVal, csrRowPtr, csrColInd, A.shape)
+
+    @property
+    def matrix_type(self):
+        """ matrix type """
+        if self.__matrix_type is None:
+            return cusparseGetMatType(self.descr)
+        else:
+            return self.__matrix_type
+
+    @matrix_type.setter
+    def matrix_type(self, matrix_type):
+        """ matrix type """
+        self.__matrix_type = cusparseSetMatType(self.descr, matrix_type)
+
+    @property
+    def index_base(self):
+        """ matrix index base """
+        if self.__index_base is None:
+            return cusparseGetMatIndexBase(self.descr)
+        else:
+            return self.__index_base
+
+    @index_base.setter
+    def index_base(self, index_base):
+        """ matrix index base """
+        self.__index_base = cusparseSetMatIndexBase(self.descr, index_base)
+
+    @property
+    def diag_type(self):
+        """ matrix diag type """
+        if self.__diag_type is None:
+            return cusparseGetMatDiagType(self.descr)
+        else:
+            return self.__diag_type
+
+    @diag_type.setter
+    def diag_type(self, diag_type):
+        """matrix diag type """
+        self.__diag_type = cusparseSetMatDiagType(self.descr, diag_type)
+
+    @property
+    def fill_mode(self):
+        """matrix fill mode """
+        if self.__fill_mode is None:
+            return cusparseGetMatFillMode(self.descr)
+        else:
+            return self.__fill_mode
+
+    @fill_mode.setter
+    def fill_mode(self, fill_mode):
+        """matrix fill mode """
+        self.__fill_mode = cusparseSetMatFillMode(self.descr, fill_mode)
+
+    @property
+    def nnz(self):
+        """ number of non-zeros """
+        return self.Val.size
+
+    # mirror the function name from scipy
+    def getnnz(self):
+        """ return number of non-zeros"""
+        return self.nnz
+
+    def tocsr_scipy(self):
+        """ return as scipy csr_matrix in host memory """
+        from scipy.sparse import csr_matrix
+        return csr_matrix((self.data.get(),
+                           self.indices.get(),
+                           self.indptr.get()),
+                          shape=self.shape)
+
+    def todense(self, lda=None, to_cpu=False, handle=None, stream=None,
+                autosync=True):
+        """ return dense gpuarray if to_cpu=False, numpy ndarray if to_cpu=True
+        """
+        m, n = self.shape
+        if lda is None:
+            lda = m
+        else:
+            assert lda >= m
+        if handle is None:
+            handle = self.handle
+        if stream is not None:
+            cusparseSetStream(handle, stream.handle)
+        A = csr2dense(self.handle, m, n, self.descr, self.Val, self.RowPtr,
+                      self.ColInd, lda=lda)
+        if autosync:
+            drv.Context.synchronize()
+        if to_cpu:
+            return A.get()
+        else:
+            return A
+
+    def mv(self, x, transA=CUSPARSE_OPERATION_NON_TRANSPOSE, alpha=1.0,
+           beta=0.0, y=None, check_inputs=True, to_cpu=False,
+           autosync=True, handle=None, stream=None):
+        """ multiplication by dense vector x:  y = alpha*transA(A)*x + beta*y.
+        """
+        m, n = self.shape
+
+        # try moving list or numpy array to GPU
+        if not isinstance(x, pycuda.gpuarray.GPUArray):
+            x = np.atleast_1d(x)  # .astype(self.dtype)
+            x = gpuarray.to_gpu(x)
+        if handle is None:
+            handle = self.handle
+        if stream is not None:
+            cusparseSetStream(handle, stream.handle)
+        y = csrmv(handle, self.descr, self.Val, self.RowPtr, self.ColInd, m, n,
+                  x, transA=transA, alpha=alpha, beta=beta, y=y,
+                  check_inputs=check_inputs)
+        if autosync:
+            drv.Context.synchronize()
+        if to_cpu:
+            return y.get()
+        else:
+            return y
+
+    def mm(self, B, transA=CUSPARSE_OPERATION_NON_TRANSPOSE, alpha=1.0,
+           beta=0.0, C=None, ldb=None, ldc=None, check_inputs=True,
+           to_cpu=False, autosync=True, handle=None, stream=None):
+        """ multiplication by dense matrix B:  C = alpha*transA(A)*B + beta*C.
+        """
+        m, k = self.shape
+        # try moving list or numpy array to GPU
+        if not isinstance(B, pycuda.gpuarray.GPUArray):
+            B = np.atleast_2d(B)  # .astype(self.dtype)
+            B = gpuarray.to_gpu(B)
+        n = B.shape[1]
+        if handle is None:
+            handle = self.handle
+        if stream is not None:
+            cusparseSetStream(handle, stream.handle)
+        C = csrmm(handle=self.handle, m=m, n=n, k=k, descrA=self.descr,
+                  csrValA=self.Val, csrRowPtrA=self.RowPtr,
+                  csrColIndA=self.ColInd,  B=B, C=C, transA=transA,
+                  alpha=alpha, beta=beta, ldb=ldb, ldc=ldc,
+                  check_inputs=check_inputs)
+        if autosync:
+            drv.Context.synchronize()
+        if to_cpu:
+            return C.get()
+        else:
+            return C
+
+    def mm2(self, B, transA=CUSPARSE_OPERATION_NON_TRANSPOSE,
+            transB=CUSPARSE_OPERATION_NON_TRANSPOSE, alpha=1.0, beta=0.0,
+            C=None, ldb=None, ldc=None, check_inputs=True, to_cpu=False,
+            autosync=True, handle=None, stream=None):
+        """ multiplication by dense matrix B:  C = alpha*transA(A)*B + beta*C.
+        version 2
+        """
+        if toolkit_version < (5, 5, 0):
+            raise ImportError("mm2 not implemented prior to CUDA v5.5")
+        m, k = self.shape
+        # try moving list or numpy array to GPU
+        if not isinstance(B, pycuda.gpuarray.GPUArray):
+            B = np.atleast_2d(B)  # .astype(self.dtype)
+            B = gpuarray.to_gpu(B)
+        if transB == CUSPARSE_OPERATION_NON_TRANSPOSE:
+            n = B.shape[1]
+        else:
+            n = B.shape[0]
+        if handle is None:
+            handle = self.handle
+        if stream is not None:
+            cusparseSetStream(handle, stream.handle)
+        C = csrmm2(handle=self.handle, m=m, n=n, k=k, descrA=self.descr,
+                   csrValA=self.Val, csrRowPtrA=self.RowPtr,
+                   csrColIndA=self.ColInd, B=B, C=C, transA=transA,
+                   transB=transB, alpha=alpha, beta=beta, ldb=ldb, ldc=ldc,
+                   check_inputs=check_inputs)
+        if autosync:
+            drv.Context.synchronize()
+        if to_cpu:
+            return C.get()
+        else:
+            return C
+
+    def geam(self, B, alpha=1.0, beta=1.0, check_inputs=True, autosync=True,
+             handle=None, stream=None):
+        """ addition of sparse matrix B:  C = alpha*A + beta*B """
+        if toolkit_version < (5, 0, 0):
+            raise ImportError("geam not implemented prior to CUDA v5.0")
+        m, n = self.shape
+        if not isinstance(B, CSR):
+            # try converting B to cuSPARSE CSR
+            B = CSR.to_CSR(B, handle=self.handle)
+        if self.shape != B.shape:
+            raise ValueError("Incompatible shapes")
+        if handle is None:
+            handle = self.handle
+        if stream is not None:
+            cusparseSetStream(handle, stream.handle)
+        descrC, ValC, RowPtrC, ColIndC = csrgeam(
+            handle=self.handle, m=m, n=n, descrA=self.descr, csrValA=self.Val,
+            csrRowPtrA=self.RowPtr, csrColIndA=self.ColInd, descrB=B.descr,
+            csrValB=B.Val, csrRowPtrB=B.RowPtr, csrColIndB=B.ColInd,
+            alpha=alpha, beta=beta, nnzA=self.nnz, nnzB=B.nnz,
+            check_inputs=True)
+        C = CSR(self.handle, descr=descrC, csrVal=ValC, csrRowPtr=RowPtrC,
+                csrColInd=ColIndC, shape=self.shape)
+        if autosync:
+            drv.Context.synchronize()
+        return C
+
+    def gemm(self, B, transA=CUSPARSE_OPERATION_NON_TRANSPOSE,
+             transB=CUSPARSE_OPERATION_NON_TRANSPOSE, check_inputs=True,
+             autosync=True, handle=None, stream=None):
+        """ multiplication by sparse matrix B:  C = transA(A) * transB(B) """
+        if toolkit_version < (5, 0, 0):
+            raise ImportError("gemm not implemented prior to CUDA v5.0")
+
+        if transA == CUSPARSE_OPERATION_NON_TRANSPOSE:
+            m, k = self.shape
+        else:
+            k, m = self.shape
+        if not isinstance(B, CSR):
+            # try converting B to cuSPARSE CSR
+            B = CSR.to_CSR(B, handle=self.handle)
+        if transB == CUSPARSE_OPERATION_NON_TRANSPOSE:
+            n = B.shape[1]
+        else:
+            n = B.shape[0]
+        if handle is None:
+            handle = self.handle
+        if stream is not None:
+            cusparseSetStream(handle, stream.handle)
+        descrC, ValC, RowPtrC, ColIndC = csrgemm(
+            handle=self.handle, m=m, n=n, k=k, descrA=self.descr,
+            csrValA=self.Val, csrRowPtrA=self.RowPtr, csrColIndA=self.ColInd,
+            descrB=B.descr, csrValB=B.Val, csrRowPtrB=B.RowPtr,
+            csrColIndB=B.ColInd, nnzA=self.nnz, nnzB=B.nnz, transA=transA,
+            transB=transB, check_inputs=True)
+        if autosync:
+            drv.Context.synchronize()
+        C = CSR(self.handle, descr=descrC, csrVal=ValC, csrRowPtr=RowPtrC,
+                csrColInd=ColIndC, shape=(m, n))
+        return C
+
+    """
+    start of: subset of methods in scipy.sparse.compressed._cs_matrix
+    """
+    @property
+    def A(self):
+        "The transpose operator."
+        return self.todense()
+
+    @property
+    def T(self):
+        "The transpose operator."
+        return self.transpose()
+
+    @property
+    def H(self):
+        "The adjoint operator."
+        return self.getH()
+
+    @property
+    def real(self):
+        "The transpose operator."
+        return self._real()
+
+    @property
+    def imag(self):
+        "The transpose operator."
+        return self._imag()
+
+    @property
+    def size(self):
+        "The adjoint operator."
+        return self.getnnz()
+
+    def transpose(self):
+        m, n = self.shape
+        # use csr2csc to perform the transpose
+        cscVal, cscColPtr, cscRowInd = csr2csc(
+            self.handle, m, n, self.Val, self.RowPtr, self.ColInd, self.nnz)
+        drv.Context.synchronize()
+        return CSR(self.handle, copyMatDescr(self.descr), cscVal, cscColPtr,
+                   cscRowInd, self.shape)
+
+    def getH(self):
+        return self.transpose().conj()
+
+    def conjugate(self):
+        return self.conj()
+
+    # implement _with_data similar to scipy.sparse.data._data_matrix
+    def _with_data(self, data, copy=True):
+        """Returns a matrix with the same sparsity structure as self,
+        but with different data.  By default the structure arrays
+        (i.e. .indptr and .indices) are copied.
+        """
+        if copy:
+            return self.__class__(self.handle, copyMatDescr(self.descr), data,
+                                  self.RowPtr.copy(), self.ColInd.copy(),
+                                  self.shape)
+        else:
+            return self.__class__(self.handle, self.descr, data,
+                                  self.RowPtr, self.ColInd,
+                                  self.shape)
+
+    """
+    end of: subset of methods in scipy.sparse.compressed._cs_matrix
+    """
+
+    """
+    start of: subset of methods in scipy.sparse.data._data_matrix
+    """
+    def conj(self):
+        return self._with_data(self.data.conj())
+        # return CSR(self.handle, self.descr, self.Val.conj(), self.RowPtr,
+        #            self.ColInd, self.shape)
+
+    def _real(self):
+        return self._with_data(self.data.real)
+        # return CSR(self.handle, self.descr, self.Val.real, self.RowPtr,
+        #            self.ColInd, self.shape)
+
+    def _imag(self):
+        return self._with_data(self.data.imag)
+        # return CSR(self.handle, self.descr, self.Val.imag, self.RowPtr,
+        #            self.ColInd, self.shape)
+
+    def __abs__(self):
+        return self._with_data(abs(self.data))
+
+    def __neg__(self):
+        return self._with_data(abs(self.data))
+
+    def __imul__(self, other):  # self *= other
+        if isscalarlike(other):
+            self.data *= other
+            return self
+        else:
+            return NotImplemented
+
+    def __itruediv__(self, other):  # self /= other
+        if isscalarlike(other):
+            recip = 1.0 / other
+            self.data *= recip
+            return self
+        else:
+            return NotImplemented
+
+    def astype(self, t):
+        return self._with_data(self.data.astype(t))
+
+    def copy(self):
+        return self._with_data(self.data.copy(), copy=True)
+
+    def _mul_scalar(self, other):
+        return self._with_data(self.data * other)
+
+    """
+    end of: subset of methods in scipy.sparse.data._data_matrix
+    """
+
+    def __del__(self):
+        """ cleanup descriptor upon object deletion """
+        cusparseDestroyMatDescr(self.descr)
+        # don't destroy the handle as other objects may be using it
+
+    def __repr__(self):
+        rstr = "CSR matrix:\n"
+        rstr += "\tshape = {}\n".format(self.shape)
+        rstr += "\tdtype = {}\n".format(self.dtype)
+        rstr += "\tMatrixType = {}\n".format(self.matrix_type)
+        rstr += "\tIndexBase = {}\n".format(self.index_base)
+        rstr += "\tDiagType = {}\n".format(self.diag_type)
+        rstr += "\tFillMode = {}\n".format(self.fill_mode)
+        rstr += "\tcontext = {}\n\n".format(self.handle)
+        rstr += "\tnnz = {}\n".format(self.nnz)
+        rstr += "\tRowPtr = {}\n".format(self.RowPtr)
+        rstr += "\tVal = {}\n".format(self.Val)
+        return rstr
