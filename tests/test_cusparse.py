@@ -3,6 +3,9 @@ from __future__ import division
 from scikits.cuda.cusparse import *
 from scikits.cuda.cusparse import (_csrgeamNnz, _csrgemmNnz)
 
+from scikits.cuda import cusparse
+cusparse.init()
+
 import numpy as np
 from numpy.testing import assert_raises, assert_equal, assert_almost_equal
 
@@ -121,11 +124,9 @@ def test_dense_nnz():
     A_cpu = np.asarray([[1, 0, 0], [0, 1, 0], [1, 0, 1], [0, 0, 3]])
     A = gpuarray.to_gpu(A_cpu)
 
-    handle = cusparseCreate()
     descrA = cusparseCreateMatDescr()
     cusparseSetMatType(descrA, CUSPARSE_MATRIX_TYPE_GENERAL)
     cusparseSetMatIndexBase(descrA, CUSPARSE_INDEX_BASE_ZERO)
-    cusparseSetPointerMode(handle, CUSPARSE_POINTER_MODE_HOST)
 
     # loop over all directions and dtypes
     try:
@@ -133,14 +134,13 @@ def test_dense_nnz():
         for dirA in [CUSPARSE_DIRECTION_ROW, CUSPARSE_DIRECTION_COLUMN]:
             for dtype in cusparse_dtypes:
                 nnzRowCol, nnzTotal = dense_nnz(
-                    handle, descrA, A.astype(dtype), dirA=dirA)
+                    descrA, A.astype(dtype), dirA=dirA)
                 assert nnzTotal == 5
                 if dirA == CUSPARSE_DIRECTION_ROW:
                     assert_equal(nnzRowCol.get(), [3, 0, 1, 1])
                 else:
                     assert_equal(nnzRowCol.get(), [1, 2, 2])
     finally:
-        cusparseDestroy(handle)
         cusparseDestroyMatDescr(descrA)
 
 
@@ -150,18 +150,16 @@ def test_dense2csr_csr2dense():
     for dtype in cusparse_dtypes:
         A = A.astype(dtype)
         A_csr_scipy = scipy.sparse.csr_matrix(A)
-        (handle, descrA, csrValA, csrRowPtrA, csrColIndA) = dense2csr(A)
+        (descrA, csrValA, csrRowPtrA, csrColIndA) = dense2csr(A)
         try:
             assert_equal(csrValA.get(), A_csr_scipy.data)
             assert_equal(csrRowPtrA.get(), A_csr_scipy.indptr)
             assert_equal(csrColIndA.get(), A_csr_scipy.indices)
 
-            A_dense = csr2dense(handle, m, n, descrA, csrValA, csrRowPtrA,
-                                csrColIndA)
+            A_dense = csr2dense(m, n, descrA, csrValA, csrRowPtrA, csrColIndA)
             assert_equal(A, A_dense.get())
         finally:
-            # release handle, descrA that were generated within dense2csr
-            cusparseDestroy(handle)
+            # release descrA that was generated within dense2csr
             cusparseDestroyMatDescr(descrA)
 
 
@@ -174,18 +172,16 @@ def test_dense2csc_csc2dense():
         A_cpu = A_cpu.astype(dtype)
         A_csc_scipy = scipy.sparse.csc_matrix(A_cpu)
         A = gpuarray.to_gpu(A_cpu)
-        (handle, descrA, cscValA, cscColPtrA, cscRowIndA) = dense2csc(A)
+        (descrA, cscValA, cscColPtrA, cscRowIndA) = dense2csc(A)
         try:
             assert_equal(cscValA.get(), A_csc_scipy.data)
             assert_equal(cscColPtrA.get(), A_csc_scipy.indptr)
             assert_equal(cscRowIndA.get(), A_csc_scipy.indices)
 
-            A_dense = csc2dense(handle, m, n, descrA, cscValA, cscColPtrA,
-                                cscRowIndA)
+            A_dense = csc2dense(m, n, descrA, cscValA, cscColPtrA, cscRowIndA)
             assert_equal(A_cpu, A_dense.get())
         finally:
-            # release handle, descrA that were generated within dense2csc
-            cusparseDestroy(handle)
+            # release descrA that was generated within dense2csc
             cusparseDestroyMatDescr(descrA)
 
 
@@ -197,26 +193,25 @@ def test_csr2csc_csc2csr():
         A = gpuarray.to_gpu(A_cpu.astype(dtype))
         A_csr_scipy = scipy.sparse.csr_matrix(A_cpu)
         A_csc_scipy = A_csr_scipy.tocsc()
-        (handle, descr, csrVal, csrRowPtr, csrColInd) = dense2csr(A)
+        (descr, csrVal, csrRowPtr, csrColInd) = dense2csr(A)
 
         try:
-            cscVal, cscColPtr, cscRowInd = csr2csc(handle, m, n, csrVal,
-                                                   csrRowPtr, csrColInd)
+            cscVal, cscColPtr, cscRowInd = csr2csc(m, n, csrVal, csrRowPtr,
+                                                   csrColInd)
             # verify match to scipy
             assert_equal(cscVal.get(), A_csc_scipy.data)
             assert_equal(cscColPtr.get(), A_csc_scipy.indptr)
             assert_equal(cscRowInd.get(), A_csc_scipy.indices)
 
             # repeat for inverse operation
-            csrVal, csrRowPtr, csrColInd = csc2csr(handle, n, m, cscVal,
-                                                   cscColPtr, cscRowInd)
+            csrVal, csrRowPtr, csrColInd = csc2csr(n, m, cscVal, cscColPtr,
+                                                   cscRowInd)
             # verify match to scipy
             assert_equal(csrVal.get(), A_csr_scipy.data)
             assert_equal(csrRowPtr.get(), A_csr_scipy.indptr)
             assert_equal(csrColInd.get(), A_csr_scipy.indices)
 
         finally:
-            cusparseDestroy(handle)
             cusparseDestroyMatDescr(descr)
 
 
@@ -226,13 +221,13 @@ def test_csr2coo_coo2csr():
 
     for dtype in cusparse_dtypes:
         A = gpuarray.to_gpu(A_cpu.astype(dtype))
-        (handle, descr, csrVal, csrRowPtr, csrColInd) = dense2csr(A)
+        (descr, csrVal, csrRowPtr, csrColInd) = dense2csr(A)
         try:
             nnz = csrVal.size
-            cscVal, cscColPtr, cscRowInd = csr2csc(handle, m, n, csrVal,
-                                                   csrRowPtr, csrColInd)
+            cscVal, cscColPtr, cscRowInd = csr2csc(m, n, csrVal, csrRowPtr,
+                                                   csrColInd)
 
-            cooRowInd = csr2coo(handle, csrRowPtr, nnz)
+            cooRowInd = csr2coo(csrRowPtr, nnz)
 
             # couldn't compare to scipy due to different ordering, so check the
             # values directly
@@ -243,11 +238,10 @@ def test_csr2coo_coo2csr():
                 assert A_cpu[rows[idx], cols[idx]] == vals[idx]
 
             # repeat for inverse operation
-            csrRowPtr_v2 = coo2csr(handle, cooRowInd, m)
+            csrRowPtr_v2 = coo2csr(cooRowInd, m)
             assert_equal(csrRowPtr_v2.get(), csrRowPtr.get())
 
         finally:
-            cusparseDestroy(handle)
             cusparseDestroyMatDescr(descr)
 
 
@@ -257,14 +251,14 @@ def test_csc2coo_coo2csc():
 
     for dtype in cusparse_dtypes:
         A = gpuarray.to_gpu(A_cpu.astype(dtype))
-        (handle, descr, csrVal, csrRowPtr, csrColInd) = dense2csr(A)
+        (descr, csrVal, csrRowPtr, csrColInd) = dense2csr(A)
 
         try:
             nnz = csrVal.size
 
-            cscVal, cscColPtr, cscRowInd = csr2csc(handle, m, n, csrVal,
-                                                   csrRowPtr, csrColInd)
-            cooColInd = csc2coo(handle, cscColPtr, nnz)
+            cscVal, cscColPtr, cscRowInd = csr2csc(m, n, csrVal, csrRowPtr,
+                                                   csrColInd)
+            cooColInd = csc2coo(cscColPtr, nnz)
             # couldn't compare to scipy due to different ordering, so check the
             # values directly
             vals = csrVal.get()
@@ -274,11 +268,10 @@ def test_csc2coo_coo2csc():
                 assert A_cpu[rows[idx], cols[idx]] == vals[idx]
 
             # repeat for inverse operation
-            cscColPtr_v2 = coo2csc(handle, cooColInd, n)
+            cscColPtr_v2 = coo2csc(cooColInd, n)
             assert_equal(cscColPtr_v2.get(), cscColPtr.get())
 
         finally:
-            cusparseDestroy(handle)
             cusparseDestroyMatDescr(descr)
 
 
@@ -286,11 +279,9 @@ def test_csrmv():
     A_cpu = np.asarray([[1, 0, 0], [0, 1, 0], [1, 0, 1], [0, 0, 3]])
     # A = gpuarray.to_gpu(A_cpu)
 
-    handle = cusparseCreate()
     descrA = cusparseCreateMatDescr()
     cusparseSetMatType(descrA, CUSPARSE_MATRIX_TYPE_GENERAL)
     cusparseSetMatIndexBase(descrA, CUSPARSE_INDEX_BASE_ZERO)
-    cusparseSetPointerMode(handle, CUSPARSE_POINTER_MODE_HOST)
 
     csr_numpy = scipy.sparse.csr_matrix(A_cpu)
     indptr = csr_numpy.indptr
@@ -313,13 +304,13 @@ def test_csrmv():
 
                 # test mutliplication without passing in y
                 beta = 0.0
-                y = csrmv(handle, descrA, csrValA, csrRowPtrA, csrColIndA, m,
+                y = csrmv(descrA, csrValA, csrRowPtrA, csrColIndA, m,
                           n, x, transA=transA, alpha=alpha, beta=beta)
                 y_cpu = y.get()
 
                 # repeat, but pass in previous y with beta = 1.0
                 beta = 1.0
-                y = csrmv(handle, descrA, csrValA, csrRowPtrA, csrColIndA, m,
+                y = csrmv(descrA, csrValA, csrRowPtrA, csrColIndA, m,
                           n, x, transA=transA, alpha=alpha, beta=beta, y=y)
                 y_cpu2 = y.get()
                 if transA == CUSPARSE_OPERATION_NON_TRANSPOSE:
@@ -329,18 +320,15 @@ def test_csrmv():
                     assert_almost_equal(y_cpu, [4., 2., 8.])
                     assert_almost_equal(y_cpu2, 2 * y_cpu)
     finally:
-        cusparseDestroy(handle)
         cusparseDestroyMatDescr(descrA)
 
 
 def test_csrmm():
     A_cpu = np.asarray([[1, 0, 0], [0, 1, 0], [1, 0, 1], [0, 0, 3]])
 
-    handle = cusparseCreate()
     descrA = cusparseCreateMatDescr()
     cusparseSetMatType(descrA, CUSPARSE_MATRIX_TYPE_GENERAL)
     cusparseSetMatIndexBase(descrA, CUSPARSE_INDEX_BASE_ZERO)
-    cusparseSetPointerMode(handle, CUSPARSE_POINTER_MODE_HOST)
 
     csr_numpy = scipy.sparse.csr_matrix(A_cpu)
     indptr = csr_numpy.indptr
@@ -372,21 +360,18 @@ def test_csrmm():
                 B = gpuarray.to_gpu(B_cpu)
                 # test mutliplication without passing in C
                 beta = 0.0
-                C = csrmm(handle, m, n, k, descrA, csrValA, csrRowPtrA,
-                          csrColIndA, B, transA=transA, alpha=alpha,
-                          beta=beta)
+                C = csrmm(m, n, k, descrA, csrValA, csrRowPtrA, csrColIndA, B,
+                          transA=transA, alpha=alpha, beta=beta)
                 C_cpu = C.get()
                 assert_almost_equal(C_cpu, expected_result)
 
                 # repeat, but pass in previous y with beta = 1.0
                 beta = 1.0
-                C = csrmm(handle, m, n, k, descrA, csrValA, csrRowPtrA,
-                          csrColIndA, B, C=C, transA=transA, alpha=alpha,
-                          beta=beta)
+                C = csrmm(m, n, k, descrA, csrValA, csrRowPtrA, csrColIndA, B,
+                          C=C, transA=transA, alpha=alpha, beta=beta)
                 C_cpu2 = C.get()
                 assert_almost_equal(C_cpu2, 2*expected_result)
     finally:
-        cusparseDestroy(handle)
         cusparseDestroyMatDescr(descrA)
 
 
@@ -396,11 +381,9 @@ def test_csrmm2():
         return
     A_cpu = np.asarray([[1, 0, 0], [0, 1, 0], [1, 0, 1], [0, 0, 3]])
 
-    handle = cusparseCreate()
     descrA = cusparseCreateMatDescr()
     cusparseSetMatType(descrA, CUSPARSE_MATRIX_TYPE_GENERAL)
     cusparseSetMatIndexBase(descrA, CUSPARSE_INDEX_BASE_ZERO)
-    cusparseSetPointerMode(handle, CUSPARSE_POINTER_MODE_HOST)
 
     csr_numpy = scipy.sparse.csr_matrix(A_cpu)
     indptr = csr_numpy.indptr
@@ -447,7 +430,7 @@ def test_csrmm2():
 
                     # test mutliplication without passing in C
                     beta = 0.0
-                    C = csrmm2(handle, m, n, k, descrA, csrValA, csrRowPtrA,
+                    C = csrmm2(m, n, k, descrA, csrValA, csrRowPtrA,
                                csrColIndA, B, transA=transA, transB=transB,
                                alpha=alpha, beta=beta)
                     C_cpu = C.get()
@@ -455,13 +438,12 @@ def test_csrmm2():
 
                     # repeat, but pass in previous y with beta = 1.0
                     beta = 1.0
-                    C = csrmm2(handle, m, n, k, descrA, csrValA, csrRowPtrA,
+                    C = csrmm2(m, n, k, descrA, csrValA, csrRowPtrA,
                                csrColIndA, B, C=C, transA=transA,
                                transB=transB, alpha=alpha, beta=beta)
                     C_cpu2 = C.get()
                     assert_almost_equal(C_cpu2, 2*expected_result)
     finally:
-        cusparseDestroy(handle)
         cusparseDestroyMatDescr(descrA)
 
 
@@ -475,9 +457,6 @@ def test_csrgeamNnz():
     B_cpu = scipy.sparse.csr_matrix(B_cpu)
     C_cpu = A_cpu + B_cpu
     nnz_expected = C_cpu.getnnz()
-
-    handle = cusparseCreate()
-    cusparseSetPointerMode(handle, CUSPARSE_POINTER_MODE_HOST)
 
     descrA = cusparseCreateMatDescr()
     cusparseSetMatType(descrA, CUSPARSE_MATRIX_TYPE_GENERAL)
@@ -497,8 +476,8 @@ def test_csrgeamNnz():
 
     # test alternative case where descrC, csrRowPtrC not preallocated
     descrC, csrRowPtrC, nnzC = _csrgeamNnz(
-        handle, m, n, descrA, csrRowPtrA, csrColIndA, descrB, csrRowPtrB,
-        csrColIndB, check_inputs=True)
+        m, n, descrA, csrRowPtrA, csrColIndA, descrB, csrRowPtrB, csrColIndB,
+        check_inputs=True)
     cusparseDestroyMatDescr(descrC)
     assert_equal(nnzC, nnz_expected)
 
@@ -507,9 +486,9 @@ def test_csrgeamNnz():
     try:
         cusparseSetMatType(descrC, CUSPARSE_MATRIX_TYPE_GENERAL)
         csrRowPtrC = gpuarray.to_gpu(np.zeros((m+1, ), dtype=np.int32))
-        nnzC = _csrgeamNnz(handle, m, n, descrA, csrRowPtrA, csrColIndA,
-                           descrB, csrRowPtrB, csrColIndB, descrC,
-                           csrRowPtrC, nnzA=None, nnzB=None,
+        nnzC = _csrgeamNnz(m, n, descrA, csrRowPtrA, csrColIndA, descrB,
+                           csrRowPtrB, csrColIndB, descrC=descrC,
+                           csrRowPtrC=csrRowPtrC, nnzA=None, nnzB=None,
                            check_inputs=True)
         assert_equal(nnzC, nnz_expected)
     finally:
@@ -524,9 +503,6 @@ def test_csrgeam():
     A_cpu = scipy.sparse.csr_matrix(A_cpu)
     B_cpu = np.asarray([[0, 1, 0], [0, 0, 1], [0, 0, 0], [0, 0, 0]])
     B_cpu = scipy.sparse.csr_matrix(B_cpu)
-
-    handle = cusparseCreate()
-    cusparseSetPointerMode(handle, CUSPARSE_POINTER_MODE_HOST)
 
     descrA = cusparseCreateMatDescr()
     cusparseSetMatType(descrA, CUSPARSE_MATRIX_TYPE_GENERAL)
@@ -554,14 +530,12 @@ def test_csrgeam():
             csrValB = gpuarray.to_gpu(B_cpu.data.astype(dtype))
             try:
                 descrC, csrValC, csrRowPtrC, csrColIndC = csrgeam(
-                    handle, m, n, descrA, csrValA, csrRowPtrA, csrColIndA,
-                    descrB, csrValB, csrRowPtrB, csrColIndB, alpha=alpha,
-                    beta=beta)
+                    m, n, descrA, csrValA, csrRowPtrA, csrColIndA, descrB,
+                    csrValB, csrRowPtrB, csrColIndB, alpha=alpha, beta=beta)
                 assert_almost_equal(csrValC.get(), C_cpu.data)
             finally:
                 cusparseDestroyMatDescr(descrC)
     finally:
-        cusparseDestroy(handle)
         cusparseDestroyMatDescr(descrA)
         cusparseDestroyMatDescr(descrB)
 
@@ -572,9 +546,6 @@ def test_csrgemmNnz():
         return
     A_cpu = np.asarray([[1, 0, 0], [0, 1, 0], [1, 0, 1], [0, 0, 3]])
     # A = gpuarray.to_gpu(A_cpu)
-
-    handle = cusparseCreate()
-    cusparseSetPointerMode(handle, CUSPARSE_POINTER_MODE_HOST)
 
     descrA = cusparseCreateMatDescr()
     cusparseSetMatType(descrA, CUSPARSE_MATRIX_TYPE_GENERAL)
@@ -601,7 +572,7 @@ def test_csrgemmNnz():
     # test alternative case where descrC, csrRowPtrC not preallocated
     transA = transB = CUSPARSE_OPERATION_NON_TRANSPOSE
     descrC, csrRowPtrC, nnzC = _csrgemmNnz(
-        handle, m, n, k, descrA, csrRowPtrA, csrColIndA, descrB, csrRowPtrB,
+        m, n, k, descrA, csrRowPtrA, csrColIndA, descrB, csrRowPtrB,
         csrColIndB, transA=transA, transB=transB, check_inputs=True)
     cusparseDestroyMatDescr(descrC)
 
@@ -625,10 +596,10 @@ def test_csrgemmNnz():
                 n, kB = B_cpu.shape
 
             csrRowPtrC = gpuarray.to_gpu(np.zeros((m+1, ), dtype=np.int32))
-            nnzC = _csrgemmNnz(handle, m, n, k, descrA, csrRowPtrA, csrColIndA,
-                               descrB, csrRowPtrB, csrColIndB, descrC,
-                               csrRowPtrC, nnzA=None, nnzB=None, transA=transA,
-                               transB=transB, check_inputs=True)
+            nnzC = _csrgemmNnz(m, n, k, descrA, csrRowPtrA, csrColIndA,
+                               descrB, csrRowPtrB, csrColIndB, descrC=descrC,
+                               csrRowPtrC=csrRowPtrC, nnzA=None, nnzB=None,
+                               transA=transA, transB=transB, check_inputs=True)
             if transA == CUSPARSE_OPERATION_NON_TRANSPOSE:
                 assert nnzC == 8
                 assert_equal(csrRowPtrC.get(), [0, 2, 3, 6, 8])
@@ -636,7 +607,6 @@ def test_csrgemmNnz():
                 assert nnzC == 5
                 assert_equal(csrRowPtrC.get(), [0, 2, 3, 5])
     finally:
-        cusparseDestroy(handle)
         cusparseDestroyMatDescr(descrA)
         cusparseDestroyMatDescr(descrB)
         cusparseDestroyMatDescr(descrC)
@@ -648,9 +618,6 @@ def test_csrgemm():
         return
     A_cpu = np.asarray([[1, 0, 0], [0, 1, 0], [1, 0, 1], [0, 0, 3]])
     # A = gpuarray.to_gpu(A_cpu)
-
-    handle = cusparseCreate()
-    cusparseSetPointerMode(handle, CUSPARSE_POINTER_MODE_HOST)
 
     descrA = cusparseCreateMatDescr()
     cusparseSetMatType(descrA, CUSPARSE_MATRIX_TYPE_GENERAL)
@@ -692,20 +659,19 @@ def test_csrgemm():
                 csrValA = gpuarray.to_gpu(csr_data.astype(dtype))
                 csrValB = gpuarray.to_gpu(B_cpu.data.astype(dtype))
 
-                try:
-                    descrC, csrValC, csrRowPtrC, csrColIndC = csrgemm(
-                        handle, m, n, k, descrA, csrValA, csrRowPtrA,
-                        csrColIndA, descrB, csrValB, csrRowPtrB, csrColIndB,
-                        transA=transA, transB=transB)
-                    if transA == CUSPARSE_OPERATION_NON_TRANSPOSE:
-                        assert_almost_equal(csrValC.get(),
-                                            [1, 1, 1, 1, 2, 3, 3, 9])
-                    else:
-                        assert_almost_equal(csrValC.get(), [2, 1, 1, 1, 10])
-                finally:
-                    cusparseDestroyMatDescr(descrC)
+                descrC, csrValC, csrRowPtrC, csrColIndC = csrgemm(
+                    m, n, k, descrA, csrValA, csrRowPtrA,
+                    csrColIndA, descrB, csrValB, csrRowPtrB, csrColIndB,
+                    transA=transA, transB=transB)
+                cusparseDestroyMatDescr(descrC)
+                if transA == CUSPARSE_OPERATION_NON_TRANSPOSE:
+                    assert_almost_equal(csrValC.get(),
+                                        [1, 1, 1, 1, 2, 3, 3, 9])
+                else:
+                    assert_almost_equal(csrValC.get(), [2, 1, 1, 1, 10])
+
+
     finally:
-        cusparseDestroy(handle)
         cusparseDestroyMatDescr(descrA)
         cusparseDestroyMatDescr(descrB)
 

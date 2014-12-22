@@ -59,7 +59,7 @@ result : bool
     Result.
 
 """
-    
+
 def init_device(n=0):
     """
     Initialize a GPU device.
@@ -127,6 +127,10 @@ global _global_cublas_handle
 _global_cublas_handle = None
 global _global_cublas_allocator
 _global_cublas_allocator = None
+global _global_cusparse_handle
+_global_cusparse_handle = None
+global _global_cusparse_allocator
+_global_cusparse_allocator = None
 def init(allocator=drv.mem_alloc):
     """
     Initialize libraries used by scikits.cuda.
@@ -145,14 +149,26 @@ def init(allocator=drv.mem_alloc):
     and context were initialized in the current host thread.
     """
 
-    # CUBLAS uses whatever device is being used by the host thread:
+    # CUBLAS & CUSPARSE use whatever device is being used by the host thread:
     global _global_cublas_handle, _global_cublas_allocator
+    global _global_cusparse_handle, _global_cusparse_allocator
+
     if not _global_cublas_handle:
         from . import cublas  # nest to avoid requiring cublas e.g. for FFT
         _global_cublas_handle = cublas.cublasCreate()
 
     if _global_cublas_allocator is None:
         _global_cublas_allocator = allocator
+
+    if not _global_cusparse_handle:
+        from . import cusparse  # nest to avoid requiring cublas e.g. for FFT
+        _global_cusparse_handle = cusparse.cusparseCreate()
+        # set so that scalar values are passed by reference on the host
+        cusparse.cusparseSetPointerMode(_global_cusparse_handle,
+                                        cusparse.CUSPARSE_POINTER_MODE_HOST)
+
+    if _global_cusparse_allocator is None:
+        _global_cusparse_allocator = allocator
 
     # culaSelectDevice() need not (and, in fact, cannot) be called
     # here because the host thread has already been bound to a GPU
@@ -321,7 +337,7 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
 
     # Actual number of thread blocks needed:
     blocks_needed = iceil(N/float(max_threads_per_block))
-    
+
     if blocks_needed <= max_grid_dim[0]:
         return (max_threads_per_block, 1, 1), (blocks_needed, 1, 1)
     elif blocks_needed > max_grid_dim[0] and \
@@ -331,7 +347,7 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
     elif blocks_needed > max_grid_dim[0]*max_grid_dim[1] and \
          blocks_needed <= max_grid_dim[0]*max_grid_dim[1]*max_grid_dim[2]:
         return (max_threads_per_block, 1, 1), \
-            (max_grid_dim[0], max_grid_dim[1], 
+            (max_grid_dim[0], max_grid_dim[1],
              iceil(blocks_needed/float(max_grid_dim[0]*max_grid_dim[1])))
     else:
         raise ValueError('array size too large')
