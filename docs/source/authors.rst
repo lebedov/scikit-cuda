@@ -19,6 +19,7 @@ Special thanks are due to the following parties for their contributions:
 - Gregory R. Lee - Enhanced FFT plan creation.
 - Teodor Mihai Moldovan - CUBLAS 5 bindings.
 - Lars Pastewka - FFT tests and FFTW compatibility mode configuration.
+- Luke Pfister - Bug fixes.
 - Alex Rubinsteyn - Support for CULA Dense Free R17.
 - Xing Shi - Bug fixes.
 - Steve Taylor - Cholesky factorization/solve functions.
