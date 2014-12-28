@@ -5229,7 +5229,7 @@ if _cublas_version >= 5000:
                                        ctypes.c_void_p,
                                        ctypes.c_int]
 @_cublas_version_req(5)
-def cublasZdgmm(mode, m, n, A, lda, x, incx, C, ldc):
+def cublasZdgmm(handle, mode, m, n, A, lda, x, incx, C, ldc):
     """
     Matrix-diagonal matrix product for complex general matrix.
 
