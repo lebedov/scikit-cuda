@@ -1058,7 +1058,7 @@ class CSR(object):
                     A = np.asfortranarray(A)
                     A = gpuarray.to_gpu(A, allocator=alloc)
 
-            (descr, csrVal, csrRowPtr, csrColInd) = dense2csr(A)
+            (descr, csrVal, csrRowPtr, csrColInd) = dense2csr(A, handle=handle)
         return cls(descr, csrVal, csrRowPtr, csrColInd, A.shape)
 
     @property
@@ -1331,6 +1331,13 @@ class CSR(object):
     def size(self):
         "The adjoint operator."
         return self.getnnz()
+
+    @property
+    def nbytes(self):
+        """ approximate object size in bytes (size of data,
+            column indices and row pointers only). """
+        nbytes = self.data.nbytes + self.indptr.nbytes + self.indices.nbytes
+        return nbytes
 
     def transpose(self):
         m, n = self.shape
