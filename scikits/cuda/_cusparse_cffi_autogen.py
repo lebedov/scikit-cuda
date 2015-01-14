@@ -265,7 +265,7 @@ def _build_func_sig(func_name, arg_dict, return_type):
         basic_getter = False
 
     sig = "def %s(" % func_name
-    for k, v in arg_dict.iteritems():
+    for k, v in arg_dict.items():
         is_ptr = '*' in v
         if is_ptr and basic_getter:
             continue
@@ -279,7 +279,7 @@ def _build_doc_str(arg_dict, func_description='', variable_descriptions={}):
     """ generate python wrapper docstring """
     docstr = '"""' + func_description + '\n'
     docstr += 'Parameters\n----------\n'
-    for k, v in arg_dict.iteritems():
+    for k, v in arg_dict.items():
         docstr += k + " : " + v + "\n"
         if k in variable_descriptions:
             docstr += reindent(variable_descriptions[k],
@@ -318,7 +318,7 @@ def _build_body(func_name, arg_dict, return_type):
 
     # else:
     return_str = ''
-    for k, v in arg_dict.iteritems():
+    for k, v in arg_dict.items():
 
         """
         set some flags based on the name/type of the argument
@@ -471,7 +471,7 @@ def get_variable_descriptions(var_def_json):
     """ load variable description dictionary from .json file"""
     with open(var_def_json, 'r') as fid:
         variable_descriptions = json.load(fid)
-    for k, v in variable_descriptions.iteritems():
+    for k, v in variable_descriptions.items():
         variable_descriptions[k] = _split_line(v, break_pattern=' ', nmax=72,
                                                pad_char=None)
     return variable_descriptions
@@ -481,7 +481,7 @@ def get_function_descriptions(func_def_json):
     """ load function description dictionary from .json file"""
     with open(func_def_json, 'r') as fid:
         func_descriptions = json.load(fid)
-    for k, v in func_descriptions.iteritems():
+    for k, v in func_descriptions.items():
         func_descriptions[k] = _split_line(v, break_pattern=' ', nmax=72,
                                            pad_char=None)
     return func_descriptions
@@ -605,7 +605,7 @@ def generate_func_descriptions_json(ffi_lib, json_file):
 
     # prune any of the above that aren't in ffi_lib:
     func_descriptions = dict(
-        (k, v) for k, v in func_descriptions.iteritems(
+        (k, v) for k, v in func_descriptions.items(
             ) if k in ffi_lib.__dict__)
 
     with open(json_file, 'w') as fid:

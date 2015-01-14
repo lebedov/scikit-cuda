@@ -50,7 +50,7 @@ class CUSPARSE_ERROR(Exception):
 # exception in response to the corresponding CUSPARSE error code:
 CUSPARSE_STATUS_SUCCESS = ffi_lib.CUSPARSE_STATUS_SUCCESS
 CUSPARSE_EXCEPTIONS = {-1: CUSPARSE_ERROR}
-for k, v in ffi_lib.__dict__.iteritems():
+for k, v in ffi_lib.__dict__.items():
     # Skip CUSPARSE_STATUS_SUCCESS:
     if re.match('CUSPARSE_STATUS.*', k) and v != CUSPARSE_STATUS_SUCCESS:
         CUSPARSE_EXCEPTIONS[v] = vars()[k] = type(k, (CUSPARSE_ERROR,), {})
@@ -58,7 +58,7 @@ for k, v in ffi_lib.__dict__.iteritems():
 
 # Import various other enum values into module namespace:
 regex = 'CUSPARSE_(?!STATUS).*'
-for k, v in ffi_lib.__dict__.iteritems():
+for k, v in ffi_lib.__dict__.items():
     if re.match(regex, k):
         # print("k={}, v={}".format(k,v))
         vars()[k] = v
@@ -93,7 +93,7 @@ with open(python_wrapper_file) as f:
     exec(code)
 
 
-__all__ = [k for k, v in ffi_lib.__dict__.iteritems()]
+__all__ = [k for k, v in ffi_lib.__dict__.items()]
 __all__.append('CUSPARSE_ERROR')
 __all__.append('CUSPARSE_EXCEPTIONS')
 __all__.append('cusparseCheckStatus')
