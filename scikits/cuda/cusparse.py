@@ -1135,7 +1135,7 @@ class CSR(object):
         """ return number of non-zeros"""
         return self.nnz
 
-    def tocsr_scipy(self):
+    def get(self):
         """ return as scipy csr_matrix in host memory """
         from scipy.sparse import csr_matrix
         return csr_matrix((self.data.get(),

@@ -865,7 +865,7 @@ def test_CSR_todense():
         cusparseDestroy(h)
 
 
-def test_CSR_tocsr_scipy():
+def test_CSR_get():
     n = 64
     h = cusparseCreate()
     try:
@@ -876,7 +876,7 @@ def test_CSR_tocsr_scipy():
         A_CSR = CSR.to_CSR(A.astype(dtype), h)
 
         # convert cusparseCSR back to a dense matrix
-        csr_scipy = A_CSR.tocsr_scipy()
+        csr_scipy = A_CSR.get()
         # assert_equal(A_CSR.data.get(), csr_scipy.data)
         # assert_equal(A_CSR.indices.get(), csr_scipy.indices)
         # assert_equal(A_CSR.indptr.get(), csr_scipy.indptr)
