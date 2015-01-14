@@ -37,6 +37,7 @@ your CUDA installation.
 try:
     from ._cusparse_cffi import *
 except Exception as e:
+    print(repr(e))
     estr = "autogenerattion and import of cuSPARSE wrappers failed\n"
     estr += ("Try setting the CUDA_ROOT environment variable to the base of"
              "your CUDA installation.  The autogeneration script tries to find"
