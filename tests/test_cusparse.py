@@ -9,6 +9,8 @@ cusparse.init()
 import numpy as np
 from numpy.testing import assert_raises, assert_equal, assert_almost_equal
 
+from unittest import skipIf
+
 import pycuda.autoinit
 import pycuda.gpuarray as gpuarray
 import pycuda.driver as drv
@@ -36,30 +38,21 @@ def test_get_version():
     finally:
         cusparseDestroy(handle)
 
-
+@skipIf(toolkit_version < (4, 1, 0), "HyB format added in CUDA Toolkit v4.1")
 def test_create_destroy_hyb():
-    # HyB format added in CUDA Toolkit v4.1
-    if toolkit_version < (4, 1, 0):
-        # skip for old CUDA versions
-        return
     HybA = cusparseCreateHybMat()
     cusparseDestroyHybMat(HybA)
 
 
+@skipIf(toolkit_version < (4, 0, 0), "Analysis Info added in CUDA v4.0")
 def test_create_destroy_AnalysisInfo():
-    # Analysis Info added in CUDA v4.0
-    if toolkit_version < (4, 0, 0):
-        # skip for old CUDA versions
-        return
     info = cusparseCreateSolveAnalysisInfo()
     cusparseDestroySolveAnalysisInfo(info)
 
 
+@skipIf(toolkit_version < (6, 0, 0),
+        "additional solve info types introduced in CUDA v6.0")
 def test_create_destroy_SolveInfo_v6():
-    # additional solve info types introduced in CUDA v6.0
-    if toolkit_version < (6, 0, 0):
-        return
-
     # CSR cases
     info = cusparse.cusparseCreateCsrsv2Info()
     cusparse.cusparseDestroyCsrsv2Info(info)
@@ -81,13 +74,17 @@ def test_create_destroy_SolveInfo_v6():
     cusparse.cusparseDestroyBsric02Info(info)
 
 
+@skipIf(toolkit_version < (6, 5, 0),
+        "additional solve info types introduced in CUDA v6.5")
 def test_create_destroy_SolveInfo_v65():
-    # additional solve info types introduced in CUDA v6.5
-    if toolkit_version < (6, 5, 0):
-        return
-
     info = cusparse.cusparseCreateBsrsm2Info()
     cusparse.cusparseDestroyBsrsm2Info(info)
+
+@skipIf(toolkit_version < (7, 0, 0), "ColorInfo introduced in CUDA v7.0")
+def test_create_destroy_ColorInfo():
+    # CSR cases
+    info = cusparse.cusparseCreateColorInfo()
+    cusparse.cusparseDestroyColorInfo(info)
 
 
 def test_set_stream():
@@ -98,11 +95,8 @@ def test_set_stream():
     finally:
         cusparseDestroy(handle)
 
-
+@skipIf(toolkit_version < (4, 1, 0), "skip for CUDA < v4.1")
 def test_get_set_PointerMode():
-    if toolkit_version < (4, 1, 0):
-        # skip for old CUDA versions
-        return
     handle = cusparseCreate()
     try:
         # test default mode
@@ -419,10 +413,8 @@ def test_csrmm():
         cusparseDestroyMatDescr(descrA)
 
 
+@skipIf(toolkit_version < (5, 5, 0), "skip for CUDA < v5.5")
 def test_csrmm2():
-    if toolkit_version < (5, 5, 0):
-        # skip for old CUDA versions
-        return
     A_cpu = np.asarray([[1, 0, 0], [0, 1, 0], [1, 0, 1], [0, 0, 3]])
 
     descrA = cusparseCreateMatDescr()
@@ -491,10 +483,8 @@ def test_csrmm2():
         cusparseDestroyMatDescr(descrA)
 
 
+@skipIf(toolkit_version < (5, 0, 0), "skip for CUDA < v5.0")
 def test_csrgeamNnz():
-    if toolkit_version < (5, 0, 0):
-        # skip for old CUDA versions
-        return
     A_cpu = np.asarray([[1, 0, 0], [0, 1, 0], [1, 0, 1], [0, 0, 3]])
     A_cpu = scipy.sparse.csr_matrix(A_cpu)
     B_cpu = np.asarray([[0, 1, 0], [0, 0, 1], [0, 0, 0], [0, 0, 0]])
@@ -539,10 +529,8 @@ def test_csrgeamNnz():
         cusparseDestroyMatDescr(descrC)
 
 
+@skipIf(toolkit_version < (5, 0, 0), "skip for CUDA < v5.0")
 def test_csrgeam():
-    if toolkit_version < (5, 0, 0):
-        # skip for old CUDA versions
-        return
     A_cpu = np.asarray([[1, 0, 0], [0, 1, 0], [1, 0, 1], [0, 0, 3]])
     A_cpu = scipy.sparse.csr_matrix(A_cpu)
     B_cpu = np.asarray([[0, 1, 0], [0, 0, 1], [0, 0, 0], [0, 0, 0]])
@@ -584,10 +572,8 @@ def test_csrgeam():
         cusparseDestroyMatDescr(descrB)
 
 
+@skipIf(toolkit_version < (5, 0, 0), "skip for CUDA < v5.0")
 def test_csrgemmNnz():
-    if toolkit_version < (5, 0, 0):
-        # skip for old CUDA versions
-        return
     A_cpu = np.asarray([[1, 0, 0], [0, 1, 0], [1, 0, 1], [0, 0, 3]])
     # A = gpuarray.to_gpu(A_cpu)
 
@@ -656,10 +642,8 @@ def test_csrgemmNnz():
         cusparseDestroyMatDescr(descrC)
 
 
+@skipIf(toolkit_version < (5, 0, 0), "skip for CUDA < v5.0")
 def test_csrgemm():
-    if toolkit_version < (5, 0, 0):
-        # skip for old CUDA versions
-        return
     A_cpu = np.asarray([[1, 0, 0], [0, 1, 0], [1, 0, 1], [0, 0, 3]])
     # A = gpuarray.to_gpu(A_cpu)
 
@@ -972,11 +956,8 @@ def test_CSR_mm():
         cusparseDestroy(h)
 
 
+@skipIf(toolkit_version < (5, 5, 0), "skip for CUDA < v5.5")
 def test_CSR_mm2():
-    if toolkit_version < (5, 5, 0):
-        # skip for old CUDA versions
-        return
-
     A_cpu = np.asarray([[1, 0, 0], [0, 1, 0], [1, 0, 1], [0, 0, 3]])
     n = 5
     alpha = 2.0
@@ -1027,10 +1008,8 @@ def test_CSR_mm2():
         cusparseDestroy(h)
 
 
+@skipIf(toolkit_version < (5, 0, 0), "skip for CUDA < v5.0")
 def test_CSR_geam():
-    if toolkit_version < (5, 0, 0):
-        # skip for old CUDA versions
-        return
     A_cpu = np.asarray([[1, 0, 0], [0, 1, 0], [1, 0, 1], [0, 0, 3]])
     B_cpu = np.asarray([[0, 1, 0], [0, 0, 1], [0, 0, 0], [0, 0, 0]])
 
@@ -1051,10 +1030,8 @@ def test_CSR_geam():
         cusparseDestroy(h)
 
 
+@skipIf(toolkit_version < (5, 0, 0), "skip for CUDA < v5.0")
 def test_CSR_gemm():
-    if toolkit_version < (5, 0, 0):
-        # skip for old CUDA versions
-        return
     A_cpu = np.asarray([[1, 0, 0], [0, 1, 0], [1, 0, 1], [0, 0, 3]])
 
     h = cusparseCreate()
