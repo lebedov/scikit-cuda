@@ -2,6 +2,7 @@
 Autogenerate Python interface to cuSPARSE functions.
 
 """
+from __future__ import absolute_import, print_function
 
 import os
 import re
@@ -9,10 +10,10 @@ import numpy as np
 
 from os.path import join as pjoin
 
-from _cusparse_cffi_autogen import (generate_cffi_cdef,
-                                    ffi_init_cusparse,
-                                    generate_func_descriptions_json,
-                                    generate_cusparse_python_wrappers)
+from ._cusparse_cffi_autogen import (generate_cffi_cdef,
+                                     ffi_init_cusparse,
+                                     generate_func_descriptions_json,
+                                     generate_cusparse_python_wrappers)
 
 base_dir = os.path.dirname(__file__)
 cffi_file = pjoin(base_dir, '_cusparse.cffi')

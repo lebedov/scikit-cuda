@@ -30,26 +30,39 @@ import cffi
 # TODO: improve autodetection of cuda include folder
 CUDA_ROOT = os.environ.get('CUDA_ROOT', None) or '/usr/local/cuda'
 cuda_include_path = os.path.join(CUDA_ROOT, 'include')
+
+# on versions where cusparse_v2.h exists, use it
+cusparse_header = os.path.join(cuda_include_path, 'cusparse_v2.h')
+if not os.path.exists(cusparse_header):
+    # on old versions there was only cusparse.h
+    cusparse_header = os.path.join(cuda_include_path, 'cusparse.h')
+    if not os.path.exists(cusparse_header):
+        raise IOError("cusparse header file not found in expected "
+                      "location.  Try defining CUDA_ROOT")
+
+
 base_dir = os.path.dirname(__file__)
 
 
-def ffi_init_cusparse(cffi_cdef):
+def ffi_init_cusparse(cffi_cdef, cusparse_header=cusparse_header):
     ffi = cffi.FFI()
     ffi.cdef(cffi_cdef)
 
     # Get the address in a cdata pointer:
     __verify_scr = """
-    #include <cusparse_v2.h>
+    #include <{}>
     #include <driver_types.h>
-    """
+    """.format(os.path.basename(cusparse_header))
+
     ffi_lib = ffi.verify(__verify_scr, libraries=['cusparse'],
-                           include_dirs=['/usr/local/cuda/include'],
-                           library_dirs=['/usr/local/cuda/lib64/'])
+                         include_dirs=['/usr/local/cuda/include'],
+                         library_dirs=['/usr/local/cuda/lib64/'])
     return ffi, ffi_lib
 
 
 def generate_cffi_cdef(
-        cuda_include_path=cuda_include_path, cffi_out_file=None):
+        cuda_include_path=cuda_include_path, cusparse_header=cusparse_header,
+        cffi_out_file=None):
     """ generate the CUSPARSE FFI definition
 
     Parameters
@@ -65,23 +78,17 @@ def generate_cffi_cdef(
         function definitions for use with cffi.  e.g. input to FFI.verify()
 
     """
-    v2_header = os.path.join(cuda_include_path, 'cusparse_v2.h')
-    if not os.path.exists(v2_header):
-        # on old versions there was only cusparse.h
-        v2_header = os.path.join(cuda_include_path, 'cusparse.h')
-        if not os.path.exists(v2_header):
-            raise ValueError("cusparse header file not found in expected "
-                             "location.  Try defining CUDA_ROOT")
 
-    with open(v2_header, 'r') as f:
+    with open(cusparse_header, 'r') as f:
         cusparse_hdr = f.readlines()
 
-    # in newer versions cusparse_v2.h just points to cusparse.h
+    # in some version cusparse_v2.h just points to cusparse.h, so read it
+    # instead
     for line in cusparse_hdr:
         # if v2 header includes cusparse.h, read that one instead
         if line.startswith('#include "cusparse.h"'):
-            v2_header = os.path.join(cuda_include_path, 'cusparse.h')
-            with open(v2_header, 'r') as f:
+            cusparse_header = os.path.join(cuda_include_path, 'cusparse.h')
+            with open(cusparse_header, 'r') as f:
                 cusparse_hdr = f.readlines()
 
     # skip lines leading up to first typedef
@@ -125,7 +132,6 @@ def generate_cffi_cdef(
     """
 
     cffi_cdef += ''.join(cusparse_hdr[start_line:end_line])
-
 
     """
     don't use the _v2 versions of the function names defined in CUDA v4.1
@@ -296,7 +302,9 @@ def _build_body(func_name, arg_dict, return_type):
     arg_list = ""
 
     # the following are pointers to scalar outputs
+    # Note: pBufferSize was renamed pBufferSizeInBytes in v6.5
     scalar_ptr_outputs = ['nnzTotalDevHostPtr',
+                          'pBufferSize',
                           'pBufferSizeInBytes',
                           'resultDevHostPtr']
 

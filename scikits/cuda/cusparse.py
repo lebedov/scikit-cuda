@@ -40,7 +40,8 @@ except Exception as e:
     estr = "autogenerattion and import of cuSPARSE wrappers failed\n"
     estr += ("Try setting the CUDA_ROOT environment variable to the base of"
              "your CUDA installation.  The autogeneration script tries to find"
-             "the CUSPARSE header at CUDA_ROOT/include/cusparse_v2.h\n")
+             "the CUSPARSE header at CUDA_ROOT/include/cusparse_v2.h or"
+             "CUDA_ROOT/include/cusparse.h\n")
     raise ImportError(estr)
 
 # define higher level wrappers for common functions
@@ -318,8 +319,7 @@ def csr2coo(csrRowPtr, nnz, handle=None, m=None, cooRowInd=None,
     if cooRowInd is None:
         alloc = misc._global_cusparse_allocator
         cooRowInd = gpuarray.zeros((nnz, ), dtype=np.int32, allocator=alloc)
-    cusparseXcsr2coo(handle=handle, csrRowPtr=csrRowPtr, nnz=nnz, m=m,
-                     cooRowInd=cooRowInd, idxBase=idxBase)
+    cusparseXcsr2coo(handle, csrRowPtr, nnz, m, cooRowInd, idxBase)
     return cooRowInd
 
 
