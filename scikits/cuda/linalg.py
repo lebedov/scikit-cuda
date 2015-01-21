@@ -840,7 +840,7 @@ def _transpose(a_gpu, conj=False, handle=None):
         func = cublas.cublasDgeam
     else:
         raise ValueError('unsupported input type')
-    
+
     if conj:
         transa = 'c'
     else:
@@ -848,7 +848,7 @@ def _transpose(a_gpu, conj=False, handle=None):
     M, N = a_gpu.shape
     at_gpu = gpuarray.empty((N, M), a_gpu.dtype)
     func(handle, transa, 't', M, N,
-         1.0, a_gpu.gpudata, N, 0.0, a_gpu.gpudata, N,         
+         1.0, a_gpu.gpudata, N, 0.0, a_gpu.gpudata, N,
          at_gpu.gpudata, M)
     return at_gpu
 
@@ -1613,6 +1613,52 @@ def inv(a_gpu, overwrite=False, ipiv_gpu=None):
     except cula.culaDataError as e:
         raise LinAlgError(e)
     return out
+
+
+def trace(x_gpu, handle=None):
+    """
+    Return the sum along the main diagonal of the array.
+
+    Parameters
+    ----------
+    x_gpu : pycuda.gpuarray.GPUArray
+        Matrix to calculate the trace of.
+
+    handle : int
+        CUBLAS context. If no context is specified, the default handle from
+        `scikits.misc._global_cublas_handle` is used.
+
+    Returns
+    -------
+    trace : number
+        trace of x_gpu
+    """
+    if handle is None:
+        handle = misc._global_cublas_handle
+
+    if len(x_gpu.shape) != 2:
+        raise ValueError('Only 2D matrices are supported')
+
+    one = gpuarray.to_gpu(np.ones(1, dtype=x_gpu.dtype))
+    if (x_gpu.dtype == np.complex64):
+        cublas_func = cublas.cublasCdotu
+    elif (x_gpu.dtype == np.float32):
+        cublas_func = cublas.cublasSdot
+    elif (x_gpu.dtype == np.complex128):
+        cublas_func = cublas.cublasZdotu
+    elif (x_gpu.dtype == np.float64):
+        cublas_func = cublas.cublasDdot
+
+    if not cublas_func:
+        raise ValueError('unsupported input type')
+
+    if x_gpu.flags.c_contiguous:
+        incx = x_gpu.shape[1] + 1
+    else:
+        incx = x_gpu.shape[0] + 1
+    return cublas_func(handle, np.min(x_gpu.shape),
+                       x_gpu.gpudata, incx, one.gpudata, 0)
+
 
 if __name__ == "__main__":
     import doctest
