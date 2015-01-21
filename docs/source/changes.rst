@@ -44,6 +44,7 @@ Release 0.5.0 - (under development)
 * Improved Python 3.4 compatibility (enh. by Eric Larson).
 * Avoid unnecessary import of cublas when importing fft module (enh. by Eric 
   Larson).
+* Matrix trace function (enh. by Thomas Unterthiner).
 
 Release 0.042 - (March 10, 2013)
 --------------------------------

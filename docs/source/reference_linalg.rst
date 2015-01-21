@@ -24,5 +24,6 @@ Linear Algebra Routines
    pinv
    scale
    svd
+   trace
    transpose
    tril
