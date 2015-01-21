@@ -704,11 +704,37 @@ class test_linalg(TestCase):
 
     def test_add_diag_complex128(self):
         self.impl_test_add_diag(np.complex128)
-      
+
     def test_eye_large_float32(self):
         N = 128
         e_gpu = linalg.eye(N, dtype=np.float32)
-        assert np.all(np.eye(N, dtype=np.float32) == e_gpu.get())		
+        assert np.all(np.eye(N, dtype=np.float32) == e_gpu.get())
+
+    def impl_test_trace(self, dtype):
+        # square matrix
+        x = 10*np.asarray(np.random.rand(4, 4), dtype)
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(linalg.trace(x_gpu), np.trace(x))
+        # tall matrix
+        x = np.asarray(np.random.rand(5, 2), dtype)
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(linalg.trace(x_gpu), np.trace(x))
+        # fat matrix
+        x = np.asarray(np.random.rand(2, 5), dtype)
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(linalg.trace(x_gpu), np.trace(x))
+
+    def test_trace_float32(self):
+        self.impl_test_trace(np.float32)
+
+    def test_trace_float64(self):
+        self.impl_test_trace(np.float64)
+
+    def test_trace_complex64(self):
+        self.impl_test_trace(np.complex64)
+
+    def test_trace_complex128(self):
+        self.impl_test_trace(np.complex128)
 
 def suite():
     s = TestSuite()
@@ -751,6 +777,8 @@ def suite():
     s.addTest(test_linalg('test_add_diag_complex64'))
     s.addTest(test_linalg('test_inv_exceptions'))
     s.addTest(test_linalg('test_eye_large_float32'))
+    s.addTest(test_linalg('test_trace_float32'))
+    s.addTest(test_linalg('test_trace_complex64'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_linalg('test_svd_ss_float64'))
         s.addTest(test_linalg('test_svd_ss_complex128'))
@@ -786,6 +814,8 @@ def suite():
         s.addTest(test_linalg('test_inv_complex128'))
         s.addTest(test_linalg('test_add_diag_float64'))
         s.addTest(test_linalg('test_add_diag_complex128'))
+        s.addTest(test_linalg('test_trace_float64'))
+        s.addTest(test_linalg('test_trace_complex128'))
     return s
 
 if __name__ == '__main__':
