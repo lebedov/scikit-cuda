@@ -1026,15 +1026,13 @@ def diag(v_gpu):
     Construct a diagonal matrix if input array is one-dimensional,
     or extracts diagonal entries of a two-dimensional array.
 
-    --- If input-array is one-dimensional:
-    Constructs a matrix in device memory whose diagonal elements
-    correspond to the elements in the specified array; all
-    non-diagonal elements are set to 0.
+    If input-array is one-dimensional: Constructs a matrix in device 
+    memory whose diagonal elements correspond to the elements in the 
+    specified array; all non-diagonal elements are set to 0.
 
-    --- If input-array is two-dimensional:
-    Constructs an array in device memory whose elements
-    correspond to the elements along the main-diagonal of the specified
-    array.
+    If input-array is two-dimensional: Constructs an array in device memory 
+    whose elements correspond to the elements along the main-diagonal 
+    of the specified array.
 
     Parameters
     ----------
@@ -1044,10 +1042,8 @@ def diag(v_gpu):
     Returns
     -------
     d_gpu : pycuda.gpuarray.GPUArray
-            ---If v_obj has shape `(n,1)`, output is
-               diagonal matrix of dimensions `[n, n]`.
-            ---If v_obj has shape `(n,m)`, output is
-               array of length `min(n,m)`.
+        If v_obj has shape `(n,1)`, output is diagonal matrix of dimensions `[n, n]`.
+        If v_obj has shape `(n,m)`, output is array of length `min(n,m)`.               
 
     Examples
     --------
@@ -1072,7 +1068,6 @@ def diag(v_gpu):
     >>> d_gpu = linalg.diag(v_gpu)
     >>> d_gpu
     array([ 1.,  5.])
-
     """
 
     if v_gpu.dtype not in [np.float32, np.float64, np.complex64,
@@ -1094,12 +1089,13 @@ def diag(v_gpu):
             raise ValueError('unsupported input type')
 
         n = min(v_gpu.shape)
-        m = max(v_gpu.shape)
+        incx = v_gpu.shape[1]+1
+
         # Allocate the output array
         d_gpu = gpuarray.empty(n, v_gpu.dtype.type, allocator=alloc)
 
         handle = misc._global_cublas_handle
-        func(handle, n, v_gpu.gpudata, m+1, d_gpu.gpudata, 1)
+        func(handle, n, v_gpu.gpudata, incx, d_gpu.gpudata, 1)
         return d_gpu
     elif len(v_gpu.shape) >= 3:
         raise ValueError('input array cannot have greater than 2-dimensions')

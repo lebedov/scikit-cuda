@@ -529,8 +529,32 @@ class test_linalg(TestCase):
         d_gpu = linalg.diag(v_gpu)
         assert np.all(np.diag(v) == d_gpu.get())
 
+    def test_diag_2d_wide_complex64(self):
+        v = np.array(np.random.rand(32, 64)*1j, np.complex64)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert np.all(np.diag(v) == d_gpu.get())
+
+    def test_diag_2d_tall_complex64(self):
+        v = np.array(np.random.rand(64, 32)*1j, np.complex64)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert np.all(np.diag(v) == d_gpu.get())
+
     def test_diag_1d_complex128(self):
         v = np.array([1j, 2j, 3j, 4j, 5j, 6j], np.complex128)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert np.all(np.diag(v) == d_gpu.get())
+
+    def test_diag_2d_wide_complex128(self):
+        v = np.array(np.random.rand(32, 64)*1j, np.complex128)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert np.all(np.diag(v) == d_gpu.get())
+
+    def test_diag_2d_tall_complex128(self):
+        v = np.array(np.random.rand(64, 32)*1j, np.complex128)
         v_gpu = gpuarray.to_gpu(v)
         d_gpu = linalg.diag(v_gpu)
         assert np.all(np.diag(v) == d_gpu.get())
@@ -779,6 +803,8 @@ def suite():
     s.addTest(test_linalg('test_diag_2d_wide_float32'))
     s.addTest(test_linalg('test_diag_2d_tall_float32'))
     s.addTest(test_linalg('test_diag_1d_complex64'))
+    s.addTest(test_linalg('test_diag_2d_wide_complex64'))
+    s.addTest(test_linalg('test_diag_2d_tall_complex64'))
     s.addTest(test_linalg('test_eye_float32'))
     s.addTest(test_linalg('test_eye_complex64'))
     s.addTest(test_linalg('test_pinv_float32'))
@@ -820,6 +846,8 @@ def suite():
         s.addTest(test_linalg('test_diag_2d_wide_float64'))
         s.addTest(test_linalg('test_diag_2d_tall_float64'))
         s.addTest(test_linalg('test_diag_1d_complex128'))
+        s.addTest(test_linalg('test_diag_2d_wide_complex128'))
+        s.addTest(test_linalg('test_diag_2d_tall_complex128'))
         s.addTest(test_linalg('test_eye_float64'))
         s.addTest(test_linalg('test_eye_complex128'))
         s.addTest(test_linalg('test_pinv_float64'))
