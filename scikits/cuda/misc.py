@@ -6,8 +6,9 @@ Miscellaneous PyCUDA functions.
 
 from __future__ import absolute_import
 
-from string import Template
 import atexit
+import numbers
+from string import Template
 
 import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
@@ -638,6 +639,52 @@ def set_realloc(x_gpu, data):
 
     # Update the GPU memory:
     x_gpu.set(data)
+
+def set_by_index(dest_gpu, ind, src_gpu):
+    """
+    Set values in a GPUArray by index.
+
+    Parameters
+    ----------
+    dest_gpu : pycuda.gpuarray.GPUArray
+        GPUArray instance to modify.
+    ind : pycuda.gpuarray.GPUArray or numpy.ndarray
+        Array of element indices to set. Must have an integer dtype.
+    src_gpu : pycuda.gpuarray.GPUArray
+        GPUArray instance from which to set values. Must be the same
+        length as `ind`.
+
+    Examples
+    --------
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import pycuda.autoinit
+    >>> import numpy as np
+    >>> import misc
+    >>> dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.float32))
+    >>> ind = gpuarray.to_gpu(np.array([0, 2, 4]))
+    >>> src_gpu = gpuarray.to_gpu(np.array([1, 1, 1], dtype=np.float32))
+    >>> misc.set_by_index(dest_gpu, ind, src_gpu)
+    >>> np.allclose(dest_gpu.get(), np.array([1, 1, 1, 3, 1], dtype=np.float32))
+    True
+
+    Notes
+    -----
+    May not be efficient for certain index patterns because of lack of inability
+    to coalesce memory operations.
+    """
+
+    assert dest_gpu.dtype == src_gpu.dtype
+    assert issubclass(ind.dtype.type, numbers.Integral)
+    N = len(ind)
+    assert N == len(src_gpu)
+    data_ctype = tools.dtype_to_ctype(dest_gpu.dtype)
+    ind_ctype = tools.dtype_to_ctype(ind.dtype)
+    if not isinstance(ind, gpuarray.GPUArray):
+        ind = gpuarray.to_gpu(ind)
+    v = "{data_ctype} *dest, {ind_ctype} *ind, {data_ctype} *src".format(data_ctype=data_ctype, ind_ctype=ind_ctype)
+    func = elementwise.ElementwiseKernel(v, "dest[ind[i]] = src[i]")
+                             
+    func(dest_gpu, ind, src_gpu, range=slice(0, N, 1))
 
 if __name__ == "__main__":
     import doctest
