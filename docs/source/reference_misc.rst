@@ -11,6 +11,7 @@ Miscellaneous Routines
    cumsum
    diff
    done_context
+   get_by_index
    get_compute_capability
    get_current_device
    get_dev_attrs

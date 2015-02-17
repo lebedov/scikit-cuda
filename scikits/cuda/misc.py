@@ -640,6 +640,59 @@ def set_realloc(x_gpu, data):
     # Update the GPU memory:
     x_gpu.set(data)
 
+def get_by_index(src_gpu, ind):
+    """
+    Get values in a GPUArray by index.
+
+    Parameters
+    ----------
+    src_gpu : pycuda.gpuarray.GPUArray
+        GPUArray instance from which to extract values.
+    ind : pycuda.gpuarray.GPUArray or numpy.ndarray
+        Array of element indices to set. Must have an integer dtype.
+
+    Returns
+    -------
+    res_gpu : pycuda.gpuarray.GPUArray
+        GPUArray with length of `ind` and dtype of `src_gpu` containing 
+        selected values.
+
+    Examples
+    --------
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import pycuda.autoinit
+    >>> import numpy as np
+    >>> import misc
+    >>> src = np.random.rand(5).astype(np.float32)
+    >>> src_gpu = gpuarray.to_gpu(src)
+    >>> ind = gpuarray.to_gpu(np.array([0, 2, 4]))
+    >>> res_gpu = misc.get_by_index(src_gpu, ind)
+    >>> np.allclose(res_gpu.get(), src[[0, 2, 4]])
+    True
+
+    Notes
+    -----
+    Only supports 1D index arrays.
+
+    May not be efficient for certain index patterns because of lack of inability
+    to coalesce memory operations.
+    """
+
+    # Only support 1D index arrays:
+    assert len(np.shape(ind)) == 1
+    assert issubclass(ind.dtype.type, numbers.Integral)
+    N = len(ind)
+    assert N <= len(src_gpu)
+    data_ctype = tools.dtype_to_ctype(src_gpu.dtype)
+    ind_ctype = tools.dtype_to_ctype(ind.dtype)
+    res_gpu = gpuarray.empty(N, dtype=src_gpu.dtype)
+    if not isinstance(ind, gpuarray.GPUArray):
+        ind = gpuarray.to_gpu(ind)
+    v = "{data_ctype} *res, {ind_ctype} *ind, {data_ctype} *src".format(data_ctype=data_ctype, ind_ctype=ind_ctype)
+    func = elementwise.ElementwiseKernel(v, "res[i] = src[ind[i]]")
+    func(res_gpu, ind, src_gpu, range=slice(0, N, 1))
+    return res_gpu
+
 def set_by_index(dest_gpu, ind, src_gpu):
     """
     Set values in a GPUArray by index.
@@ -649,7 +702,7 @@ def set_by_index(dest_gpu, ind, src_gpu):
     dest_gpu : pycuda.gpuarray.GPUArray
         GPUArray instance to modify.
     ind : pycuda.gpuarray.GPUArray or numpy.ndarray
-        Array of element indices to set. Must have an integer dtype.
+        1D array of element indices to set. Must have an integer dtype.
     src_gpu : pycuda.gpuarray.GPUArray
         GPUArray instance from which to set values. Must be the same
         length as `ind`.
@@ -669,10 +722,14 @@ def set_by_index(dest_gpu, ind, src_gpu):
 
     Notes
     -----
+    Only supports 1D index arrays.
+
     May not be efficient for certain index patterns because of lack of inability
     to coalesce memory operations.
     """
 
+    # Only support 1D index arrays:
+    assert len(np.shape(ind)) == 1
     assert dest_gpu.dtype == src_gpu.dtype
     assert issubclass(ind.dtype.type, numbers.Integral)
     N = len(ind)
@@ -683,7 +740,6 @@ def set_by_index(dest_gpu, ind, src_gpu):
         ind = gpuarray.to_gpu(ind)
     v = "{data_ctype} *dest, {ind_ctype} *ind, {data_ctype} *src".format(data_ctype=data_ctype, ind_ctype=ind_ctype)
     func = elementwise.ElementwiseKernel(v, "dest[ind[i]] = src[i]")
-                             
     func(dest_gpu, ind, src_gpu, range=slice(0, N, 1))
 
 if __name__ == "__main__":

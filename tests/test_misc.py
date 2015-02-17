@@ -85,6 +85,20 @@ class test_misc(TestCase):
         y_gpu = misc.diff(x_gpu)
         assert np.allclose(y_gpu.get(), np.diff(x))
 
+    def test_get_by_index_float32(self):
+        src = np.random.rand(5).astype(np.float32)
+        src_gpu = gpuarray.to_gpu(src)
+        ind = gpuarray.to_gpu(np.array([0, 2, 4]))
+        res_gpu = misc.get_by_index(src_gpu, ind)
+        assert np.allclose(res_gpu.get(), src[[0, 2, 4]])
+
+    def test_get_by_index_float64(self):
+        src = np.random.rand(5).astype(np.float64)
+        src_gpu = gpuarray.to_gpu(src)
+        ind = gpuarray.to_gpu(np.array([0, 2, 4]))
+        res_gpu = misc.get_by_index(src_gpu, ind)
+        assert np.allclose(res_gpu.get(), src[[0, 2, 4]])
+                           
     def test_set_by_index_float32(self):
         dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.float32))
         ind = gpuarray.to_gpu(np.array([0, 2, 4]))
@@ -109,6 +123,7 @@ def suite():
     s.addTest(test_misc('test_cumsum_complex64'))
     s.addTest(test_misc('test_diff_float32'))
     s.addTest(test_misc('test_diff_complex64'))
+    s.addTest(test_misc('test_get_by_index_float32'))
     s.addTest(test_misc('test_set_by_index_float32'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_misc('test_maxabs_float64'))
@@ -117,6 +132,7 @@ def suite():
         s.addTest(test_misc('test_cumsum_complex128'))
         s.addTest(test_misc('test_diff_float64'))
         s.addTest(test_misc('test_diff_complex128'))
+        s.addTest(test_misc('test_get_by_index_float32'))
         s.addTest(test_misc('test_set_by_index_float64'))
     return s
 
