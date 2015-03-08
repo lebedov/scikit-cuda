@@ -16,7 +16,7 @@ from setuptools import find_packages
 from setuptools import setup
 
 NAME =               'scikits.cuda'
-VERSION =            '0.5.0a2'
+VERSION =            '0.5.0a3'
 AUTHOR =             'Lev Givon'
 AUTHOR_EMAIL =       'lev@columbia.edu'
 URL =                'https://github.com/lebedov/scikits.cuda/'
@@ -31,6 +31,7 @@ CLASSIFIERS = [
     'License :: OSI Approved :: BSD License',
     'Operating System :: OS Independent',
     'Programming Language :: Python',
+    'Programming Language :: Python :: 2.7',
     'Topic :: Scientific/Engineering',
     'Topic :: Software Development']
 NAMESPACE_PACKAGES = ['scikits']
