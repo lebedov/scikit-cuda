@@ -60,7 +60,7 @@ result : bool
     Result.
 
 """
-    
+
 def init_device(n=0):
     """
     Initialize a GPU device.
@@ -693,7 +693,7 @@ def get_by_index(src_gpu, ind):
     func(res_gpu, ind, src_gpu, range=slice(0, N, 1))
     return res_gpu
 
-def set_by_index(dest_gpu, ind, src_gpu):
+def set_by_index(dest_gpu, ind, src_gpu, ind_which='dest'):
     """
     Set values in a GPUArray by index.
 
@@ -704,8 +704,13 @@ def set_by_index(dest_gpu, ind, src_gpu):
     ind : pycuda.gpuarray.GPUArray or numpy.ndarray
         1D array of element indices to set. Must have an integer dtype.
     src_gpu : pycuda.gpuarray.GPUArray
-        GPUArray instance from which to set values. Must be the same
-        length as `ind`.
+        GPUArray instance from which to set values.
+    ind_which : str
+        If set to 'dest', set the elements in `dest_gpu` with indices `ind`
+        to the successive values in `src_gpu`; the lengths of `ind` and
+        `src_gpu` must be equal. If set to 'src', set the
+        successive values in `dest_gpu` to the values in `src_gpu` with indices
+        `ind`; the lengths of `ind` and `dest_gpu` must be equal.
 
     Examples
     --------
@@ -716,8 +721,14 @@ def set_by_index(dest_gpu, ind, src_gpu):
     >>> dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.float32))
     >>> ind = gpuarray.to_gpu(np.array([0, 2, 4]))
     >>> src_gpu = gpuarray.to_gpu(np.array([1, 1, 1], dtype=np.float32))
-    >>> misc.set_by_index(dest_gpu, ind, src_gpu)
+    >>> misc.set_by_index(dest_gpu, ind, src_gpu, 'dest')
     >>> np.allclose(dest_gpu.get(), np.array([1, 1, 1, 3, 1], dtype=np.float32))
+    True
+    >>> dest_gpu = gpuarray.to_gpu(np.zeros(3, dtype=np.float32))
+    >>> ind = gpuarray.to_gpu(np.array([0, 2, 4]))
+    >>> src_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.float32))
+    >>> misc.set_by_index(dest_gpu, ind, src_gpu)
+    >>> np.allclose(dest_gpu.get(), np.array([0, 2, 4], dtype=np.float32))
     True
 
     Notes
@@ -733,13 +744,21 @@ def set_by_index(dest_gpu, ind, src_gpu):
     assert dest_gpu.dtype == src_gpu.dtype
     assert issubclass(ind.dtype.type, numbers.Integral)
     N = len(ind)
-    assert N == len(src_gpu)
+    if ind_which == 'dest':
+        assert N == len(src_gpu)
+    elif ind_which == 'src':
+        assert N == len(dest_gpu)
+    else:
+        raise ValueError('invalid value for `ind_which`')
     data_ctype = tools.dtype_to_ctype(dest_gpu.dtype)
     ind_ctype = tools.dtype_to_ctype(ind.dtype)
     if not isinstance(ind, gpuarray.GPUArray):
         ind = gpuarray.to_gpu(ind)
     v = "{data_ctype} *dest, {ind_ctype} *ind, {data_ctype} *src".format(data_ctype=data_ctype, ind_ctype=ind_ctype)
-    func = elementwise.ElementwiseKernel(v, "dest[ind[i]] = src[i]")
+    if ind_which == 'dest':
+        func = elementwise.ElementwiseKernel(v, "dest[ind[i]] = src[i]")
+    else:
+        func = elementwise.ElementwiseKernel(v, "dest[i] = src[ind[i]]")
     func(dest_gpu, ind, src_gpu, range=slice(0, N, 1))
 
 if __name__ == "__main__":
