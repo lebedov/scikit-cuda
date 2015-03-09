@@ -28,6 +28,12 @@ try:
 except (ImportError, OSError):
     _has_cula = False
 
+try:
+    from . import magma
+    _has_magma = True
+except (ImportError, OSError):
+    _has_magma = False
+
 isdoubletype = lambda x : True if x == np.float64 or \
                x == np.complex128 else False
 isdoubletype.__doc__ = """
@@ -160,6 +166,9 @@ def init(allocator=drv.mem_alloc):
     # device:
     if _has_cula:
         cula.culaInitialize()
+
+    if _has_magma:
+        magma.magma_init()
 
 def shutdown():
     """

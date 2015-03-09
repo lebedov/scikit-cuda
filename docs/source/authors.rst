@@ -15,6 +15,7 @@ Special thanks are due to the following parties for their contributions:
   PARRET [3]_ software).
 - Michael M. Forbes - Improved MacOSX compatibility, bug fixes.
 - Jacob Frelinger - Various enhancements.
+- Tim Klein - Additional MAGMA wrappers.
 - Eric Larson - Various enhancements.
 - Gregory R. Lee - Enhanced FFT plan creation.
 - Teodor Mihai Moldovan - CUBLAS 5 bindings.
