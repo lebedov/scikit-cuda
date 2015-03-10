@@ -692,15 +692,20 @@ def get_by_index(src_gpu, ind):
     assert issubclass(ind.dtype.type, numbers.Integral)
     N = len(ind)
     assert N <= len(src_gpu)
-    data_ctype = tools.dtype_to_ctype(src_gpu.dtype)
-    ind_ctype = tools.dtype_to_ctype(ind.dtype)
-    res_gpu = gpuarray.empty(N, dtype=src_gpu.dtype)
     if not isinstance(ind, gpuarray.GPUArray):
         ind = gpuarray.to_gpu(ind)
-    v = "{data_ctype} *res, {ind_ctype} *ind, {data_ctype} *src".format(data_ctype=data_ctype, ind_ctype=ind_ctype)
-    func = elementwise.ElementwiseKernel(v, "res[i] = src[ind[i]]")
-    func(res_gpu, ind, src_gpu, range=slice(0, N, 1))
-    return res_gpu
+    dest_gpu = gpuarray.empty(N, dtype=src_gpu.dtype)
+    try:
+        func = get_by_index.cache[(src_gpu.dtype, ind.dtype)]
+    except KeyError:
+        data_ctype = tools.dtype_to_ctype(src_gpu.dtype)
+        ind_ctype = tools.dtype_to_ctype(ind.dtype)
+        v = "{data_ctype} *dest, {ind_ctype} *ind, {data_ctype} *src".format(data_ctype=data_ctype, ind_ctype=ind_ctype)
+        func = elementwise.ElementwiseKernel(v, "dest[i] = src[ind[i]]")
+        get_by_index.cache[(src_gpu.dtype, ind.dtype)] = func
+    func(dest_gpu, ind, src_gpu, range=slice(0, N, 1))
+    return dest_gpu
+get_by_index.cache = {}
 
 def set_by_index(dest_gpu, ind, src_gpu, ind_which='dest'):
     """
@@ -759,16 +764,22 @@ def set_by_index(dest_gpu, ind, src_gpu, ind_which='dest'):
         assert N == len(dest_gpu)
     else:
         raise ValueError('invalid value for `ind_which`')
-    data_ctype = tools.dtype_to_ctype(dest_gpu.dtype)
-    ind_ctype = tools.dtype_to_ctype(ind.dtype)
     if not isinstance(ind, gpuarray.GPUArray):
         ind = gpuarray.to_gpu(ind)
-    v = "{data_ctype} *dest, {ind_ctype} *ind, {data_ctype} *src".format(data_ctype=data_ctype, ind_ctype=ind_ctype)
-    if ind_which == 'dest':
-        func = elementwise.ElementwiseKernel(v, "dest[ind[i]] = src[i]")
-    else:
-        func = elementwise.ElementwiseKernel(v, "dest[i] = src[ind[i]]")
+    try:
+        func = set_by_index.cache[(dest_gpu.dtype, ind.dtype, ind_which)]
+    except KeyError:
+        data_ctype = tools.dtype_to_ctype(dest_gpu.dtype)
+        ind_ctype = tools.dtype_to_ctype(ind.dtype)        
+        v = "{data_ctype} *dest, {ind_ctype} *ind, {data_ctype} *src".format(data_ctype=data_ctype, ind_ctype=ind_ctype)
+    
+        if ind_which == 'dest':
+            func = elementwise.ElementwiseKernel(v, "dest[ind[i]] = src[i]")
+        else:
+            func = elementwise.ElementwiseKernel(v, "dest[i] = src[ind[i]]")
+        set_by_index.cache[(dest_gpu.dtype, ind.dtype, ind_which)] = func
     func(dest_gpu, ind, src_gpu, range=slice(0, N, 1))
+set_by_index.cache = {}
 
 if __name__ == "__main__":
     import doctest
