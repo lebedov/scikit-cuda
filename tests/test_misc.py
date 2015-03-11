@@ -92,12 +92,20 @@ class test_misc(TestCase):
         res_gpu = misc.get_by_index(src_gpu, ind)
         assert np.allclose(res_gpu.get(), src[[0, 2, 4]])
 
+        ind = gpuarray.to_gpu(np.array([], np.int64))
+        res_gpu = misc.get_by_index(src_gpu, ind)
+        assert len(res_gpu) == 0
+
     def test_get_by_index_float64(self):
         src = np.random.rand(5).astype(np.float64)
         src_gpu = gpuarray.to_gpu(src)
         ind = gpuarray.to_gpu(np.array([0, 2, 4]))
         res_gpu = misc.get_by_index(src_gpu, ind)
         assert np.allclose(res_gpu.get(), src[[0, 2, 4]])
+
+        ind = gpuarray.to_gpu(np.array([], np.int64))
+        res_gpu = misc.get_by_index(src_gpu, ind)
+        assert len(res_gpu) == 0
 
     def test_set_by_index_dest_float32(self):
         dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.float32))
@@ -107,6 +115,13 @@ class test_misc(TestCase):
         assert np.allclose(dest_gpu.get(),
                            np.array([1, 1, 1, 3, 1], dtype=np.float32))
 
+        dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.float32))
+        ind = gpuarray.to_gpu(np.array([], np.int64))
+        src_gpu = gpuarray.to_gpu(np.array([1, 1, 1], dtype=np.float32))
+        misc.set_by_index(dest_gpu, ind, src_gpu, 'dest')
+        assert np.allclose(dest_gpu.get(),
+                           np.arange(5, dtype=np.float32))
+
     def test_set_by_index_dest_float64(self):
         dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.double))
         ind = gpuarray.to_gpu(np.array([0, 2, 4]))
@@ -114,6 +129,13 @@ class test_misc(TestCase):
         misc.set_by_index(dest_gpu, ind, src_gpu, 'dest')
         assert np.allclose(dest_gpu.get(),
                            np.array([1, 1, 1, 3, 1], dtype=np.double))
+
+        dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.double))
+        ind = gpuarray.to_gpu(np.array([], np.int64))
+        src_gpu = gpuarray.to_gpu(np.array([1, 1, 1], dtype=np.double))
+        misc.set_by_index(dest_gpu, ind, src_gpu, 'dest')
+        assert np.allclose(dest_gpu.get(),
+                           np.arange(5, dtype=np.double))
 
     def test_set_by_index_src_float32(self):
         dest_gpu = gpuarray.to_gpu(np.zeros(3, dtype=np.float32))
@@ -123,6 +145,13 @@ class test_misc(TestCase):
         assert np.allclose(dest_gpu.get(),
                            np.array([0, 2, 4], dtype=np.float32))
 
+        dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.float32))
+        ind = gpuarray.to_gpu(np.array([], np.int64))
+        src_gpu = gpuarray.to_gpu(np.array([1, 1, 1], dtype=np.float32))
+        misc.set_by_index(dest_gpu, ind, src_gpu, 'src')
+        assert np.allclose(dest_gpu.get(),
+                           np.arange(5, dtype=np.float32))
+
     def test_set_by_index_src_float64(self):
         dest_gpu = gpuarray.to_gpu(np.zeros(3, dtype=np.double))
         ind = gpuarray.to_gpu(np.array([0, 2, 4]))
@@ -130,6 +159,13 @@ class test_misc(TestCase):
         misc.set_by_index(dest_gpu, ind, src_gpu, 'src')
         assert np.allclose(dest_gpu.get(),
                            np.array([0, 2, 4], dtype=np.double))
+
+        dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.double))
+        ind = gpuarray.to_gpu(np.array([], np.int64))
+        src_gpu = gpuarray.to_gpu(np.array([1, 1, 1], dtype=np.double))
+        misc.set_by_index(dest_gpu, ind, src_gpu, 'src')
+        assert np.allclose(dest_gpu.get(),
+                           np.arange(5, dtype=np.double))
 
 def suite():
     s = TestSuite()

@@ -695,6 +695,11 @@ def get_by_index(src_gpu, ind):
     if not isinstance(ind, gpuarray.GPUArray):
         ind = gpuarray.to_gpu(ind)
     dest_gpu = gpuarray.empty(N, dtype=src_gpu.dtype)
+
+    # Manually handle empty index array because it will cause the kernel to
+    # fail if processed:
+    if N == 0:
+        return dest_gpu
     try:
         func = get_by_index.cache[(src_gpu.dtype, ind.dtype)]
     except KeyError:
@@ -758,6 +763,11 @@ def set_by_index(dest_gpu, ind, src_gpu, ind_which='dest'):
     assert dest_gpu.dtype == src_gpu.dtype
     assert issubclass(ind.dtype.type, numbers.Integral)
     N = len(ind)
+
+    # Manually handle empty index array because it will cause the kernel to
+    # fail if processed:
+    if N == 0:
+        return
     if ind_which == 'dest':
         assert N == len(src_gpu)
     elif ind_which == 'src':
@@ -770,9 +780,9 @@ def set_by_index(dest_gpu, ind, src_gpu, ind_which='dest'):
         func = set_by_index.cache[(dest_gpu.dtype, ind.dtype, ind_which)]
     except KeyError:
         data_ctype = tools.dtype_to_ctype(dest_gpu.dtype)
-        ind_ctype = tools.dtype_to_ctype(ind.dtype)        
+        ind_ctype = tools.dtype_to_ctype(ind.dtype)
         v = "{data_ctype} *dest, {ind_ctype} *ind, {data_ctype} *src".format(data_ctype=data_ctype, ind_ctype=ind_ctype)
-    
+
         if ind_which == 'dest':
             func = elementwise.ElementwiseKernel(v, "dest[ind[i]] = src[i]")
         else:
