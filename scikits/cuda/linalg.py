@@ -740,6 +740,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
     if overwrite:
         r_gpu = a_gpu
     else:
+        alloc = misc._global_cublas_allocator
         r_gpu = gpuarray.empty((a_gpu.shape[0], a_gpu.shape[1]),
                                a_gpu.dtype, allocator=alloc)
         copy_func(handle, a_gpu.size, int(a_gpu.gpudata), 1,
@@ -1026,12 +1027,12 @@ def diag(v_gpu):
     Construct a diagonal matrix if input array is one-dimensional,
     or extracts diagonal entries of a two-dimensional array.
 
-    If input-array is one-dimensional: Constructs a matrix in device 
-    memory whose diagonal elements correspond to the elements in the 
+    If input-array is one-dimensional: Constructs a matrix in device
+    memory whose diagonal elements correspond to the elements in the
     specified array; all non-diagonal elements are set to 0.
 
-    If input-array is two-dimensional: Constructs an array in device memory 
-    whose elements correspond to the elements along the main-diagonal 
+    If input-array is two-dimensional: Constructs an array in device memory
+    whose elements correspond to the elements along the main-diagonal
     of the specified array.
 
     Parameters
@@ -1043,7 +1044,7 @@ def diag(v_gpu):
     -------
     d_gpu : pycuda.gpuarray.GPUArray
         If v_obj has shape `(n,1)`, output is diagonal matrix of dimensions `[n, n]`.
-        If v_obj has shape `(n,m)`, output is array of length `min(n,m)`.               
+        If v_obj has shape `(n,m)`, output is array of length `min(n,m)`.
 
     Examples
     --------
