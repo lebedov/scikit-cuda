@@ -843,12 +843,48 @@ def _sum_axis(x_gpu, axis=None, out=None, calc_mean=False):
     return out
 
 
-def sum(x, axis=None, out=None):
-    return _sum_axis(x, axis, out=out)
+def sum(x_gpu, axis=None, out=None):
+    """
+    Compute the sum along the specified axis.
+
+    Parameters
+    ----------
+    x_gpu : pycuda.gpuarray.GPUArray
+        Array containing numbers whose sum is desired.
+    axis : int (optional)
+        Axis along which the sums are computed. The default is to
+        compute the sum of the flattened array.
+    out : pycuda.gpuarray.GPUArray (optional)
+        Output array in which to place the result.
+
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray
+        sums of matrix elements along the desired axis.
+    """
+    return _sum_axis(x_gpu, axis, out=out)
 
 
-def mean(x, axis=None, out=None):
-    return _sum_axis(x, axis, calc_mean=True, out=out)
+def mean(x_gpu, axis=None, out=None):
+    """
+    Compute the arithmetic means along the specified axis.
+
+    Parameters
+    ----------
+    x_gpu : pycuda.gpuarray.GPUArray
+        Array containing numbers whose mean is desired.
+    axis : int (optional)
+        Axis along which the means are computed. The default is to
+        compute the mean of the flattened array.
+    out : pycuda.gpuarray.GPUArray (optional)
+        Output array in which to place the result.
+
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray
+        means of matrix elements along the desired axis.
+    """
+    return _sum_axis(x_gpu, axis, calc_mean=True, out=out)
 
 
 if __name__ == "__main__":
