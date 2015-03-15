@@ -13,6 +13,11 @@ import numpy as np
 import scikits.cuda.misc as misc
 
 class test_misc(TestCase):
+
+    def setUp(self):
+        np.random.seed(0)
+        misc.init()
+
     def test_maxabs_float32(self):
         x = np.array([-1, 2, -3], np.float32)
         x_gpu = gpuarray.to_gpu(x)
@@ -167,6 +172,56 @@ class test_misc(TestCase):
         assert np.allclose(dest_gpu.get(),
                            np.arange(5, dtype=np.double))
 
+    def impl_test_sum(self, dtype):
+        x = np.random.normal(scale=5.0, size=(3, 5))
+        x = x.astype(dtype=dtype, order='C')
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(misc.sum(x_gpu), x.sum())
+        assert np.allclose(misc.sum(x_gpu, axis=0).get(), x.sum(axis=0))
+        assert np.allclose(misc.sum(x_gpu, axis=1).get(), x.sum(axis=1))
+        x = x.astype(dtype=dtype, order='F')
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(misc.sum(x_gpu), x.sum())
+        assert np.allclose(misc.sum(x_gpu, axis=0).get(), x.sum(axis=0))
+        assert np.allclose(misc.sum(x_gpu, axis=1).get(), x.sum(axis=1))
+
+    def test_sum_float32(self):
+        self.impl_test_sum(np.float32)
+
+    def test_sum_float64(self):
+        self.impl_test_sum(np.float64)
+
+    def test_sum_complex64(self):
+        self.impl_test_sum(np.complex64)
+
+    def test_sum_complex128(self):
+        self.impl_test_sum(np.complex128)
+
+    def impl_test_mean(self, dtype):
+        x = np.random.normal(scale=5.0, size=(3, 5))
+        x = x.astype(dtype=dtype, order='C')
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(misc.mean(x_gpu), x.mean())
+        assert np.allclose(misc.mean(x_gpu, axis=0).get(), x.mean(axis=0))
+        assert np.allclose(misc.mean(x_gpu, axis=1).get(), x.mean(axis=1))
+        x = x.astype(dtype=dtype, order='F')
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(misc.mean(x_gpu), x.mean())
+        assert np.allclose(misc.mean(x_gpu, axis=-1).get(), x.mean(axis=-1))
+        assert np.allclose(misc.mean(x_gpu, axis=-2).get(), x.mean(axis=-2))
+
+    def test_mean_float32(self):
+        self.impl_test_mean(np.float32)
+
+    def test_mean_float64(self):
+        self.impl_test_mean(np.float64)
+
+    def test_mean_complex64(self):
+        self.impl_test_mean(np.complex64)
+
+    def test_mean_complex128(self):
+        self.impl_test_mean(np.complex128)
+
 def suite():
     s = TestSuite()
     s.addTest(test_misc('test_maxabs_float32'))
@@ -178,6 +233,10 @@ def suite():
     s.addTest(test_misc('test_get_by_index_float32'))
     s.addTest(test_misc('test_set_by_index_dest_float32'))
     s.addTest(test_misc('test_set_by_index_src_float32'))
+    s.addTest(test_misc('test_sum_float32'))
+    s.addTest(test_misc('test_sum_complex64'))
+    s.addTest(test_misc('test_mean_float32'))
+    s.addTest(test_misc('test_mean_complex64'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_misc('test_maxabs_float64'))
         s.addTest(test_misc('test_maxabs_complex128'))
@@ -188,6 +247,10 @@ def suite():
         s.addTest(test_misc('test_get_by_index_float32'))
         s.addTest(test_misc('test_set_by_index_dest_float64'))
         s.addTest(test_misc('test_set_by_index_src_float64'))
+        s.addTest(test_misc('test_sum_float64'))
+        s.addTest(test_misc('test_sum_complex128'))
+        s.addTest(test_misc('test_mean_float64'))
+        s.addTest(test_misc('test_mean_complex128'))
     return s
 
 if __name__ == '__main__':

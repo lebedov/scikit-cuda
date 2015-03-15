@@ -4,7 +4,7 @@
 Miscellaneous PyCUDA functions.
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 import atexit
 import numbers
@@ -21,6 +21,7 @@ from pytools import memoize
 import numpy as np
 
 from . import cuda
+from . import cublas
 
 try:
     from . import cula
@@ -331,7 +332,7 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
 
     # Actual number of thread blocks needed:
     blocks_needed = iceil(N/float(max_threads_per_block))
-    
+
     if blocks_needed <= max_grid_dim[0]:
         return (max_threads_per_block, 1, 1), (blocks_needed, 1, 1)
     elif blocks_needed > max_grid_dim[0] and \
@@ -341,7 +342,7 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
     elif blocks_needed > max_grid_dim[0]*max_grid_dim[1] and \
          blocks_needed <= max_grid_dim[0]*max_grid_dim[1]*max_grid_dim[2]:
         return (max_threads_per_block, 1, 1), \
-            (max_grid_dim[0], max_grid_dim[1], 
+            (max_grid_dim[0], max_grid_dim[1],
              iceil(blocks_needed/float(max_grid_dim[0]*max_grid_dim[1])))
     else:
         raise ValueError('array size too large')
@@ -663,7 +664,7 @@ def get_by_index(src_gpu, ind):
     Returns
     -------
     res_gpu : pycuda.gpuarray.GPUArray
-        GPUArray with length of `ind` and dtype of `src_gpu` containing 
+        GPUArray with length of `ind` and dtype of `src_gpu` containing
         selected values.
 
     Examples
@@ -790,6 +791,65 @@ def set_by_index(dest_gpu, ind, src_gpu, ind_which='dest'):
         set_by_index.cache[(dest_gpu.dtype, ind.dtype, ind_which)] = func
     func(dest_gpu, ind, src_gpu, range=slice(0, N, 1))
 set_by_index.cache = {}
+
+
+
+def _sum_axis(x_gpu, axis=None, out=None, calc_mean=False):
+    global _global_cublas_allocator
+
+    if axis is None:
+        if calc_mean == False:
+            return gpuarray.sum(x_gpu).get()
+        else:
+            return gpuarray.sum(x_gpu).get() / x_gpu.size
+
+    if axis < 0:
+        axis += 2
+    if axis > 1:
+        raise ValueError('invalid axis')
+
+    if x_gpu.flags.c_contiguous:
+        n, m = x_gpu.shape[1], x_gpu.shape[0]
+        lda = x_gpu.shape[1]
+        trans = "n" if axis == 0 else "t"
+        sum_axis, out_axis = (m, n) if axis == 0 else (n, m)
+    else:
+        n, m = x_gpu.shape[0], x_gpu.shape[1]
+        lda = x_gpu.shape[0]
+        trans = "t" if axis == 0 else "n"
+        sum_axis, out_axis = (n, m) if axis == 0 else (m, n)
+
+    alpha = (1.0 / sum_axis) if calc_mean else 1.0
+    if (x_gpu.dtype == np.complex64):
+        gemv = cublas.cublasCgemv
+    elif (x_gpu.dtype == np.float32):
+        gemv = cublas.cublasSgemv
+    elif (x_gpu.dtype == np.complex128):
+        gemv = cublas.cublasZgemv
+    elif (x_gpu.dtype == np.float64):
+        gemv = cublas.cublasDgemv
+
+    alloc = _global_cublas_allocator
+    ons = ones((sum_axis, ), x_gpu.dtype, alloc)
+    if out is None:
+        out = gpuarray.empty((out_axis, ), x_gpu.dtype, alloc)
+    else:
+        assert out.dtype == x_gpu.dtype
+        assert out.size >= out_axis
+
+    gemv(_global_cublas_handle, trans, n, m,
+         alpha, x_gpu.gpudata, lda,
+         ons.gpudata, 1, 0.0, out.gpudata, 1)
+    return out
+
+
+def sum(x, axis=None, out=None):
+    return _sum_axis(x, axis, out=out)
+
+
+def mean(x, axis=None, out=None):
+    return _sum_axis(x, axis, calc_mean=True, out=out)
+
 
 if __name__ == "__main__":
     import doctest
