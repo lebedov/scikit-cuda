@@ -777,6 +777,31 @@ class test_linalg(TestCase):
     def test_trace_complex128(self):
         self.impl_test_trace(np.complex128)
 
+    def impl_test_addvec(self, dtype):
+        x = np.random.normal(scale=5.0, size=(3, 5)).astype(dtype)
+        #x = np.zeros((4, 5), dtype=dtype)
+        a = np.random.normal(scale=5.0, size=(1, 5)).astype(dtype)
+        b = np.random.normal(scale=5.0, size=(3, 1)).astype(dtype)
+        x_gpu = gpuarray.to_gpu(x)
+        a_gpu = gpuarray.to_gpu(a)
+        b_gpu = gpuarray.to_gpu(b)
+        out = gpuarray.empty(x.shape, dtype=dtype)
+        res = linalg.add_matvec(x_gpu, a_gpu, out=out).get()
+        assert np.allclose(res, x+a)
+        assert np.allclose(linalg.add_matvec(x_gpu, b_gpu).get(), x+b)
+
+    def test_addvec_float32(self):
+        self.impl_test_addvec(np.float32)
+
+    def test_addvec_float64(self):
+        self.impl_test_addvec(np.float64)
+
+    def test_addvec_complex64(self):
+        self.impl_test_addvec(np.complex64)
+
+    def test_addvec_complex128(self):
+        self.impl_test_addvec(np.complex128)
+
 def suite():
     s = TestSuite()
     s.addTest(test_linalg('test_svd_ss_float32'))
@@ -823,6 +848,8 @@ def suite():
     s.addTest(test_linalg('test_eye_large_float32'))
     s.addTest(test_linalg('test_trace_float32'))
     s.addTest(test_linalg('test_trace_complex64'))
+    s.addTest(test_linalg('test_addvec_float32'))
+    s.addTest(test_linalg('test_addvec_complex64'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_linalg('test_svd_ss_float64'))
         s.addTest(test_linalg('test_svd_ss_complex128'))
@@ -862,6 +889,8 @@ def suite():
         s.addTest(test_linalg('test_add_diag_complex128'))
         s.addTest(test_linalg('test_trace_float64'))
         s.addTest(test_linalg('test_trace_complex128'))
+        s.addTest(test_linalg('test_addvec_float64'))
+        s.addTest(test_linalg('test_addvec_complex128'))
     return s
 
 if __name__ == '__main__':
