@@ -247,6 +247,58 @@ class test_misc(TestCase):
     def test_mean_complex128(self):
         self.impl_test_mean(np.complex128)
 
+    def impl_test_var(self, dtype):
+        x = np.random.normal(scale=5.0, size=(3, 5))
+        x = x.astype(dtype=dtype, order='C')
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(misc.var(x_gpu), x.var())
+        assert np.allclose(misc.var(x_gpu, axis=0).get(), x.var(axis=0))
+        assert np.allclose(misc.var(x_gpu, axis=1).get(), x.var(axis=1))
+        # Currently not working due to a bug in PyCUDA, see Issue #92
+        #x = x.astype(dtype=dtype, order='F')
+        #x_gpu = gpuarray.to_gpu(x)
+        #assert np.allclose(misc.var(x_gpu), x.var())
+        #assert np.allclose(misc.var(x_gpu, axis=-1).get(), x.var(axis=-1))
+        #assert np.allclose(misc.var(x_gpu, axis=-2).get(), x.var(axis=-2))
+
+    def test_var_float32(self):
+        self.impl_test_var(np.float32)
+
+    def test_var_float64(self):
+        self.impl_test_var(np.float64)
+
+    def test_var_complex64(self):
+        self.impl_test_var(np.complex64)
+
+    def test_var_complex128(self):
+        self.impl_test_var(np.complex128)
+
+    def impl_test_std(self, dtype):
+        x = np.random.normal(scale=5.0, size=(3, 5))
+        x = x.astype(dtype=dtype, order='C')
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(misc.std(x_gpu), x.std())
+        assert np.allclose(misc.std(x_gpu, axis=0).get(), x.std(axis=0))
+        assert np.allclose(misc.std(x_gpu, axis=1).get(), x.std(axis=1))
+        # Currently not working due to a bug in PyCUDA, see Issue #92
+        #x = x.astype(dtype=dtype, order='F')
+        #x_gpu = gpuarray.to_gpu(x)
+        #assert np.allclose(misc.std(x_gpu), x.std())
+        #assert np.allclose(misc.std(x_gpu, axis=-1).get(), x.std(axis=-1))
+        #assert np.allclose(misc.std(x_gpu, axis=-2).get(), x.std(axis=-2))
+
+    def test_std_float32(self):
+        self.impl_test_std(np.float32)
+
+    def test_std_float64(self):
+        self.impl_test_std(np.float64)
+
+    def test_std_complex64(self):
+        self.impl_test_std(np.complex64)
+
+    def test_std_complex128(self):
+        self.impl_test_std(np.complex128)
+
 def suite():
     s = TestSuite()
     s.addTest(test_misc('test_maxabs_float32'))
@@ -264,6 +316,10 @@ def suite():
     s.addTest(test_misc('test_sum_complex64'))
     s.addTest(test_misc('test_mean_float32'))
     s.addTest(test_misc('test_mean_complex64'))
+    s.addTest(test_misc('test_var_float32'))
+    s.addTest(test_misc('test_var_complex64'))
+    s.addTest(test_misc('test_std_float32'))
+    s.addTest(test_misc('test_std_complex64'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_misc('test_maxabs_float64'))
         s.addTest(test_misc('test_maxabs_complex128'))
@@ -280,6 +336,10 @@ def suite():
         s.addTest(test_misc('test_mean_complex128'))
         s.addTest(test_misc('test_addvec_float64'))
         s.addTest(test_misc('test_addvec_complex128'))
+        s.addTest(test_misc('test_var_float64'))
+        s.addTest(test_misc('test_var_complex128'))
+        s.addTest(test_misc('test_std_float64'))
+        s.addTest(test_misc('test_std_complex128'))
     return s
 
 if __name__ == '__main__':

@@ -931,7 +931,7 @@ def _sum_axis(x_gpu, axis=None, out=None, calc_mean=False):
         if calc_mean == False:
             return gpuarray.sum(x_gpu).get()
         else:
-            return gpuarray.sum(x_gpu).get() / x_gpu.size
+            return gpuarray.sum(x_gpu).get() / x_gpu.dtype.type(x_gpu.size)
 
     if axis < 0:
         axis += 2
@@ -1016,6 +1016,84 @@ def mean(x_gpu, axis=None, out=None):
     """
     return _sum_axis(x_gpu, axis, calc_mean=True, out=out)
 
+
+def var(x_gpu, axis=None, stream=None):
+    """
+    Compute the variance along the specified axis.
+
+    Returns the variance of the array elements, a measure of the spread of a
+    distribution. The variance is computed for the flattened array by default,
+    otherwise over the specified axis.
+
+    Parameters
+    ----------
+    x_gpu : pycuda.gpuarray.GPUArray
+        Array containing numbers whose variance is desired.
+    axis : int (optional)
+        Axis along which the variance are computed. The default is to
+        compute the variance of the flattened array.
+    stream : pycuda.driver.Stream (optional)
+        Optional CUDA stream in which to perform this calculation
+
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray or float
+        variances of matrix elements along the desired axis or overall var.
+    """
+    def _inplace_pow(x_gpu, p, stream):
+        func = elementwise.get_pow_kernel(x_gpu.dtype)
+        func.prepared_async_call(x_gpu._grid, x_gpu._block, stream,
+                    p, x_gpu.gpudata, x_gpu.gpudata, x_gpu.mem_size)
+
+    if axis is None:
+        m = mean(x_gpu)
+        out = x_gpu - m
+        out**=2
+        out = mean(out)
+    else:
+        if axis < 0:
+            axis += 2
+        m = mean(x_gpu, axis=axis)
+        out = add_matvec(x_gpu, -m, axis=1-axis, stream=stream)
+        _inplace_pow(out, 2, stream)
+        out = mean(out, axis=axis)
+    return out
+
+
+def std(x_gpu, axis=None, stream=None):
+    """
+    Compute the standard deviation along the specified axis.
+
+    Returns the standard deviation of the array elements, a measure of the
+    spread of a distribution. The standard deviation is computed for the
+    flattened array by default, otherwise over the specified axis.
+
+    Parameters
+    ----------
+    x_gpu : pycuda.gpuarray.GPUArray
+        Array containing numbers whose std is desired.
+    axis : int (optional)
+        Axis along which the std are computed. The default is to
+        compute the std of the flattened array.
+    stream : pycuda.driver.Stream (optional)
+        Optional CUDA stream in which to perform this calculation
+
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray or float
+        std of matrix elements along the desired axis, or overall std.
+    """
+    def _inplace_pow(x_gpu, p, stream):
+        func = elementwise.get_pow_kernel(x_gpu.dtype)
+        func.prepared_async_call(x_gpu._grid, x_gpu._block, stream,
+                    p, x_gpu.gpudata, x_gpu.gpudata, x_gpu.mem_size)
+
+    if axis is None:
+        return np.sqrt(var(x_gpu, stream=stream))
+    else:
+        out = var(x_gpu, axis=axis, stream=stream)
+        _inplace_pow(out, 0.5, stream)
+    return out
 
 if __name__ == "__main__":
     import doctest
