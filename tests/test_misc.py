@@ -172,6 +172,31 @@ class test_misc(TestCase):
         assert np.allclose(dest_gpu.get(),
                            np.arange(5, dtype=np.double))
 
+    def impl_test_addvec(self, dtype):
+        x = np.random.normal(scale=5.0, size=(3, 5)).astype(dtype)
+        #x = np.zeros((4, 5), dtype=dtype)
+        a = np.random.normal(scale=5.0, size=(1, 5)).astype(dtype)
+        b = np.random.normal(scale=5.0, size=(3, 1)).astype(dtype)
+        x_gpu = gpuarray.to_gpu(x)
+        a_gpu = gpuarray.to_gpu(a)
+        b_gpu = gpuarray.to_gpu(b)
+        out = gpuarray.empty(x.shape, dtype=dtype)
+        res = misc.add_matvec(x_gpu, a_gpu, out=out).get()
+        assert np.allclose(res, x+a)
+        assert np.allclose(misc.add_matvec(x_gpu, b_gpu).get(), x+b)
+
+    def test_addvec_float32(self):
+        self.impl_test_addvec(np.float32)
+
+    def test_addvec_float64(self):
+        self.impl_test_addvec(np.float64)
+
+    def test_addvec_complex64(self):
+        self.impl_test_addvec(np.complex64)
+
+    def test_addvec_complex128(self):
+        self.impl_test_addvec(np.complex128)
+
     def impl_test_sum(self, dtype):
         x = np.random.normal(scale=5.0, size=(3, 5))
         x = x.astype(dtype=dtype, order='C')
@@ -233,6 +258,8 @@ def suite():
     s.addTest(test_misc('test_get_by_index_float32'))
     s.addTest(test_misc('test_set_by_index_dest_float32'))
     s.addTest(test_misc('test_set_by_index_src_float32'))
+    s.addTest(test_misc('test_addvec_float32'))
+    s.addTest(test_misc('test_addvec_complex64'))
     s.addTest(test_misc('test_sum_float32'))
     s.addTest(test_misc('test_sum_complex64'))
     s.addTest(test_misc('test_mean_float32'))
@@ -251,6 +278,8 @@ def suite():
         s.addTest(test_misc('test_sum_complex128'))
         s.addTest(test_misc('test_mean_float64'))
         s.addTest(test_misc('test_mean_complex128'))
+        s.addTest(test_misc('test_addvec_float64'))
+        s.addTest(test_misc('test_addvec_complex128'))
     return s
 
 if __name__ == '__main__':
