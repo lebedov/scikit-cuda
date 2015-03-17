@@ -777,6 +777,52 @@ class test_linalg(TestCase):
     def test_trace_complex128(self):
         self.impl_test_trace(np.complex128)
 
+    def impl_add_dot_matrix_tests(self, dtype, transa, transb):
+        a = np.asarray(np.random.rand(4, 2), dtype)
+        if transa == 'n':
+            b = np.asarray(np.random.rand(2, 2), dtype)
+        else:
+            b = np.asarray(np.random.rand(4, 4), dtype)
+        a_gpu = gpuarray.to_gpu(a)
+        b_gpu = gpuarray.to_gpu(b)
+        aa = a if transa == 'n' else a.T
+        bb = b if transb == 'n' else b.T
+        c = np.asarray(np.random.rand(aa.shape[0], bb.shape[1]), dtype)
+        c_gpu = gpuarray.to_gpu(c)
+        c_gpu = linalg.add_dot(a_gpu, b_gpu, c_gpu, transa, transb)
+        assert np.allclose(c + np.dot(aa, bb), c_gpu.get())
+        a = a.astype(dtype, order="F", copy=True)
+        b = b.astype(dtype, order="F", copy=True)
+        c = c.astype(dtype, order="F", copy=True)
+        a_gpu = gpuarray.to_gpu(a)
+        b_gpu = gpuarray.to_gpu(b)
+        c_gpu = gpuarray.to_gpu(c)
+        c_gpu = linalg.add_dot(a_gpu, b_gpu, c_gpu, transa, transb)
+        assert np.allclose(c+np.dot(aa, bb), c_gpu.get())
+
+    def test_add_dot_matrix_float32(self):
+        self.impl_add_dot_matrix_tests(np.float32, 'n', 'n')
+        self.impl_add_dot_matrix_tests(np.float32, 'n', 't')
+        self.impl_add_dot_matrix_tests(np.float32, 't', 'n')
+        self.impl_add_dot_matrix_tests(np.float32, 't', 't')
+
+    def test_add_dot_matrix_float64(self):
+        self.impl_add_dot_matrix_tests(np.float64, 'n', 'n')
+        self.impl_add_dot_matrix_tests(np.float64, 'n', 't')
+        self.impl_add_dot_matrix_tests(np.float64, 't', 'n')
+        self.impl_add_dot_matrix_tests(np.float64, 't', 't')
+
+    def test_add_dot_matrix_complex64(self):
+        self.impl_add_dot_matrix_tests(np.complex64, 'n', 'n')
+        self.impl_add_dot_matrix_tests(np.complex64, 'n', 't')
+        self.impl_add_dot_matrix_tests(np.complex64, 't', 'n')
+        self.impl_add_dot_matrix_tests(np.complex64, 't', 't')
+
+    def test_add_dot_matrix_complex128(self):
+        self.impl_add_dot_matrix_tests(np.complex128, 'n', 'n')
+        self.impl_add_dot_matrix_tests(np.complex128, 'n', 't')
+        self.impl_add_dot_matrix_tests(np.complex128, 't', 'n')
+        self.impl_add_dot_matrix_tests(np.complex128, 't', 't')
 def suite():
     s = TestSuite()
     s.addTest(test_linalg('test_svd_ss_float32'))
@@ -823,6 +869,8 @@ def suite():
     s.addTest(test_linalg('test_eye_large_float32'))
     s.addTest(test_linalg('test_trace_float32'))
     s.addTest(test_linalg('test_trace_complex64'))
+    s.addTest(test_linalg('test_add_dot_matrix_float32'))
+    s.addTest(test_linalg('test_add_dot_matrix_complex64'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_linalg('test_svd_ss_float64'))
         s.addTest(test_linalg('test_svd_ss_complex128'))
@@ -862,6 +910,8 @@ def suite():
         s.addTest(test_linalg('test_add_diag_complex128'))
         s.addTest(test_linalg('test_trace_float64'))
         s.addTest(test_linalg('test_trace_complex128'))
+        s.addTest(test_linalg('test_add_dot_matrix_float64'))
+        s.addTest(test_linalg('test_add_dot_matrix_complex128'))
     return s
 
 if __name__ == '__main__':

@@ -389,6 +389,145 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
     # and in the input vector.
 
 
+def add_dot(a_gpu, b_gpu, c_gpu, transa='N', transb='N', alpha=1.0, beta=1.0, handle=None):
+    """
+    Calculates the dot product of two arrays and adds it to a third matrix.
+
+    In essence, this computes
+
+    C =  alpha * (A B) + beta * C
+
+    For 2D arrays of shapes `(m, k)` and `(k, n)`, it computes the matrix
+    product; the result has shape `(m, n)`.
+
+    Parameters
+    ----------
+    a_gpu : pycuda.gpuarray.GPUArray
+        Input array.
+    b_gpu : pycuda.gpuarray.GPUArray
+        Input array.
+    c_gpu : pycuda.gpuarray.GPUArray
+        Cummulative array.
+    transa : char
+        If 'T', compute the product of the transpose of `a_gpu`.
+        If 'C', compute the product of the Hermitian of `a_gpu`.
+    transb : char
+        If 'T', compute the product of the transpose of `b_gpu`.
+        If 'C', compute the product of the Hermitian of `b_gpu`.
+    handle : int (optional)
+        CUBLAS context. If no context is specified, the default handle from
+        `scikits.cuda.misc._global_cublas_handle` is used.
+
+    Returns
+    -------
+    c_gpu : pycuda.gpuarray.GPUArray
+
+    Notes
+    -----
+    The matrices must all contain elements of the same data type.
+    """
+    if handle is None:
+        handle = misc._global_cublas_handle
+
+    # Get the shapes of the arguments (accounting for the
+    # possibility that one of them may only have one dimension):
+    a_shape = a_gpu.shape
+    b_shape = b_gpu.shape
+    if len(a_shape) == 1:
+        a_shape = (1, a_shape[0])
+    if len(b_shape) == 1:
+        b_shape = (1, b_shape[0])
+
+    # Perform matrix multiplication for 2D arrays:
+    if (a_gpu.dtype == np.complex64 and b_gpu.dtype == np.complex64):
+        cublas_func = cublas.cublasCgemm
+        alpha = np.complex64(alpha)
+        beta = np.complex64(beta)
+    elif (a_gpu.dtype == np.float32 and b_gpu.dtype == np.float32):
+        cublas_func = cublas.cublasSgemm
+        alpha = np.float32(alpha)
+        beta = np.float32(beta)
+    elif (a_gpu.dtype == np.complex128 and b_gpu.dtype == np.complex128):
+        cublas_func = cublas.cublasZgemm
+        alpha = np.complex128(alpha)
+        beta = np.complex128(beta)
+    elif (a_gpu.dtype == np.float64 and b_gpu.dtype == np.float64):
+        cublas_func = cublas.cublasDgemm
+        alpha = np.float64(alpha)
+        beta = np.float64(beta)
+    else:
+        raise ValueError('unsupported combination of input types')
+
+    transa = transa.lower()
+    transb = transb.lower()
+
+    if a_gpu.flags.c_contiguous != b_gpu.flags.c_contiguous:
+        raise ValueError('unsupported combination of input order')
+
+    if a_gpu.flags.f_contiguous:
+        if transa in ['t', 'c']:
+            k, m = a_shape
+        elif transa in ['n']:
+            m, k = a_shape
+        else:
+            raise ValueError('invalid value for transa')
+
+        if transb in ['t', 'c']:
+            n, l = b_shape
+        elif transb in ['n']:
+            l, n = b_shape
+        else:
+            raise ValueError('invalid value for transb')
+
+        if l != k:
+            raise ValueError('objects are not aligned')
+
+        lda = max(1, a_shape[0])
+        ldb = max(1, b_shape[0])
+        ldc = max(1, m)
+
+        if c_gpu.shape != (m, n) or c_gpu.dtype != a_gpu.dtype:
+            raise ValueError('invalid value for c_gpu')
+        if a_gpu.flags.f_contiguous != c_gpu.flags.f_contiguous:
+            raise ValueError('invalid order for c_gpu')
+        c_gpu = c_gpu
+        cublas_func(handle, transa, transb, m, n, k, alpha, a_gpu.gpudata,
+                lda, b_gpu.gpudata, ldb, beta, c_gpu.gpudata, ldc)
+    else:
+        if transb in ['t', 'c']:
+            m, k = b_shape
+        elif transb in ['n']:
+            k, m = b_shape
+        else:
+            raise ValueError('invalid value for transb')
+
+        if transa in ['t', 'c']:
+            l, n = a_shape
+        elif transa in ['n']:
+            n, l = a_shape
+        else:
+            raise ValueError('invalid value for transa')
+
+        if l != k:
+            raise ValueError('objects are not aligned')
+
+        lda = max(1, b_shape[1])
+        ldb = max(1, a_shape[1])
+        ldc = max(1, m)
+
+        # Note that the desired shape of the output matrix is the transpose
+        # of what CUBLAS assumes:
+        if c_gpu.shape != (n, ldc) or c_gpu.dtype != a_gpu.dtype:
+            print(c_gpu.shape, (n, ldc), c_gpu.dtype, a_gpu.dtype)
+            raise ValueError('invalid value for c_gpu')
+        if a_gpu.flags.f_contiguous != c_gpu.flags.f_contiguous:
+            raise ValueError('invalid order for c_gpu')
+        c_gpu = c_gpu
+        cublas_func(handle, transb, transa, m, n, k, alpha, b_gpu.gpudata,
+                lda, a_gpu.gpudata, ldb, beta, c_gpu.gpudata, ldc)
+    return c_gpu
+
+
 def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
     """
     Dot product of two arrays.
@@ -449,14 +588,17 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
     True
 
     """
-
     if handle is None:
         handle = misc._global_cublas_handle
 
-    alloc = misc._global_cublas_allocator
+    x_shape = x_gpu.shape
+    y_shape = y_gpu.shape
+    if len(x_shape) == 1:
+        x_shape = (1, x_shape[0])
+    if len(y_shape) == 1:
+        y_shape = (1, y_shape[0])
 
     if len(x_gpu.shape) == 1 and len(y_gpu.shape) == 1:
-
         if x_gpu.size != y_gpu.size:
             raise ValueError('arrays must be of same length')
 
@@ -475,110 +617,27 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
         return cublas_func(handle, x_gpu.size, x_gpu.gpudata, 1,
                            y_gpu.gpudata, 1)
     else:
-
-        # Get the shapes of the arguments (accounting for the
-        # possibility that one of them may only have one dimension):
-        x_shape = x_gpu.shape
-        y_shape = y_gpu.shape
-        if len(x_shape) == 1:
-            x_shape = (1, x_shape[0])
-        if len(y_shape) == 1:
-            y_shape = (1, y_shape[0])
-
-        # Perform matrix multiplication for 2D arrays:
-        if (x_gpu.dtype == np.complex64 and y_gpu.dtype == np.complex64):
-            cublas_func = cublas.cublasCgemm
-            alpha = np.complex64(1.0)
-            beta = np.complex64(0.0)
-        elif (x_gpu.dtype == np.float32 and y_gpu.dtype == np.float32):
-            cublas_func = cublas.cublasSgemm
-            alpha = np.float32(1.0)
-            beta = np.float32(0.0)
-        elif (x_gpu.dtype == np.complex128 and y_gpu.dtype == np.complex128):
-            cublas_func = cublas.cublasZgemm
-            alpha = np.complex128(1.0)
-            beta = np.complex128(0.0)
-        elif (x_gpu.dtype == np.float64 and y_gpu.dtype == np.float64):
-            cublas_func = cublas.cublasDgemm
-            alpha = np.float64(1.0)
-            beta = np.float64(0.0)
-        else:
-            raise ValueError('unsupported combination of input types')
-
         transa = transa.lower()
         transb = transb.lower()
-
-        if x_gpu.flags.c_contiguous != y_gpu.flags.c_contiguous:
-            raise ValueError('unsupported combination of input order')
-
-        if x_gpu.flags.f_contiguous:
+        if out is None:
             if transa in ['t', 'c']:
                 k, m = x_shape
-            elif transa in ['n']:
-                m, k = x_shape
             else:
-                raise ValueError('invalid value for transa')
+                m, k = x_shape
 
             if transb in ['t', 'c']:
                 n, l = y_shape
-            elif transb in ['n']:
+            else:
                 l, n = y_shape
+
+            alloc = misc._global_cublas_allocator
+            if x_gpu.flags.f_contiguous:
+                out = gpuarray.empty((m, n), x_gpu.dtype, order="F", allocator=alloc)
             else:
-                raise ValueError('invalid value for transb')
+                out = gpuarray.empty((m, n), x_gpu.dtype, order="C", allocator=alloc)
 
-            if l != k:
-                raise ValueError('objects are not aligned')
+    return add_dot(x_gpu, y_gpu, out, transa, transb, 1.0, 0.0, handle)
 
-            lda = max(1, x_shape[0])
-            ldb = max(1, y_shape[0])
-            ldc = max(1, m)
-
-            if out is None:
-                c_gpu = gpuarray.empty((m, n), x_gpu.dtype, order="F", allocator=alloc)
-            else:
-                if out.shape != (m, n) or out.dtype != x_gpu.dtype:
-                    raise ValueError('invalid value for out')
-                if x_gpu.flags.f_contiguous != out.flags.f_contiguous:
-                    raise ValueError('invalid order for out')
-                c_gpu = out
-            cublas_func(handle, transa, transb, m, n, k, alpha, x_gpu.gpudata,
-                    lda, y_gpu.gpudata, ldb, beta, c_gpu.gpudata, ldc)
-        else:
-            if transb in ['t', 'c']:
-                m, k = y_shape
-            elif transb in ['n']:
-                k, m = y_shape
-            else:
-                raise ValueError('invalid value for transb')
-
-            if transa in ['t', 'c']:
-                l, n = x_shape
-            elif transa in ['n']:
-                n, l = x_shape
-            else:
-                raise ValueError('invalid value for transa')
-
-            if l != k:
-                raise ValueError('objects are not aligned')
-
-            lda = max(1, y_shape[1])
-            ldb = max(1, x_shape[1])
-            ldc = max(1, m)
-
-            # Note that the desired shape of the output matrix is the transpose
-            # of what CUBLAS assumes:
-            if out is None:
-                c_gpu = gpuarray.empty((n, ldc), x_gpu.dtype, allocator=alloc)
-            else:
-                if out.shape != (n, ldc) or out.dtype != x_gpu.dtype:
-                    raise ValueError('invalid value for out')
-                if x_gpu.flags.f_contiguous != out.flags.f_contiguous:
-                    raise ValueError('invalid order for out')
-                c_gpu = out
-            cublas_func(handle, transb, transa, m, n, k, alpha, y_gpu.gpudata,
-                    lda, x_gpu.gpudata, ldb, beta, c_gpu.gpudata, ldc)
-
-        return c_gpu
 
 def mdot(*args, **kwargs):
     """
