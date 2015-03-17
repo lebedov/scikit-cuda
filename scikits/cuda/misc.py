@@ -4,7 +4,7 @@
 Miscellaneous PyCUDA functions.
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 import atexit
 import numbers
@@ -21,6 +21,8 @@ from pytools import memoize
 import numpy as np
 
 from . import cuda
+from . import cublas
+
 
 try:
     from . import cula
@@ -331,7 +333,7 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
 
     # Actual number of thread blocks needed:
     blocks_needed = iceil(N/float(max_threads_per_block))
-    
+
     if blocks_needed <= max_grid_dim[0]:
         return (max_threads_per_block, 1, 1), (blocks_needed, 1, 1)
     elif blocks_needed > max_grid_dim[0] and \
@@ -341,7 +343,7 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
     elif blocks_needed > max_grid_dim[0]*max_grid_dim[1] and \
          blocks_needed <= max_grid_dim[0]*max_grid_dim[1]*max_grid_dim[2]:
         return (max_threads_per_block, 1, 1), \
-            (max_grid_dim[0], max_grid_dim[1], 
+            (max_grid_dim[0], max_grid_dim[1],
              iceil(blocks_needed/float(max_grid_dim[0]*max_grid_dim[1])))
     else:
         raise ValueError('array size too large')
@@ -663,7 +665,7 @@ def get_by_index(src_gpu, ind):
     Returns
     -------
     res_gpu : pycuda.gpuarray.GPUArray
-        GPUArray with length of `ind` and dtype of `src_gpu` containing 
+        GPUArray with length of `ind` and dtype of `src_gpu` containing
         selected values.
 
     Examples
@@ -790,6 +792,308 @@ def set_by_index(dest_gpu, ind, src_gpu, ind_which='dest'):
         set_by_index.cache[(dest_gpu.dtype, ind.dtype, ind_which)] = func
     func(dest_gpu, ind, src_gpu, range=slice(0, N, 1))
 set_by_index.cache = {}
+
+
+add_vec_to_mat_template = Template("""
+#include <pycuda-complex.hpp>
+
+__global__ void addColVecToMat(const ${type} *mat, const ${type} *vec, ${type} *out,
+                               const int32_t n, const int32_t m){
+    const int tx = threadIdx.x;
+    const int ty = threadIdx.y;
+    const int tidx = blockIdx.x * blockDim.x + threadIdx.x;
+    const int tidy = blockIdx.y * blockDim.y + threadIdx.y;
+
+    __shared__ ${type} shared_vec[24];
+
+    if ((ty == 0) & (tidx < n))
+        shared_vec[tx] = vec[tidx];
+    __syncthreads();
+
+    if ((tidy < m) & (tidx < n)) {
+        out[tidx*m+tidy] = mat[tidx*m+tidy] + shared_vec[tx];
+    }
+}
+
+__global__ void addRowVecToMat(const ${type}* mat, const ${type}* vec, ${type}* out,
+                               const int32_t n, const int32_t m){
+    const int tx = threadIdx.x;
+    const int ty = threadIdx.y;
+    const int tidx = blockIdx.x * blockDim.x + threadIdx.x;
+    const int tidy = blockIdx.y * blockDim.y + threadIdx.y;
+
+    __shared__ ${type} shared_vec[24];
+
+    if ((tx == 0) & (tidy < m))
+        shared_vec[ty] = vec[tidy];
+    __syncthreads();
+
+    if ((tidy < m) & (tidx < n)) {
+        out[tidx*m+tidy] = mat[tidx*m+tidy] + shared_vec[ty];
+    }
+}
+""")
+def add_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
+    """
+    Adds a vector to each column/row of the matrix.
+
+    The numpy broadcasting rules apply so this would yield the same result
+    as x_gpu.get() + a_gpu.get() in host-code.
+
+    Parameters
+    ----------
+    x_gpu : pycuda.gpuarray.GPUArray
+        Matrix to add the vector to
+
+    a_gpu : pycuda.gpuarray.GPUArray
+        Vector to add to x_gpu
+
+    axis : int (optional)
+        The axis onto which the vector is added. By default this is
+        determined automatically by using the first axis with the correct
+        dimensionality.
+
+    out : pycuda.gpuarray.GPUArray (optional)
+        Optional destination matrix
+
+    stream : pycuda.driver.Stream (optional)
+        Optional Stream in which to perform this calculation
+
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray
+        result of x_gpu + a_gpu
+    """
+    if axis is None:
+        if a_gpu.shape[0] == x_gpu.shape[0]:
+            axis = 0
+        elif a_gpu.shape[0] == x_gpu.shape[1] or a_gpu.shape[1] == x_gpu.shape[1]:
+            axis = 1
+        else:
+            raise ValueError('Vector length must equal one side of the matrix')
+    else:
+        if axis < 0:
+            axis += 2
+        if axis > 1:
+            raise ValueError('invalid axis')
+
+    if x_gpu.dtype == np.float64:
+        datatype = 'double';
+    elif x_gpu.dtype == np.float32:
+        datatype = 'float'
+    if x_gpu.dtype == np.complex64:
+        datatype = 'pycuda::complex<float>';
+    elif x_gpu.dtype == np.complex128:
+        datatype = 'pycuda::complex<double>'
+
+    cache_dir=None
+    tmpl = add_vec_to_mat_template.substitute(type=datatype)
+    mod = SourceModule(tmpl, cache_dir=cache_dir)
+
+    add_row_vec_kernel = mod.get_function('addRowVecToMat')
+    add_col_vec_kernel = mod.get_function('addColVecToMat')
+
+    n, m = np.int32(x_gpu.shape[0]), np.int32(x_gpu.shape[1])
+
+    block = (24, 24, 1)
+    gridx = n // block[0] + 1 * (n % block[0] != 0)
+    gridy = m // block[1] + 1 * (m % block[1] != 0)
+    grid = (gridx, gridy, 1)
+
+    if out is None:
+        alloc = _global_cublas_allocator
+        out = gpuarray.empty_like(x_gpu)
+    else:
+        assert out.dtype == x_gpu.dtype
+        assert out.shape == x_gpu.shape
+
+    if x_gpu.flags.c_contiguous:
+        if axis == 0:
+            add_col_vec_kernel(x_gpu, a_gpu, out, n, m,
+                               block=block, grid=grid, stream=stream)
+        elif axis == 1:
+            add_row_vec_kernel(x_gpu, a_gpu, out, n, m,
+                               block=block, grid=grid, stream=stream)
+    else:
+        if axis == 0:
+            add_row_vec_kernel(x_gpu, a_gpu, out, m, n,
+                               block=block, grid=grid, stream=stream)
+        elif axis == 1:
+            add_col_vec_kernel(x_gpu, a_gpu, out, m, n,
+                               block=block, grid=grid, stream=stream)
+    return out
+
+
+def _sum_axis(x_gpu, axis=None, out=None, calc_mean=False):
+    global _global_cublas_allocator
+
+    if axis is None:
+        if calc_mean == False:
+            return gpuarray.sum(x_gpu).get()
+        else:
+            return gpuarray.sum(x_gpu).get() / x_gpu.dtype.type(x_gpu.size)
+
+    if axis < 0:
+        axis += 2
+    if axis > 1:
+        raise ValueError('invalid axis')
+
+    if x_gpu.flags.c_contiguous:
+        n, m = x_gpu.shape[1], x_gpu.shape[0]
+        lda = x_gpu.shape[1]
+        trans = "n" if axis == 0 else "t"
+        sum_axis, out_axis = (m, n) if axis == 0 else (n, m)
+    else:
+        n, m = x_gpu.shape[0], x_gpu.shape[1]
+        lda = x_gpu.shape[0]
+        trans = "t" if axis == 0 else "n"
+        sum_axis, out_axis = (n, m) if axis == 0 else (m, n)
+
+    alpha = (1.0 / sum_axis) if calc_mean else 1.0
+    if (x_gpu.dtype == np.complex64):
+        gemv = cublas.cublasCgemv
+    elif (x_gpu.dtype == np.float32):
+        gemv = cublas.cublasSgemv
+    elif (x_gpu.dtype == np.complex128):
+        gemv = cublas.cublasZgemv
+    elif (x_gpu.dtype == np.float64):
+        gemv = cublas.cublasDgemv
+
+    alloc = _global_cublas_allocator
+    ons = ones((sum_axis, ), x_gpu.dtype, alloc)
+    if out is None:
+        out = gpuarray.empty((out_axis, ), x_gpu.dtype, alloc)
+    else:
+        assert out.dtype == x_gpu.dtype
+        assert out.size >= out_axis
+
+    gemv(_global_cublas_handle, trans, n, m,
+         alpha, x_gpu.gpudata, lda,
+         ons.gpudata, 1, 0.0, out.gpudata, 1)
+    return out
+
+
+def sum(x_gpu, axis=None, out=None):
+    """
+    Compute the sum along the specified axis.
+
+    Parameters
+    ----------
+    x_gpu : pycuda.gpuarray.GPUArray
+        Array containing numbers whose sum is desired.
+    axis : int (optional)
+        Axis along which the sums are computed. The default is to
+        compute the sum of the flattened array.
+    out : pycuda.gpuarray.GPUArray (optional)
+        Output array in which to place the result.
+
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray
+        sums of matrix elements along the desired axis.
+    """
+    return _sum_axis(x_gpu, axis, out=out)
+
+
+def mean(x_gpu, axis=None, out=None):
+    """
+    Compute the arithmetic means along the specified axis.
+
+    Parameters
+    ----------
+    x_gpu : pycuda.gpuarray.GPUArray
+        Array containing numbers whose mean is desired.
+    axis : int (optional)
+        Axis along which the means are computed. The default is to
+        compute the mean of the flattened array.
+    out : pycuda.gpuarray.GPUArray (optional)
+        Output array in which to place the result.
+
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray
+        means of matrix elements along the desired axis.
+    """
+    return _sum_axis(x_gpu, axis, calc_mean=True, out=out)
+
+
+def var(x_gpu, axis=None, stream=None):
+    """
+    Compute the variance along the specified axis.
+
+    Returns the variance of the array elements, a measure of the spread of a
+    distribution. The variance is computed for the flattened array by default,
+    otherwise over the specified axis.
+
+    Parameters
+    ----------
+    x_gpu : pycuda.gpuarray.GPUArray
+        Array containing numbers whose variance is desired.
+    axis : int (optional)
+        Axis along which the variance are computed. The default is to
+        compute the variance of the flattened array.
+    stream : pycuda.driver.Stream (optional)
+        Optional CUDA stream in which to perform this calculation
+
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray or float
+        variances of matrix elements along the desired axis or overall var.
+    """
+    def _inplace_pow(x_gpu, p, stream):
+        func = elementwise.get_pow_kernel(x_gpu.dtype)
+        func.prepared_async_call(x_gpu._grid, x_gpu._block, stream,
+                    p, x_gpu.gpudata, x_gpu.gpudata, x_gpu.mem_size)
+
+    if axis is None:
+        m = mean(x_gpu)
+        out = x_gpu - m
+        out**=2
+        out = mean(out)
+    else:
+        if axis < 0:
+            axis += 2
+        m = mean(x_gpu, axis=axis)
+        out = add_matvec(x_gpu, -m, axis=1-axis, stream=stream)
+        _inplace_pow(out, 2, stream)
+        out = mean(out, axis=axis)
+    return out
+
+
+def std(x_gpu, axis=None, stream=None):
+    """
+    Compute the standard deviation along the specified axis.
+
+    Returns the standard deviation of the array elements, a measure of the
+    spread of a distribution. The standard deviation is computed for the
+    flattened array by default, otherwise over the specified axis.
+
+    Parameters
+    ----------
+    x_gpu : pycuda.gpuarray.GPUArray
+        Array containing numbers whose std is desired.
+    axis : int (optional)
+        Axis along which the std are computed. The default is to
+        compute the std of the flattened array.
+    stream : pycuda.driver.Stream (optional)
+        Optional CUDA stream in which to perform this calculation
+
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray or float
+        std of matrix elements along the desired axis, or overall std.
+    """
+    def _inplace_pow(x_gpu, p, stream):
+        func = elementwise.get_pow_kernel(x_gpu.dtype)
+        func.prepared_async_call(x_gpu._grid, x_gpu._block, stream,
+                    p, x_gpu.gpudata, x_gpu.gpudata, x_gpu.mem_size)
+
+    if axis is None:
+        return np.sqrt(var(x_gpu, stream=stream))
+    else:
+        out = var(x_gpu, axis=axis, stream=stream)
+        _inplace_pow(out, 0.5, stream)
+    return out
 
 if __name__ == "__main__":
     import doctest
