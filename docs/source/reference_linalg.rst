@@ -10,6 +10,7 @@ Linear Algebra Routines
    :nosignatures:
 
    add_diag
+   add_dot
    cho_factor
    cho_solve
    conj

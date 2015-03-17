@@ -47,6 +47,7 @@ Release 0.5.0 - (under development)
 * Matrix trace function (enh. by Thomas Unterthiner).
 * Functions for computing simple axis-wise stats over matrices (enh. by Thomas 
   Unterthiner).
+* Matrix add_dot function (enh. by Thomas Unterthiner).
 
 Release 0.042 - (March 10, 2013)
 --------------------------------
