@@ -8,6 +8,7 @@ Miscellaneous Routines
    :toctree: generated/
    :nosignatures:
 
+   add_matvec
    cumsum
    diff
    done_context
@@ -22,11 +23,15 @@ Miscellaneous Routines
    iscomplextype
    isdoubletype
    maxabs
+   mean
    ones
    ones_like
    select_block_grid_sizes
    set_by_index
    set_realloc
    shutdown
+   std
+   sum
+   var
    zeros
    zeros_like

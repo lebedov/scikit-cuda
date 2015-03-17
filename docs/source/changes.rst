@@ -45,6 +45,8 @@ Release 0.5.0 - (under development)
 * Avoid unnecessary import of cublas when importing fft module (enh. by Eric 
   Larson).
 * Matrix trace function (enh. by Thomas Unterthiner).
+* Functions for computing simple axis-wise stats over matrices (enh. by Thomas 
+  Unterthiner).
 
 Release 0.042 - (March 10, 2013)
 --------------------------------

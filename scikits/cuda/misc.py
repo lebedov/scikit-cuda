@@ -838,31 +838,27 @@ def add_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
     Adds a vector to each column/row of the matrix.
 
     The numpy broadcasting rules apply so this would yield the same result
-    as x_gpu.get() + a_gpu.get() in host-code.
+    as `x_gpu.get()` + `a_gpu.get()` in host-code.
 
     Parameters
     ----------
     x_gpu : pycuda.gpuarray.GPUArray
-        Matrix to add the vector to
-
+        Matrix to which to add the vector.
     a_gpu : pycuda.gpuarray.GPUArray
-        Vector to add to x_gpu
-
+        Vector to add to `x_gpu`.
     axis : int (optional)
         The axis onto which the vector is added. By default this is
         determined automatically by using the first axis with the correct
         dimensionality.
-
     out : pycuda.gpuarray.GPUArray (optional)
-        Optional destination matrix
-
+        Optional destination matrix.
     stream : pycuda.driver.Stream (optional)
-        Optional Stream in which to perform this calculation
+        Optional Stream in which to perform this calculation.
 
     Returns
     -------
     out : pycuda.gpuarray.GPUArray
-        result of x_gpu + a_gpu
+        result of `x_gpu` + `a_gpu`
     """
     if axis is None:
         if a_gpu.shape[0] == x_gpu.shape[0]:
