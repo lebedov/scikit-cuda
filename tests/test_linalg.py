@@ -262,104 +262,56 @@ class test_linalg(TestCase):
         d_gpu = linalg.mdot(a_gpu, b_gpu, c_gpu)
         assert np.allclose(np.dot(a, np.dot(b, c)), d_gpu.get())
 
+
+    def impl_test_dot_diag(self, dtype):
+        d = np.asarray(np.random.rand(5), dtype)
+        a = np.asarray(np.random.rand(5, 3), dtype)
+        d_gpu = gpuarray.to_gpu(d)
+        a_gpu = gpuarray.to_gpu(a)
+        r_gpu = linalg.dot_diag(d_gpu, a_gpu)
+        assert np.allclose(np.dot(np.diag(d), a), r_gpu.get())
+        a = a.astype(dtype, order="F", copy=True)
+        d_gpu = gpuarray.to_gpu(d)
+        a_gpu = gpuarray.to_gpu(a)
+        r_gpu = linalg.dot_diag(d_gpu, a_gpu)
+        assert np.allclose(np.dot(np.diag(d), a), r_gpu.get())
+
     def test_dot_diag_float32(self):
-        d = np.asarray(np.random.rand(5), np.float32)
-        a = np.asarray(np.random.rand(5, 3), np.float32)
-        d_gpu = gpuarray.to_gpu(d)
-        a_gpu = gpuarray.to_gpu(a)
-        r_gpu = linalg.dot_diag(d_gpu, a_gpu)
-        assert np.allclose(np.dot(np.diag(d), a), r_gpu.get())
-        a = a.astype(np.float32, order="F", copy=True)
-        d_gpu = gpuarray.to_gpu(d)
-        a_gpu = gpuarray.to_gpu(a)
-        r_gpu = linalg.dot_diag(d_gpu, a_gpu)
-        assert np.allclose(np.dot(np.diag(d), a), r_gpu.get())
+        self.impl_test_dot_diag(np.float32)
 
     def test_dot_diag_float64(self):
-        d = np.asarray(np.random.rand(5), np.float64)
-        a = np.asarray(np.random.rand(5, 3), np.float64)
-        d_gpu = gpuarray.to_gpu(d)
-        a_gpu = gpuarray.to_gpu(a)
-        r_gpu = linalg.dot_diag(d_gpu, a_gpu)
-        assert np.allclose(np.dot(np.diag(d), a), r_gpu.get())
-        a = a.astype(np.float64, order="F", copy=True)
-        d_gpu = gpuarray.to_gpu(d)
-        a_gpu = gpuarray.to_gpu(a)
-        r_gpu = linalg.dot_diag(d_gpu, a_gpu)
-        assert np.allclose(np.dot(np.diag(d), a), r_gpu.get())
+        self.impl_test_dot_diag(np.float64)
 
     def test_dot_diag_complex64(self):
-        d = np.asarray(np.random.rand(5), np.float32)
-        a = np.asarray(np.random.rand(5, 3)+1j*np.random.rand(5, 3), np.complex64)
-        d_gpu = gpuarray.to_gpu(d)
-        a_gpu = gpuarray.to_gpu(a)
-        r_gpu = linalg.dot_diag(d_gpu, a_gpu)
-        assert np.allclose(np.dot(np.diag(d), a), r_gpu.get())
-        a = a.astype(np.complex64, order="F", copy=True)
-        d_gpu = gpuarray.to_gpu(d)
-        a_gpu = gpuarray.to_gpu(a)
-        r_gpu = linalg.dot_diag(d_gpu, a_gpu)
-        assert np.allclose(np.dot(np.diag(d), a), r_gpu.get())
+        self.impl_test_dot_diag(np.complex64)
 
     def test_dot_diag_complex128(self):
-        d = np.asarray(np.random.rand(5), np.float64)
-        a = np.asarray(np.random.rand(5, 3)+1j*np.random.rand(5, 3), np.complex128)
-        d_gpu = gpuarray.to_gpu(d)
-        a_gpu = gpuarray.to_gpu(a)
-        r_gpu = linalg.dot_diag(d_gpu, a_gpu)
-        assert np.allclose(np.dot(np.diag(d), a), r_gpu.get())
-        a = a.astype(np.complex128, order="F", copy=True)
-        d_gpu = gpuarray.to_gpu(d)
-        a_gpu = gpuarray.to_gpu(a)
-        r_gpu = linalg.dot_diag(d_gpu, a_gpu)
-        assert np.allclose(np.dot(np.diag(d), a), r_gpu.get())
+        self.impl_test_dot_diag(np.complex128)
 
-    def test_dot_diag_t_float32(self):
-        d = np.asarray(np.random.rand(5), np.float32)
-        a = np.asarray(np.random.rand(3, 5), np.float32)
+    def impl_test_dot_diag_t(self, dtype):
+        d = np.asarray(np.random.rand(5), dtype)
+        a = np.asarray(np.random.rand(3, 5), dtype)
         d_gpu = gpuarray.to_gpu(d)
         a_gpu = gpuarray.to_gpu(a)
         r_gpu = linalg.dot_diag(d_gpu, a_gpu, 't')
         assert np.allclose(np.dot(np.diag(d), a.T).T, r_gpu.get())
+        a = a.astype(dtype, order="F", copy=True)
+        d_gpu = gpuarray.to_gpu(d)
+        a_gpu = gpuarray.to_gpu(a)
+        r_gpu = linalg.dot_diag(d_gpu, a_gpu, 't')
+        assert np.allclose(np.dot(np.diag(d), a.T).T, r_gpu.get())
+
+    def test_dot_diag_t_float32(self):
+        self.impl_test_dot_diag_t(np.float32)
 
     def test_dot_diag_t_float64(self):
-        d = np.asarray(np.random.rand(5), np.float64)
-        a = np.asarray(np.random.rand(3, 5), np.float64)
-        d_gpu = gpuarray.to_gpu(d)
-        a_gpu = gpuarray.to_gpu(a)
-        r_gpu = linalg.dot_diag(d_gpu, a_gpu, 't')
-        assert np.allclose(np.dot(np.diag(d), a.T).T, r_gpu.get())
-        a = a.astype(np.float64, order="F", copy=True)
-        d_gpu = gpuarray.to_gpu(d)
-        a_gpu = gpuarray.to_gpu(a)
-        r_gpu = linalg.dot_diag(d_gpu, a_gpu, 't')
-        assert np.allclose(np.dot(np.diag(d), a.T).T, r_gpu.get())
+        self.impl_test_dot_diag_t(np.float64)
 
     def test_dot_diag_t_complex64(self):
-        d = np.asarray(np.random.rand(5), np.float32)
-        a = np.asarray(np.random.rand(3, 5)+1j*np.random.rand(3, 5), np.complex64)
-        d_gpu = gpuarray.to_gpu(d)
-        a_gpu = gpuarray.to_gpu(a)
-        r_gpu = linalg.dot_diag(d_gpu, a_gpu, 't')
-        assert np.allclose(np.dot(np.diag(d), a.T).T, r_gpu.get())
-        a = a.astype(np.complex64, order="F", copy=True)
-        d_gpu = gpuarray.to_gpu(d)
-        a_gpu = gpuarray.to_gpu(a)
-        r_gpu = linalg.dot_diag(d_gpu, a_gpu, 't')
-        assert np.allclose(np.dot(np.diag(d), a.T).T, r_gpu.get())
+        self.impl_test_dot_diag_t(np.complex64)
 
     def test_dot_diag_t_complex128(self):
-        d = np.asarray(np.random.rand(5), np.float64)
-        a = np.asarray(np.random.rand(3, 5)+1j*np.random.rand(3, 5), np.complex128)
-        d_gpu = gpuarray.to_gpu(d)
-        a_gpu = gpuarray.to_gpu(a)
-        r_gpu = linalg.dot_diag(d_gpu, a_gpu, 't')
-        assert np.allclose(np.dot(np.diag(d), a.T).T, r_gpu.get())
-        a = a.astype(np.complex128, order="F", copy=True)
-        d_gpu = gpuarray.to_gpu(d)
-        a_gpu = gpuarray.to_gpu(a)
-        r_gpu = linalg.dot_diag(d_gpu, a_gpu, 't')
-        assert np.allclose(np.dot(np.diag(d), a.T).T, r_gpu.get())
+        self.impl_test_dot_diag_t(np.complex128)
 
     def test_transpose_float32(self):
         # M < N
@@ -675,7 +627,7 @@ class test_linalg(TestCase):
         x_gpu = gpuarray.to_gpu(x)
         y_gpu = gpuarray.to_gpu(y)
         linalg.cho_solve(x_gpu, y_gpu)
-        assert np.allclose(c, y_gpu.get(), atol=1e-5)
+        assert np.allclose(c, y_gpu.get(), atol=1e-4)
 
         x = np.asarray(np.random.rand(4, 4), np.float32)
         x = np.dot(x.T, x).astype(np.float32, order="F", copy=True)
@@ -685,7 +637,7 @@ class test_linalg(TestCase):
         x_gpu = gpuarray.to_gpu(x)
         y_gpu = gpuarray.to_gpu(y)
         linalg.cho_solve(x_gpu, y_gpu)
-        assert np.allclose(c, y_gpu.get(), atol=1e-5)
+        assert np.allclose(c, y_gpu.get(), atol=1e-4)
 
     def impl_test_inv(self, dtype):
         from scipy.linalg import inv as cpu_inv
@@ -700,12 +652,10 @@ class test_linalg(TestCase):
         assert np.allclose(xinv, xinv_gpu.get(), atol=1e-5)
         assert xinv_gpu is x_gpu
 
-
     def test_inv_exceptions(self):
         x = np.asarray([[1, 2], [2, 4]], np.float32)
         x_gpu = gpuarray.to_gpu(x)
         assert_raises(linalg.LinAlgError, linalg.inv, x_gpu)
-
 
     def test_inv_float32(self):
         self.impl_test_inv(np.float32)

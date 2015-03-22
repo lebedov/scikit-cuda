@@ -135,7 +135,7 @@ _CUBLAS_SIDE_MODE = {
     'L': 0,
     1: 1,   # CUBLAS_SIDE_RIGHT
     'r': 1,
-    'r': 1
+    'R': 1
     }
 
 class _types:
@@ -5497,7 +5497,6 @@ def cublasDgetrfBatched(handle, n, A, lda, P, info, batchSize):
                                             int(info), batchSize)
     cublasCheckStatus(status)
 
-
 # SgetriBatched, Dgetribatched
 if _cublas_version >= 5050:
     _libcublas.cublasSgetriBatched.restype = int
@@ -5545,6 +5544,67 @@ def cublasDgetriBatched(handle, n, A, lda, P, C, ldc, info, batchSize):
                                             int(A), lda, int(P),
                                             int(C), ldc, int(info),
                                             batchSize)
+
+if _cublas_version >= 5000:
+    _libcublas.cublasSdgmm.restype = \
+    _libcublas.cublasDdgmm.restype = \
+    _libcublas.cublasCdgmm.restype = \
+    _libcublas.cublasZdgmm.restype = int
+
+    _libcublas.cublasSdgmm.argtypes = \
+    _libcublas.cublasDdgmm.argtypes = \
+    _libcublas.cublasCdgmm.argtypes = \
+    _libcublas.cublasZdgmm.argtypes =  [_types.handle,
+                                        ctypes.c_int,
+                                        ctypes.c_int,
+                                        ctypes.c_int,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int]
+@_cublas_version_req(5.0)
+def cublasSdgmm(handle, side, m, n, A, lda, x, incx, C, ldc):
+    """
+    Multiplies a matrix with a diagonal matrix
+    """
+
+    status = _libcublas.cublasSdgmm(handle, _CUBLAS_SIDE_MODE[side], m, n,
+                                    int(A), lda, int(x), incx, int(C), ldc)
+    cublasCheckStatus(status)
+
+
+@_cublas_version_req(5.0)
+def cublasDdgmm(handle, side, m, n, A, lda, x, incx, C, ldc):
+    """
+    Multiplies a matrix with a diagonal matrix
+    """
+
+    status = _libcublas.cublasDdgmm(handle, _CUBLAS_SIDE_MODE[side], m, n,
+                                    int(A), lda, int(x), incx, int(C), ldc)
+    cublasCheckStatus(status)
+
+
+@_cublas_version_req(5.0)
+def cublasCdgmm(handle, side, m, n, A, lda, x, incx, C, ldc):
+    """
+    Multiplies a matrix with a diagonal matrix
+    """
+
+    status = _libcublas.cublasCdgmm(handle, _CUBLAS_SIDE_MODE[side], m, n,
+                                    int(A), lda, int(x), incx, int(C), ldc)
+    cublasCheckStatus(status)
+
+
+@_cublas_version_req(5.0)
+def cublasSZgmm(handle, side, m, n, A, lda, x, incx, C, ldc):
+    """
+    Multiplies a matrix with a diagonal matrix
+    """
+
+    status = _libcublas.cublasZdgmm(handle, _CUBLAS_SIDE_MODE[side], m, n,
+                                    int(A), lda, int(x), incx, int(C), ldc)
     cublasCheckStatus(status)
 
 
