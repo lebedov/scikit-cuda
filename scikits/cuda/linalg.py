@@ -710,7 +710,8 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
         Array of length `N` corresponding to the diagonal of the
         multiplier.
     a_gpu : pycuda.gpuarray.GPUArray
-        Multiplicand array with shape `(N, M)`.
+        Multiplicand array with shape `(N, M)`. Must have same data type
+        as `d_gpu`.
     trans : char
         If 'T', compute the product of the transpose of `a_gpu`.
     overwrite : bool
@@ -738,7 +739,6 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
     >>> r_gpu = linalg.dot_diag(d_gpu, a_gpu)
     >>> np.allclose(np.dot(np.diag(d), a), r_gpu.get())
     True
-
     """
 
     if handle is None:
@@ -760,7 +760,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
         raise ValueError('incompatible dimensions')
 
     if a_gpu.dtype != d_gpu.dtype:
-        raise ValueError('precision of argument types must be the same')
+        raise ValueError('argument types must be the same')
 
     if (a_gpu.dtype == np.complex64):
         cublas_func = cublas.cublasCdgmm
@@ -772,7 +772,6 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
         cublas_func = cublas.cublasDdgmm
     else:
         raise ValueError('unsupported input type')
-
 
     if overwrite:
         r_gpu = a_gpu
@@ -792,7 +791,6 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
     cublas_func(handle, side, n, m, a_gpu.gpudata, lda,
                 d_gpu.gpudata, 1, r_gpu.gpudata, ldr)
     return r_gpu
-
 
 def add_diag(d_gpu, a_gpu, overwrite=True, handle=None):
     """
@@ -1270,15 +1268,35 @@ def pinv(a_gpu, rcond=1e-15):
     else:
         u_gpu, s_gpu, vh_gpu = svd(a_gpu, 's', 's')
 
-    # Suppress very small singular values:
+    # Suppress very small singular values and convert the singular value array
+    # to complex if the original matrix is complex so that the former can be
+    # handled by dot_diag():
     cutoff_gpu = gpuarray.max(s_gpu)*rcond
-    ctype = tools.dtype_to_ctype(s_gpu.dtype)
-    cutoff_func = el.ElementwiseKernel("{ctype} *s, {ctype} *cutoff".format(ctype=ctype),
-        "if (s[i] > cutoff[0]) {s[i] = 1/s[i];} else {s[i] = 0;}")
-    cutoff_func(s_gpu, cutoff_gpu)
+    real_ctype = tools.dtype_to_ctype(s_gpu.dtype)
+    if a_gpu.dtype in [np.complex64, np.complex128]:
+        if s_gpu.dtype == np.float32:
+            complex_dtype = np.complex64
+        elif s_gpu.dtype == np.float64:
+            complex_dtype = np.complex128
+        else:
+            raise ValueError('cannot convert singular values to complex')
+        s_complex_gpu = gpuarray.empty(len(s_gpu), complex_dtype)
+        complex_ctype = tools.dtype_to_ctype(complex_dtype)
+        cutoff_func = el.ElementwiseKernel("{real_ctype} *s_real, {complex_ctype} *s_complex,"
+            " {real_ctype} *cutoff".format(real_ctype=real_ctype, complex_ctype=complex_ctype),
+            "if (s_real[i] > cutoff[0]) {s_complex[i] = 1/s_real[i];} else {s_complex[i] = 0;}")
+        cutoff_func(s_gpu, s_complex_gpu, cutoff_gpu)
 
-    # Compute the pseudoinverse without allocating a new diagonal matrix:
-    return dot(vh_gpu, dot_diag(s_gpu, u_gpu, 't'), 'c', 'c')
+        # Compute the pseudoinverse without allocating a new diagonal matrix:
+        return dot(vh_gpu, dot_diag(s_complex_gpu, u_gpu, 't'), 'c', 'c')
+
+    else:
+        cutoff_func = el.ElementwiseKernel("{real_ctype} *s, {real_ctype} *cutoff".format(real_ctype=real_ctype),
+                                           "if (s[i] > cutoff[0]) {s[i] = 1/s[i];} else {s[i] = 0;}")
+        cutoff_func(s_gpu, cutoff_gpu)
+        
+        # Compute the pseudoinverse without allocating a new diagonal matrix:
+        return dot(vh_gpu, dot_diag(s_gpu, u_gpu, 't'), 'c', 'c')
 
 tril_template = Template("""
 #include <pycuda-complex.hpp>
