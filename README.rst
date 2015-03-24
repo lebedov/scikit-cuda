@@ -1,7 +1,7 @@
 .. -*- rst -*-
 
-CUDA SciKit
-===========
+..  image:: https://raw.githubusercontent.com/lebedov/scikits.cuda/master/docs/source/_static/logo.png
+   :alt: CUDA SciKit
 
 Package Description
 -------------------
