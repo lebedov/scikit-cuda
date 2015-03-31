@@ -773,6 +773,65 @@ class test_linalg(TestCase):
         self.impl_add_dot_matrix_tests(np.complex128, 'n', 't')
         self.impl_add_dot_matrix_tests(np.complex128, 't', 'n')
         self.impl_add_dot_matrix_tests(np.complex128, 't', 't')
+
+    def impl_test_dot_strided(self, dtype):
+        # n/n
+        a = np.asarray(np.random.rand(4, 10), dtype)
+        b = np.asarray(np.random.rand(2, 20), dtype)
+        c = np.zeros((4, 30), dtype)
+        a_gpu = gpuarray.to_gpu(a)
+        b_gpu = gpuarray.to_gpu(b)
+        c_gpu = gpuarray.to_gpu(c)
+        linalg.add_dot(a_gpu[:, 4:6], b_gpu[:, 2:8], c_gpu[:, 1:7], 'n', 'n')
+        res = c_gpu.get()
+        assert np.allclose(np.dot(a[:, 4:6], b[:, 2:8]), res[:, 1:7])
+
+        # t/n
+        a = np.asarray(np.random.rand(4, 10), dtype)
+        b = np.asarray(np.random.rand(4, 20), dtype)
+        c = np.zeros((2, 30), dtype)
+        a_gpu = gpuarray.to_gpu(a)
+        b_gpu = gpuarray.to_gpu(b)
+        c_gpu = gpuarray.to_gpu(c)
+        linalg.add_dot(a_gpu[:, 4:6], b_gpu[:, 2:8], c_gpu[:, 1:7], 't', 'n')
+        res = c_gpu.get()
+        assert np.allclose(np.dot(a[:, 4:6].T, b[:, 2:8]), res[:, 1:7])
+
+        # n/t
+        a = np.asarray(np.random.rand(4, 10), dtype)
+        b = np.asarray(np.random.rand(6, 20), dtype)
+        c = np.zeros((4, 30), dtype)
+        a_gpu = gpuarray.to_gpu(a)
+        b_gpu = gpuarray.to_gpu(b)
+        c_gpu = gpuarray.to_gpu(c)
+        linalg.add_dot(a_gpu[:, 4:10], b_gpu[:, 2:8], c_gpu[:, 1:7], 'n', 't')
+        res = c_gpu.get()
+        assert np.allclose(np.dot(a[:, 4:10], b[:, 2:8].T), res[:, 1:7])
+
+        # t/t
+        a = np.asarray(np.random.rand(6, 10), dtype)
+        b = np.asarray(np.random.rand(8, 20), dtype)
+        c = np.zeros((2, 30), dtype)
+        a_gpu = gpuarray.to_gpu(a)
+        b_gpu = gpuarray.to_gpu(b)
+        c_gpu = gpuarray.to_gpu(c)
+        linalg.add_dot(a_gpu[:, 4:6], b_gpu[:, 2:8], c_gpu[:, 1:9], 't', 't')
+        res = c_gpu.get()
+        assert np.allclose(np.dot(a[:, 4:6].T, b[:, 2:8].T), res[:, 1:9])
+
+
+    def test_dot_strided_float32(self):
+        self.impl_test_dot_strided(np.float32)
+
+    def test_dot_strided_float64(self):
+        self.impl_test_dot_strided(np.float64)
+
+    def test_dot_strided_complex64(self):
+        self.impl_test_dot_strided(np.complex64)
+
+    def test_dot_strided_complex128(self):
+        self.impl_test_dot_strided(np.complex128)
+
 def suite():
     s = TestSuite()
     s.addTest(test_linalg('test_svd_ss_float32'))
@@ -821,6 +880,8 @@ def suite():
     s.addTest(test_linalg('test_trace_complex64'))
     s.addTest(test_linalg('test_add_dot_matrix_float32'))
     s.addTest(test_linalg('test_add_dot_matrix_complex64'))
+    s.addTest(test_linalg('test_dot_strided_float32'))
+    s.addTest(test_linalg('test_dot_strided_complex64'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_linalg('test_svd_ss_float64'))
         s.addTest(test_linalg('test_svd_ss_complex128'))
@@ -862,6 +923,8 @@ def suite():
         s.addTest(test_linalg('test_trace_complex128'))
         s.addTest(test_linalg('test_add_dot_matrix_float64'))
         s.addTest(test_linalg('test_add_dot_matrix_complex128'))
+        s.addTest(test_linalg('test_dot_strided_float64'))
+        s.addTest(test_linalg('test_dot_strided_complex128'))
     return s
 
 if __name__ == '__main__':

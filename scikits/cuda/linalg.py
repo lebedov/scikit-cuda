@@ -4,7 +4,7 @@
 PyCUDA-based linear algebra functions.
 """
 
-from __future__ import absolute_import
+from __future__ import absolute_import, division
 
 from pprint import pprint
 from string import Template
@@ -461,10 +461,16 @@ def add_dot(a_gpu, b_gpu, c_gpu, transa='N', transb='N', alpha=1.0, beta=1.0, ha
     transa = transa.lower()
     transb = transb.lower()
 
-    if a_gpu.flags.c_contiguous != b_gpu.flags.c_contiguous:
-        raise ValueError('unsupported combination of input order')
+    a_f_order = a_gpu.strides[1] > a_gpu.strides[0]
+    b_f_order = b_gpu.strides[1] > b_gpu.strides[0]
+    c_f_order = c_gpu.strides[1] > c_gpu.strides[0]
 
-    if a_gpu.flags.f_contiguous:
+    if a_f_order != b_f_order:
+        raise ValueError('unsupported combination of input order')
+    if a_f_order != c_f_order:
+        raise ValueError('invalid order for c_gpu')
+
+    if a_f_order:  # F order array
         if transa in ['t', 'c']:
             k, m = a_shape
         elif transa in ['n']:
@@ -482,15 +488,12 @@ def add_dot(a_gpu, b_gpu, c_gpu, transa='N', transb='N', alpha=1.0, beta=1.0, ha
         if l != k:
             raise ValueError('objects are not aligned')
 
-        lda = max(1, a_shape[0])
-        ldb = max(1, b_shape[0])
-        ldc = max(1, m)
+        lda = max(1, a_gpu.strides[1] // a_gpu.dtype.itemsize)
+        ldb = max(1, b_gpu.strides[1] // b_gpu.dtype.itemsize)
+        ldc = max(1, c_gpu.strides[1] // c_gpu.dtype.itemsize)
 
         if c_gpu.shape != (m, n) or c_gpu.dtype != a_gpu.dtype:
             raise ValueError('invalid value for c_gpu')
-        if a_gpu.flags.f_contiguous != c_gpu.flags.f_contiguous:
-            raise ValueError('invalid order for c_gpu')
-        c_gpu = c_gpu
         cublas_func(handle, transa, transb, m, n, k, alpha, a_gpu.gpudata,
                 lda, b_gpu.gpudata, ldb, beta, c_gpu.gpudata, ldc)
     else:
@@ -511,20 +514,16 @@ def add_dot(a_gpu, b_gpu, c_gpu, transa='N', transb='N', alpha=1.0, beta=1.0, ha
         if l != k:
             raise ValueError('objects are not aligned')
 
-        lda = max(1, b_shape[1])
-        ldb = max(1, a_shape[1])
-        ldc = max(1, m)
+        lda = max(1, a_gpu.strides[0] // a_gpu.dtype.itemsize)
+        ldb = max(1, b_gpu.strides[0] // b_gpu.dtype.itemsize)
+        ldc = max(1, c_gpu.strides[0] // c_gpu.dtype.itemsize)
 
         # Note that the desired shape of the output matrix is the transpose
         # of what CUBLAS assumes:
-        if c_gpu.shape != (n, ldc) or c_gpu.dtype != a_gpu.dtype:
-            print(c_gpu.shape, (n, ldc), c_gpu.dtype, a_gpu.dtype)
+        if c_gpu.shape != (n, m) or c_gpu.dtype != a_gpu.dtype:
             raise ValueError('invalid value for c_gpu')
-        if a_gpu.flags.f_contiguous != c_gpu.flags.f_contiguous:
-            raise ValueError('invalid order for c_gpu')
-        c_gpu = c_gpu
         cublas_func(handle, transb, transa, m, n, k, alpha, b_gpu.gpudata,
-                lda, a_gpu.gpudata, ldb, beta, c_gpu.gpudata, ldc)
+                ldb, a_gpu.gpudata, lda, beta, c_gpu.gpudata, ldc)
     return c_gpu
 
 
@@ -631,7 +630,7 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
                 l, n = y_shape
 
             alloc = misc._global_cublas_allocator
-            if x_gpu.flags.f_contiguous:
+            if x_gpu.strides[1] > x_gpu.strides[0]: # F order
                 out = gpuarray.empty((m, n), x_gpu.dtype, order="F", allocator=alloc)
             else:
                 out = gpuarray.empty((m, n), x_gpu.dtype, order="C", allocator=alloc)
@@ -1294,7 +1293,7 @@ def pinv(a_gpu, rcond=1e-15):
         cutoff_func = el.ElementwiseKernel("{real_ctype} *s, {real_ctype} *cutoff".format(real_ctype=real_ctype),
                                            "if (s[i] > cutoff[0]) {s[i] = 1/s[i];} else {s[i] = 0;}")
         cutoff_func(s_gpu, cutoff_gpu)
-        
+
         # Compute the pseudoinverse without allocating a new diagonal matrix:
         return dot(vh_gpu, dot_diag(s_gpu, u_gpu, 't'), 'c', 'c')
 
