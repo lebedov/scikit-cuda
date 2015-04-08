@@ -105,7 +105,7 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     """
 
     if not _has_cula:
-        raise NotImplementError('CULA not installed')
+        raise NotImplementedError('CULA not installed')
 
     alloc = misc._global_cublas_allocator
 
