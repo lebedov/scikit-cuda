@@ -5,15 +5,19 @@
 
 Package Description
 -------------------
-The CUDA SciKit (toolkit for SciPy [1]_) provides Python interfaces to a
+The CUDA scikit (toolkit for `SciPy <http://www.scipy.org/>`_) provides Python 
+interfaces to a
 subset of the functions in the CUDA, CUDART, CUBLAS, and CUFFT
-libraries distributed as part of NVIDIA's CUDA Programming Toolkit
-[2]_, as well as interfaces to select functions in the free and
-standard versions of the CULA Dense Toolkit [3]_. In contrast to most
+libraries distributed as part of NVIDIA's `CUDA Programming Toolkit
+<http://www.nvidia.com/cuda/>`_, as well as interfaces to select functions in 
+the free and
+standard versions of the `CULA Dense Toolkit <http://www.culatools.com/dense>`_.  
+In contrast to most
 existing Python wrappers for these libraries (many of which only
 provide a low-level interface to the actual library functions), this
-package uses PyCUDA [4]_ to provide high-level functions comparable to
-those in the NumPy package [5]_.
+package uses `PyCUDA <http://mathema.tician.de/software/pycuda/>`_ to provide 
+high-level functions comparable to
+those in `NumPy <http://www.numpy.org>`_.
 
 .. image:: https://zenodo.org/badge/6233/lebedov/scikits.cuda.svg
     :target: http://dx.doi.org/10.5281/zenodo.16269
@@ -47,9 +51,3 @@ License
 This software is licensed under the 
 `BSD License <http://www.opensource.org/licenses/bsd-license.php>`_.
 See the included LICENSE file for more information.
-
-.. [1] http://www.scipy.org/
-.. [2] http://www.nvidia.com/cuda/
-.. [3] http://www.culatools.com/dense/
-.. [4] http://mathema.tician.de/software/pycuda/
-.. [5] http://numpy.scipy.org/
