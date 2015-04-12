@@ -797,7 +797,7 @@ set_by_index.cache = {}
 add_vec_to_mat_template = Template("""
 #include <pycuda-complex.hpp>
 
-__global__ void addColVecToMat(const ${type} *mat, const ${type} *vec, ${type} *out,
+__global__ void opColVecToMat(const ${type} *mat, const ${type} *vec, ${type} *out,
                                const int32_t n, const int32_t m){
     const int tx = threadIdx.x;
     const int ty = threadIdx.y;
@@ -811,11 +811,11 @@ __global__ void addColVecToMat(const ${type} *mat, const ${type} *vec, ${type} *
     __syncthreads();
 
     if ((tidy < m) & (tidx < n)) {
-        out[tidx*m+tidy] = mat[tidx*m+tidy] + shared_vec[tx];
+        out[tidx*m+tidy] = mat[tidx*m+tidy] ${binary_op} shared_vec[tx];
     }
 }
 
-__global__ void addRowVecToMat(const ${type}* mat, const ${type}* vec, ${type}* out,
+__global__ void opRowVecToMat(const ${type}* mat, const ${type}* vec, ${type}* out,
                                const int32_t n, const int32_t m){
     const int tx = threadIdx.x;
     const int ty = threadIdx.y;
@@ -829,19 +829,21 @@ __global__ void addRowVecToMat(const ${type}* mat, const ${type}* vec, ${type}* 
     __syncthreads();
 
     if ((tidy < m) & (tidx < n)) {
-        out[tidx*m+tidy] = mat[tidx*m+tidy] + shared_vec[ty];
+        out[tidx*m+tidy] = mat[tidx*m+tidy] ${binary_op} shared_vec[ty];
     }
 }
 """)
-def add_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
+def binaryop_matvec(binary_op, x_gpu, a_gpu, axis=None, out=None, stream=None):
     """
-    Adds a vector to each column/row of the matrix.
+    Applies a binary operation to a vector and each column/row of a matrix.
 
     The numpy broadcasting rules apply so this would yield the same result
-    as `x_gpu.get()` + `a_gpu.get()` in host-code.
+    as `x_gpu.get()` op `a_gpu.get()` in host-code.
 
     Parameters
     ----------
+    binary_op : string, ['+', '-', '/', '*' '%']
+        The operator to apply
     x_gpu : pycuda.gpuarray.GPUArray
         Matrix to which to add the vector.
     a_gpu : pycuda.gpuarray.GPUArray
@@ -882,12 +884,16 @@ def add_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
     elif x_gpu.dtype == np.complex128:
         datatype = 'pycuda::complex<double>'
 
+    if binary_op not in ['+', '-', '/', '*', '%']:
+        raise ValueError('invalid operator')
+
     cache_dir=None
-    tmpl = add_vec_to_mat_template.substitute(type=datatype)
+    tmpl = add_vec_to_mat_template.substitute(type=datatype,
+                                              binary_op=binary_op)
     mod = SourceModule(tmpl, cache_dir=cache_dir)
 
-    add_row_vec_kernel = mod.get_function('addRowVecToMat')
-    add_col_vec_kernel = mod.get_function('addColVecToMat')
+    add_row_vec_kernel = mod.get_function('opRowVecToMat')
+    add_col_vec_kernel = mod.get_function('opColVecToMat')
 
     n, m = np.int32(x_gpu.shape[0]), np.int32(x_gpu.shape[1])
 
@@ -918,6 +924,96 @@ def add_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
             add_col_vec_kernel(x_gpu, a_gpu, out, m, n,
                                block=block, grid=grid, stream=stream)
     return out
+
+
+def add_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
+    """
+    Adds a vector to each column/row of the matrix.
+
+    The numpy broadcasting rules apply so this would yield the same result
+    as `x_gpu.get()` + `a_gpu.get()` in host-code.
+
+    Parameters
+    ----------
+    x_gpu : pycuda.gpuarray.GPUArray
+        Matrix to which to add the vector.
+    a_gpu : pycuda.gpuarray.GPUArray
+        Vector to add to `x_gpu`.
+    axis : int (optional)
+        The axis onto which the vector is added. By default this is
+        determined automatically by using the first axis with the correct
+        dimensionality.
+    out : pycuda.gpuarray.GPUArray (optional)
+        Optional destination matrix.
+    stream : pycuda.driver.Stream (optional)
+        Optional Stream in which to perform this calculation.
+
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray
+        result of `x_gpu` + `a_gpu`
+    """
+    return binaryop_matvec('+', x_gpu, a_gpu, axis, out, stream)
+
+
+def div_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
+    """
+    Divides each column/row of a matrix by a vector.
+
+    The numpy broadcasting rules apply so this would yield the same result
+    as `x_gpu.get()` / `a_gpu.get()` in host-code.
+
+    Parameters
+    ----------
+    x_gpu : pycuda.gpuarray.GPUArray
+        Matrix to which to add the vector.
+    a_gpu : pycuda.gpuarray.GPUArray
+        Vector to add to `x_gpu`.
+    axis : int (optional)
+        The axis onto which the vector is added. By default this is
+        determined automatically by using the first axis with the correct
+        dimensionality.
+    out : pycuda.gpuarray.GPUArray (optional)
+        Optional destination matrix.
+    stream : pycuda.driver.Stream (optional)
+        Optional Stream in which to perform this calculation.
+
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray
+        result of `x_gpu` + `a_gpu`
+    """
+    return binaryop_matvec('/', x_gpu, a_gpu, axis, out, stream)
+
+
+def mult_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
+    """
+    Multiplies a vector elementwise with each column/row of the matrix.
+
+    The numpy broadcasting rules apply so this would yield the same result
+    as `x_gpu.get()` + `a_gpu.get()` in host-code.
+
+    Parameters
+    ----------
+    x_gpu : pycuda.gpuarray.GPUArray
+        Matrix to which to add the vector.
+    a_gpu : pycuda.gpuarray.GPUArray
+        Vector to add to `x_gpu`.
+    axis : int (optional)
+        The axis onto which the vector is added. By default this is
+        determined automatically by using the first axis with the correct
+        dimensionality.
+    out : pycuda.gpuarray.GPUArray (optional)
+        Optional destination matrix.
+    stream : pycuda.driver.Stream (optional)
+        Optional Stream in which to perform this calculation.
+
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray
+        result of `x_gpu` + `a_gpu`
+    """
+    return binaryop_matvec('*', x_gpu, a_gpu, axis, out, stream)
 
 
 def _sum_axis(x_gpu, axis=None, out=None, calc_mean=False):
