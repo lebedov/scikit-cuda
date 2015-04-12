@@ -47,7 +47,8 @@ Release 0.5.0 - (under development)
 * Matrix trace function (enh. by Thomas Unterthiner).
 * Functions for computing simple axis-wise stats over matrices (enh. by Thomas 
   Unterthiner).
-* Matrix add_dot function (enh. by Thomas Unterthiner).
+* Matrix add_dot, add_matvec, div_matvec, mult_matvec functions (enh. by Thomas 
+  Unterthiner).
 * Faster dot_diag implementation using CUBLAS matrix-matrix multiplication (enh.  
   by Thomas Unterthiner).
 
