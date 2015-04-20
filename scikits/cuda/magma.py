@@ -16,6 +16,8 @@ if 'linux' in sys.platform:
     _libmagma_libname_list = ['libmagma.so']
 elif sys.platform == 'darwin':
     _libmagma_libname_list = ['magma.so', 'libmagma.dylib']
+elif sys.platform == 'win32':
+    _libmagma_libname_list = ['magma.dll']
 else:
     raise RuntimeError('unsupported platform')
 
