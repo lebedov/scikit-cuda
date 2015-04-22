@@ -10,6 +10,7 @@ Library Wrapper Routines
 
    reference_cublas
    reference_cufft
+   reference_cusolver
    reference_cula
    reference_pcula
 
