@@ -8,7 +8,9 @@ Release 0.5.0 - (under development)
 * Switch to PEP 440 version numbering.
 * Replace distribute_setup.py with ez_setup.py.
 * Improve support for latest NVIDIA GPUs.
-* Add more wrappers for CUBLAS 5 functions (enh. by Teodor Moldovan, Sander Dieleman).
+* Direct links to online NVIDIA documentation in CUBLAS wrapper docstrings.
+* Add more wrappers for CUBLAS 5 functions (enh. by Teodor Moldovan, Sander 
+  Dieleman).
 * Add support for CULA Dense Free R17 (enh. by Alex Rubinsteyn).
 * Memoize elementwise kernel used by ifft scaling (#37).
 * Speed up misc.maxabs using reduction and kernel memoization.
