@@ -8,7 +8,7 @@ import atexit, ctypes, platform, re, sys, warnings
 import numpy as np
 
 # Load library:
-_version_list = [6.5, 6.0, 5.5, 5.0, 4.0]
+_version_list = [7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
 if 'linux' in sys.platform:
     _libcudart_libname_list = ['libcudart.so'] + \
                               ['libcudart.so.%s' % v for v in _version_list]
