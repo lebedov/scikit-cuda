@@ -16,11 +16,11 @@ not already on your system.
 
 Obtaining the Latest Software
 -----------------------------
-The latest stable and development versions of ``scikits.cuda`` can be downloaded from 
-`GitHub <http://github.com/lebedov/scikits.cuda>`_
+The latest stable and development versions of ``scikits.cuda`` can be downloaded 
+from `GitHub <https://github.com/lebedov/scikits.cuda>`_
 
 Online documentation for ``scikits.cuda`` is available at 
-`<http://lebedov.github.com/scikits.cuda/>`_
+`<https://scikit-cuda.readthedocs.org>`_
 
 Installation Dependencies
 -------------------------
@@ -40,9 +40,10 @@ To run the unit tests, the following packages are also required:
 * `nose <http://code.google.com/p/python-nose/>`_ 0.11 or later.
 * `SciPy <http://www.scipy.org>`_ 0.9.0 or later.
 
-Some of the linear algebra functionality relies on the CULA Dense toolkit; 
-the single precision release of the toolkit is free of charge, but requires registration. 
-Depending on the version of CULA installed, some functions may not be available:
+Some of the linear algebra functionality relies on the CULA Dense toolkit; the 
+single precision release of the toolkit is free of charge, but requires 
+registration.  Depending on the version of CULA installed, some functions may 
+not be available:
 
 * `CULA <http://www.culatools.com/dense/>`_ R16a or later.
 
