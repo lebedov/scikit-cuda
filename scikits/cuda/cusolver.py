@@ -526,5 +526,211 @@ def cusolverDnZgetrs(handle, trans, n, nrhs, A, lda,
                                            ldb, int(devInfo))
     cusolverCheckStatus(status)
 
-    
+# SGESVD, DGESVD, CGESVD, ZGESVD
+_libcusolver.cusolverDnSgesvd_bufferSize.restype = int
+_libcusolver.cusolverDnSgesvd_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p]
+def cusolverDnSgesvd_bufferSize(handle, m, n):
+    """
+    Calculate size of work buffer used by cusolverDnSgesvd.
 
+    References
+    ----------
+    `cusolverDn<t>gesvd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-gesvd>`_
+    """
+
+    Lwork = ctypes.c_int()
+    status = cusolverDnSgesvd_bufferSize(handle, m, n, ctypes.byref(Lwork))
+    cusolverCheckStatus(status)
+    return Lwork.value
+
+_libcusolver.cusolverDnSgesvd.restype = int
+_libcusolver.cusolverDnSgesvd.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_char,
+                                          ctypes.c_char,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p]
+def cusolverDnSgesvd(handle, jobu, jobvt, m, n, A, lda, S, U, 
+                     ldu, VT, ldvt, Work, Lwork, rwork, devInfo)
+    """
+    Compute real single precision singular value decomposition.
+
+    References
+    ----------
+    `cusolverDn<t>gesvd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-gesvd>`_
+    """
+
+    status = cusolverDnSgesvd(handle, jobu, jobvt, m, n,
+                              int(A), lda, int(S), int(U),
+                              ldu, int(VT), ldvt, int(Work),
+                              Lwork, int(rwork), int(devInfo))
+    cusolverCheckStatus(status)
+
+_libcusolver.cusolverDnDgesvd_bufferSize.restype = int
+_libcusolver.cusolverDnDgesvd_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p]
+def cusolverDnDgesvd_bufferSize(handle, m, n):
+    """
+    Calculate size of work buffer used by cusolverDnDgesvd.
+
+    References
+    ----------
+    `cusolverDn<t>gesvd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-gesvd>`_
+    """
+
+    Lwork = ctypes.c_int()
+    status = cusolverDnDgesvd_bufferSize(handle, m, n, ctypes.byref(Lwork))
+    cusolverCheckStatus(status)
+    return Lwork.value
+
+_libcusolver.cusolverDnDgesvd.restype = int
+_libcusolver.cusolverDnDgesvd.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_char,
+                                          ctypes.c_char,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p]
+def cusolverDnDgesvd(handle, jobu, jobvt, m, n, A, lda, S, U, 
+                     ldu, VT, ldvt, Work, Lwork, rwork, devInfo):
+    """
+    Compute real double precision singular value decomposition.
+
+    References
+    ----------
+    `cusolverDn<t>gesvd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-gesvd>`_
+    """
+
+    status = cusolverDnDgesvd(handle, jobu, jobvt, m, n,
+                              int(A), lda, int(S), int(U),
+                              ldu, int(VT), ldvt, int(Work),
+                              Lwork, int(rwork), int(devInfo))
+    cusolverCheckStatus(status)
+
+_libcusolver.cusolverDnCgesvd_bufferSize.restype = int
+_libcusolver.cusolverDnCgesvd_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p]
+def cusolverDnCgesvd_bufferSize(handle, m, n):
+    """
+    Calculate size of work buffer used by cusolverDnCgesvd.
+
+    References
+    ----------
+    `cusolverDn<t>gesvd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-gesvd>`_
+    """
+
+    Lwork = ctypes.c_int()
+    status = cusolverDnCgesvd_bufferSize(handle, m, n, ctypes.byref(Lwork))
+    cusolverCheckStatus(status)
+    return Lwork.value
+
+_libcusolver.cusolverDnCgesvd.restype = int
+_libcusolver.cusolverDnCgesvd.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_char,
+                                          ctypes.c_char,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p]
+def cusolverDnCgesvd(handle, jobu, jobvt, m, n, A, lda, S, U, 
+                     ldu, VT, ldvt, Work, Lwork, rwork, devInfo):
+    """
+    Compute complex single precision singular value decomposition.
+
+    References
+    ----------
+    `cusolverDn<t>gesvd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-gesvd>`_
+    """
+
+    status = cusolverDnCgesvd(handle, jobu, jobvt, m, n,
+                              int(A), lda, int(S), int(U),
+                              ldu, int(VT), ldvt, int(Work),
+                              Lwork, int(rwork), int(devInfo))
+    cusolverCheckStatus(status)
+
+_libcusolver.cusolverDnZgesvd_bufferSize.restype = int
+_libcusolver.cusolverDnZgesvd_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p]
+def cusolverDnZgesvd_bufferSize(handle, m, n):
+    """
+    Calculate size of work buffer used by cusolverDnZgesvd.
+
+    References
+    ----------
+    `cusolverDn<t>gesvd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-gesvd>`_
+    """
+
+    Lwork = ctypes.c_int()
+    status = cusolverDnZgesvd_bufferSize(handle, m, n, ctypes.byref(Lwork))
+    cusolverCheckStatus(status)
+    return Lwork.value
+
+_libcusolver.cusolverDnZgesvd.restype = int
+_libcusolver.cusolverDnZgesvd.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_char,
+                                          ctypes.c_char,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p]
+def cusolverDnZgesvd(handle, jobu, jobvt, m, n, A, lda, S, U, 
+                     ldu, VT, ldvt, Work, Lwork, rwork, devInfo):
+    """
+    Compute complex double precision singular value decomposition.
+
+    References
+    ----------
+    `cusolverDn<t>gesvd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-gesvd>`_
+    """
+
+    status = cusolverDnZgesvd(handle, jobu, jobvt, m, n,
+                              int(A), lda, int(S), int(U),
+                              ldu, int(VT), ldvt, int(Work),
+                              Lwork, int(rwork), int(devInfo))
+    cusolverCheckStatus(status)

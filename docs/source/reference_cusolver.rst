@@ -35,4 +35,11 @@ Wrapper Routines
    cusolverDnDgetrs
    cusolverDnCgetrs
    cusolverDnZgetrs
-
+   cusolverDnSgesvd_bufferSize
+   cusolverDnSgesvd
+   cusolverDnDgesvd_bufferSize
+   cusolverDnDgesvd
+   cusolverDnCgesvd_bufferSize
+   cusolverDnCgesvd
+   cusolverDnZgesvd_bufferSize
+   cusolverDnZgesvd
