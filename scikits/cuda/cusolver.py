@@ -563,8 +563,8 @@ _libcusolver.cusolverDnSgesvd.argtypes = [ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
-def cusolverDnSgesvd(handle, jobu, jobvt, m, n, A, lda, S, U, 
-                     ldu, VT, ldvt, Work, Lwork, rwork, devInfo)
+def cusolverDnSgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
+        ldu, VT, ldvt, Work, Lwork, rwork, devInfo):
     """
     Compute real single precision singular value decomposition.
 
@@ -615,7 +615,7 @@ _libcusolver.cusolverDnDgesvd.argtypes = [ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
-def cusolverDnDgesvd(handle, jobu, jobvt, m, n, A, lda, S, U, 
+def cusolverDnDgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
                      ldu, VT, ldvt, Work, Lwork, rwork, devInfo):
     """
     Compute real double precision singular value decomposition.
@@ -667,7 +667,7 @@ _libcusolver.cusolverDnCgesvd.argtypes = [ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
-def cusolverDnCgesvd(handle, jobu, jobvt, m, n, A, lda, S, U, 
+def cusolverDnCgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
                      ldu, VT, ldvt, Work, Lwork, rwork, devInfo):
     """
     Compute complex single precision singular value decomposition.
@@ -719,7 +719,7 @@ _libcusolver.cusolverDnZgesvd.argtypes = [ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
-def cusolverDnZgesvd(handle, jobu, jobvt, m, n, A, lda, S, U, 
+def cusolverDnZgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
                      ldu, VT, ldvt, Work, Lwork, rwork, devInfo):
     """
     Compute complex double precision singular value decomposition.
