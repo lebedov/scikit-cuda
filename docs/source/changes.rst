@@ -8,7 +8,8 @@ Release 0.5.0 - (under development)
 * Switch to PEP 440 version numbering.
 * Replace distribute_setup.py with ez_setup.py.
 * Improve support for latest NVIDIA GPUs.
-* Direct links to online NVIDIA documentation in CUBLAS wrapper docstrings.
+* Direct links to online NVIDIA documentation in CUBLAS, CUFFT wrapper 
+  docstrings.
 * Add wrappers for CUSOLVER in CUDA 7.0.
 * Add more wrappers for CUBLAS 5 functions (enh. by Teodor Moldovan, Sander 
   Dieleman).
