@@ -3,8 +3,8 @@
 CUDA SciKit
 ===========
 The CUDA scikit (toolkit for `SciPy <http://www.scipy.org/>`_) provides Python 
-interfaces to a
-subset of the functions in the CUDA, CUDART, CUBLAS, and CUFFT
+interfaces to many
+of the functions in the CUDA, CUDART, CUBLAS, CUFFT, and CUSOLVER
 libraries distributed as part of NVIDIA's `CUDA Programming Toolkit
 <http://www.nvidia.com/cuda/>`_, as well as interfaces to select functions in 
 the free and
