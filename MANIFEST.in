@@ -1,4 +1,5 @@
 include AUTHORS CHANGES INSTALL LICENSE README.rst tox.ini
+recursive-include skcuda *.py
 recursive-include scikits *.h
 recursive-include demos *.py
 recursive-include tests *.py
