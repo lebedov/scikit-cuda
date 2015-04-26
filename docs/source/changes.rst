@@ -11,6 +11,7 @@ Release 0.5.0 - (under development)
 * Direct links to online NVIDIA documentation in CUBLAS, CUFFT wrapper 
   docstrings.
 * Add wrappers for CUSOLVER in CUDA 7.0.
+* Add skcuda namespace package that contains all modules in scikits.cuda namespace.
 * Add more wrappers for CUBLAS 5 functions (enh. by Teodor Moldovan, Sander 
   Dieleman).
 * Add support for CULA Dense Free R17 (enh. by Alex Rubinsteyn).
