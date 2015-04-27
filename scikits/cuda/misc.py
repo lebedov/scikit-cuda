@@ -898,8 +898,8 @@ def binaryop_matvec(binary_op, x_gpu, a_gpu, axis=None, out=None, stream=None):
     n, m = np.int32(x_gpu.shape[0]), np.int32(x_gpu.shape[1])
 
     block = (24, 24, 1)
-    gridx = n // block[0] + 1 * (n % block[0] != 0)
-    gridy = m // block[1] + 1 * (m % block[1] != 0)
+    gridx = int(n // block[0] + 1 * (n % block[0] != 0))
+    gridy = int(m // block[1] + 1 * (m % block[1] != 0))
     grid = (gridx, gridy, 1)
 
     if out is None:

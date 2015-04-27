@@ -114,15 +114,15 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     data_type = a_gpu.dtype.type
     real_type = np.float32
     if data_type == np.complex64:
-        cula_func = cula._libcula.culaDeviceCgesvd
+        cula_func = cula.culaDeviceCgesvd
     elif data_type == np.float32:
-        cula_func = cula._libcula.culaDeviceSgesvd
+        cula_func = cula.culaDeviceSgesvd
     else:
         if cula._libcula_toolkit == 'standard':
             if data_type == np.complex128:
-                cula_func = cula._libcula.culaDeviceZgesvd
+                cula_func = cula.culaDeviceZgesvd
             elif data_type == np.float64:
-                cula_func = cula._libcula.culaDeviceDgesvd
+                cula_func = cula.culaDeviceDgesvd
             else:
                 raise ValueError('unsupported type')
             real_type = np.float64
@@ -184,11 +184,9 @@ def svd(a_gpu, jobu='A', jobvt='A'):
 
     # Compute SVD and check error status:
 
-    status = cula_func(jobu, jobvt, m, n, int(a_gpu.gpudata),
-                       lda, int(s_gpu.gpudata), int(u_gpu.gpudata),
-                       ldu, int(vh_gpu.gpudata), ldvt)
-
-    cula.culaCheckStatus(status)
+    cula_func(jobu, jobvt, m, n, int(a_gpu.gpudata),
+              lda, int(s_gpu.gpudata), int(u_gpu.gpudata),
+              ldu, int(vh_gpu.gpudata), ldvt)
 
     # Free internal CULA memory:
     cula.culaFreeBuffers()
@@ -253,13 +251,13 @@ def cho_factor(a_gpu, uplo='L'):
     real_type = np.float32
     if cula._libcula_toolkit == 'standard':
         if data_type == np.complex64:
-            cula_func = cula._libcula.culaDeviceCpotrf
+            cula_func = cula.culaDeviceCpotrf
         elif data_type == np.float32:
-            cula_func = cula._libcula.culaDeviceSpotrf
+            cula_func = cula.culaDeviceSpotrf
         elif data_type == np.complex128:
-            cula_func = cula._libcula.culaDeviceZpotrf
+            cula_func = cula.culaDeviceZpotrf
         elif data_type == np.float64:
-            cula_func = cula._libcula.culaDeviceDpotrf
+            cula_func = cula.culaDeviceDpotrf
         else:
             raise ValueError('unsupported type')
         real_type = np.float64
@@ -275,9 +273,7 @@ def cho_factor(a_gpu, uplo='L'):
     # Set the leading dimension of the input matrix:
     lda = max(1, m)
 
-    status = cula_func(uplo, n, int(a_gpu.gpudata), lda)
-
-    cula.culaCheckStatus(status)
+    cula_func(uplo, n, int(a_gpu.gpudata), lda)
 
     # Free internal CULA memory:
     cula.culaFreeBuffers()
@@ -340,13 +336,13 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
     real_type = np.float32
     if cula._libcula_toolkit == 'standard':
         if data_type == np.complex64:
-            cula_func = cula._libcula.culaDeviceCposv
+            cula_func = cula.culaDeviceCposv
         elif data_type == np.float32:
-            cula_func = cula._libcula.culaDeviceSposv
+            cula_func = cula.culaDeviceSposv
         elif data_type == np.complex128:
-            cula_func = cula._libcula.culaDeviceZposv
+            cula_func = cula.culaDeviceZposv
         elif data_type == np.float64:
-            cula_func = cula._libcula.culaDeviceDposv
+            cula_func = cula.culaDeviceDposv
         else:
             raise ValueError('unsupported type')
         real_type = np.float64
@@ -377,10 +373,8 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
             raise ValueError('only vectors allowed in c-order RHS')
 
     # Assuming we are only solving for a vector. Hence, nrhs = 1
-    status = cula_func(uplo, na, b_shape[1], int(a_gpu.gpudata), lda,
-                       int(b_gpu.gpudata), ldb)
-
-    cula.culaCheckStatus(status)
+    cula_func(uplo, na, b_shape[1], int(a_gpu.gpudata), lda,
+              int(b_gpu.gpudata), ldb)
 
     # Free internal CULA memory:
     cula.culaFreeBuffers()
@@ -680,7 +674,7 @@ def mdot(*args, **kwargs):
 
     """
 
-    if kwargs.has_key('handle') and kwargs['handle'] is not None:
+    if ' handle' in kwargs and kwargs['handle'] is not None:
         handle = kwargs['handle']
     else:
         handle = misc._global_cublas_handle
