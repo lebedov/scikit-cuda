@@ -16,6 +16,7 @@ import pycuda.elementwise as elementwise
 import pycuda.reduction as reduction
 import pycuda.scan as scan
 import pycuda.tools as tools
+from pycuda.tools import context_dependent_memoize
 from pycuda.compiler import SourceModule
 from pytools import memoize
 import numpy as np
@@ -794,45 +795,55 @@ def set_by_index(dest_gpu, ind, src_gpu, ind_which='dest'):
 set_by_index.cache = {}
 
 
-add_vec_to_mat_template = Template("""
-#include <pycuda-complex.hpp>
+@context_dependent_memoize
+def _get_binaryop_vecmat_kernel(datatype, binary_op):
+    template = Template("""
+    #include <pycuda-complex.hpp>
 
-__global__ void opColVecToMat(const ${type} *mat, const ${type} *vec, ${type} *out,
-                               const int32_t n, const int32_t m){
-    const int tx = threadIdx.x;
-    const int ty = threadIdx.y;
-    const int tidx = blockIdx.x * blockDim.x + threadIdx.x;
-    const int tidy = blockIdx.y * blockDim.y + threadIdx.y;
+    __global__ void opColVecToMat(const ${type} *mat, const ${type} *vec, ${type} *out,
+                                   const int32_t n, const int32_t m){
+        const int tx = threadIdx.x;
+        const int ty = threadIdx.y;
+        const int tidx = blockIdx.x * blockDim.x + threadIdx.x;
+        const int tidy = blockIdx.y * blockDim.y + threadIdx.y;
 
-    __shared__ ${type} shared_vec[24];
+        __shared__ ${type} shared_vec[24];
 
-    if ((ty == 0) & (tidx < n))
-        shared_vec[tx] = vec[tidx];
-    __syncthreads();
+        if ((ty == 0) & (tidx < n))
+            shared_vec[tx] = vec[tidx];
+        __syncthreads();
 
-    if ((tidy < m) & (tidx < n)) {
-        out[tidx*m+tidy] = mat[tidx*m+tidy] ${binary_op} shared_vec[tx];
+        if ((tidy < m) & (tidx < n)) {
+            out[tidx*m+tidy] = mat[tidx*m+tidy] ${binary_op} shared_vec[tx];
+        }
     }
-}
 
-__global__ void opRowVecToMat(const ${type}* mat, const ${type}* vec, ${type}* out,
-                               const int32_t n, const int32_t m){
-    const int tx = threadIdx.x;
-    const int ty = threadIdx.y;
-    const int tidx = blockIdx.x * blockDim.x + threadIdx.x;
-    const int tidy = blockIdx.y * blockDim.y + threadIdx.y;
+    __global__ void opRowVecToMat(const ${type}* mat, const ${type}* vec, ${type}* out,
+                                   const int n, const int m){
+        const int tx = threadIdx.x;
+        const int ty = threadIdx.y;
+        const int tidx = blockIdx.x * blockDim.x + threadIdx.x;
+        const int tidy = blockIdx.y * blockDim.y + threadIdx.y;
 
-    __shared__ ${type} shared_vec[24];
+        __shared__ ${type} shared_vec[24];
 
-    if ((tx == 0) & (tidy < m))
-        shared_vec[ty] = vec[tidy];
-    __syncthreads();
+        if ((tx == 0) & (tidy < m))
+            shared_vec[ty] = vec[tidy];
+        __syncthreads();
 
-    if ((tidy < m) & (tidx < n)) {
-        out[tidx*m+tidy] = mat[tidx*m+tidy] ${binary_op} shared_vec[ty];
-    }
-}
-""")
+        if ((tidy < m) & (tidx < n)) {
+            out[tidx*m+tidy] = mat[tidx*m+tidy] ${binary_op} shared_vec[ty];
+        }
+    }""")
+    cache_dir=None
+    tmpl = template.substitute(type=datatype, binary_op=binary_op)
+    mod = SourceModule(tmpl)
+
+    add_row_vec_kernel = mod.get_function('opRowVecToMat')
+    add_col_vec_kernel = mod.get_function('opColVecToMat')
+    return add_row_vec_kernel, add_col_vec_kernel
+
+
 def binaryop_matvec(binary_op, x_gpu, a_gpu, axis=None, out=None, stream=None):
     """
     Applies a binary operation to a vector and each column/row of a matrix.
@@ -887,14 +898,7 @@ def binaryop_matvec(binary_op, x_gpu, a_gpu, axis=None, out=None, stream=None):
     if binary_op not in ['+', '-', '/', '*', '%']:
         raise ValueError('invalid operator')
 
-    cache_dir=None
-    tmpl = add_vec_to_mat_template.substitute(type=datatype,
-                                              binary_op=binary_op)
-    mod = SourceModule(tmpl, cache_dir=cache_dir)
-
-    add_row_vec_kernel = mod.get_function('opRowVecToMat')
-    add_col_vec_kernel = mod.get_function('opColVecToMat')
-
+    row_kernel, col_kernel = _get_binaryop_vecmat_kernel(datatype, binary_op)
     n, m = np.int32(x_gpu.shape[0]), np.int32(x_gpu.shape[1])
 
     block = (24, 24, 1)
@@ -911,18 +915,18 @@ def binaryop_matvec(binary_op, x_gpu, a_gpu, axis=None, out=None, stream=None):
 
     if x_gpu.flags.c_contiguous:
         if axis == 0:
-            add_col_vec_kernel(x_gpu, a_gpu, out, n, m,
-                               block=block, grid=grid, stream=stream)
+            col_kernel(x_gpu, a_gpu, out, n, m,
+                       block=block, grid=grid, stream=stream)
         elif axis == 1:
-            add_row_vec_kernel(x_gpu, a_gpu, out, n, m,
-                               block=block, grid=grid, stream=stream)
+            row_kernel(x_gpu, a_gpu, out, n, m,
+                       block=block, grid=grid, stream=stream)
     else:
         if axis == 0:
-            add_row_vec_kernel(x_gpu, a_gpu, out, m, n,
-                               block=block, grid=grid, stream=stream)
+            row_kernel(x_gpu, a_gpu, out, m, n,
+                       block=block, grid=grid, stream=stream)
         elif axis == 1:
-            add_col_vec_kernel(x_gpu, a_gpu, out, m, n,
-                               block=block, grid=grid, stream=stream)
+            col_kernel(x_gpu, a_gpu, out, m, n,
+                       block=block, grid=grid, stream=stream)
     return out
 
 
