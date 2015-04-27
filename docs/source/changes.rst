@@ -56,7 +56,9 @@ Release 0.5.0 - (under development)
   Unterthiner).
 * Faster dot_diag implementation using CUBLAS matrix-matrix multiplication (enh.  
   by Thomas Unterthiner).
-
+* Memoize SourceModule calls to speed up various high-level functions (enh. by 
+  Thomas Unterthiner).
+  
 Release 0.042 - (March 10, 2013)
 --------------------------------
 * Add complex exponential integral.

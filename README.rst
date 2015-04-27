@@ -21,10 +21,10 @@ those in `NumPy <http://www.numpy.org>`_.
 .. image:: https://zenodo.org/badge/6233/lebedov/scikits.cuda.svg
     :target: http://dx.doi.org/10.5281/zenodo.16269
     :alt: 0.5.0b1
-.. image:: https://pypip.in/version/scikits.cuda/badge.png
+.. image:: https://img.shields.io/pypi/v/scikits.cuda.svg
     :target: https://pypi.python.org/pypi/scikits.cuda
     :alt: Latest Version
-.. image:: https://pypip.in/d/scikits.cuda/badge.png
+.. image:: https://img.shields.io/pypi/dm/scikits.cuda.svg
     :target: https://pypi.python.org/pypi/scikits.cuda
     :alt: Downloads
 .. image:: http://prime4commit.com/projects/102.svg
