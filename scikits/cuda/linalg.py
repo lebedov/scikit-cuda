@@ -8,6 +8,7 @@ from __future__ import absolute_import, division
 
 from pprint import pprint
 from string import Template
+from pycuda.tools import context_dependent_memoize
 from pycuda.compiler import SourceModule
 
 import pycuda.gpuarray as gpuarray
@@ -1026,33 +1027,43 @@ def conj(x_gpu, overwrite=True):
         return y_gpu
 conj.cache = {}
 
-diag_template = Template("""
-#include <pycuda-complex.hpp>
 
-#if ${use_double}
-#if ${use_complex}
-#define FLOAT pycuda::complex<double>
-#else
-#define FLOAT double
-#endif
-#else
-#if ${use_complex}
-#define FLOAT pycuda::complex<float>
-#else
-#define FLOAT float
-#endif
-#endif
+@context_dependent_memoize
+def _get_diag_kernel(use_double, use_complex):
+    template = Template("""
+    #include <pycuda-complex.hpp>
 
-// Assumes that d already contains zeros in all positions.
-// N must contain the number of elements in v.
-__global__ void diag(FLOAT *v, FLOAT *d, int N) {
-    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
-                       blockIdx.x*blockDim.x+threadIdx.x;
-    if (idx < N)
-        d[idx*(N+1)] = v[idx];
-}
+    #if ${use_double}
+    #if ${use_complex}
+    #define FLOAT pycuda::complex<double>
+    #else
+    #define FLOAT double
+    #endif
+    #else
+    #if ${use_complex}
+    #define FLOAT pycuda::complex<float>
+    #else
+    #define FLOAT float
+    #endif
+    #endif
 
-""")
+    // Assumes that d already contains zeros in all positions.
+    // N must contain the number of elements in v.
+    __global__ void diag(FLOAT *v, FLOAT *d, int N) {
+        unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
+                           blockIdx.x*blockDim.x+threadIdx.x;
+        if (idx < N)
+            d[idx*(N+1)] = v[idx];
+    }
+    """)
+
+    # Set this to False when debugging to make sure the compiled kernel is
+    # not cached:
+    tmpl = template.substitute(use_double=use_double, use_complex=use_complex)
+    cache_dir=None
+    diag_mod = SourceModule(tmpl, cache_dir=cache_dir)
+    return diag_mod.get_function("diag")
+
 
 def diag(v_gpu):
     """
@@ -1143,15 +1154,7 @@ def diag(v_gpu):
     dev = misc.get_current_device()
     block_dim, grid_dim = misc.select_block_grid_sizes(dev, d_gpu.shape)
 
-    # Set this to False when debugging to make sure the compiled kernel is
-    # not cached:
-    cache_dir=None
-    diag_mod = \
-             SourceModule(diag_template.substitute(use_double=use_double,
-                                                   use_complex=use_complex),
-                          cache_dir=cache_dir)
-
-    diag = diag_mod.get_function("diag")
+    diag = _get_diag_kernel(use_double, use_complex)
     diag(v_gpu, d_gpu, np.uint32(v_gpu.size),
          block=block_dim,
          grid=grid_dim)
@@ -1297,35 +1300,48 @@ def pinv(a_gpu, rcond=1e-15):
         # Compute the pseudoinverse without allocating a new diagonal matrix:
         return dot(vh_gpu, dot_diag(s_gpu, u_gpu, 't'), 'c', 'c')
 
-tril_template = Template("""
-#include <pycuda-complex.hpp>
 
-#if ${use_double}
-#if ${use_complex}
-#define FLOAT pycuda::complex<double>
-#else
-#define FLOAT double
-#endif
-#else
-#if ${use_complex}
-#define FLOAT pycuda::complex<float>
-#else
-#define FLOAT float
-#endif
-#endif
 
-__global__ void tril(FLOAT *a, unsigned int N) {
-    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
-                       blockIdx.x*blockDim.x+threadIdx.x;
-    unsigned int ix = idx/${cols};
-    unsigned int iy = idx%${cols};
+@context_dependent_memoize
+def _get_tril_kernel(use_double, use_complex, cols):
+    template = Template("""
+    #include <pycuda-complex.hpp>
 
-    if (idx < N) {
-        if (ix < iy)
-            a[idx] = 0.0;
+    #if ${use_double}
+    #if ${use_complex}
+    #define FLOAT pycuda::complex<double>
+    #else
+    #define FLOAT double
+    #endif
+    #else
+    #if ${use_complex}
+    #define FLOAT pycuda::complex<float>
+    #else
+    #define FLOAT float
+    #endif
+    #endif
+
+    __global__ void tril(FLOAT *a, unsigned int N) {
+        unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
+                           blockIdx.x*blockDim.x+threadIdx.x;
+        unsigned int ix = idx/${cols};
+        unsigned int iy = idx%${cols};
+
+        if (idx < N) {
+            if (ix < iy)
+                a[idx] = 0.0;
+        }
     }
-}
-""")
+    """)
+    # Set this to False when debugging to make sure the compiled kernel is
+    # not cached:
+    cache_dir=None
+    tmpl = template.substitute(use_double=use_double,
+                               use_complex=use_complex,
+                               cols=cols)
+    mod = SourceModule(tmpl, cache_dir=cache_dir)
+    return mod.get_function("tril")
+
 
 def tril(a_gpu, overwrite=True, handle=None):
     """
@@ -1401,17 +1417,7 @@ def tril(a_gpu, overwrite=True, handle=None):
     # Get block/grid sizes:
     dev = misc.get_current_device()
     block_dim, grid_dim = misc.select_block_grid_sizes(dev, a_gpu.shape)
-
-    # Set this to False when debugging to make sure the compiled kernel is
-    # not cached:
-    cache_dir=None
-    tril_mod = \
-             SourceModule(tril_template.substitute(use_double=use_double,
-                                                   use_complex=use_complex,
-                                                   cols=N),
-                          cache_dir=cache_dir)
-    tril = tril_mod.get_function("tril")
-
+    tril = _get_tril_kernel(use_double, use_complex, cols=N)
     if not overwrite:
         a_orig_gpu = gpuarray.empty(a_gpu.shape, a_gpu.dtype, allocator=alloc)
         copy_func(handle, a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)

@@ -5,6 +5,7 @@ PyCUDA-based integration functions.
 """
 
 from string import Template
+from pycuda.tools import context_dependent_memoize
 from pycuda.compiler import SourceModule
 import pycuda.elementwise as elementwise
 import pycuda.gpuarray as gpuarray
@@ -78,12 +79,12 @@ def trapz(x_gpu, dx=1.0, handle=None):
     >>> x_gpu = gpuarray.to_gpu(x)
     >>> z = integrate.trapz(x_gpu)
     >>> np.allclose(np.trapz(x), z)
-    True    
+    True
     """
 
     if handle is None:
         handle = misc._global_cublas_handle
-        
+
     if len(x_gpu.shape) > 1:
         raise ValueError('input array must be 1D')
     if np.iscomplex(dx):
@@ -91,7 +92,7 @@ def trapz(x_gpu, dx=1.0, handle=None):
 
     float_type = x_gpu.dtype.type
     if float_type == np.complex64:
-        cublas_func = cublas.cublasCdotu        
+        cublas_func = cublas.cublasCdotu
     elif float_type == np.float32:
         cublas_func = cublas.cublasSdot
     elif float_type == np.complex128:
@@ -107,41 +108,51 @@ def trapz(x_gpu, dx=1.0, handle=None):
 
     return float_type(dx)*result
 
-gen_trapz2d_mult_template = Template("""
-#include <pycuda-complex.hpp>
 
-#if ${use_double}
-#if ${use_complex}
-#define TYPE pycuda::complex<double>
-#else
-#define TYPE double
-#endif
-#else
-#if ${use_complex}
-#define TYPE pycuda::complex<float>
-#else
-#define TYPE float
-#endif
-#endif
+@context_dependent_memoize
+def _get_trapz2d_mult_kernel(use_double, use_complex):
+    template = Template("""
+    #include <pycuda-complex.hpp>
 
-// Ny: number of rows
-// Nx: number of columns
-__global__ void gen_trapz2d_mult(TYPE *mult,
-                                 unsigned int Ny, unsigned int Nx) {
-    unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
-                       blockIdx.x*blockDim.x+threadIdx.x;
+    #if ${use_double}
+    #if ${use_complex}
+    #define TYPE pycuda::complex<double>
+    #else
+    #define TYPE double
+    #endif
+    #else
+    #if ${use_complex}
+    #define TYPE pycuda::complex<float>
+    #else
+    #define TYPE float
+    #endif
+    #endif
 
-    if (idx < Nx*Ny) {
-        if (idx == 0 || idx == Nx-1 || idx == Nx*(Ny-1) || idx == Nx*Ny-1)
-            mult[idx] = TYPE(0.25);
-        else if ((idx > 0 && idx < Nx-1) || (idx % Nx == 0) ||
-                (((idx + 1) % Nx) == 0) || (idx > Nx*(Ny-1) && idx < Nx*Ny-1))
-            mult[idx] = TYPE(0.5);
-        else 
-            mult[idx] = TYPE(1.0);
+    // Ny: number of rows
+    // Nx: number of columns
+    __global__ void gen_trapz2d_mult(TYPE *mult,
+                                     unsigned int Ny, unsigned int Nx) {
+        unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
+                           blockIdx.x*blockDim.x+threadIdx.x;
+
+        if (idx < Nx*Ny) {
+            if (idx == 0 || idx == Nx-1 || idx == Nx*(Ny-1) || idx == Nx*Ny-1)
+                mult[idx] = TYPE(0.25);
+            else if ((idx > 0 && idx < Nx-1) || (idx % Nx == 0) ||
+                    (((idx + 1) % Nx) == 0) || (idx > Nx*(Ny-1) && idx < Nx*Ny-1))
+                mult[idx] = TYPE(0.5);
+            else
+                mult[idx] = TYPE(1.0);
+        }
     }
-}
-""")
+    """)
+
+    # Set this to False when debugging to make sure the compiled kernel is
+    # not cached:
+    tmpl = template.substitute(use_double=use_double, use_complex=use_complex)
+    cache_dir=None
+    mod = SourceModule(tmpl, cache_dir=cache_dir)
+    return mod.get_function("gen_trapz2d_mult")
 
 def gen_trapz2d_mult(mat_shape, dtype):
     """
@@ -167,7 +178,7 @@ def gen_trapz2d_mult(mat_shape, dtype):
     if dtype not in [np.float32, np.float64, np.complex64,
                          np.complex128]:
         raise ValueError('unrecognized type')
-    
+
     use_double = int(dtype in [np.float64, np.complex128])
     use_complex = int(dtype in [np.complex64, np.complex128])
 
@@ -178,20 +189,11 @@ def gen_trapz2d_mult(mat_shape, dtype):
     # Get block/grid sizes:
     dev = misc.get_current_device()
     block_dim, grid_dim = misc.select_block_grid_sizes(dev, mat_shape)
-    
-    # Set this to False when debugging to make sure the compiled kernel is
-    # not cached:
-    cache_dir=None
-    gen_trapz2d_mult_mod = \
-                         SourceModule(gen_trapz2d_mult_template.substitute(use_double=use_double,
-                                                                           use_complex=use_complex),
-                                      cache_dir=cache_dir)
-
-    gen_trapz2d_mult = gen_trapz2d_mult_mod.get_function("gen_trapz2d_mult")    
+    gen_trapz2d_mult = _get_trapz2d_mult_kernel(use_double, use_complex)
     gen_trapz2d_mult(mult_gpu, np.uint32(Ny), np.uint32(Nx),
                      block=block_dim,
                      grid=grid_dim)
-    
+
     return mult_gpu
 
 def trapz2d(x_gpu, dx=1.0, dy=1.0, handle=None):
@@ -209,7 +211,7 @@ def trapz2d(x_gpu, dx=1.0, dy=1.0, handle=None):
     handle : int
         CUBLAS context. If no context is specified, the default handle from
         `scikits.misc._global_cublas_handle` is used.
-        
+
     Returns
     -------
     result : float
@@ -231,7 +233,7 @@ def trapz2d(x_gpu, dx=1.0, dy=1.0, handle=None):
 
     if handle is None:
         handle = misc._global_cublas_handle
-        
+
     if len(x_gpu.shape) != 2:
         raise ValueError('input array must be 2D')
     if np.iscomplex(dx) or np.iscomplex(dy):
@@ -239,7 +241,7 @@ def trapz2d(x_gpu, dx=1.0, dy=1.0, handle=None):
 
     float_type = x_gpu.dtype.type
     if float_type == np.complex64:
-        cublas_func = cublas.cublasCdotu        
+        cublas_func = cublas.cublasCdotu
     elif float_type == np.float32:
         cublas_func = cublas.cublasSdot
     elif float_type == np.complex128:
@@ -248,7 +250,7 @@ def trapz2d(x_gpu, dx=1.0, dy=1.0, handle=None):
         cublas_func = cublas.cublasDdot
     else:
         raise ValueError('unsupported input type')
-                                            
+
     trapz_mult_gpu = gen_trapz2d_mult(x_gpu.shape, float_type)
     result = cublas_func(handle, x_gpu.size, x_gpu.gpudata, 1,
                          trapz_mult_gpu.gpudata, 1)
