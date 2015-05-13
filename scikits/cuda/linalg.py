@@ -10,6 +10,7 @@ from pprint import pprint
 from string import Template
 from pycuda.tools import context_dependent_memoize
 from pycuda.compiler import SourceModule
+from pycuda.reduction import ReductionKernel
 
 import pycuda.gpuarray as gpuarray
 import pycuda.driver as drv
@@ -1705,6 +1706,72 @@ def trace(x_gpu, handle=None):
         incx = x_gpu.shape[0] + 1
     return cublas_func(handle, np.min(x_gpu.shape),
                        x_gpu.gpudata, incx, one.gpudata, 0)
+
+
+def det(a_gpu, overwrite=False, ipiv_gpu=None, handle=None):
+    """
+    Compute the determinant of a square matrix.
+
+    Parameters
+    ----------
+    a_gpu : pycuda.gpuarray.GPUArray
+        The square n*n matrix of which to calculate the determinant.
+
+    overwrite : bool, optional
+        Discard data in `a` (may improve performance). Default is False.
+
+    handle : int
+        CUBLAS context. If no context is specified, the default handle from
+        `scikits.misc._global_cublas_handle` is used.
+
+    ipiv_gpu : pycuda.gpuarray.GPUArray (optional)
+        Temporary array of size n, can be supplied to save allocations.
+
+    Returns
+    -------
+    det : number
+        determinant of a_gpu
+    """
+    if handle is None:
+        handle = misc._global_cublas_handle
+
+    if len(a_gpu.shape) != 2:
+        raise ValueError('Only 2D matrices are supported')
+    if a_gpu.shape[0] != a_gpu.shape[1]:
+        raise ValueError('Only square matrices are supported')
+
+    if (a_gpu.dtype == np.complex64):
+        getrf = cula.culaDeviceCgetrf
+    elif (a_gpu.dtype == np.float32):
+        getrf = cula.culaDeviceSgetrf
+    elif (a_gpu.dtype == np.complex128):
+        getrf = cula.culaDeviceZgetrf
+    elif (a_gpu.dtype == np.float64):
+        getrf = cula.culaDeviceDgetrf
+    else:
+        raise ValueError('unsupported input type')
+
+    n = a_gpu.shape[0]
+    if ipiv_gpu is None:
+        alloc = misc._global_cublas_allocator
+        ipiv_gpu = gpuarray.empty((n, 1), np.int32, allocator=alloc)
+    elif ipiv_gpu.dtype != np.int32 or np.prod(ipiv_gpu.shape) < n:
+        raise ValueError('invalid ipiv provided')
+
+    @context_dependent_memoize
+    def _get_kernel(dtype):
+        ctype = tools.dtype_to_ctype(dtype)
+        args = "int* ipiv, {ctype}* x, unsigned xn".format(ctype=ctype)
+        return ReductionKernel(a_gpu.dtype, "1.0", "a*b",
+                              "(ipiv[i] != i+1) ? -x[i*xn+i] : x[i*xn+i]",
+                              args)
+
+    out = a_gpu if overwrite else a_gpu.copy()
+    try:
+        getrf(n, n, out.gpudata, n, ipiv_gpu.gpudata)
+        return _get_kernel(a_gpu.dtype)(ipiv_gpu, out, n).get()
+    except cula.culaDataError as e:
+        raise LinAlgError(e)
 
 
 if __name__ == "__main__":

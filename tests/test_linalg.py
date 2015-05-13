@@ -831,6 +831,29 @@ class test_linalg(TestCase):
     def test_dot_strided_complex128(self):
         self._impl_test_dot_strided(np.complex128)
 
+    def _impl_test_det(self, dtype):
+        # random matrix
+        x = 10*np.asarray(np.random.rand(4, 4), dtype)
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(linalg.det(x_gpu), np.linalg.det(x))
+
+        # known matrix (from http://en.wikipedia.org/wiki/Determinant )
+        x = np.asarray([[-2.0, 2, -3.0], [-1, 1, 3], [2, 0, -1]], dtype)
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(linalg.det(x_gpu), 18.0)
+
+    def test_det_float32(self):
+        self._impl_test_det(np.float32)
+
+    def test_det_float64(self):
+        self._impl_test_det(np.float64)
+
+    def test_det_complex64(self):
+        self._impl_test_det(np.complex64)
+
+    def test_det_complex128(self):
+        self._impl_test_det(np.complex128)
+
 def suite():
     s = TestSuite()
     s.addTest(test_linalg('test_svd_ss_float32'))
@@ -881,6 +904,8 @@ def suite():
     s.addTest(test_linalg('test_add_dot_matrix_complex64'))
     s.addTest(test_linalg('test_dot_strided_float32'))
     s.addTest(test_linalg('test_dot_strided_complex64'))
+    s.addTest(test_linalg('test_det_float32'))
+    s.addTest(test_linalg('test_det_complex64'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_linalg('test_svd_ss_float64'))
         s.addTest(test_linalg('test_svd_ss_complex128'))
@@ -924,6 +949,8 @@ def suite():
         s.addTest(test_linalg('test_add_dot_matrix_complex128'))
         s.addTest(test_linalg('test_dot_strided_float64'))
         s.addTest(test_linalg('test_dot_strided_complex128'))
+        s.addTest(test_linalg('test_det_float64'))
+        s.addTest(test_linalg('test_det_complex128'))
     return s
 
 if __name__ == '__main__':
