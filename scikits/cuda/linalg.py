@@ -1630,9 +1630,6 @@ def inv(a_gpu, overwrite=False, ipiv_gpu=None):
         * If `a` is not square, or not 2-dimensional.
         * If ipiv was not None but had the wrong dtype or shape.
     """
-
-    alloc = misc._global_cublas_allocator
-
     if len(a_gpu.shape) != 2 or a_gpu.shape[0] != a_gpu.shape[1]:
         raise ValueError('expected square matrix')
 
@@ -1651,8 +1648,9 @@ def inv(a_gpu, overwrite=False, ipiv_gpu=None):
 
     n = a_gpu.shape[0]
     if ipiv_gpu is None:
-        ipiv_gpu = gpuarray.empty((n, 1), a_gpu.dtype, allocator=alloc)
-    elif ipiv_gpu.dtype != a_gpu.dtype or np.prod(ipiv_gpu.shape) < n:
+        alloc = misc._global_cublas_allocator
+        ipiv_gpu = gpuarray.empty((n, 1), np.int32, allocator=alloc)
+    elif ipiv_gpu.dtype != np.int32 or np.prod(ipiv_gpu.shape) < n:
         raise ValueError('invalid ipiv provided')
 
     out = a_gpu if overwrite else a_gpu.copy()
