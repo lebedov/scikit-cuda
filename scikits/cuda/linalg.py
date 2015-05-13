@@ -1716,14 +1716,11 @@ def det(a_gpu, overwrite=False, ipiv_gpu=None, handle=None):
     ----------
     a_gpu : pycuda.gpuarray.GPUArray
         The square n*n matrix of which to calculate the determinant.
-
     overwrite : bool, optional
         Discard data in `a` (may improve performance). Default is False.
-
     handle : int
         CUBLAS context. If no context is specified, the default handle from
         `scikits.misc._global_cublas_handle` is used.
-
     ipiv_gpu : pycuda.gpuarray.GPUArray (optional)
         Temporary array of size n, can be supplied to save allocations.
 
@@ -1732,6 +1729,7 @@ def det(a_gpu, overwrite=False, ipiv_gpu=None, handle=None):
     det : number
         determinant of a_gpu
     """
+
     if handle is None:
         handle = misc._global_cublas_handle
 

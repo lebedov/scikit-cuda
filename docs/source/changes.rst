@@ -58,6 +58,7 @@ Release 0.5.0 - (under development)
   by Thomas Unterthiner).
 * Memoize SourceModule calls to speed up various high-level functions (enh. by 
   Thomas Unterthiner).
+* Function for computing matrix determinant (enh. by Thomas Unterthiner).
   
 Release 0.042 - (March 10, 2013)
 --------------------------------

@@ -15,12 +15,14 @@ Linear Algebra Routines
    cho_factor
    cho_solve
    conj
+   det
    diag
    div_matvec
    dot_diag
    dot
    eye
    hermitian
+   inv
    mdot
    mult_matvec
    multiply
