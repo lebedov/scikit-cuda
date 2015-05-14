@@ -7,6 +7,9 @@ import scikits.cuda
 from pkgutil import extend_path
 __path__ = extend_path(__path__, 'scikits.cuda')
 
+from .info import __doc__
+from .version import __version__
+
 # Needed to ensure correct header location even when modules are imported as
 # skcuda.something:
 install_headers = \
