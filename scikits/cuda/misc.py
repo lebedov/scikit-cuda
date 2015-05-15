@@ -16,7 +16,7 @@ import pycuda.elementwise as elementwise
 import pycuda.reduction as reduction
 import pycuda.scan as scan
 import pycuda.tools as tools
-from pycuda.tools import context_dependent_memoize
+from pycuda.tools import context_dependent_memoize, dtype_to_ctype
 from pycuda.compiler import SourceModule
 from pytools import memoize
 import numpy as np
@@ -796,7 +796,7 @@ set_by_index.cache = {}
 
 
 @context_dependent_memoize
-def _get_binaryop_vecmat_kernel(datatype, binary_op):
+def _get_binaryop_vecmat_kernel(dtype, binary_op):
     template = Template("""
     #include <pycuda-complex.hpp>
 
@@ -836,7 +836,8 @@ def _get_binaryop_vecmat_kernel(datatype, binary_op):
         }
     }""")
     cache_dir=None
-    tmpl = template.substitute(type=datatype, binary_op=binary_op)
+    ctype = dtype_to_ctype(dtype)
+    tmpl = template.substitute(type=ctype, binary_op=binary_op)
     mod = SourceModule(tmpl)
 
     add_row_vec_kernel = mod.get_function('opRowVecToMat')
@@ -886,19 +887,10 @@ def binaryop_matvec(binary_op, x_gpu, a_gpu, axis=None, out=None, stream=None):
         if axis > 1:
             raise ValueError('invalid axis')
 
-    if x_gpu.dtype == np.float64:
-        datatype = 'double';
-    elif x_gpu.dtype == np.float32:
-        datatype = 'float'
-    if x_gpu.dtype == np.complex64:
-        datatype = 'pycuda::complex<float>';
-    elif x_gpu.dtype == np.complex128:
-        datatype = 'pycuda::complex<double>'
-
     if binary_op not in ['+', '-', '/', '*', '%']:
         raise ValueError('invalid operator')
 
-    row_kernel, col_kernel = _get_binaryop_vecmat_kernel(datatype, binary_op)
+    row_kernel, col_kernel = _get_binaryop_vecmat_kernel(x_gpu.dtype, binary_op)
     n, m = np.int32(x_gpu.shape[0]), np.int32(x_gpu.shape[1])
 
     block = (24, 24, 1)
@@ -1190,6 +1182,215 @@ def std(x_gpu, axis=None, stream=None):
         out = var(x_gpu, axis=axis, stream=stream)
         _inplace_pow(out, 0.5, stream)
     return out
+
+
+@context_dependent_memoize
+def _get_minmax_kernel(dtype, min_or_max):
+    template = Template("""
+    #include <pycuda-complex.hpp>
+
+    __global__ void minmax_column_kernel(${type}* mat, ${type}* target,
+                                         unsigned int *idx_target,
+                                         unsigned int width,
+                                         unsigned int height) {
+        __shared__ ${type} max_vals[32];
+        __shared__ unsigned int max_idxs[32];
+        ${type} cur_max = ${init_value};
+        unsigned int cur_idx = 0;
+        ${type} val = 0;
+
+        for (unsigned int i = threadIdx.x; i < height; i += 32) {
+            val = mat[blockIdx.x + i * width];
+
+            if (val ${cmp_op} cur_max) {
+                cur_max = val;
+                cur_idx = i;
+            }
+        }
+        max_vals[threadIdx.x] = cur_max;
+        max_idxs[threadIdx.x] = cur_idx;
+        __syncthreads();
+
+        if (threadIdx.x == 0) {
+            cur_max = ${init_value};
+            cur_idx = 0;
+
+            for (unsigned int i = 0; i < 32; i++)
+                if (max_vals[i] ${cmp_op} cur_max) {
+                    cur_max = max_vals[i];
+                    cur_idx = max_idxs[i];
+                }
+
+            target[blockIdx.x] = cur_max;
+            idx_target[blockIdx.x] = cur_idx;
+        }
+    }
+
+    __global__ void minmax_row_kernel(${type}* mat, ${type}* target,
+                                      unsigned int* idx_target,
+                                      unsigned int width,
+                                      unsigned int height) {
+        __shared__ ${type} max_vals[32];
+        __shared__ unsigned int max_idxs[32];
+        ${type} cur_max = ${init_value};
+        unsigned int cur_idx = 0;
+        ${type} val = 0;
+
+        for (unsigned int i = threadIdx.x; i < width; i += 32) {
+            val = mat[blockIdx.x * width + i];
+
+            if (val ${cmp_op} cur_max) {
+                cur_max = val;
+                cur_idx = i;
+            }
+        }
+        max_vals[threadIdx.x] = cur_max;
+        max_idxs[threadIdx.x] = cur_idx;
+        __syncthreads();
+
+        if (threadIdx.x == 0) {
+            cur_max = ${init_value};
+            cur_idx = 0;
+
+            for (unsigned int i = 0; i < 32; i++)
+                if (max_vals[i] ${cmp_op} cur_max) {
+                    cur_max = max_vals[i];
+                    cur_idx = max_idxs[i];
+                }
+
+            target[blockIdx.x] = cur_max;
+            idx_target[blockIdx.x] = cur_idx;
+        }
+    }
+""")
+    cache_dir=None
+    ctype = dtype_to_ctype(dtype)
+    if min_or_max=='max':
+        iv = str(np.finfo(dtype).min)
+        tmpl = template.substitute(type=ctype, cmp_op='>', init_value=iv)
+    elif min_or_max=='min':
+        iv = str(np.finfo(dtype).max)
+        tmpl = template.substitute(type=ctype, cmp_op='<', init_value=iv)
+    else:
+        raise ValueError('invalid argument')
+    mod = SourceModule(tmpl)
+
+    minmax_col_kernel = mod.get_function('minmax_column_kernel')
+    minmax_row_kernel = mod.get_function('minmax_row_kernel')
+    return minmax_col_kernel, minmax_row_kernel
+
+
+def _minmax_impl(a_gpu, axis, min_or_max, stream=None):
+    ''' Returns both max and argmax (min/argmin) along an axis.'''
+    assert len(a_gpu.shape) < 3
+    if iscomplextype(a_gpu.dtype):
+        raise ValueError("Cannot compute min/max of complex values")
+
+    if axis is None:  ## Note: PyCUDA doesn't have an overall argmax/argmin!
+        if min_or_max == 'max':
+            return gpuarray.max(a_gpu).get()
+        else:
+            return gpuarray.min(a_gpu).get()
+    else:
+        if axis < 0:
+            axis += 2
+    assert axis in (0, 1)
+
+    global _global_cublas_allocator
+    alloc = _global_cublas_allocator
+
+    n, m = a_gpu.shape if a_gpu.flags.c_contiguous else (a_gpu.shape[1], a_gpu.shape[0])
+    col_kernel, row_kernel = _get_minmax_kernel(a_gpu.dtype, min_or_max)
+    if (axis == 0 and a_gpu.flags.c_contiguous) or (axis == 1 and a_gpu.flags.f_contiguous):
+        target = gpuarray.empty(m, dtype=a_gpu.dtype, allocator=alloc)
+        idx = gpuarray.empty(m, dtype=np.uint32, allocator=alloc)
+        col_kernel(a_gpu, target, idx, np.uint32(m), np.uint32(n),
+                   block=(32, 1, 1), grid=(m, 1, 1), stream=stream)
+    else:
+        target = gpuarray.empty(n, dtype=a_gpu, allocator=alloc)
+        idx = gpuarray.empty(n, dtype=np.uint32, allocator=alloc)
+        row_kernel(a_gpu, target, idx, np.uint32(m), np.uint32(n),
+                block=(32, 1, 1), grid=(n, 1, 1), stream=stream)
+    return target, idx
+
+
+def max(a_gpu, axis=None):
+    '''
+    Return the maximum of an array or maximum along an axis.
+
+    Parameters
+    ----------
+    a_gpu : pycuda.gpuarray.GPUArray
+        Input array
+    axis : int (optional)
+        Axis along which the maxima are computed. The default is to
+        compute the maximum of the flattened array.
+
+     Returns
+    -------
+    out : pycuda.gpuarray.GPUArray or float
+        maxima of matrix elements along the desired axis or overall maximum.
+    '''
+    return _minmax_impl(a_gpu, axis, "max")[0]
+
+
+def min(a_gpu, axis=None):
+    '''
+    Return the minimum of an array or minimum along an axis.
+
+    Parameters
+    ----------
+    a_gpu : pycuda.gpuarray.GPUArray
+        Input array
+    axis : int (optional)
+        Axis along which the minima are computed. The default is to
+        compute the minimum of the flattened array.
+
+     Returns
+    -------
+    out : pycuda.gpuarray.GPUArray or float
+        minima of matrix elements along the desired axis or overall minimum.
+    '''
+    return _minmax_impl(a_gpu, axis, "min")[0]
+
+
+def argmax(a_gpu, axis):
+    '''
+    Indices of the maximum values along an axis.
+
+    Parameters
+    ----------
+    a_gpu : pycuda.gpuarray.GPUArray
+        Input array
+    axis : int
+        Axis along which the maxima are computed.
+
+     Returns
+    -------
+    out : pycuda.gpuarray.GPUArray or float
+        Array of indices into the array.
+    '''
+    return _minmax_impl(a_gpu, axis, "max")[1]
+
+
+def argmin(a_gpu, axis):
+    '''
+    Indices of the minimum values along an axis.
+
+    Parameters
+    ----------
+    a_gpu : pycuda.gpuarray.GPUArray
+        Input array
+    axis : int
+        Axis along which the minima are computed.
+
+     Returns
+    -------
+    out : pycuda.gpuarray.GPUArray or float
+        Array of indices into the array.
+    '''
+    return _minmax_impl(a_gpu, axis, "min")[1]
+
 
 if __name__ == "__main__":
     import doctest

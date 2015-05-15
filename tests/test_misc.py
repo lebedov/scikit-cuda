@@ -308,6 +308,50 @@ class test_misc(TestCase):
     def test_std_complex128(self):
         self.impl_test_std(np.complex128)
 
+    def _impl_test_minmax(self, dtype):
+        x = np.random.normal(scale=5.0, size=(3, 5))
+        x = x.astype(dtype=dtype, order='C')
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(misc.max(x_gpu, axis=0).get(), x.max(axis=0))
+        assert np.allclose(misc.max(x_gpu, axis=1).get(), x.max(axis=1))
+        assert np.allclose(misc.min(x_gpu, axis=0).get(), x.min(axis=0))
+        assert np.allclose(misc.min(x_gpu, axis=1).get(), x.min(axis=1))
+
+        x = x.astype(dtype=dtype, order='F')
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(misc.max(x_gpu, axis=0).get(), x.max(axis=0))
+        assert np.allclose(misc.max(x_gpu, axis=1).get(), x.max(axis=1))
+        assert np.allclose(misc.min(x_gpu, axis=0).get(), x.min(axis=0))
+        assert np.allclose(misc.min(x_gpu, axis=1).get(), x.min(axis=1))
+
+    def test_minmax_float32(self):
+        self._impl_test_minmax(np.float32)
+
+    def test_minmax_float64(self):
+        self._impl_test_minmax(np.float64)
+
+    def _impl_test_argminmax(self, dtype):
+        x = np.random.normal(scale=5.0, size=(3, 5))
+        x = x.astype(dtype=dtype, order='C')
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(misc.argmax(x_gpu, axis=0).get(), x.argmax(axis=0))
+        assert np.allclose(misc.argmax(x_gpu, axis=1).get(), x.argmax(axis=1))
+        assert np.allclose(misc.argmin(x_gpu, axis=0).get(), x.argmin(axis=0))
+        assert np.allclose(misc.argmin(x_gpu, axis=1).get(), x.argmin(axis=1))
+
+        x = x.astype(dtype=dtype, order='F')
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(misc.argmax(x_gpu, axis=0).get(), x.argmax(axis=0))
+        assert np.allclose(misc.argmax(x_gpu, axis=1).get(), x.argmax(axis=1))
+        assert np.allclose(misc.argmin(x_gpu, axis=0).get(), x.argmin(axis=0))
+        assert np.allclose(misc.argmin(x_gpu, axis=1).get(), x.argmin(axis=1))
+
+    def test_argminmax_float32(self):
+        self._impl_test_argminmax(np.float32)
+
+    def test_argminmax_float64(self):
+        self._impl_test_argminmax(np.float64)
+
 def suite():
     s = TestSuite()
     s.addTest(test_misc('test_maxabs_float32'))
@@ -329,6 +373,8 @@ def suite():
     s.addTest(test_misc('test_var_complex64'))
     s.addTest(test_misc('test_std_float32'))
     s.addTest(test_misc('test_std_complex64'))
+    s.addTest(test_misc('test_minmax_float32'))
+    s.addTest(test_misc('test_argminmax_float32'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_misc('test_maxabs_float64'))
         s.addTest(test_misc('test_maxabs_complex128'))
@@ -349,6 +395,8 @@ def suite():
         s.addTest(test_misc('test_var_complex128'))
         s.addTest(test_misc('test_std_float64'))
         s.addTest(test_misc('test_std_complex128'))
+    s.addTest(test_misc('test_minmax_float64'))
+    s.addTest(test_misc('test_argminmax_float64'))
     return s
 
 if __name__ == '__main__':
