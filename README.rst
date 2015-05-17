@@ -18,9 +18,9 @@ package uses `PyCUDA <http://mathema.tician.de/software/pycuda/>`_ to provide
 high-level functions comparable to
 those in `NumPy <http://www.numpy.org>`_.
 
-.. image:: https://zenodo.org/badge/6233/lebedov/scikits.cuda.svg
-    :target: http://dx.doi.org/10.5281/zenodo.16269
-    :alt: 0.5.0b1
+.. image:: https://zenodo.org/badge/doi/10.5281/zenodo.17700.svg
+    :target: http://dx.doi.org/10.5281/zenodo.17700
+    :alt: 0.5.0b2
 .. image:: https://img.shields.io/pypi/v/scikits.cuda.svg
     :target: https://pypi.python.org/pypi/scikits.cuda
     :alt: Latest Version
