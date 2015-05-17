@@ -8,11 +8,11 @@ Release 0.5.0 - (under development)
 * Switch to PEP 440 version numbering.
 * Replace distribute_setup.py with ez_setup.py.
 * Improve support for latest NVIDIA GPUs.
-* Direct links to online NVIDIA documentation in CUBLAS, CUFFT wrapper 
+* Direct links to online NVIDIA documentation in CUBLAS, CUFFT wrapper
   docstrings.
 * Add wrappers for CUSOLVER in CUDA 7.0.
 * Add skcuda namespace package that contains all modules in scikits.cuda namespace.
-* Add more wrappers for CUBLAS 5 functions (enh. by Teodor Moldovan, Sander 
+* Add more wrappers for CUBLAS 5 functions (enh. by Teodor Moldovan, Sander
   Dieleman).
 * Add support for CULA Dense Free R17 (enh. by Alex Rubinsteyn).
 * Memoize elementwise kernel used by ifft scaling (#37).
@@ -33,33 +33,35 @@ Release 0.5.0 - (under development)
 * Use cublas*copy in diag() function (enh. by Thomas Unterthiner).
 * Improved MacOSX compatibility (enh. by Michael M. Forbes).
 * Find CUBLAS version even when it is only accessible via LD_LIBRARY_PATH (enh. by Frédéric Bastien).
-* Get both major and minor version numbers from CUBLAS library when determining 
+* Get both major and minor version numbers from CUBLAS library when determining
   version.
 * Handle unset LD_LIBRARY_PATH variable (fix by Jan Schlüter).
 * Fix library search on MacOS X (fix by capdevc).
 * Fix library search on Windows.
 * Add Windows support to CULA wrappers.
-* Enable specification of memory pool allocator to linalg functions (enh.  by 
+* Enable specification of memory pool allocator to linalg functions (enh.  by
   Thomas Unterthiner).
 * Improve misc.select_block_grid_sizes() logic to handle different GPU hardware.
 * Compute transpose using CUDA 5.0 CUBLAS functions rather than with inefficient naive kernel.
 * Use ReadTheDocs theme when building HTML docs locally.
-* Support additional cufftPlanMany() parameters when creating FFT plans (enh. by 
+* Support additional cufftPlanMany() parameters when creating FFT plans (enh. by
   Gregory R. Lee).
 * Improved Python 3.4 compatibility (enh. by Eric Larson).
-* Avoid unnecessary import of cublas when importing fft module (enh. by Eric 
+* Avoid unnecessary import of cublas when importing fft module (enh. by Eric
   Larson).
 * Matrix trace function (enh. by Thomas Unterthiner).
-* Functions for computing simple axis-wise stats over matrices (enh. by Thomas 
+* Functions for computing simple axis-wise stats over matrices (enh. by Thomas
   Unterthiner).
-* Matrix add_dot, add_matvec, div_matvec, mult_matvec functions (enh. by Thomas 
+* Matrix add_dot, add_matvec, div_matvec, mult_matvec functions (enh. by Thomas
   Unterthiner).
-* Faster dot_diag implementation using CUBLAS matrix-matrix multiplication (enh.  
+* Faster dot_diag implementation using CUBLAS matrix-matrix multiplication (enh.
   by Thomas Unterthiner).
-* Memoize SourceModule calls to speed up various high-level functions (enh. by 
+* Memoize SourceModule calls to speed up various high-level functions (enh. by
   Thomas Unterthiner).
 * Function for computing matrix determinant (enh. by Thomas Unterthiner).
-  
+* Function for computing min/max and argmin/argmax along a matrix axis
+  (enh. by Thomas Unterthiner).
+
 Release 0.042 - (March 10, 2013)
 --------------------------------
 * Add complex exponential integral.
@@ -67,7 +69,7 @@ Release 0.042 - (March 10, 2013)
 * Use CUBLAS v2 API, add preliminary support for CUBLAS 5 functions.
 * Detect CUBLAS version without initializing the GPU.
 * Work around numpy bug #1898.
-* Fix issues with pycuda installations done via easy_install/pip. 
+* Fix issues with pycuda installations done via easy_install/pip.
 * Add support for specifying streams when creating FFT plans.
 * Successfully find CULA R13a libraries.
 * Raise exceptions when functions in the full release of CULA Dense are invoked
@@ -115,4 +117,3 @@ Release 0.02 - (September 21, 2010)
 Release 0.01 - (September 17, 2010)
 -----------------------------------
 * First public release.
-

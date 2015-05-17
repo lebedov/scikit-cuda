@@ -9,6 +9,8 @@ Miscellaneous Routines
    :nosignatures:
 
    add_matvec
+   argmax
+   argmin
    cumsum
    diff
    done_context
@@ -22,8 +24,10 @@ Miscellaneous Routines
    init_device
    iscomplextype
    isdoubletype
+   max
    maxabs
    mean
+   min
    ones
    ones_like
    select_block_grid_sizes
