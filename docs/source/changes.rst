@@ -61,6 +61,8 @@ Release 0.5.0 - (under development)
 * Function for computing matrix determinant (enh. by Thomas Unterthiner).
 * Function for computing min/max and argmin/argmax along a matrix axis
   (enh. by Thomas Unterthiner).
+* Set default value of the parameter 'overwrite' to False in all linalg
+  functions.
 
 Release 0.042 - (March 10, 2013)
 --------------------------------
