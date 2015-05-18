@@ -66,8 +66,9 @@ Building and Installation
 -------------------------
 ``scikits.cuda`` searches for CUDA libraries in the system library
 search path when imported. You may have to modify this path (e.g., by adding the
-path to the CUDA libraries to /etc/ld.so.conf or to the
-LD_LIBRARY_PATH environmental variable on Linux) if the libraries are
+path to the CUDA libraries to ``/etc/ld.so.conf`` and running ``ldconfig`` as 
+root or to the
+``LD_LIBRARY_PATH`` environmental variable on Linux) if the libraries are
 not being found.
 
 To build and install the toolbox, download and unpack the source 
@@ -93,7 +94,10 @@ directly.
 
 Getting Started
 ---------------
-Sample code demonstrating how to use different parts of the toolbox is
-located in the ``demos/`` subdirectory of the source release. Most of 
-the high-level functions also contain doctests that describe their usage.
+The functions provided by ``scikits.cuda`` are grouped into several submodules 
+in the ``scikits.cuda`` namespace package. The ``skcuda`` namespace package is 
+also provided as a shortcut to ``scikits.cuda``. Sample code demonstrating how 
+to use different parts of the toolbox is
+located in the ``demos/`` subdirectory of the source release. Many of the 
+high-level functions also contain doctests that describe their usage.
 
