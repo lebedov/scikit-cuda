@@ -1156,6 +1156,12 @@ def diag(v_gpu):
 
     return d_gpu
 
+
+@context_dependent_memoize
+def _get_eye_kernel(dtype):
+    ctype=tools.dtype_to_ctype(dtype)
+    return el.ElementwiseKernel("{ctype} *e".format(ctype=ctype), "e[i] = 1")
+
 def eye(N, dtype=np.float32):
     """
     Construct a 2D matrix with ones on the diagonal and zeros elsewhere.
@@ -1202,8 +1208,7 @@ def eye(N, dtype=np.float32):
     alloc = misc._global_cublas_allocator
 
     e_gpu = misc.zeros((N, N), dtype, allocator=alloc)
-    func = el.ElementwiseKernel("{ctype} *e".format(ctype=tools.dtype_to_ctype(dtype)),
-                                "e[i] = 1")
+    func = _get_eye_kernel(dtype)
     func(e_gpu, slice=slice(0, N*N, N+1))
     return e_gpu
 
@@ -1708,6 +1713,13 @@ def trace(x_gpu, handle=None):
                        x_gpu.gpudata, incx, one.gpudata, 0)
 
 
+@context_dependent_memoize
+def _get_det_kernel(dtype):
+    ctype = tools.dtype_to_ctype(dtype)
+    args = "int* ipiv, {ctype}* x, unsigned xn".format(ctype=ctype)
+    return ReductionKernel(dtype, "1.0", "a*b",
+                           "(ipiv[i] != i+1) ? -x[i*xn+i] : x[i*xn+i]", args)
+
 def det(a_gpu, overwrite=False, ipiv_gpu=None, handle=None):
     """
     Compute the determinant of a square matrix.
@@ -1756,18 +1768,10 @@ def det(a_gpu, overwrite=False, ipiv_gpu=None, handle=None):
     elif ipiv_gpu.dtype != np.int32 or np.prod(ipiv_gpu.shape) < n:
         raise ValueError('invalid ipiv provided')
 
-    @context_dependent_memoize
-    def _get_kernel(dtype):
-        ctype = tools.dtype_to_ctype(dtype)
-        args = "int* ipiv, {ctype}* x, unsigned xn".format(ctype=ctype)
-        return ReductionKernel(a_gpu.dtype, "1.0", "a*b",
-                              "(ipiv[i] != i+1) ? -x[i*xn+i] : x[i*xn+i]",
-                              args)
-
     out = a_gpu if overwrite else a_gpu.copy()
     try:
         getrf(n, n, out.gpudata, n, ipiv_gpu.gpudata)
-        return _get_kernel(a_gpu.dtype)(ipiv_gpu, out, n).get()
+        return _get_det_kernel(a_gpu.dtype)(ipiv_gpu, out, n).get()
     except cula.culaDataError as e:
         raise LinAlgError(e)
 
