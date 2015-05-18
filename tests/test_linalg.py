@@ -273,7 +273,8 @@ class test_linalg(TestCase):
         a = a.astype(dtype, order="F", copy=True)
         d_gpu = gpuarray.to_gpu(d)
         a_gpu = gpuarray.to_gpu(a)
-        r_gpu = linalg.dot_diag(d_gpu, a_gpu)
+        # note: due to pycuda issue #66, this will fail when overwrite=False
+        r_gpu = linalg.dot_diag(d_gpu, a_gpu, overwrite=True)
         assert np.allclose(np.dot(np.diag(d), a), r_gpu.get())
 
     def test_dot_diag_float32(self):
@@ -298,7 +299,8 @@ class test_linalg(TestCase):
         a = a.astype(dtype, order="F", copy=True)
         d_gpu = gpuarray.to_gpu(d)
         a_gpu = gpuarray.to_gpu(a)
-        r_gpu = linalg.dot_diag(d_gpu, a_gpu, 't')
+        # note: due to pycuda issue #66, this will fail when overwrite=False
+        r_gpu = linalg.dot_diag(d_gpu, a_gpu, 't', overwrite=True)
         assert np.allclose(np.dot(np.diag(d), a.T).T, r_gpu.get())
 
     def test_dot_diag_t_float32(self):
@@ -429,15 +431,15 @@ class test_linalg(TestCase):
         a = np.array([[1+1j, 2-2j, 3+3j, 4-4j],
                       [5+5j, 6-6j, 7+7j, 8-8j]], np.complex64)
         a_gpu = gpuarray.to_gpu(a)
-        linalg.conj(a_gpu)
-        assert np.all(np.conj(a) == a_gpu.get())
+        r_gpu = linalg.conj(a_gpu)
+        assert np.all(np.conj(a) == r_gpu.get())
 
     def test_conj_complex128(self):
         a = np.array([[1+1j, 2-2j, 3+3j, 4-4j],
                       [5+5j, 6-6j, 7+7j, 8-8j]], np.complex128)
         a_gpu = gpuarray.to_gpu(a)
-        linalg.conj(a_gpu)
-        assert np.all(np.conj(a) == a_gpu.get())
+        r_gpu = linalg.conj(a_gpu)
+        assert np.all(np.conj(a) == r_gpu.get())
 
     def test_diag_1d_float32(self):
         v = np.array([1, 2, 3, 4, 5, 6], np.float32)

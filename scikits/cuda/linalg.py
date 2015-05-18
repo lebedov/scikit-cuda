@@ -692,7 +692,7 @@ def mdot(*args, **kwargs):
         del(temp_gpu)
     return out_gpu
 
-def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
+def dot_diag(d_gpu, a_gpu, trans='N', overwrite=False, handle=None):
     """
     Dot product of diagonal and non-diagonal arrays.
 
@@ -709,8 +709,8 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
         as `d_gpu`.
     trans : char
         If 'T', compute the product of the transpose of `a_gpu`.
-    overwrite : bool
-        If true (default), save the result in `a_gpu`.
+    overwrite : bool (default: False)
+        If true, save the result in `a_gpu`.
     handle : int
         CUBLAS context. If no context is specified, the default handle from
         `scikits.cuda.misc._global_cublas_handle` is used.
@@ -787,7 +787,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=True, handle=None):
                 d_gpu.gpudata, 1, r_gpu.gpudata, ldr)
     return r_gpu
 
-def add_diag(d_gpu, a_gpu, overwrite=True, handle=None):
+def add_diag(d_gpu, a_gpu, overwrite=False, handle=None):
     """
     Adds a vector to the diagonal of an array.
 
@@ -800,8 +800,8 @@ def add_diag(d_gpu, a_gpu, overwrite=True, handle=None):
         diagonal.
     a_gpu : pycuda.gpuarray.GPUArray
         Summand array with shape `(N, N)`.
-    overwrite : bool
-        If true, save the result in `a_gpu` (default: True).
+    overwrite : bool (default: False)
+        If true, save the result in `a_gpu`.
     handle : int
         CUBLAS context. If no context is specified, the default handle from
         `scikits.cuda.misc._global_cublas_handle` is used.
@@ -965,7 +965,7 @@ def hermitian(a_gpu, handle=None):
 
     return _transpose(a_gpu, True, handle)
 
-def conj(x_gpu, overwrite=True):
+def conj(x_gpu, overwrite=False):
     """
     Complex conjugate.
 
@@ -975,8 +975,8 @@ def conj(x_gpu, overwrite=True):
     ----------
     x_gpu : pycuda.gpuarray.GPUArray
         Input array of shape `(m, n)`.
-    overwrite : bool
-        If true (default), save the result in the specified array.
+    overwrite : bool (default: False)
+        If true, save the result in the specified array.
         If false, return the result in a newly allocated array.
 
     Returns
@@ -1338,7 +1338,7 @@ def _get_tril_kernel(use_double, use_complex, cols):
     return mod.get_function("tril")
 
 
-def tril(a_gpu, overwrite=True, handle=None):
+def tril(a_gpu, overwrite=False, handle=None):
     """
     Lower triangle of a matrix.
 
@@ -1348,8 +1348,8 @@ def tril(a_gpu, overwrite=True, handle=None):
     ----------
     a_gpu : pycuda.gpuarray.GPUArray
         Input matrix of shape `(m, m)`
-    overwrite : boolean
-        If true (default), zero out the upper triangle of the matrix.
+    overwrite : bool (default: False)
+        If true, zero out the upper triangle of the matrix.
         If false, return the result in a newly allocated matrix.
     handle : int
         CUBLAS context. If no context is specified, the default handle from
@@ -1429,7 +1429,7 @@ def tril(a_gpu, overwrite=True, handle=None):
         swap_func(handle, a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
         return a_orig_gpu
 
-def multiply(x_gpu, y_gpu, overwrite=True):
+def multiply(x_gpu, y_gpu, overwrite=False):
     """
     Multiply arguments element-wise.
 
@@ -1439,8 +1439,8 @@ def multiply(x_gpu, y_gpu, overwrite=True):
         Input arrays to be multiplied.
     dev : pycuda.driver.Device
         Device object to be used.
-    overwrite : bool
-        If true (default), return the result in `y_gpu`.
+    overwrite : bool (default: False)
+        If true, return the result in `y_gpu`.
         is false, return the result in a newly allocated array.
 
     Returns
@@ -1613,8 +1613,8 @@ def inv(a_gpu, overwrite=False, ipiv_gpu=None):
     ----------
     a_gpu : pycuda.gpuarray.GPUArray
         Square (n, n) matrix to be inverted.
-    overwrite : bool, optional
-        Discard data in `a` (may improve performance). Default is False.
+    overwrite : bool (default: False)
+        Discard data in `a` (may improve performance).
     ipiv_gpu : pycuda.gpuarray.GPUArray (optional)
         Temporary array of size n, can be supplied to save allocations.
 
@@ -1716,8 +1716,8 @@ def det(a_gpu, overwrite=False, ipiv_gpu=None, handle=None):
     ----------
     a_gpu : pycuda.gpuarray.GPUArray
         The square n*n matrix of which to calculate the determinant.
-    overwrite : bool, optional
-        Discard data in `a` (may improve performance). Default is False.
+    overwrite : bool (default: False)
+        Discard data in `a` (may improve performance).
     handle : int
         CUBLAS context. If no context is specified, the default handle from
         `scikits.misc._global_cublas_handle` is used.
