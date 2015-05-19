@@ -1579,6 +1579,112 @@ def magma_zgesv_gpu(n, nhrs, A, lda, ipiv, B, ldb):
     magmaCheckStatus(status)
 
 
+# SPOTRF, DPOTRF, CPOTRF, ZPOTRF
+_libmagma.magma_spotrf_gpu.restype = int
+_libmagma.magma_spotrf_gpu.argtypes = [ctypes.c_int,
+                                  ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int,
+                                  ctypes.c_void_p]
+def magma_spotrf_gpu(uplo, n, A, lda):
+    """
+    Cholesky factorization of positive symmetric matrix.
+    """
+    uplo = _uplo_conversion[uplo]
+    info = ctypes.c_int()
+    status = _libmagma.magma_spotrf_gpu(uplo, n, int(A), lda, ctypes.byref(info))
+    magmaCheckStatus(status)
+
+
+_libmagma.magma_dpotrf_gpu.restype = int
+_libmagma.magma_dpotrf_gpu.argtypes = _libmagma.magma_spotrf_gpu.argtypes
+def magma_dpotrf_gpu(uplo, n, A, lda):
+    """
+    Cholesky factorization of positive symmetric matrix.
+    """
+    uplo = _uplo_conversion[uplo]
+    info = ctypes.c_int()
+    status = _libmagma.magma_dpotrf_gpu(uplo, n, int(A), lda, ctypes.byref(info))
+    magmaCheckStatus(status)
+
+
+_libmagma.magma_cpotrf_gpu.restype = int
+_libmagma.magma_cpotrf_gpu.argtypes = _libmagma.magma_spotrf_gpu.argtypes
+def magma_cpotrf_gpu(uplo, n, A, lda):
+    """
+    Cholesky factorization of positive symmetric matrix.
+    """
+    uplo = _uplo_conversion[uplo]
+    info = ctypes.c_int()
+    status = _libmagma.magma_cpotrf_gpu(uplo, n, int(A), lda, ctypes.byref(info))
+    magmaCheckStatus(status)
+
+
+_libmagma.magma_zpotrf_gpu.restype = int
+_libmagma.magma_zpotrf_gpu.argtypes = _libmagma.magma_zpotrf_gpu.argtypes
+def magma_zpotrf_gpu(uplo, n, A, lda):
+    """
+    Cholesky factorization of positive symmetric matrix.
+    """
+    uplo = _uplo_conversion[uplo]
+    info = ctypes.c_int()
+    status = _libmagma.magma_zpotrf_gpu(uplo, n, int(A), lda, ctypes.byref(info))
+    magmaCheckStatus(status)
+
+
+# SPOTRI, DPOTRI, CPOTRI, ZPOTRI
+_libmagma.magma_spotri_gpu.restype = int
+_libmagma.magma_spotri_gpu.argtypes = [ctypes.c_int,
+                                  ctypes.c_int,
+                                  ctypes.c_void_p,
+                                  ctypes.c_int,
+                                  ctypes.c_void_p]
+def magma_spotri_gpu(uplo, n, A, lda):
+    """
+    Inverse using the Cholesky factorization of positive symmetric matrix.
+    """
+    uplo = _uplo_conversion[uplo]
+    info = ctypes.c_int()
+    status = _libmagma.magma_spotri_gpu(uplo, n, int(A), lda, ctypes.byref(info))
+    magmaCheckStatus(status)
+
+
+_libmagma.magma_dpotri_gpu.restype = int
+_libmagma.magma_dpotri_gpu.argtypes = _libmagma.magma_spotri_gpu.argtypes
+def magma_dpotri_gpu(uplo, n, A, lda):
+    """
+    Inverse using the Cholesky factorization of positive symmetric matrix.
+    """
+    uplo = _uplo_conversion[uplo]
+    info = ctypes.c_int()
+    status = _libmagma.magma_dpotri_gpu(uplo, n, int(A), lda, ctypes.byref(info))
+    magmaCheckStatus(status)
+
+
+_libmagma.magma_cpotri_gpu.restype = int
+_libmagma.magma_cpotri_gpu.argtypes = _libmagma.magma_spotri_gpu.argtypes
+def magma_cpotri_gpu(uplo, n, A, lda):
+    """
+    Inverse using the Cholesky factorization of positive symmetric matrix.
+    """
+    uplo = _uplo_conversion[uplo]
+    info = ctypes.c_int()
+    status = _libmagma.magma_cpotri_gpu(uplo, n, int(A), lda, ctypes.byref(info))
+    magmaCheckStatus(status)
+
+
+_libmagma.magma_zpotri_gpu.restype = int
+_libmagma.magma_zpotri_gpu.argtypes = _libmagma.magma_spotri_gpu.argtypes
+def magma_zpotri_gpu(uplo, n, A, lda):
+    """
+    Inverse using the Cholesky factorization of positive symmetric matrix.
+    """
+    uplo = _uplo_conversion[uplo]
+    info = ctypes.c_int()
+    status = _libmagma.magma_zpotri_gpu(uplo, n, int(A), lda, ctypes.byref(info))
+    magmaCheckStatus(status)
+
+
 # SGETRF, DGETRF, CGETRF, ZGETRF
 _libmagma.magma_sgetrf_gpu.restype = int
 _libmagma.magma_sgetrf_gpu.argtypes = [ctypes.c_int,
