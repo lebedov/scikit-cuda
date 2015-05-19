@@ -47,12 +47,6 @@ def magma_strerror(error):
 
     return _libmagma.magma_strerror(error)
 
-class magmaError(Exception):
-    try:
-        __doc__ = magma_strerror(-100)
-    except:
-        pass
-    pass
 
 class MagmaError(Exception):
 	def __init__(self, status, info=None):
@@ -61,89 +55,14 @@ class MagmaError(Exception):
 		errstr = "%s (Code: %d)" % (magma_strerror(status), status)
 		super(MagmaError,self).__init__(errstr)
 
-class MagmaNotInitializedError(MagmaError):
-    pass
 
-class MagmaReinitializedError(MagmaError):
-    pass
-
-class MagmaNotSupportedError(MagmaError):
-    pass
-
-class MagmaIllegalValueError(MagmaError):
-    pass
-
-class MagmaIllegalValueError(MagmaError):
-    pass
-
-class MagmaNotFoundError(MagmaError):
-    pass
-
-class MagmaAllocationError(MagmaError):
-    pass
-
-class MagmaInternalLimitError(MagmaError):
-    pass
-
-class MagmaUnallocatedError(MagmaError):
-    pass
-
-class MagmaFilesystemError(MagmaError):
-    pass
-
-class MagmaUnexpectedError(MagmaError):
-    pass
-
-class MagmaSequenceFlushedError(MagmaError):
-    pass
-
-class MagmaHostAllocError(MagmaError):
-    pass
-
-class MagmaDeviceAllocError(MagmaError):
-    pass
-
-class MagmaCUDAStreamError(MagmaError):
-    pass
-
-class MagmaInvalidPtrError(MagmaError):
-    pass
-
-class MagmaUnknownError(MagmaError):
-    pass
-
-magmaExceptions = {
-    -100: MagmaError,
-    -101: MagmaNotInitializedError,
-    -102: MagmaReinitializedError,
-    -103: MagmaNotSupportedError,
-    -104: MagmaIllegalValueError,
-    -105: MagmaNotFoundError,
-    -106: MagmaAllocationError,
-    -107: MagmaInternalLimitError,
-    -108: MagmaUnallocatedError,
-    -109: MagmaFilesystemError,
-    -110: MagmaUnexpectedError,
-    -111: MagmaSequenceFlushedError,
-    -112: MagmaHostAllocError,
-    -113: MagmaDeviceAllocError,
-    -114: MagmaCUDAStreamError,
-    -115: MagmaInvalidPtrError,
-    -116: MagmaUnknownError
-}
-
-_libmagma.magma_uplo_const.restype = ctypes.c_int
-_libmagma.magma_uplo_const.argtypes = [ctypes.c_char]
 def magmaCheckStatus(status):
     """
     Raise an exception corresponding to the specified MAGMA status code.
     """
 
     if status != 0:
-        try:
-            raise magmaExceptions[status](status)
-        except KeyError:
-            raise MagmaError(status)
+        raise MagmaError(status)
 
 # Utility functions:
 _libmagma.magma_version.argtypes = [ctypes.c_void_p,
@@ -161,6 +80,9 @@ def magma_version():
         ctypes.byref(minv), ctypes.byref(micv))
     return (majv.value, minv.value, micv.value)
 
+
+_libmagma.magma_uplo_const.restype = ctypes.c_int
+_libmagma.magma_uplo_const.argtypes = [ctypes.c_char]
 _libmagma.magma_init.restype = int
 def magma_init():
     """
