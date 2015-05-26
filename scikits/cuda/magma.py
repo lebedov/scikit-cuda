@@ -4,12 +4,14 @@
 Python interface to MAGMA toolkit.
 """
 
+from __future__ import absolute_import, division, print_function
+
 import sys
 import ctypes
 import atexit
 import numpy as np
 
-import cuda
+from . import cuda
 
 # Load MAGMA library:
 if 'linux' in sys.platform:
