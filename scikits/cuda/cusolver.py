@@ -542,7 +542,7 @@ def cusolverDnSgesvd_bufferSize(handle, m, n):
     """
 
     Lwork = ctypes.c_int()
-    status = cusolverDnSgesvd_bufferSize(handle, m, n, ctypes.byref(Lwork))
+    status = _libcusolver.cusolverDnSgesvd_bufferSize(handle, m, n, ctypes.byref(Lwork))
     cusolverCheckStatus(status)
     return Lwork.value
 
@@ -573,10 +573,10 @@ def cusolverDnSgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
     `cusolverDn<t>gesvd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-gesvd>`_
     """
 
-    status = cusolverDnSgesvd(handle, jobu, jobvt, m, n,
-                              int(A), lda, int(S), int(U),
-                              ldu, int(VT), ldvt, int(Work),
-                              Lwork, int(rwork), int(devInfo))
+    status = _libcusolver.cusolverDnSgesvd(handle, jobu, jobvt, m, n,
+                                           int(A), lda, int(S), int(U),
+                                           ldu, int(VT), ldvt, int(Work),
+                                           Lwork, int(rwork), int(devInfo))
     cusolverCheckStatus(status)
 
 _libcusolver.cusolverDnDgesvd_bufferSize.restype = int
@@ -594,7 +594,7 @@ def cusolverDnDgesvd_bufferSize(handle, m, n):
     """
 
     Lwork = ctypes.c_int()
-    status = cusolverDnDgesvd_bufferSize(handle, m, n, ctypes.byref(Lwork))
+    status = _libcusolver.cusolverDnDgesvd_bufferSize(handle, m, n, ctypes.byref(Lwork))
     cusolverCheckStatus(status)
     return Lwork.value
 
@@ -625,10 +625,10 @@ def cusolverDnDgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
     `cusolverDn<t>gesvd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-gesvd>`_
     """
 
-    status = cusolverDnDgesvd(handle, jobu, jobvt, m, n,
-                              int(A), lda, int(S), int(U),
-                              ldu, int(VT), ldvt, int(Work),
-                              Lwork, int(rwork), int(devInfo))
+    status = _libcusolver.cusolverDnDgesvd(handle, jobu, jobvt, m, n,
+                                           int(A), lda, int(S), int(U),
+                                           ldu, int(VT), ldvt, int(Work),
+                                           Lwork, int(rwork), int(devInfo))
     cusolverCheckStatus(status)
 
 _libcusolver.cusolverDnCgesvd_bufferSize.restype = int
@@ -646,7 +646,7 @@ def cusolverDnCgesvd_bufferSize(handle, m, n):
     """
 
     Lwork = ctypes.c_int()
-    status = cusolverDnCgesvd_bufferSize(handle, m, n, ctypes.byref(Lwork))
+    status = _libcusolver.cusolverDnCgesvd_bufferSize(handle, m, n, ctypes.byref(Lwork))
     cusolverCheckStatus(status)
     return Lwork.value
 
@@ -677,10 +677,10 @@ def cusolverDnCgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
     `cusolverDn<t>gesvd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-gesvd>`_
     """
 
-    status = cusolverDnCgesvd(handle, jobu, jobvt, m, n,
-                              int(A), lda, int(S), int(U),
-                              ldu, int(VT), ldvt, int(Work),
-                              Lwork, int(rwork), int(devInfo))
+    status = _libcusolver.cusolverDnCgesvd(handle, jobu, jobvt, m, n,
+                                           int(A), lda, int(S), int(U),
+                                           ldu, int(VT), ldvt, int(Work),
+                                           Lwork, int(rwork), int(devInfo))
     cusolverCheckStatus(status)
 
 _libcusolver.cusolverDnZgesvd_bufferSize.restype = int
@@ -698,7 +698,7 @@ def cusolverDnZgesvd_bufferSize(handle, m, n):
     """
 
     Lwork = ctypes.c_int()
-    status = cusolverDnZgesvd_bufferSize(handle, m, n, ctypes.byref(Lwork))
+    status = _libcusolver.cusolverDnZgesvd_bufferSize(handle, m, n, ctypes.byref(Lwork))
     cusolverCheckStatus(status)
     return Lwork.value
 
@@ -729,8 +729,8 @@ def cusolverDnZgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
     `cusolverDn<t>gesvd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-gesvd>`_
     """
 
-    status = cusolverDnZgesvd(handle, jobu, jobvt, m, n,
-                              int(A), lda, int(S), int(U),
-                              ldu, int(VT), ldvt, int(Work),
-                              Lwork, int(rwork), int(devInfo))
+    status = _libcusolver.cusolverDnZgesvd(handle, jobu, jobvt, m, n,
+                                           int(A), lda, int(S), int(U),
+                                           ldu, int(VT), ldvt, int(Work),
+                                           Lwork, int(rwork), int(devInfo))
     cusolverCheckStatus(status)
