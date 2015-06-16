@@ -96,10 +96,10 @@ def magma_init():
     magmaCheckStatus(status)
     v = magma_version()
     if v >= (1, 5, 0):
-        _uplo_conversion.update({"L": _libmagma.magma_uplo_const("L"),
-                                 "l": _libmagma.magma_uplo_const("l"),
-                                 "U": _libmagma.magma_uplo_const("U"),
-                                 "u": _libmagma.magma_uplo_const("u")})
+        _uplo_conversion.update({"L": _libmagma.magma_uplo_const(b"L"),
+                                 "l": _libmagma.magma_uplo_const(b"l"),
+                                 "U": _libmagma.magma_uplo_const(b"U"),
+                                 "u": _libmagma.magma_uplo_const(b"u")})
     else:
        _uplo_conversion.update({"L": "L", "l": "l", "U": "u", "u": "u"})
 

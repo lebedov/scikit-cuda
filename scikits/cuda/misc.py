@@ -1288,9 +1288,9 @@ def _minmax_impl(a_gpu, axis, min_or_max, stream=None):
 
     if axis is None:  ## Note: PyCUDA doesn't have an overall argmax/argmin!
         if min_or_max == 'max':
-            return gpuarray.max(a_gpu).get()
+            return gpuarray.max(a_gpu).get(), None
         else:
-            return gpuarray.min(a_gpu).get()
+            return gpuarray.min(a_gpu).get(), None
     else:
         if axis < 0:
             axis += 2
@@ -1370,6 +1370,8 @@ def argmax(a_gpu, axis):
     out : pycuda.gpuarray.GPUArray or float
         Array of indices into the array.
     '''
+    if axis is None:
+        raise NotImplementedError("Can't compute global argmax")
     return _minmax_impl(a_gpu, axis, "max")[1]
 
 
@@ -1389,6 +1391,8 @@ def argmin(a_gpu, axis):
     out : pycuda.gpuarray.GPUArray or float
         Array of indices into the array.
     '''
+    if axis is None:
+        raise NotImplementedError("Can't compute global argmax")
     return _minmax_impl(a_gpu, axis, "min")[1]
 
 
