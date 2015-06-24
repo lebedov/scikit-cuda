@@ -5,7 +5,8 @@ Authors & Acknowledgments
 This software was written and packaged by `Lev Givon 
 <http://www.columbia.edu/~lev/>`_.  Although it
 depends upon the excellent `PyCUDA <http://mathema.tician.de/software/pycuda/>`_ 
-package by Andreas Klöckner, scikits.cuda is developed independently of PyCUDA.
+package by `Andreas Klöckner <http://mathema.tician.de/aboutme/>`_, scikits.cuda 
+is developed independently of PyCUDA.
 
 Special thanks are due to the following parties for their contributions:
 
