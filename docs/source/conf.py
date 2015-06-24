@@ -63,11 +63,11 @@ sys.path.append(os.path.abspath('../../scikits/cuda'))
 sys.path.append(os.path.abspath('../../'))
 
 # Prevent cublas library load from interfering with doc build:
-import scikits.cuda.utils
+import skcuda.utils
 def __temp(filename):
     return 'libcublas.so.6.5'
-__temp.__doc__ = scikits.cuda.utils.get_soname.__doc__
-scikits.cuda.utils.get_soname = __temp
+__temp.__doc__ = skcuda.utils.get_soname.__doc__
+skcuda.utils.get_soname = __temp
 
 # -- General configuration -----------------------------------------------------
 
