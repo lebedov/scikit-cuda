@@ -262,7 +262,7 @@ def cufftExecC2C(plan, idata, odata, direction):
     ----------
     `cufftExecC2C <http://docs.nvidia.com/cuda/cufft/#function-cufftexecc2c-cufftexecz2z>`_
     """
-    
+
     status = _libcufft.cufftExecC2C(plan, idata, odata,
                                     direction)
     cufftCheckStatus(status)
@@ -275,11 +275,11 @@ def cufftExecR2C(plan, idata, odata):
     """
     Execute single precision real-to-complex forward transform plan.
 
-   References
+    References
     ----------
     `cufftExecR2C <http://docs.nvidia.com/cuda/cufft/#function-cufftexecr2c-cufftexecd2z>`_
     """
-    
+
     status = _libcufft.cufftExecR2C(plan, idata, odata)
     cufftCheckStatus(status)
 
@@ -295,7 +295,7 @@ def cufftExecC2R(plan, idata, odata):
     ----------
     `cufftExecC2R <http://docs.nvidia.com/cuda/cufft/#function-cufftexecc2r-cufftexecz2d>`_
     """
-    
+
     status = _libcufft.cufftExecC2R(plan, idata, odata)
     cufftCheckStatus(status)
 
@@ -309,11 +309,11 @@ def cufftExecZ2Z(plan, idata, odata, direction):
     Execute double precision complex-to-complex transform plan as
     specified by `direction`.
 
-   References
+    References
     ----------
     `cufftExecZ2Z <http://docs.nvidia.com/cuda/cufft/#function-cufftexecc2c-cufftexecz2z>`_
 """
-    
+
     status = _libcufft.cufftExecZ2Z(plan, idata, odata,
                                     direction)
     cufftCheckStatus(status)

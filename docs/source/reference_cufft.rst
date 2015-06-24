@@ -1,6 +1,6 @@
 .. -*- rst -*-
 
-.. currentmodule:: scikits.cuda.cufft
+.. currentmodule:: skcuda.cufft
 
 CUFFT Routines
 ==============

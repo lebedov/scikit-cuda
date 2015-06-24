@@ -1,6 +1,6 @@
 .. -*- rst -*-
 
-.. currentmodule:: scikits.cuda.special
+.. currentmodule:: skcuda.special
 
 Special Math Functions
 ======================

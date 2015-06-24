@@ -1,6 +1,6 @@
 .. -*- rst -*-
 
-.. currentmodule:: scikits.cuda.cula
+.. currentmodule:: skcuda.cula
 
 CULA Routines
 =============

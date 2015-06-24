@@ -1,6 +1,6 @@
 .. -*- rst -*-
 
-.. currentmodule:: scikits.cuda.fft
+.. currentmodule:: skcuda.fft
 
 Fast Fourier Transform
 ======================

@@ -37,7 +37,7 @@ try:
 except (ImportError, OSError):
     _has_cula = False
 
-from .misc import init
+from .misc import init, add_matvec, div_matvec, mult_matvec
 
 # Get installation location of C headers:
 from . import install_headers

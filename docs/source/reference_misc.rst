@@ -1,6 +1,6 @@
 .. -*- rst -*-
 
-.. currentmodule:: scikits.cuda.misc
+.. currentmodule:: skcuda.misc
 
 Miscellaneous Routines
 ======================

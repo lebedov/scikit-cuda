@@ -1,6 +1,6 @@
 .. -*- rst -*-
 
-.. currentmodule:: scikits.cuda.pcula
+.. currentmodule:: skcuda.pcula
 
 Multi-GPU CULA Routines
 =======================

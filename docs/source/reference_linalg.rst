@@ -1,6 +1,6 @@
 .. -*- rst -*-
 
-.. currentmodule:: scikits.cuda.linalg
+.. currentmodule:: skcuda.linalg
 
 Linear Algebra Routines
 =======================

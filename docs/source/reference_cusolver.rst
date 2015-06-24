@@ -1,6 +1,6 @@
 .. -*- rst -*-
 
-.. currentmodule:: scikits.cuda.cusolver
+.. currentmodule:: skcuda.cusolver
 
 CUSOLVER Routines
 =================
