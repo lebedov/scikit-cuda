@@ -9,8 +9,8 @@ import pycuda.driver as drv
 import pycuda.autoinit
 import numpy as np
 
-import scikits.cuda.linalg as linalg
-import scikits.cuda.misc as cumisc
+import skcuda.linalg as linalg
+import skcuda.misc as cumisc
 linalg.init()
 
 # Double precision is only supported by devices with compute
