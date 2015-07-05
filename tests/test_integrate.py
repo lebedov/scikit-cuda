@@ -8,8 +8,8 @@ import pycuda.autoinit
 import pycuda.gpuarray as gpuarray
 import numpy as np
 
-import scikits.cuda.misc as misc
-import scikits.cuda.integrate as integrate
+import skcuda.misc as misc
+import skcuda.integrate as integrate
 
 class test_integrate(TestCase):
     def setUp(self):

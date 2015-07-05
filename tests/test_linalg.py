@@ -12,8 +12,8 @@ import numpy as np
 
 from numpy.testing import assert_raises
 
-import scikits.cuda.linalg as linalg
-import scikits.cuda.misc as misc
+import skcuda.linalg as linalg
+import skcuda.misc as misc
 
 atol_float32 = 1e-6
 atol_float64 = 1e-8

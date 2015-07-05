@@ -10,7 +10,7 @@ import pycuda.autoinit
 import pycuda.gpuarray as gpuarray
 import numpy as np
 
-import scikits.cuda.misc as misc
+import skcuda.misc as misc
 
 class test_misc(TestCase):
 

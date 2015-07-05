@@ -13,9 +13,9 @@ import numpy as np
 import scipy as sp
 import scipy.special
 
-import scikits.cuda.linalg as linalg
-import scikits.cuda.misc as misc
-import scikits.cuda.special as special
+import skcuda.linalg as linalg
+import skcuda.misc as misc
+import skcuda.special as special
 
 class test_special(TestCase):
     def setUp(self):
