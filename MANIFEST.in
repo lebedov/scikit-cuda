@@ -3,5 +3,11 @@ recursive-include skcuda *.py
 recursive-include skcuda *.h
 recursive-include demos *.py
 recursive-include tests *.py
-recursive-include docs *
+
+include docs/source/*.rst
+include docs/Makefile
+include docs/source/conf.py
+include docs/source/_static/*
+include docs/source/_templates/*.html
+
 exclude MANIFEST.in
