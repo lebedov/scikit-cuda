@@ -1012,14 +1012,15 @@ def mult_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
     return binaryop_matvec('*', x_gpu, a_gpu, axis, out, stream)
 
 
-def _sum_axis(x_gpu, axis=None, out=None, calc_mean=False):
+def _sum_axis(x_gpu, axis=None, out=None, calc_mean=False, keepdims=False):
     global _global_cublas_allocator
 
-    if axis is None:
+    if axis is None or len(x_gpu.shape) <= 1:
+        out_shape = (1,)*len(x_gpu.shape)
         if calc_mean == False:
-            return gpuarray.sum(x_gpu).get()
+            return gpuarray.sum(x_gpu).get().reshape(out_shape)
         else:
-            return gpuarray.sum(x_gpu).get() / x_gpu.dtype.type(x_gpu.size)
+            return gpuarray.sum(x_gpu).get().reshape(out_shape) / x_gpu.dtype.type(x_gpu.size)
 
     if axis < 0:
         axis += 2
@@ -1049,8 +1050,14 @@ def _sum_axis(x_gpu, axis=None, out=None, calc_mean=False):
 
     alloc = _global_cublas_allocator
     ons = ones((sum_axis, ), x_gpu.dtype, alloc)
+
+    if keepdims:
+        out_shape = (1, out_axis) if axis == 0 else (out_axis, 1)
+    else:
+        out_shape = (out_axis,)
+
     if out is None:
-        out = gpuarray.empty((out_axis, ), x_gpu.dtype, alloc)
+        out = gpuarray.empty(out_shape, x_gpu.dtype, alloc)
     else:
         assert out.dtype == x_gpu.dtype
         assert out.size >= out_axis
@@ -1061,7 +1068,7 @@ def _sum_axis(x_gpu, axis=None, out=None, calc_mean=False):
     return out
 
 
-def sum(x_gpu, axis=None, out=None):
+def sum(x_gpu, axis=None, out=None, keepdims=False):
     """
     Compute the sum along the specified axis.
 
@@ -1080,10 +1087,10 @@ def sum(x_gpu, axis=None, out=None):
     out : pycuda.gpuarray.GPUArray
         sums of matrix elements along the desired axis.
     """
-    return _sum_axis(x_gpu, axis, out=out)
+    return _sum_axis(x_gpu, axis, out=out, keepdims=keepdims)
 
 
-def mean(x_gpu, axis=None, out=None):
+def mean(x_gpu, axis=None, out=None, keepdims=False):
     """
     Compute the arithmetic means along the specified axis.
 
@@ -1102,10 +1109,10 @@ def mean(x_gpu, axis=None, out=None):
     out : pycuda.gpuarray.GPUArray
         means of matrix elements along the desired axis.
     """
-    return _sum_axis(x_gpu, axis, calc_mean=True, out=out)
+    return _sum_axis(x_gpu, axis, calc_mean=True, out=out, keepdims=keepdims)
 
 
-def var(x_gpu, axis=None, stream=None):
+def var(x_gpu, axis=None, stream=None, keepdims=False):
     """
     Compute the variance along the specified axis.
 
@@ -1136,19 +1143,19 @@ def var(x_gpu, axis=None, stream=None):
     if axis is None:
         m = mean(x_gpu)
         out = x_gpu - m
-        out**=2
-        out = mean(out)
+        out **= 2
+        out = mean(out, keepdims=keepdims)
     else:
         if axis < 0:
             axis += 2
         m = mean(x_gpu, axis=axis)
         out = add_matvec(x_gpu, -m, axis=1-axis, stream=stream)
         _inplace_pow(out, 2, stream)
-        out = mean(out, axis=axis)
+        out = mean(out, axis=axis, keepdims=keepdims)
     return out
 
 
-def std(x_gpu, axis=None, stream=None):
+def std(x_gpu, axis=None, stream=None, keepdims=False):
     """
     Compute the standard deviation along the specified axis.
 
@@ -1177,9 +1184,9 @@ def std(x_gpu, axis=None, stream=None):
                     p, x_gpu.gpudata, x_gpu.gpudata, x_gpu.mem_size)
 
     if axis is None:
-        return np.sqrt(var(x_gpu, stream=stream))
+        return np.sqrt(var(x_gpu, stream=stream, keepdims=keepdims))
     else:
-        out = var(x_gpu, axis=axis, stream=stream)
+        out = var(x_gpu, axis=axis, stream=stream, keepdims=keepdims)
         _inplace_pow(out, 0.5, stream)
     return out
 
@@ -1280,17 +1287,18 @@ def _get_minmax_kernel(dtype, min_or_max):
     return minmax_col_kernel, minmax_row_kernel
 
 
-def _minmax_impl(a_gpu, axis, min_or_max, stream=None):
+def _minmax_impl(a_gpu, axis, min_or_max, stream=None, keepdims=False):
     ''' Returns both max and argmax (min/argmin) along an axis.'''
     assert len(a_gpu.shape) < 3
     if iscomplextype(a_gpu.dtype):
         raise ValueError("Cannot compute min/max of complex values")
 
-    if axis is None:  ## Note: PyCUDA doesn't have an overall argmax/argmin!
+    if axis is None or len(a_gpu.shape) <= 1:  ## Note: PyCUDA doesn't have an overall argmax/argmin!
+        out_shape = (1,) * len(a_gpu.shape)
         if min_or_max == 'max':
-            return gpuarray.max(a_gpu).get(), None
+            return gpuarray.max(a_gpu).get().reshape(out_shape), None
         else:
-            return gpuarray.min(a_gpu).get(), None
+            return gpuarray.min(a_gpu).get().reshape(out_shape), None
     else:
         if axis < 0:
             axis += 2
@@ -1302,19 +1310,27 @@ def _minmax_impl(a_gpu, axis, min_or_max, stream=None):
     n, m = a_gpu.shape if a_gpu.flags.c_contiguous else (a_gpu.shape[1], a_gpu.shape[0])
     col_kernel, row_kernel = _get_minmax_kernel(a_gpu.dtype, min_or_max)
     if (axis == 0 and a_gpu.flags.c_contiguous) or (axis == 1 and a_gpu.flags.f_contiguous):
-        target = gpuarray.empty(m, dtype=a_gpu.dtype, allocator=alloc)
-        idx = gpuarray.empty(m, dtype=np.uint32, allocator=alloc)
+        if keepdims:
+            out_shape = (1, m) if axis == 0 else (m, 1)
+        else:
+            out_shape = (m,)
+        target = gpuarray.empty(out_shape, dtype=a_gpu.dtype, allocator=alloc)
+        idx = gpuarray.empty(out_shape, dtype=np.uint32, allocator=alloc)
         col_kernel(a_gpu, target, idx, np.uint32(m), np.uint32(n),
                    block=(32, 1, 1), grid=(m, 1, 1), stream=stream)
     else:
-        target = gpuarray.empty(n, dtype=a_gpu, allocator=alloc)
-        idx = gpuarray.empty(n, dtype=np.uint32, allocator=alloc)
+        if keepdims:
+            out_shape = (1, n) if axis == 0 else (n, 1)
+        else:
+            out_shape = (n,)
+        target = gpuarray.empty(out_shape, dtype=a_gpu, allocator=alloc)
+        idx = gpuarray.empty(out_shape, dtype=np.uint32, allocator=alloc)
         row_kernel(a_gpu, target, idx, np.uint32(m), np.uint32(n),
                 block=(32, 1, 1), grid=(n, 1, 1), stream=stream)
     return target, idx
 
 
-def max(a_gpu, axis=None):
+def max(a_gpu, axis=None, keepdims=False):
     '''
     Return the maximum of an array or maximum along an axis.
 
@@ -1331,10 +1347,10 @@ def max(a_gpu, axis=None):
     out : pycuda.gpuarray.GPUArray or float
         maxima of matrix elements along the desired axis or overall maximum.
     '''
-    return _minmax_impl(a_gpu, axis, "max")[0]
+    return _minmax_impl(a_gpu, axis, "max", keepdims=keepdims)[0]
 
 
-def min(a_gpu, axis=None):
+def min(a_gpu, axis=None, keepdims=False):
     '''
     Return the minimum of an array or minimum along an axis.
 
@@ -1351,7 +1367,7 @@ def min(a_gpu, axis=None):
     out : pycuda.gpuarray.GPUArray or float
         minima of matrix elements along the desired axis or overall minimum.
     '''
-    return _minmax_impl(a_gpu, axis, "min")[0]
+    return _minmax_impl(a_gpu, axis, "min", keepdims=keepdims)[0]
 
 
 def argmax(a_gpu, axis):
@@ -1372,7 +1388,7 @@ def argmax(a_gpu, axis):
     '''
     if axis is None:
         raise NotImplementedError("Can't compute global argmax")
-    return _minmax_impl(a_gpu, axis, "max")[1]
+    return _minmax_impl(a_gpu, axis, "max", keepdims=keepdims)[1]
 
 
 def argmin(a_gpu, axis):
@@ -1393,7 +1409,7 @@ def argmin(a_gpu, axis):
     '''
     if axis is None:
         raise NotImplementedError("Can't compute global argmax")
-    return _minmax_impl(a_gpu, axis, "min")[1]
+    return _minmax_impl(a_gpu, axis, "min", keepdims=keepdims)[1]
 
 
 if __name__ == "__main__":
