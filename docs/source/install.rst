@@ -17,7 +17,7 @@ not already on your system.
 Obtaining the Latest Software
 -----------------------------
 The latest stable and development versions of ``scikits.cuda`` can be downloaded 
-from `GitHub <https://github.com/lebedov/scikits.cuda>`_
+from `GitHub <https://github.com/lebedov/scikit-cuda>`_
 
 Online documentation for ``scikits.cuda`` is available at 
 `<https://scikit-cuda.readthedocs.org>`_
@@ -95,9 +95,9 @@ directly.
 Getting Started
 ---------------
 The functions provided by ``scikits.cuda`` are grouped into several submodules 
-in the ``scikits.cuda`` namespace package. The ``skcuda`` namespace package is 
-also provided as a shortcut to ``scikits.cuda``. Sample code demonstrating how 
-to use different parts of the toolbox is
+in the ``skcuda`` namespace package. The ``scikits.cuda`` namespace package is 
+also provided as a shortcut to ``skcuda``. Sample code demonstrating how to use 
+different parts of the toolbox is
 located in the ``demos/`` subdirectory of the source release. Many of the 
 high-level functions also contain doctests that describe their usage.
 

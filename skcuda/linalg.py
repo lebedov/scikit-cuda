@@ -412,7 +412,7 @@ def add_dot(a_gpu, b_gpu, c_gpu, transa='N', transb='N', alpha=1.0, beta=1.0, ha
         If 'C', compute the product of the Hermitian of `b_gpu`.
     handle : int (optional)
         CUBLAS context. If no context is specified, the default handle from
-        `scikits.cuda.misc._global_cublas_handle` is used.
+        `skcuda.misc._global_cublas_handle` is used.
 
     Returns
     -------
@@ -545,7 +545,7 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
         If 'C', compute the product of the Hermitian of `y_gpu`.
     handle : int
         CUBLAS context. If no context is specified, the default handle from
-        `scikits.cuda.misc._global_cublas_handle` is used.
+        `skcuda.misc._global_cublas_handle` is used.
     out : pycuda.gpuarray.GPUArray, optional
         Output argument. Will be used to store the result.
 
@@ -646,7 +646,7 @@ def mdot(*args, **kwargs):
         Arrays to multiply.
     handle : int
         CUBLAS context. If no context is specified, the default handle from
-        `scikits.cuda.misc._global_cublas_handle` is used.
+        `skcuda.misc._global_cublas_handle` is used.
 
     Returns
     -------
@@ -713,7 +713,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=False, handle=None):
         If true, save the result in `a_gpu`.
     handle : int
         CUBLAS context. If no context is specified, the default handle from
-        `scikits.cuda.misc._global_cublas_handle` is used.
+        `skcuda.misc._global_cublas_handle` is used.
 
     Returns
     -------
@@ -804,7 +804,7 @@ def add_diag(d_gpu, a_gpu, overwrite=False, handle=None):
         If true, save the result in `a_gpu`.
     handle : int
         CUBLAS context. If no context is specified, the default handle from
-        `scikits.cuda.misc._global_cublas_handle` is used.
+        `skcuda.misc._global_cublas_handle` is used.
 
     Returns
     -------
@@ -899,7 +899,7 @@ def transpose(a_gpu, handle=None):
         Transposed matrix of shape `(n, m)`.
     handle : int
         CUBLAS context. If no context is specified, the default handle from
-        `scikits.cuda.misc._global_cublas_handle` is used.
+        `skcuda.misc._global_cublas_handle` is used.
 
     Examples
     --------
@@ -936,7 +936,7 @@ def hermitian(a_gpu, handle=None):
         Input matrix of shape `(m, n)`.
     handle : int
         CUBLAS context. If no context is specified, the default handle from
-        `scikits.cuda.misc._global_cublas_handle` is used.
+        `skcuda.misc._global_cublas_handle` is used.
 
     Returns
     -------
@@ -1358,7 +1358,7 @@ def tril(a_gpu, overwrite=False, handle=None):
         If false, return the result in a newly allocated matrix.
     handle : int
         CUBLAS context. If no context is specified, the default handle from
-        `scikits.cuda.misc._global_cublas_handle` is used.
+        `skcuda.misc._global_cublas_handle` is used.
 
     Returns
     -------
@@ -1511,7 +1511,7 @@ def norm(x_gpu, handle=None):
         Input array.
     handle : int
         CUBLAS context. If no context is specified, the default handle from
-        `scikits.misc._global_cublas_handle` is used.
+        `skcuda.misc._global_cublas_handle` is used.
 
     Returns
     -------
@@ -1573,7 +1573,7 @@ def scale(alpha, x_gpu, alpha_real=False, handle=None):
         the corresponding complex type.)
     handle : int
         CUBLAS context. If no context is specified, the default handle from
-        `scikits.misc._global_cublas_handle` is used.
+        `skcuda.misc._global_cublas_handle` is used.
 
     Examples
     --------
@@ -1679,7 +1679,7 @@ def trace(x_gpu, handle=None):
 
     handle : int
         CUBLAS context. If no context is specified, the default handle from
-        `scikits.misc._global_cublas_handle` is used.
+        `skcuda.misc._global_cublas_handle` is used.
 
     Returns
     -------
@@ -1732,7 +1732,7 @@ def det(a_gpu, overwrite=False, ipiv_gpu=None, handle=None):
         Discard data in `a` (may improve performance).
     handle : int
         CUBLAS context. If no context is specified, the default handle from
-        `scikits.misc._global_cublas_handle` is used.
+        `skcuda.misc._global_cublas_handle` is used.
     ipiv_gpu : pycuda.gpuarray.GPUArray (optional)
         Temporary array of size n, can be supplied to save allocations.
 

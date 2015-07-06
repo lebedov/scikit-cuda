@@ -61,7 +61,7 @@ def trapz(x_gpu, dx=1.0, handle=None):
         Spacing.
     handle : int
         CUBLAS context. If no context is specified, the default handle from
-        `scikits.misc._global_cublas_handle` is used.
+        `skcuda.misc._global_cublas_handle` is used.
 
     Returns
     -------
@@ -210,7 +210,7 @@ def trapz2d(x_gpu, dx=1.0, dy=1.0, handle=None):
         Y-axis spacing
     handle : int
         CUBLAS context. If no context is specified, the default handle from
-        `scikits.misc._global_cublas_handle` is used.
+        `skcuda.misc._global_cublas_handle` is used.
 
     Returns
     -------

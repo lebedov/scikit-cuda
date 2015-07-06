@@ -1,6 +1,6 @@
 .. -*- rst -*-
 
-..  image:: https://raw.githubusercontent.com/lebedov/scikits.cuda/master/docs/source/_static/logo.png
+..  image:: https://raw.githubusercontent.com/lebedov/scikit-cuda/master/docs/source/_static/logo.png
    :alt: CUDA SciKit
 
 Package Description
@@ -39,7 +39,7 @@ Package documentation is available at
 Development
 -----------
 The latest source code can be obtained from
-`<http://github.com/lebedov/scikits.cuda>`_.
+`<http://github.com/lebedov/scikit-cuda>`_.
 
 Authors & Acknowledgments
 -------------------------
