@@ -9,7 +9,7 @@ from unittest import main, TestCase, TestSuite
 import pycuda.autoinit
 import pycuda.gpuarray as gpuarray
 import numpy as np
-
+from numpy.testing import assert_raises
 import skcuda.misc as misc
 
 class test_misc(TestCase):
@@ -174,25 +174,37 @@ class test_misc(TestCase):
 
     def impl_test_binaryop_matvec(self, dtype):
         x = np.random.normal(scale=5.0, size=(3, 5)).astype(dtype)
-        #x = np.zeros((4, 5), dtype=dtype)
         a = np.random.normal(scale=5.0, size=(1, 5)).astype(dtype)
         b = np.random.normal(scale=5.0, size=(3, 1)).astype(dtype)
+
+        # the following two test correct broadcasting on 0D vectors
+        c = np.random.normal(scale=5.0, size=(5, )).astype(dtype)
+        d = np.random.normal(scale=5.0, size=(3, )).astype(dtype)
         x_gpu = gpuarray.to_gpu(x)
         a_gpu = gpuarray.to_gpu(a)
         b_gpu = gpuarray.to_gpu(b)
+        c_gpu = gpuarray.to_gpu(c)
+        d_gpu = gpuarray.to_gpu(d)
         out = gpuarray.empty(x.shape, dtype=dtype)
         # addition
         res = misc.add_matvec(x_gpu, a_gpu, out=out).get()
         assert np.allclose(res, x+a)
         assert np.allclose(misc.add_matvec(x_gpu, b_gpu).get(), x+b)
+        assert np.allclose(misc.add_matvec(x_gpu, c_gpu).get(), x+c)
+        assert_raises(ValueError, misc.add_matvec, x_gpu, d_gpu)
         # multiplication
         res = misc.mult_matvec(x_gpu, a_gpu, out=out).get()
         assert np.allclose(res, x*a)
         assert np.allclose(misc.mult_matvec(x_gpu, b_gpu).get(), x*b)
+        assert np.allclose(misc.mult_matvec(x_gpu, c_gpu).get(), x*c)
+        assert_raises(ValueError, misc.mult_matvec, x_gpu, d_gpu)
         # division
         res = misc.div_matvec(x_gpu, a_gpu, out=out).get()
         assert np.allclose(res, x/a)
         assert np.allclose(misc.div_matvec(x_gpu, b_gpu).get(), x/b)
+        assert np.allclose(misc.div_matvec(x_gpu, c_gpu).get(), x/c)
+        assert_raises(ValueError, misc.div_matvec, x_gpu, d_gpu)
+
 
     def test_binaryop_matvec_float32(self):
         self.impl_test_binaryop_matvec(np.float32)
