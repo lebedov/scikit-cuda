@@ -985,11 +985,11 @@ def add(x_gpu, y_gpu):
     return binaryop_2d("+", operator.add, True, x_gpu, y_gpu)
 
 def subtract(x_gpu, y_gpu):
-    return binaryop_2d("-", operator.subtract, False, x_gpu, y_gpu)
+    return binaryop_2d("-", operator.sub, False, x_gpu, y_gpu)
 def multiply(x_gpu, y_gpu):
-    return binaryop_2d("*", operator.multiply, True, x_gpu, y_gpu)
+    return binaryop_2d("*", operator.mul, True, x_gpu, y_gpu)
 def divide(x_gpu, y_gpu):
-    return binaryop_2d("-", operator.divide, False, x_gpu, y_gpu)
+    return binaryop_2d("/", operator.div, False, x_gpu, y_gpu)
 
 
 def add_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
