@@ -1,22 +1,19 @@
 .. -*- rst -*-
 
 ..  image:: https://raw.githubusercontent.com/lebedov/scikit-cuda/master/docs/source/_static/logo.png
-   :alt: CUDA SciKit
+   :alt: scikits.cuda
 
 Package Description
 -------------------
 The CUDA scikit (toolkit for `SciPy <http://www.scipy.org/>`_) provides Python 
-interfaces to many of the functions in the CUDA, CUDART, CUBLAS, CUFFT, and 
-CUSOLVER libraries distributed as part of NVIDIA's `CUDA Programming Toolkit
+interfaces to many of the functions in the CUDA device/runtime, CUBLAS, CUFFT, 
+and CUSOLVER libraries distributed as part of NVIDIA's `CUDA Programming Toolkit
 <http://www.nvidia.com/cuda/>`_, as well as interfaces to select functions in 
 the free and
 standard versions of the `CULA Dense Toolkit <http://www.culatools.com/dense>`_.  
-In contrast to most
-existing Python wrappers for these libraries (many of which only
-provide a low-level interface to the actual library functions), this
-package uses `PyCUDA <http://mathema.tician.de/software/pycuda/>`_ to provide 
-high-level functions comparable to
-those in `NumPy <http://www.numpy.org>`_.
+Both low-level wrapper functions similar to their C counterparts and high-level 
+functions comparable to those in `NumPy and Scipy <http://www.scipy.org>`_ are 
+provided.
 
 .. image:: https://zenodo.org/badge/doi/10.5281/zenodo.17700.svg
     :target: http://dx.doi.org/10.5281/zenodo.17700
