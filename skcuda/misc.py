@@ -875,12 +875,21 @@ def binaryop_matvec(binary_op, x_gpu, a_gpu, axis=None, out=None, stream=None):
         result of `x_gpu` + `a_gpu`
     """
     if axis is None:
-        if a_gpu.shape[0] == x_gpu.shape[0]:
-            axis = 0
-        elif a_gpu.shape[0] == x_gpu.shape[1] or a_gpu.shape[1] == x_gpu.shape[1]:
+        if len(a_gpu.shape) == 1:
+            if a_gpu.shape[0] == x_gpu.shape[1]:
+                axis = 1
+            else:
+                raise ValueError(
+                    "operands could not be broadcast together "
+                    "with shapes %s %s" % (x_gpu.shape, a_gpu.shape))
+        elif a_gpu.shape[1] == x_gpu.shape[1]:  # numpy matches inner axes first
             axis = 1
+        elif a_gpu.shape[0] == x_gpu.shape[0]:
+            axis = 0
         else:
-            raise ValueError('Vector length must equal one side of the matrix')
+                raise ValueError(
+                    "operands could not be broadcast together "
+                    "with shapes %s %s" % (x_gpu.shape, a_gpu.shape))
     else:
         if axis < 0:
             axis += 2
