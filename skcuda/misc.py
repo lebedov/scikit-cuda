@@ -1081,6 +1081,9 @@ def sum(x_gpu, axis=None, out=None, keepdims=False):
         compute the sum of the flattened array.
     out : pycuda.gpuarray.GPUArray (optional)
         Output array in which to place the result.
+    keepdims : bool (optional, default False)
+        If True, the axes which are reduced are left in the result as
+        dimensions with size one.
 
     Returns
     -------
@@ -1103,6 +1106,9 @@ def mean(x_gpu, axis=None, out=None, keepdims=False):
         compute the mean of the flattened array.
     out : pycuda.gpuarray.GPUArray (optional)
         Output array in which to place the result.
+    keepdims : bool (optional, default False)
+        If True, the axes which are reduced are left in the result as
+        dimensions with size one.
 
     Returns
     -------
@@ -1129,6 +1135,9 @@ def var(x_gpu, axis=None, stream=None, keepdims=False):
         compute the variance of the flattened array.
     stream : pycuda.driver.Stream (optional)
         Optional CUDA stream in which to perform this calculation
+    keepdims : bool (optional, default False)
+        If True, the axes which are reduced are left in the result as
+        dimensions with size one.
 
     Returns
     -------
@@ -1172,6 +1181,9 @@ def std(x_gpu, axis=None, stream=None, keepdims=False):
         compute the std of the flattened array.
     stream : pycuda.driver.Stream (optional)
         Optional CUDA stream in which to perform this calculation
+    keepdims : bool (optional, default False)
+        If True, the axes which are reduced are left in the result as
+        dimensions with size one.
 
     Returns
     -------
@@ -1341,8 +1353,11 @@ def max(a_gpu, axis=None, keepdims=False):
     axis : int (optional)
         Axis along which the maxima are computed. The default is to
         compute the maximum of the flattened array.
+    keepdims : bool (optional, default False)
+        If True, the axes which are reduced are left in the result as
+        dimensions with size one.
 
-     Returns
+    Returns
     -------
     out : pycuda.gpuarray.GPUArray or float
         maxima of matrix elements along the desired axis or overall maximum.
@@ -1361,8 +1376,11 @@ def min(a_gpu, axis=None, keepdims=False):
     axis : int (optional)
         Axis along which the minima are computed. The default is to
         compute the minimum of the flattened array.
+    keepdims : bool (optional, default False)
+        If True, the axes which are reduced are left in the result as
+        dimensions with size one.
 
-     Returns
+    Returns
     -------
     out : pycuda.gpuarray.GPUArray or float
         minima of matrix elements along the desired axis or overall minimum.
@@ -1370,7 +1388,7 @@ def min(a_gpu, axis=None, keepdims=False):
     return _minmax_impl(a_gpu, axis, "min", keepdims=keepdims)[0]
 
 
-def argmax(a_gpu, axis):
+def argmax(a_gpu, axis, keepdims=False):
     '''
     Indices of the maximum values along an axis.
 
@@ -1380,8 +1398,11 @@ def argmax(a_gpu, axis):
         Input array
     axis : int
         Axis along which the maxima are computed.
+    keepdims : bool (optional, default False)
+        If True, the axes which are reduced are left in the result as
+        dimensions with size one.
 
-     Returns
+    Returns
     -------
     out : pycuda.gpuarray.GPUArray or float
         Array of indices into the array.
@@ -1391,7 +1412,7 @@ def argmax(a_gpu, axis):
     return _minmax_impl(a_gpu, axis, "max", keepdims=keepdims)[1]
 
 
-def argmin(a_gpu, axis):
+def argmin(a_gpu, axis, keepdims=False):
     '''
     Indices of the minimum values along an axis.
 
@@ -1401,8 +1422,11 @@ def argmin(a_gpu, axis):
         Input array
     axis : int
         Axis along which the minima are computed.
+    keepdims : bool (optional, default False)
+        If True, the axes which are reduced are left in the result as
+        dimensions with size one.
 
-     Returns
+    Returns
     -------
     out : pycuda.gpuarray.GPUArray or float
         Array of indices into the array.
