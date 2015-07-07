@@ -5,6 +5,8 @@ Change Log
 
 Release 0.5.0 - (under development)
 -----------------------------------
+* Reductions sum, mean, var, std, max, min, argmax, argmin accept keepdims option.
+* The same reductions now return a GPUArray instead of ndarray if axis=None.
 * Switch to PEP 440 version numbering.
 * Replace distribute_setup.py with ez_setup.py.
 * Improve support for latest NVIDIA GPUs.
