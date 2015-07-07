@@ -40,7 +40,9 @@ The latest source code can be obtained from
 
 Authors & Acknowledgments
 -------------------------
-See the included [AUTHORS](docs/source/authors.rst) file for more information.
+See the included `AUTHORS`_ file for more information.
+
+.. _AUTHORS: docs/source/authors.rst
 
 License
 -------
