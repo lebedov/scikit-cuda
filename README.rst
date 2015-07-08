@@ -15,9 +15,9 @@ Both low-level wrapper functions similar to their C counterparts and high-level
 functions comparable to those in `NumPy and Scipy <http://www.scipy.org>`_ are 
 provided.
 
-.. image:: https://zenodo.org/badge/doi/10.5281/zenodo.17700.svg
-    :target: http://dx.doi.org/10.5281/zenodo.17700
-    :alt: 0.5.0b2
+.. image:: https://zenodo.org/badge/doi/10.5281/zenodo.19723.svg
+    :target: http://dx.doi.org/10.5281/zenodo.19723
+    :alt: 0.5.0b3
 .. image:: https://img.shields.io/pypi/v/scikits.cuda.svg
     :target: https://pypi.python.org/pypi/scikits.cuda
     :alt: Latest Version
