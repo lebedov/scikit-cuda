@@ -930,6 +930,67 @@ def binaryop_matvec(binary_op, x_gpu, a_gpu, axis=None, out=None, stream=None):
                        block=block, grid=grid, stream=stream)
     return out
 
+import operator
+
+def binaryop_2d(c_op, py_op, commutative, x_gpu, y_gpu):
+    if x_gpu.shape == y_gpu.shape:
+        return py_op(x_gpu, y_gpu)
+    elif x_gpu.size == 1:
+        return py_op(x_gpu.get().reshape(()), y_gpu)
+    elif y_gpu.size == 1:
+        return py_op(x_gpu, y_gpu.get().reshape(()))
+
+    if len(x_gpu.shape) == 2:
+        m, n = x_gpu.shape
+        if y_gpu.shape == (n,):
+            return binaryop_matvec(c_op, x_gpu, y_gpu, axis=1)
+        elif y_gpu.shape == (1, n):
+            return binaryop_matvec(c_op, x_gpu, y_gpu[0], axis=1)
+        elif y_gpu.shape == (m, 1):
+            return binaryop_matvec(c_op, x_gpu, y_gpu.ravel(), axis=0)
+
+    if len(y_gpu.shape) == 2 and commutative:
+        m, n = y_gpu.shape
+        if x_gpu.shape == (n,):
+            return binaryop_matvec(c_op, y_gpu, x_gpu, axis=1)
+        elif x_gpu.shape == (1, n):
+            return binaryop_matvec(c_op, y_gpu, x_gpu[0], axis=1)
+        elif x_gpu.shape == (m, 1):
+            return binaryop_matvec(c_op, y_gpu, x_gpu.ravel(), axis=0)
+
+    raise TypeError("unsupported combination of shapes")
+
+def add(x_gpu, y_gpu):
+    """
+    Adds two scalars, vectors or matrices.
+
+    The numpy broadcasting rules apply so this would yield the same result
+    as `x_gpu.get()` + `y_gpu.get()` in host-code.
+
+    Parameters
+    ----------
+    x_gpu, y_gpu : pycuda.gpuarray.GPUArray
+        The arrays to be added.
+
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray
+        result of `x_gpu` + `y_gpu`
+
+    Bugs
+    ----
+    - out, stream options not supported because GPUArray.__add__ doesn't have them
+
+    """
+    return binaryop_2d("+", operator.add, True, x_gpu, y_gpu)
+
+def subtract(x_gpu, y_gpu):
+    return binaryop_2d("-", operator.sub, False, x_gpu, y_gpu)
+def multiply(x_gpu, y_gpu):
+    return binaryop_2d("*", operator.mul, True, x_gpu, y_gpu)
+def divide(x_gpu, y_gpu):
+    return binaryop_2d("/", operator.div, False, x_gpu, y_gpu)
+
 
 def add_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
     """
