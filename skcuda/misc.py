@@ -807,7 +807,7 @@ def _get_binaryop_vecmat_kernel(dtype, binary_op):
         const int tidx = blockIdx.x * blockDim.x + threadIdx.x;
         const int tidy = blockIdx.y * blockDim.y + threadIdx.y;
 
-        __shared__ ${type} shared_vec[24];
+        extern __shared__ ${type} shared_vec[];
 
         if ((ty == 0) & (tidx < n))
             shared_vec[tx] = vec[tidx];
@@ -825,7 +825,7 @@ def _get_binaryop_vecmat_kernel(dtype, binary_op):
         const int tidx = blockIdx.x * blockDim.x + threadIdx.x;
         const int tidy = blockIdx.y * blockDim.y + threadIdx.y;
 
-        __shared__ ${type} shared_vec[24];
+        extern __shared__ ${type} shared_vec[];
 
         if ((tx == 0) & (tidy < m))
             shared_vec[ty] = vec[tidy];
@@ -917,17 +917,21 @@ def binaryop_matvec(binary_op, x_gpu, a_gpu, axis=None, out=None, stream=None):
     if x_gpu.flags.c_contiguous:
         if axis == 0:
             col_kernel(x_gpu, a_gpu, out, n, m,
-                       block=block, grid=grid, stream=stream)
+                       block=block, grid=grid, stream=stream,
+                       shared=24*x_gpu.dtype.itemsize)
         elif axis == 1:
             row_kernel(x_gpu, a_gpu, out, n, m,
-                       block=block, grid=grid, stream=stream)
+                       block=block, grid=grid, stream=stream,
+                       shared=24*x_gpu.dtype.itemsize)
     else:
         if axis == 0:
             row_kernel(x_gpu, a_gpu, out, m, n,
-                       block=block, grid=grid, stream=stream)
+                       block=block, grid=grid, stream=stream,
+                       shared=24*x_gpu.dtype.itemsize)
         elif axis == 1:
             col_kernel(x_gpu, a_gpu, out, m, n,
-                       block=block, grid=grid, stream=stream)
+                       block=block, grid=grid, stream=stream,
+                       shared=24*x_gpu.dtype.itemsize)
     return out
 
 import operator
