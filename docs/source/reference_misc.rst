@@ -8,11 +8,13 @@ Miscellaneous Routines
    :toctree: generated/
    :nosignatures:
 
+   add
    add_matvec
    argmax
    argmin
    cumsum
    diff
+   divide
    done_context
    get_by_index
    get_compute_capability
@@ -28,6 +30,7 @@ Miscellaneous Routines
    maxabs
    mean
    min
+   multiply
    ones
    ones_like
    select_block_grid_sizes
@@ -35,6 +38,7 @@ Miscellaneous Routines
    set_realloc
    shutdown
    std
+   subtract
    sum
    var
    zeros

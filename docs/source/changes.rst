@@ -65,6 +65,8 @@ Release 0.5.0 - (under development)
   (enh. by Thomas Unterthiner).
 * Set default value of the parameter 'overwrite' to False in all linalg
   functions.
+* Elementwise arithmetic operations with broadcasting up to 2 dimensions
+  (enh. David Wei Chiang)
 
 Release 0.042 - (March 10, 2013)
 --------------------------------

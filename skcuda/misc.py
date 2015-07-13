@@ -962,10 +962,10 @@ def binaryop_2d(c_op, py_op, commutative, x_gpu, y_gpu):
 
 def add(x_gpu, y_gpu):
     """
-    Adds two scalars, vectors or matrices.
+    Adds two scalars, vectors, or matrices.
 
     The numpy broadcasting rules apply so this would yield the same result
-    as `x_gpu.get()` + `y_gpu.get()` in host-code.
+    as `x_gpu.get()` + `y_gpu.get()` in host code.
 
     Parameters
     ----------
@@ -975,22 +975,90 @@ def add(x_gpu, y_gpu):
     Returns
     -------
     out : pycuda.gpuarray.GPUArray
-        result of `x_gpu` + `y_gpu`
+        Equivalent to `x_gpu.get()` + `y_gpu.get()`.
 
     Bugs
     ----
-    - out, stream options not supported because GPUArray.__add__ doesn't have them
-
+    The `out` and `stream` options not supported because `GPUArray.__add__` 
+    doesn't provide them.
     """
+
     return binaryop_2d("+", operator.add, True, x_gpu, y_gpu)
 
 def subtract(x_gpu, y_gpu):
-    return binaryop_2d("-", operator.sub, False, x_gpu, y_gpu)
-def multiply(x_gpu, y_gpu):
-    return binaryop_2d("*", operator.mul, True, x_gpu, y_gpu)
-def divide(x_gpu, y_gpu):
-    return binaryop_2d("/", operator.div, False, x_gpu, y_gpu)
+    """
+    Subtracts two scalars, vectors, or matrices with broadcasting.
 
+    The numpy broadcasting rules apply so this would yield the same result
+    as `x_gpu.get()` - `y_gpu.get()` in host code.
+
+    Parameters
+    ----------
+    x_gpu, y_gpu : pycuda.gpuarray.GPUArray
+        The arrays to be subtracted.
+
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray
+        Equivalent to `x_gpu.get()` - `y_gpu.get()`.
+
+    Bugs
+    ----
+    The `out` and `stream` options not supported because `GPUArray.__sub__` 
+    doesn't provide them.
+    """
+
+    return binaryop_2d("-", operator.sub, False, x_gpu, y_gpu)
+
+def multiply(x_gpu, y_gpu):
+    """
+    Multiplies two scalars, vectors, or matrices with broadcasting.
+
+    The numpy broadcasting rules apply so this would yield the same result
+    as `x_gpu.get()` * `y_gpu.get()` in host code.
+
+    Parameters
+    ----------
+    x_gpu, y_gpu : pycuda.gpuarray.GPUArray
+        The arrays to be multiplied.
+
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray
+        Equivalent to `x_gpu.get()` * `y_gpu.get()`.
+
+    Bugs
+    ----
+    The `out` and `stream` options not supported because `GPUArray.__mul__` 
+    doesn't provide them.
+    """
+
+    return binaryop_2d("*", operator.mul, True, x_gpu, y_gpu)
+
+def divide(x_gpu, y_gpu):
+    """
+    Divides two scalars, vectors, or matrices with broadcasting.
+
+    The numpy broadcasting rules apply so this would yield the same result
+    as `x_gpu.get()` / `y_gpu.get()` in host code.
+
+    Parameters
+    ----------
+    x_gpu, y_gpu : pycuda.gpuarray.GPUArray
+        The arrays to be divided.
+
+    Returns
+    -------
+    out : pycuda.gpuarray.GPUArray
+        Equivalent to `x_gpu.get()` / `y_gpu.get()`.
+
+    Bugs
+    ----
+    The `out` and `stream` options not supported because `GPUArray.__div__` 
+    doesn't provide them.
+    """
+
+    return binaryop_2d("/", operator.div, False, x_gpu, y_gpu)
 
 def add_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
     """
@@ -1017,8 +1085,9 @@ def add_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
     Returns
     -------
     out : pycuda.gpuarray.GPUArray
-        result of `x_gpu` + `a_gpu`
+        Result of `x_gpu` + `a_gpu`
     """
+
     return binaryop_matvec('+', x_gpu, a_gpu, axis, out, stream)
 
 
