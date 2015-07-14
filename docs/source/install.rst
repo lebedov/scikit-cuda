@@ -87,7 +87,7 @@ Running the Unit Tests
 To run all of the package unit tests, download and unpack the package source
 tarball and run::
 
-   python setup.py tests
+   python setup.py test
 
 from within the main directory in the archive. Tests for individual
 modules (found in the ``tests/`` subdirectory) can also be run

@@ -983,7 +983,7 @@ def add(x_gpu, y_gpu):
 
     Notes
     -----
-    The `out` and `stream` options not supported because `GPUArray.__add__`
+    The `out` and `stream` options are not supported because `GPUArray.__add__`
     doesn't provide them.
     """
 
@@ -1008,7 +1008,7 @@ def subtract(x_gpu, y_gpu):
 
     Notes
     -----
-    The `out` and `stream` options not supported because `GPUArray.__sub__`
+    The `out` and `stream` options are not supported because `GPUArray.__sub__`
     doesn't provide them.
     """
 
@@ -1033,7 +1033,7 @@ def multiply(x_gpu, y_gpu):
 
     Notes
     -----
-    The `out` and `stream` options not supported because `GPUArray.__mul__`
+    The `out` and `stream` options are not supported because `GPUArray.__mul__`
     doesn't provide them.
     """
 
@@ -1058,7 +1058,7 @@ def divide(x_gpu, y_gpu):
 
     Notes
     -----
-    The `out` and `stream` options not supported because `GPUArray.__div__`
+    The `out` and `stream` options are not supported because `GPUArray.__div__`
     doesn't provide them.
     """
 
