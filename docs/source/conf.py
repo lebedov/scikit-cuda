@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 #
-# scikits.cuda documentation build configuration file, created by
+# scikit-cuda documentation build configuration file, created by
 # sphinx-quickstart on Fri Jul 19 10:11:54 2013.
 #
 # This file is execfile()d with the current directory set to its containing dir.
@@ -59,7 +59,7 @@ pkg_resources.require = Mock()
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 sys.path.append(os.path.abspath('../sphinxext'))
-sys.path.append(os.path.abspath('../../scikits/cuda'))
+sys.path.append(os.path.abspath('../skcuda'))
 sys.path.append(os.path.abspath('../../'))
 
 # Prevent cublas library load from interfering with doc build:
