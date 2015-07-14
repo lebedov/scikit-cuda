@@ -981,9 +981,9 @@ def add(x_gpu, y_gpu):
     out : pycuda.gpuarray.GPUArray
         Equivalent to `x_gpu.get()` + `y_gpu.get()`.
 
-    Bugs
-    ----
-    The `out` and `stream` options not supported because `GPUArray.__add__` 
+    Notes
+    -----
+    The `out` and `stream` options not supported because `GPUArray.__add__`
     doesn't provide them.
     """
 
@@ -1006,9 +1006,9 @@ def subtract(x_gpu, y_gpu):
     out : pycuda.gpuarray.GPUArray
         Equivalent to `x_gpu.get()` - `y_gpu.get()`.
 
-    Bugs
-    ----
-    The `out` and `stream` options not supported because `GPUArray.__sub__` 
+    Notes
+    -----
+    The `out` and `stream` options not supported because `GPUArray.__sub__`
     doesn't provide them.
     """
 
@@ -1031,9 +1031,9 @@ def multiply(x_gpu, y_gpu):
     out : pycuda.gpuarray.GPUArray
         Equivalent to `x_gpu.get()` * `y_gpu.get()`.
 
-    Bugs
-    ----
-    The `out` and `stream` options not supported because `GPUArray.__mul__` 
+    Notes
+    -----
+    The `out` and `stream` options not supported because `GPUArray.__mul__`
     doesn't provide them.
     """
 
@@ -1056,9 +1056,9 @@ def divide(x_gpu, y_gpu):
     out : pycuda.gpuarray.GPUArray
         Equivalent to `x_gpu.get()` / `y_gpu.get()`.
 
-    Bugs
-    ----
-    The `out` and `stream` options not supported because `GPUArray.__div__` 
+    Notes
+    -----
+    The `out` and `stream` options not supported because `GPUArray.__div__`
     doesn't provide them.
     """
 

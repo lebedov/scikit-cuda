@@ -1,28 +1,26 @@
 .. -*- rst -*-
 
 ..  image:: https://raw.githubusercontent.com/lebedov/scikit-cuda/master/docs/source/_static/logo.png
-   :alt: scikits.cuda
+   :alt: scikit-cuda
 
 Package Description
 -------------------
-scikits.cuda provides Python interfaces to many of the functions in the CUDA 
-device/runtime, CUBLAS, CUFFT, and CUSOLVER libraries distributed as part of 
-NVIDIA's `CUDA Programming Toolkit
-<http://www.nvidia.com/cuda/>`_, as well as interfaces to select functions in 
-the free and
-standard versions of the `CULA Dense Toolkit <http://www.culatools.com/dense>`_.  
-Both low-level wrapper functions similar to their C counterparts and high-level 
-functions comparable to those in `NumPy and Scipy <http://www.scipy.org>`_ are 
-provided.
+scikit-cuda provides Python interfaces to many of the functions in the CUDA
+device/runtime, CUBLAS, CUFFT, and CUSOLVER libraries distributed as part of
+NVIDIA's `CUDA Programming Toolkit <http://www.nvidia.com/cuda/>`_, as well as
+interfaces to select functions in the free and standard versions of the `CULA
+Dense Toolkit <http://www.culatools.com/dense>`_.  Both low-level wrapper
+functions similar to their C counterparts and high-level functions comparable to
+those in `NumPy and Scipy <http://www.scipy.org>`_ are provided.
 
 .. image:: https://zenodo.org/badge/doi/10.5281/zenodo.19723.svg
     :target: http://dx.doi.org/10.5281/zenodo.19723
-    :alt: 0.5.0b3
-.. image:: https://img.shields.io/pypi/v/scikits.cuda.svg
-    :target: https://pypi.python.org/pypi/scikits.cuda
+    :alt: 0.5.0
+.. image:: https://img.shields.io/pypi/v/scikit-cuda.svg
+    :target: https://pypi.python.org/pypi/scikit-cuda
     :alt: Latest Version
-.. image:: https://img.shields.io/pypi/dm/scikits.cuda.svg
-    :target: https://pypi.python.org/pypi/scikits.cuda
+.. image:: https://img.shields.io/pypi/dm/scikit-cuda.svg
+    :target: https://pypi.python.org/pypi/scikit-cuda
     :alt: Downloads
 .. image:: http://prime4commit.com/projects/102.svg
     :target: http://prime4commit.com/projects/102

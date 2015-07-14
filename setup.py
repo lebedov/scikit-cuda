@@ -15,8 +15,8 @@ from distutils.command.install_headers import install_headers
 from setuptools import find_packages
 from setuptools import setup
 
-NAME =               'scikits.cuda'
-VERSION =            '0.5.0b3'
+NAME =               'scikit-cuda'
+VERSION =            '0.5.0'
 AUTHOR =             'Lev Givon'
 AUTHOR_EMAIL =       'lev@columbia.edu'
 URL =                'https://github.com/lebedov/scikit-cuda/'
@@ -32,27 +32,32 @@ CLASSIFIERS = [
     'Operating System :: OS Independent',
     'Programming Language :: Python',
     'Programming Language :: Python :: 2.7',
+    'Programming Language :: Python :: 3.4',
     'Topic :: Scientific/Engineering',
     'Topic :: Software Development']
-NAMESPACE_PACKAGES = ['scikits']
+NAMESPACE_PACKAGES = ['scikits', 'skcuda']
 PACKAGES =           find_packages()
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if not on_rtd:
-    install_requires = ['numpy',
-                        'pycuda >= 2013.1']
-    extras_require = dict(scipy = ['scipy >= 0.9.0'],
+    install_requires = ['mako >= 1.0.1',
+                        'numpy >= 1.2.0',
+                        'pycuda >= 2014.1']
+    tests_require = ['nose >= 0.11',
+                    'scipy >= 0.14.0'],
+    extras_require = dict(scipy = ['scipy >= 0.14.0'],
                           sphinx_rtd_theme = ['sphinx_rtd_theme >= 0.1.6'])
 else:
     install_requires = []
+    tests_require = []
     extras_require = {}
 
 if __name__ == "__main__":
     if os.path.exists('MANIFEST'):
         os.remove('MANIFEST')
 
-    # This enables the installation of scikits/__init__.py as a data
-    # file:
+    # This enables the installation of __init__.py files in namespace
+    # directories as a data file:
     for scheme in INSTALL_SCHEMES.values():
         scheme['data'] = scheme['purelib']
 
@@ -70,7 +75,10 @@ if __name__ == "__main__":
         packages = PACKAGES,
 
         # Force installation of __init__.py in namespace package:
-        data_files = [('scikits', ['scikits/__init__.py'])],
+        data_files = [('scikits', ['scikits/__init__.py']),
+                      ('skcuda', ['skcuda/__init__.py'])],
         include_package_data = True,
         install_requires = install_requires,
-        extras_require = extras_require)
+        tests_require = tests_require,
+        extras_require = extras_require,
+        test_suite='nose.collector')

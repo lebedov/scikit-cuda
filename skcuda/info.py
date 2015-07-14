@@ -1,24 +1,19 @@
 #!/usr/bin/env python
 
 """
-scikits.cuda
-============
-
-This SciKit (toolkit for SciPy [1]_) provides Python interfaces to a
-subset of the functions in the CUDA, CUDART, CUBLAS, and CUFFT
+scikit-cuda
+===========
+scikit-cuda provides Python interfaces to many of the functions
+in the CUDA device/runtime, CUBLAS, CUFFT, and CUSOLVER
 libraries distributed as part of NVIDIA's CUDA Programming Toolkit
-[2]_, as well as interfaces to select functions in the free-of-charge
-CULA Toolkit [3]_. In contrast to most existing Python wrappers for
-these libraries (many of which only provide a low-level interface to
-the actual library functions), this package uses PyCUDA [4]_ to
-provide high-level functions comparable to those in the NumPy package
-[5]_.
-
+[1]_, as well as interfaces to select functions in the free and standard
+versions of the CULA Dense Toolkit [2]_. Both low-level wrapper functions
+similar to their C counterparts and high-level functions comparable to those in
+NumPy and Scipy [3]_ are provided
 
 High-level modules
 ------------------
-
-- autoinit       Import this module to automatically initialize CUBLAS and CULA.
+- autoinit       Automatic GPU library initialization module.
 - fft            Fast Fourier Transform functions.
 - integrate      Numerical integration functions.
 - linalg         Linear algebra functions.
@@ -27,19 +22,14 @@ High-level modules
 
 Low-level modules
 -----------------
+- cublas         Function wrappers for the CUBLAS library.
+- cufft          Function wrappers for the CUFFT library.
+- cuda           Function wrappers for the CUDA device/runtime libraries.
+- cula           Function wrappers for the CULA library.
+- cusolver       Function wrappers for the CUSOLVER library.
+- pcula          Function wrappers for the multi-GPU CULA library.
 
-- cublas         Wrappers for functions in the CUBLAS library.
-- cufft          Wrappers for functions in the CUFFT library.
-- cuda           Wrappers for functions in the CUDA/CUDART libraries.
-- cula           Wrappers for functions in the CULA library.
-- pcula          Wrappers for functions in the multi-GPU CULA library.
-
-.. [1] http://www.scipy.org/
-.. [2] http://www.nvidia.com/cuda
-.. [3] http://www.culatools.com/
-.. [4] http://mathema.tician.de/software/pycuda/
-.. [5] http://numpy.scipy.org/
-.. [6] http://bionet.ee.columbia.edu/
-.. [7] http://www.mathcs.emory.edu/~yfan/PARRET
-
+.. [1] http://www.nvidia.com/cuda
+.. [2] http://www.culatools.com/
+.. [5] http://www.scipy.org/
 """

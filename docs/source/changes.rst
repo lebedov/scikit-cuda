@@ -3,8 +3,9 @@
 Change Log
 ==========
 
-Release 0.5.0 - (under development)
------------------------------------
+Release 0.5.0 - (July 14, 2015)
+-------------------------------
+* Rename package to scikit-cuda.
 * Reductions sum, mean, var, std, max, min, argmax, argmin accept keepdims option.
 * The same reductions now return a GPUArray instead of ndarray if axis=None.
 * Switch to PEP 440 version numbering.
