@@ -13,33 +13,53 @@ Helper Routines
    :nosignatures:
 
    cusolverDnCreate
+   cusolverDnGetStream
    cusolverDnDestroy
    cusolverDnSetStream
-   cusolverDnGetStream
 
 Wrapper Routines
 ----------------
+
+Single Precision Routines
+^^^^^^^^^^^^^^^^^^^^^^^^^
 .. autosummary::
    :toctree: generated/
    :nosignatures:
 
-   cusolverDnSgetrf_bufferSize
-   cusolverDnSgetrf
-   cusolverDnDgetrf_bufferSize
-   cusolverDnDgetrf
-   cusolverDnCgetrf_bufferSize
-   cusolverDnCgetrf
-   cusolverDnZgetrf_bufferSize
-   cusolverDnZgetrf
-   cusolverDnSgetrs
-   cusolverDnDgetrs
-   cusolverDnCgetrs
-   cusolverDnZgetrs
+   cusolverDnSgeqrf_bufferSize
+   cusolverDnSgeqrf
    cusolverDnSgesvd_bufferSize
    cusolverDnSgesvd
-   cusolverDnDgesvd_bufferSize
-   cusolverDnDgesvd
+   cusolverDnSgetrf_bufferSize
+   cusolverDnSgetrf
+   cusolverDnSgetrs
+
+   cusolverDnCgeqrf_bufferSize
+   cusolverDnCgeqrf
    cusolverDnCgesvd_bufferSize
    cusolverDnCgesvd
+   cusolverDnCgetrf_bufferSize
+   cusolverDnCgetrf
+   cusolverDnCgetrs
+
+Double Precision Routines
+^^^^^^^^^^^^^^^^^^^^^^^^^
+.. autosummary::
+   :toctree: generated/
+   :nosignatures:
+
+   cusolverDnDgeqrf_bufferSize
+   cusolverDnDgeqrf
+   cusolverDnDgesvd_bufferSize
+   cusolverDnDgesvd
+   cusolverDnDgetrf_bufferSize
+   cusolverDnDgetrf
+   cusolverDnDgetrs
+
+   cusolverDnZgeqrf_bufferSize
+   cusolverDnZgeqrf
    cusolverDnZgesvd_bufferSize
    cusolverDnZgesvd
+   cusolverDnZgetrf_bufferSize
+   cusolverDnZgetrf
+   cusolverDnZgetrs

@@ -734,3 +734,192 @@ def cusolverDnZgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
                                            ldu, int(VT), ldvt, int(Work),
                                            Lwork, int(rwork), int(devInfo))
     cusolverCheckStatus(status)
+
+# SGEQRF, DGEQRF, CGEQRF, ZGEQRF
+_libcusolver.cusolverDnSgeqrf_bufferSize.restype = int
+_libcusolver.cusolverDnSgeqrf_bufferSize.argtypes = [ctypes.c_void_p,
+                                                   ctypes.c_int,
+                                                   ctypes.c_void_p,
+                                                   ctypes.c_int,
+                                                   ctypes.c_void_p]
+def cusolverDnSgeqrf_bufferSize(handle, m, n, A, lda):
+    """
+    Calculate size of work buffer used by cusolverDnSgeqrf.
+
+    References
+    ----------
+    `cusolverDn<t>geqrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-geqrf>`_
+    """
+
+    Lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnSgeqrf_bufferSize(handle, m, n, int(A),
+                                                      n, ctypes.byref(Lwork))
+    cusolverCheckStatus(status)
+    return Lwork.value
+
+_libcusolver.cusolverDnSgeqrf.restype = int
+_libcusolver.cusolverDnSgeqrf.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p]
+def cusolverDnSgeqrf(handle, m, n, A, lda, TAU, Workspace, Lwork, devInfo):
+    """
+    Compute QR factorization of a real single precision m x n matrix.
+
+    References
+    ----------
+    `cusolverDn<t>geqrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-geqrf>`_
+    """
+    
+    status = _libcusolver.cusolverDnSgeqrf(handle, m, n, int(A), lda,
+                                           int(TAU),
+                                           int(Workspace),
+                                           Lwork,
+                                           int(devInfo))
+    cusolverCheckStatus(status)
+
+_libcusolver.cusolverDnDgeqrf_bufferSize.restype = int
+_libcusolver.cusolverDnDgeqrf_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p]
+def cusolverDnDgeqrf_bufferSize(handle, m, n, A, lda):
+    """
+    Calculate size of work buffer used by cusolverDnDgeqrf.
+
+    References
+    ----------
+    `cusolverDn<t>geqrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-geqrf>`_
+    """
+
+    Lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnDgeqrf_bufferSize(handle, m, n, int(A),
+                                                      n, ctypes.byref(Lwork))
+    cusolverCheckStatus(status)
+    return Lwork.value
+
+_libcusolver.cusolverDnDgeqrf.restype = int
+_libcusolver.cusolverDnDgeqrf.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p]
+def cusolverDnDgeqrf(handle, m, n, A, lda, TAU, Workspace, Lwork, devInfo):
+    """
+    Compute QR factorization of a real double precision m x n matrix.
+
+    References
+    ----------
+    `cusolverDn<t>geqrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-geqrf>`_
+    """
+    
+    status = _libcusolver.cusolverDnDgeqrf(handle, m, n, int(A), lda,
+                                           int(TAU),
+                                           int(Workspace),
+                                           Lwork,
+                                           int(devInfo))
+    cusolverCheckStatus(status)
+
+_libcusolver.cusolverDnCgeqrf_bufferSize.restype = int
+_libcusolver.cusolverDnCgeqrf_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p]
+def cusolverDnCgeqrf_bufferSize(handle, m, n, A, lda):
+    """
+    Calculate size of work buffer used by cusolverDnCgeqrf.
+
+    References
+    ----------
+    `cusolverDn<t>geqrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-geqrf>`_
+    """
+
+    Lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnCgeqrf_bufferSize(handle, m, n, int(A),
+                                                      n, ctypes.byref(Lwork))
+    cusolverCheckStatus(status)
+    return Lwork.value
+
+_libcusolver.cusolverDnCgeqrf.restype = int
+_libcusolver.cusolverDnCgeqrf.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p]
+def cusolverDnCgeqrf(handle, m, n, A, lda, TAU, Workspace, Lwork, devInfo):
+    """
+    Compute QR factorization of a complex single precision m x n matrix.
+
+    References
+    ----------
+    `cusolverDn<t>geqrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-geqrf>`_
+    """
+    
+    status = _libcusolver.cusolverDnCgeqrf(handle, m, n, int(A), lda,
+                                           int(TAU),
+                                           int(Workspace),
+                                           Lwork,
+                                           int(devInfo))
+    cusolverCheckStatus(status)
+
+_libcusolver.cusolverDnZgeqrf_bufferSize.restype = int
+_libcusolver.cusolverDnZgeqrf_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p]
+def cusolverDnZgeqrf_bufferSize(handle, m, n, A, lda):
+    """
+    Calculate size of work buffer used by cusolverDnZgeqrf.
+
+    References
+    ----------
+    `cusolverDn<t>geqrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-geqrf>`_
+    """
+
+    Lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnZgeqrf_bufferSize(handle, m, n, int(A),
+                                                      n, ctypes.byref(Lwork))
+    cusolverCheckStatus(status)
+    return Lwork.value
+
+_libcusolver.cusolverDnZgeqrf.restype = int
+_libcusolver.cusolverDnZgeqrf.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p]
+def cusolverDnZgeqrf(handle, m, n, A, lda, TAU, Workspace, Lwork, devInfo):
+    """
+    Compute QR factorization of a complex double precision m x n matrix.
+
+    References
+    ----------
+    `cusolverDn<t>geqrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-geqrf>`_
+    """
+    
+    status = _libcusolver.cusolverDnZgeqrf(handle, m, n, int(A), lda,
+                                           int(TAU),
+                                           int(Workspace),
+                                           Lwork,
+                                           int(devInfo))
+    cusolverCheckStatus(status)

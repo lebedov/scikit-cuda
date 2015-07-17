@@ -3,6 +3,10 @@
 Change Log
 ==========
 
+Release 0.5.1 - (under development)
+-----------------------------------
+* More CUSOLVER wrappers.
+
 Release 0.5.0 - (July 14, 2015)
 -------------------------------
 * Rename package to scikit-cuda.
