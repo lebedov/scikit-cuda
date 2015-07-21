@@ -99,7 +99,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'scikits.cuda'
+project = u'scikit-cuda'
 copyright = u'2009-2015, Lev Givon'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -232,7 +232,7 @@ html_use_index = True
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'scikits-cuda-doc'
+htmlhelp_basename = 'scikit-cuda-doc'
 
 # -- Options for LaTeX output --------------------------------------------------
 
@@ -256,7 +256,7 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title, author, documentclass [howto/manual]).
 latex_documents = [
-  ('index', 'scikits.cuda-doc.tex', u'scikits.cuda Documentation',
+  ('index', 'scikit-cuda-doc.tex', u'scikit-cuda Documentation',
    u'Lev Givon', 'manual'),
 ]
 
@@ -287,7 +287,7 @@ latex_appendices = []
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('index', 'scikits.cuda', u'CUDA Scikit Documentation',
+    ('index', 'scikit-cuda', u'scikit-cuda Documentation',
      [u'Lev Givon'], 1)
 ]
 
@@ -301,8 +301,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'scikits.cuda', u'CUDA Scikit Documentation',
-   u'Lev Givon', 'scikits.cuda', 'CUDA Scikit',
+  ('index', 'scikit-cuda', u'scikit-cuda Documentation',
+   u'Lev Givon', 'scikit-cuda', 'scikit-cuda',
    'Miscellaneous'),
 ]
 
