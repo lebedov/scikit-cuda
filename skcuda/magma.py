@@ -1503,6 +1503,57 @@ def magma_zgesv_gpu(n, nhrs, A, lda, ipiv, B, ldb):
     magmaCheckStatus(status)
 
 
+_libmagma.magma_sgesv_nopiv_gpu.restype = int
+_libmagma.magma_sgesv_nopiv_gpu.argtypes = [ctypes.c_int,
+                                            ctypes.c_int,
+                                            ctypes.c_void_p,
+                                            ctypes.c_int,
+                                            ctypes.c_void_p,
+                                            ctypes.c_int,
+                                            ctypes.c_void_p]
+def magma_sgesv_nopiv_gpu(n, nhrs, A, lda, B, ldb):
+    """
+    Solve system of linear equations.
+    """
+    info = ctypes.c_int()
+    status = _libmagma.magma_sgesv_nopiv_gpu(n, nhrs, int(A), lda,
+                                             int(B), ldb, ctypes.byref(info))
+    magmaCheckStatus(status)
+
+_libmagma.magma_dgesv_nopiv_gpu.restype = int
+_libmagma.magma_dgesv_nopiv_gpu.argtypes = _libmagma.magma_sgesv_nopiv_gpu.argtypes
+def magma_dgesv_nopiv_gpu(n, nhrs, A, lda, B, ldb):
+    """
+    Solve system of linear equations.
+    """
+    info = ctypes.c_int()
+    status = _libmagma.magma_dgesv_nopiv_gpu(n, nhrs, int(A), lda,
+                                             int(B), ldb, ctypes.byref(info))
+    magmaCheckStatus(status)
+
+_libmagma.magma_cgesv_nopiv_gpu.restype = int
+_libmagma.magma_cgesv_nopiv_gpu.argtypes = _libmagma.magma_sgesv_nopiv_gpu.argtypes
+def magma_cgesv_nopiv_gpu(n, nhrs, A, lda, B, ldb):
+    """
+    Solve system of linear equations.
+    """
+    info = ctypes.c_int()
+    status = _libmagma.magma_cgesv_nopiv_gpu(n, nhrs, int(A), lda,
+                                             int(B), ldb, ctypes.byref(info))
+    magmaCheckStatus(status)
+
+
+_libmagma.magma_zgesv_nopiv_gpu.restype = int
+_libmagma.magma_zgesv_nopiv_gpu.argtypes = _libmagma.magma_sgesv_nopiv_gpu.argtypes
+def magma_zgesv_nopiv_gpu(n, nhrs, A, lda, B, ldb):
+    """
+    Solve system of linear equations.
+    """
+    info = ctypes.c_int()
+    status = _libmagma.magma_zgesv_nopiv_gpu(n, nhrs, int(A), lda,
+                                             int(B), ldb, ctypes.byref(info))
+    magmaCheckStatus(status)
+
 # SPOTRF, DPOTRF, CPOTRF, ZPOTRF
 _libmagma.magma_spotrf_gpu.restype = int
 _libmagma.magma_spotrf_gpu.argtypes = [ctypes.c_int,
