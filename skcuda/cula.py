@@ -494,6 +494,32 @@ def culaDeviceCgeqrf(m, n, a, lda, tau):
     status = _libcula.culaDeviceCgeqrf(m, n, int(a), lda, int(tau))
     culaCheckStatus(status)
 
+# SORGQR, CUNGQR
+_libcula.culaDeviceSorgqr.restype = \
+_libcula.culaDeviceCungqr.restype = int
+_libcula.culaDeviceSorgqr.argtypes = \
+_libcula.culaDeviceCungqr.argtypes = [ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p]
+def culaDeviceSorgqr(m, n, k, a, lda, tau):
+    """
+    QR factorization - Generate Q from QR factorization
+    """
+
+    status = _libcula.culaDeviceSorgqr(m, n, k, int(a), lda, int(tau))
+    culaCheckStatus(status)
+
+def culaDeviceCungqr(m, n, k, a, lda, tau):
+    """
+    QR factorization - Generate Q from QR factorization
+    """
+
+    status = _libcula.culaDeviceCungqr(m, n, k, int(a), lda, int(tau))
+    culaCheckStatus(status)
+
 # SGELS, CGELS
 _libcula.culaDeviceSgels.restype = \
 _libcula.culaDeviceCgels.restype = int
@@ -740,6 +766,46 @@ else:
         status = _libcula.culaDeviceZgeqrf(m, n, int(a), lda, int(tau))
         culaCheckStatus(status)
 
+# DORGQR, ZUNGQR
+try:
+    _libcula.culaDeviceDorgqr.restype = \
+    _libcula.culaDeviceZungqr.restype = int
+    _libcula.culaDeviceDorgqr.argtypes = \
+    _libcula.culaDeviceZungqr.argtypes = [ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p]
+except AttributeError:
+    def culaDeviceDorgqr(m, n, k, a, lda, tau):
+        """
+        QR factorization - Generate Q from QR factorization
+        """
+
+        raise NotImplementedError('CULA Dense required')
+
+    def culaDeviceDorgqr(m, n, k, a, lda, tau):
+        """
+        QR factorization - Generate Q from QR factorization
+        """
+        raise NotImplementedError('CULA Dense required')
+else:
+    def culaDeviceDorgqr(m, n, k, a, lda, tau):
+        """
+        QR factorization.
+        """
+
+        status = _libcula.culaDeviceDorgqr(m, n, k, int(a), lda, int(tau))
+        culaCheckStatus(status)
+
+    def culaDeviceZungqr(m, n, k, a, lda, tau):
+        """
+        QR factorization.
+        """
+
+        status = _libcula.culaDeviceZungqr(m, n, k, int(a), lda, int(tau))
+        culaCheckStatus(status)
 
 # SGETRI, CGETRI, DGETRI, ZGETRI
 try:
