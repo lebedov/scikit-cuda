@@ -133,7 +133,7 @@ def svd(a_gpu, jobu='A', jobvt='A'):
 
     # Since CUDA assumes that arrays are stored in column-major
     # format, the input matrix is assumed to be transposed:
-    n, m = a_gpu.shape
+    n, m = np.array(a_gpu.shape, int) # workaround for bug #131
     square = (n == m)
 
     # Since the input matrix is transposed, jobu and jobvt must also
@@ -586,8 +586,8 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
     if handle is None:
         handle = misc._global_cublas_handle
 
-    x_shape = x_gpu.shape
-    y_shape = y_gpu.shape
+    x_shape = tuple(int(i) for i in x_gpu.shape) # workaround for bug #131
+    y_shape = tuple(int(i) for i in y_gpu.shape)
     if len(x_shape) == 1:
         x_shape = (1, x_shape[0])
     if len(y_shape) == 1:
@@ -874,7 +874,7 @@ def _transpose(a_gpu, conj=False, handle=None):
         transa = 'c'
     else:
         transa = 't'
-    M, N = a_gpu.shape
+    M, N = np.array(a_gpu.shape, int) # workaround for bug #131
     at_gpu = gpuarray.empty((N, M), a_gpu.dtype)
     func(handle, transa, 't', M, N,
          1.0, a_gpu.gpudata, N, 0.0, a_gpu.gpudata, N,
@@ -1127,7 +1127,7 @@ def diag(v_gpu):
         else:
             raise ValueError('unsupported input type')
 
-        n = min(v_gpu.shape)
+        n = int(min(v_gpu.shape)) # workaround for bug #131
         incx = v_gpu.shape[1]+1
 
         # Allocate the output array
@@ -1419,7 +1419,9 @@ def tril(a_gpu, overwrite=False, handle=None):
     block_dim, grid_dim = misc.select_block_grid_sizes(dev, a_gpu.shape)
     tril = _get_tril_kernel(use_double, use_complex, cols=N)
     if not overwrite:
-        a_orig_gpu = gpuarray.empty(a_gpu.shape, a_gpu.dtype, allocator=alloc)
+        # workaround for bug #131
+        a_orig_gpu = gpuarray.empty(tuple(int(i) for i in a_gpu.shape),
+                                    a_gpu.dtype, allocator=alloc)
         copy_func(handle, a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
 
     tril(a_gpu, np.uint32(a_gpu.size),
@@ -1490,7 +1492,9 @@ def multiply(x_gpu, y_gpu, overwrite=False):
         return y_gpu
     else:
         result_type = np.result_type(x_gpu.dtype, y_gpu.dtype)
-        z_gpu = gpuarray.empty(x_gpu.shape, result_type, allocator=alloc)
+        # workaround for bug #131
+        z_gpu = gpuarray.empty(tuple(int(i) for i in x_gpu.shape), 
+                               result_type, allocator=alloc)
         func = \
                el.ElementwiseKernel("{x_ctype} *x, {y_ctype} *y, {z_type} *z".format(x_ctype=x_ctype,
                                                                                      y_ctype=y_ctype,
@@ -1652,7 +1656,7 @@ def inv(a_gpu, overwrite=False, ipiv_gpu=None):
         getrf = cula.culaDeviceDgetrf
         getri = cula.culaDeviceDgetri
 
-    n = a_gpu.shape[0]
+    n = int(a_gpu.shape[0]) # workaround for bug #131
     if ipiv_gpu is None:
         alloc = misc._global_cublas_allocator
         ipiv_gpu = gpuarray.empty((n, 1), np.int32, allocator=alloc)
@@ -1761,7 +1765,7 @@ def det(a_gpu, overwrite=False, ipiv_gpu=None, handle=None):
     else:
         raise ValueError('unsupported input type')
 
-    n = a_gpu.shape[0]
+    n = int(a_gpu.shape[0]) # workaround for bug #131
     if ipiv_gpu is None:
         alloc = misc._global_cublas_allocator
         ipiv_gpu = gpuarray.empty((n, 1), np.int32, allocator=alloc)
