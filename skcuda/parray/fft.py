@@ -7,7 +7,7 @@ from pycuda.compiler import SourceModule
 import pycuda.gpuarray as gpuarray
 import scikits.cuda.cufft as cufft
 
-import ypcutil.parray as parray
+import parray
 
 class fftplan(object):
     """
