@@ -11,7 +11,7 @@ import pycuda.gpuarray as gpuarray
 from pycuda.compiler import SourceModule
 import numpy as np
 
-import scikits.cuda.misc as misc
+import skcuda.misc as misc
 
 A = 3
 B = 4

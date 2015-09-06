@@ -9,7 +9,7 @@ import pycuda.autoinit
 import pycuda.gpuarray as gpuarray
 import numpy as np
 
-import scikits.cuda.fft as cu_fft
+import skcuda.fft as cu_fft
 
 print 'Testing fft/ifft..'
 N = 256

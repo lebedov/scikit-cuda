@@ -13,8 +13,8 @@ import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
 import numpy as np
 
-import scikits.cuda.fft as fft
-import scikits.cuda.misc as misc
+import skcuda.fft as fft
+import skcuda.misc as misc
 
 atol_float32 = 1e-6
 atol_float64 = 1e-8

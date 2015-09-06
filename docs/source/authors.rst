@@ -2,19 +2,23 @@
 
 Authors & Acknowledgments
 =========================
-This software was written and packaged by Lev Givon [1]_. Although it
-depends upon the excellent PyCUDA [2]_ package by Andreas Klöckner,
-scikits.cuda is developed independently of PyCUDA.
+This software was written and packaged by `Lev Givon 
+<http://www.columbia.edu/~lev/>`_.  Although it
+depends upon the excellent `PyCUDA <http://mathema.tician.de/software/pycuda/>`_ 
+package by `Andreas Klöckner <http://mathema.tician.de/aboutme/>`_, scikit-cuda 
+is developed independently of PyCUDA.
 
 Special thanks are due to the following parties for their contributions:
 
 - Frédéric Bastien - CUBLAS version detection enhancements.
+- David Wei Chiang - Improvements to vectorized functions, bug fixes.
 - Sander Dieleman - CUBLAS 5 bindings.
 - capdevc - MacOS X library search fix.
 - Ying Wei (Daniel) Fan - Kindly permitted reuse of CUBLAS wrapper code in his 
-  PARRET [3]_ software).
+  `PARRET <http://www.mathcs.emory.edu/~yfan/PARRET/>`_ software).
 - Michael M. Forbes - Improved MacOSX compatibility, bug fixes.
 - Jacob Frelinger - Various enhancements.
+- Tim Klein - Additional MAGMA wrappers.
 - Eric Larson - Various enhancements.
 - Gregory R. Lee - Enhanced FFT plan creation.
 - Teodor Mihai Moldovan - CUBLAS 5 bindings.
@@ -28,7 +32,3 @@ Special thanks are due to the following parties for their contributions:
 - Stefan van der Walt - Bug fixes.
 - Feng Wang - Bug reports.
 - Yiyin Zhou - Patches, bug reports, and function wrappers 
-
-.. [1] http://www.columbia.edu/~lev/
-.. [2] http://mathema.tician.de/software/pycuda/
-.. [3] http://www.mathcs.emory.edu/~yfan/PARRET

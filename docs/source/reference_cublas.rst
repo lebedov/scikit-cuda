@@ -1,6 +1,6 @@
 .. -*- rst -*-
 
-.. currentmodule:: scikits.cuda.cublas
+.. currentmodule:: skcuda.cublas
 
 CUBLAS Routines
 ===============

@@ -9,9 +9,8 @@ import pycuda.gpuarray as gpuarray
 import pycuda.elementwise as elementwise
 import numpy as np
 
-import misc
-
-from misc import init
+from . import misc
+from .misc import init
 
 # Get installation location of C headers:
 from . import install_headers

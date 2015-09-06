@@ -9,10 +9,15 @@ from unittest import main, TestCase, TestSuite
 import pycuda.autoinit
 import pycuda.gpuarray as gpuarray
 import numpy as np
+from numpy.testing import assert_raises
+import skcuda.misc as misc
 
-import scikits.cuda.misc as misc
+class test_misc(TestCase):
 
-class test_misc(TestCase):        
+    def setUp(self):
+        np.random.seed(0)
+        misc.init()
+
     def test_maxabs_float32(self):
         x = np.array([-1, 2, -3], np.float32)
         x_gpu = gpuarray.to_gpu(x)
@@ -92,28 +97,272 @@ class test_misc(TestCase):
         res_gpu = misc.get_by_index(src_gpu, ind)
         assert np.allclose(res_gpu.get(), src[[0, 2, 4]])
 
+        ind = gpuarray.to_gpu(np.array([], np.int64))
+        res_gpu = misc.get_by_index(src_gpu, ind)
+        assert len(res_gpu) == 0
+
     def test_get_by_index_float64(self):
         src = np.random.rand(5).astype(np.float64)
         src_gpu = gpuarray.to_gpu(src)
         ind = gpuarray.to_gpu(np.array([0, 2, 4]))
         res_gpu = misc.get_by_index(src_gpu, ind)
         assert np.allclose(res_gpu.get(), src[[0, 2, 4]])
-                           
-    def test_set_by_index_float32(self):
+
+        ind = gpuarray.to_gpu(np.array([], np.int64))
+        res_gpu = misc.get_by_index(src_gpu, ind)
+        assert len(res_gpu) == 0
+
+    def test_set_by_index_dest_float32(self):
         dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.float32))
         ind = gpuarray.to_gpu(np.array([0, 2, 4]))
         src_gpu = gpuarray.to_gpu(np.array([1, 1, 1], dtype=np.float32))
-        misc.set_by_index(dest_gpu, ind, src_gpu)
+        misc.set_by_index(dest_gpu, ind, src_gpu, 'dest')
         assert np.allclose(dest_gpu.get(),
                            np.array([1, 1, 1, 3, 1], dtype=np.float32))
 
-    def test_set_by_index_float64(self):
+        dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.float32))
+        ind = gpuarray.to_gpu(np.array([], np.int64))
+        src_gpu = gpuarray.to_gpu(np.array([1, 1, 1], dtype=np.float32))
+        misc.set_by_index(dest_gpu, ind, src_gpu, 'dest')
+        assert np.allclose(dest_gpu.get(),
+                           np.arange(5, dtype=np.float32))
+
+    def test_set_by_index_dest_float64(self):
         dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.double))
         ind = gpuarray.to_gpu(np.array([0, 2, 4]))
         src_gpu = gpuarray.to_gpu(np.array([1, 1, 1], dtype=np.double))
-        misc.set_by_index(dest_gpu, ind, src_gpu)
+        misc.set_by_index(dest_gpu, ind, src_gpu, 'dest')
         assert np.allclose(dest_gpu.get(),
                            np.array([1, 1, 1, 3, 1], dtype=np.double))
+
+        dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.double))
+        ind = gpuarray.to_gpu(np.array([], np.int64))
+        src_gpu = gpuarray.to_gpu(np.array([1, 1, 1], dtype=np.double))
+        misc.set_by_index(dest_gpu, ind, src_gpu, 'dest')
+        assert np.allclose(dest_gpu.get(),
+                           np.arange(5, dtype=np.double))
+
+    def test_set_by_index_src_float32(self):
+        dest_gpu = gpuarray.to_gpu(np.zeros(3, dtype=np.float32))
+        ind = gpuarray.to_gpu(np.array([0, 2, 4]))
+        src_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.float32))
+        misc.set_by_index(dest_gpu, ind, src_gpu, 'src')
+        assert np.allclose(dest_gpu.get(),
+                           np.array([0, 2, 4], dtype=np.float32))
+
+        dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.float32))
+        ind = gpuarray.to_gpu(np.array([], np.int64))
+        src_gpu = gpuarray.to_gpu(np.array([1, 1, 1], dtype=np.float32))
+        misc.set_by_index(dest_gpu, ind, src_gpu, 'src')
+        assert np.allclose(dest_gpu.get(),
+                           np.arange(5, dtype=np.float32))
+
+    def test_set_by_index_src_float64(self):
+        dest_gpu = gpuarray.to_gpu(np.zeros(3, dtype=np.double))
+        ind = gpuarray.to_gpu(np.array([0, 2, 4]))
+        src_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.double))
+        misc.set_by_index(dest_gpu, ind, src_gpu, 'src')
+        assert np.allclose(dest_gpu.get(),
+                           np.array([0, 2, 4], dtype=np.double))
+
+        dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.double))
+        ind = gpuarray.to_gpu(np.array([], np.int64))
+        src_gpu = gpuarray.to_gpu(np.array([1, 1, 1], dtype=np.double))
+        misc.set_by_index(dest_gpu, ind, src_gpu, 'src')
+        assert np.allclose(dest_gpu.get(),
+                           np.arange(5, dtype=np.double))
+
+    def impl_test_binaryop_matvec(self, dtype):
+        x = np.random.normal(scale=5.0, size=(3, 5)).astype(dtype)
+        a = np.random.normal(scale=5.0, size=(1, 5)).astype(dtype)
+        b = np.random.normal(scale=5.0, size=(3, 1)).astype(dtype)
+
+        # the following two test correct broadcasting on 0D vectors
+        c = np.random.normal(scale=5.0, size=(5, )).astype(dtype)
+        d = np.random.normal(scale=5.0, size=(3, )).astype(dtype)
+        x_gpu = gpuarray.to_gpu(x)
+        a_gpu = gpuarray.to_gpu(a)
+        b_gpu = gpuarray.to_gpu(b)
+        c_gpu = gpuarray.to_gpu(c)
+        d_gpu = gpuarray.to_gpu(d)
+        out = gpuarray.empty(x.shape, dtype=dtype)
+        # addition
+        res = misc.add_matvec(x_gpu, a_gpu, out=out).get()
+        assert np.allclose(res, x+a)
+        assert np.allclose(misc.add_matvec(x_gpu, b_gpu).get(), x+b)
+        assert np.allclose(misc.add_matvec(x_gpu, c_gpu).get(), x+c)
+        assert_raises(ValueError, misc.add_matvec, x_gpu, d_gpu)
+        # multiplication
+        res = misc.mult_matvec(x_gpu, a_gpu, out=out).get()
+        assert np.allclose(res, x*a)
+        assert np.allclose(misc.mult_matvec(x_gpu, b_gpu).get(), x*b)
+        assert np.allclose(misc.mult_matvec(x_gpu, c_gpu).get(), x*c)
+        assert_raises(ValueError, misc.mult_matvec, x_gpu, d_gpu)
+        # division
+        res = misc.div_matvec(x_gpu, a_gpu, out=out).get()
+        assert np.allclose(res, x/a)
+        assert np.allclose(misc.div_matvec(x_gpu, b_gpu).get(), x/b)
+        assert np.allclose(misc.div_matvec(x_gpu, c_gpu).get(), x/c)
+        assert_raises(ValueError, misc.div_matvec, x_gpu, d_gpu)
+
+
+    def test_binaryop_matvec_float32(self):
+        self.impl_test_binaryop_matvec(np.float32)
+
+    def test_binaryop_matvec_float64(self):
+        self.impl_test_binaryop_matvec(np.float64)
+
+    def test_binaryop_matvec_complex64(self):
+        self.impl_test_binaryop_matvec(np.complex64)
+
+    def test_binaryop_matvec_complex128(self):
+        self.impl_test_binaryop_matvec(np.complex128)
+
+    def impl_test_sum(self, dtype):
+        x = np.random.normal(scale=5.0, size=(3, 5))
+        x = x.astype(dtype=dtype, order='C')
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(misc.sum(x_gpu).get(), x.sum())
+        assert np.allclose(misc.sum(x_gpu, axis=0).get(), x.sum(axis=0))
+        assert np.allclose(misc.sum(x_gpu, axis=1).get(), x.sum(axis=1))
+        x = x.astype(dtype=dtype, order='F')
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(misc.sum(x_gpu).get(), x.sum())
+        assert np.allclose(misc.sum(x_gpu, axis=0).get(), x.sum(axis=0))
+        assert np.allclose(misc.sum(x_gpu, axis=1).get(), x.sum(axis=1))
+
+    def test_sum_float32(self):
+        self.impl_test_sum(np.float32)
+
+    def test_sum_float64(self):
+        self.impl_test_sum(np.float64)
+
+    def test_sum_complex64(self):
+        self.impl_test_sum(np.complex64)
+
+    def test_sum_complex128(self):
+        self.impl_test_sum(np.complex128)
+
+    def impl_test_mean(self, dtype):
+        x = np.random.normal(scale=5.0, size=(3, 5))
+        x = x.astype(dtype=dtype, order='C')
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(misc.mean(x_gpu).get(), x.mean())
+        assert np.allclose(misc.mean(x_gpu, axis=0).get(), x.mean(axis=0))
+        assert np.allclose(misc.mean(x_gpu, axis=1).get(), x.mean(axis=1))
+        x = x.astype(dtype=dtype, order='F')
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(misc.mean(x_gpu).get(), x.mean())
+        assert np.allclose(misc.mean(x_gpu, axis=-1).get(), x.mean(axis=-1))
+        assert np.allclose(misc.mean(x_gpu, axis=-2).get(), x.mean(axis=-2))
+
+    def test_mean_float32(self):
+        self.impl_test_mean(np.float32)
+
+    def test_mean_float64(self):
+        self.impl_test_mean(np.float64)
+
+    def test_mean_complex64(self):
+        self.impl_test_mean(np.complex64)
+
+    def test_mean_complex128(self):
+        self.impl_test_mean(np.complex128)
+
+    def impl_test_var(self, dtype):
+        x = np.random.normal(scale=5.0, size=(3, 5))
+        x = x.astype(dtype=dtype, order='C')
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(misc.var(x_gpu).get(), x.var())
+        assert np.allclose(misc.var(x_gpu, axis=0).get(), x.var(axis=0))
+        assert np.allclose(misc.var(x_gpu, axis=1).get(), x.var(axis=1))
+        # Currently not working due to a bug in PyCUDA, see Issue #92
+        #x = x.astype(dtype=dtype, order='F')
+        #x_gpu = gpuarray.to_gpu(x)
+        #assert np.allclose(misc.var(x_gpu).get(), x.var())
+        #assert np.allclose(misc.var(x_gpu, axis=-1).get(), x.var(axis=-1))
+        #assert np.allclose(misc.var(x_gpu, axis=-2).get(), x.var(axis=-2))
+
+    def test_var_float32(self):
+        self.impl_test_var(np.float32)
+
+    def test_var_float64(self):
+        self.impl_test_var(np.float64)
+
+    def test_var_complex64(self):
+        self.impl_test_var(np.complex64)
+
+    def test_var_complex128(self):
+        self.impl_test_var(np.complex128)
+
+    def impl_test_std(self, dtype):
+        x = np.random.normal(scale=5.0, size=(3, 5))
+        x = x.astype(dtype=dtype, order='C')
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(misc.std(x_gpu).get(), x.std())
+        assert np.allclose(misc.std(x_gpu, axis=0).get(), x.std(axis=0))
+        assert np.allclose(misc.std(x_gpu, axis=1).get(), x.std(axis=1))
+        # Currently not working due to a bug in PyCUDA, see Issue #92
+        #x = x.astype(dtype=dtype, order='F')
+        #x_gpu = gpuarray.to_gpu(x)
+        #assert np.allclose(misc.std(x_gpu).get(), x.std())
+        #assert np.allclose(misc.std(x_gpu, axis=-1).get(), x.std(axis=-1))
+        #assert np.allclose(misc.std(x_gpu, axis=-2).get(), x.std(axis=-2))
+
+    def test_std_float32(self):
+        self.impl_test_std(np.float32)
+
+    def test_std_float64(self):
+        self.impl_test_std(np.float64)
+
+    def test_std_complex64(self):
+        self.impl_test_std(np.complex64)
+
+    def test_std_complex128(self):
+        self.impl_test_std(np.complex128)
+
+    def _impl_test_minmax(self, dtype):
+        x = np.random.normal(scale=5.0, size=(3, 5))
+        x = x.astype(dtype=dtype, order='C')
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(misc.max(x_gpu, axis=0).get(), x.max(axis=0))
+        assert np.allclose(misc.max(x_gpu, axis=1).get(), x.max(axis=1))
+        assert np.allclose(misc.min(x_gpu, axis=0).get(), x.min(axis=0))
+        assert np.allclose(misc.min(x_gpu, axis=1).get(), x.min(axis=1))
+
+        x = x.astype(dtype=dtype, order='F')
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(misc.max(x_gpu, axis=0).get(), x.max(axis=0))
+        assert np.allclose(misc.max(x_gpu, axis=1).get(), x.max(axis=1))
+        assert np.allclose(misc.min(x_gpu, axis=0).get(), x.min(axis=0))
+        assert np.allclose(misc.min(x_gpu, axis=1).get(), x.min(axis=1))
+
+    def test_minmax_float32(self):
+        self._impl_test_minmax(np.float32)
+
+    def test_minmax_float64(self):
+        self._impl_test_minmax(np.float64)
+
+    def _impl_test_argminmax(self, dtype):
+        x = np.random.normal(scale=5.0, size=(3, 5))
+        x = x.astype(dtype=dtype, order='C')
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(misc.argmax(x_gpu, axis=0).get(), x.argmax(axis=0))
+        assert np.allclose(misc.argmax(x_gpu, axis=1).get(), x.argmax(axis=1))
+        assert np.allclose(misc.argmin(x_gpu, axis=0).get(), x.argmin(axis=0))
+        assert np.allclose(misc.argmin(x_gpu, axis=1).get(), x.argmin(axis=1))
+
+        x = x.astype(dtype=dtype, order='F')
+        x_gpu = gpuarray.to_gpu(x)
+        assert np.allclose(misc.argmax(x_gpu, axis=0).get(), x.argmax(axis=0))
+        assert np.allclose(misc.argmax(x_gpu, axis=1).get(), x.argmax(axis=1))
+        assert np.allclose(misc.argmin(x_gpu, axis=0).get(), x.argmin(axis=0))
+        assert np.allclose(misc.argmin(x_gpu, axis=1).get(), x.argmin(axis=1))
+
+    def test_argminmax_float32(self):
+        self._impl_test_argminmax(np.float32)
+
+    def test_argminmax_float64(self):
+        self._impl_test_argminmax(np.float64)
 
 def suite():
     s = TestSuite()
@@ -124,7 +373,20 @@ def suite():
     s.addTest(test_misc('test_diff_float32'))
     s.addTest(test_misc('test_diff_complex64'))
     s.addTest(test_misc('test_get_by_index_float32'))
-    s.addTest(test_misc('test_set_by_index_float32'))
+    s.addTest(test_misc('test_set_by_index_dest_float32'))
+    s.addTest(test_misc('test_set_by_index_src_float32'))
+    s.addTest(test_misc('test_binaryop_matvec_float32'))
+    s.addTest(test_misc('test_binaryop_matvec_complex64'))
+    s.addTest(test_misc('test_sum_float32'))
+    s.addTest(test_misc('test_sum_complex64'))
+    s.addTest(test_misc('test_mean_float32'))
+    s.addTest(test_misc('test_mean_complex64'))
+    s.addTest(test_misc('test_var_float32'))
+    s.addTest(test_misc('test_var_complex64'))
+    s.addTest(test_misc('test_std_float32'))
+    s.addTest(test_misc('test_std_complex64'))
+    s.addTest(test_misc('test_minmax_float32'))
+    s.addTest(test_misc('test_argminmax_float32'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_misc('test_maxabs_float64'))
         s.addTest(test_misc('test_maxabs_complex128'))
@@ -133,7 +395,20 @@ def suite():
         s.addTest(test_misc('test_diff_float64'))
         s.addTest(test_misc('test_diff_complex128'))
         s.addTest(test_misc('test_get_by_index_float32'))
-        s.addTest(test_misc('test_set_by_index_float64'))
+        s.addTest(test_misc('test_set_by_index_dest_float64'))
+        s.addTest(test_misc('test_set_by_index_src_float64'))
+        s.addTest(test_misc('test_sum_float64'))
+        s.addTest(test_misc('test_sum_complex128'))
+        s.addTest(test_misc('test_mean_float64'))
+        s.addTest(test_misc('test_mean_complex128'))
+        s.addTest(test_misc('test_binaryop_matvec_float64'))
+        s.addTest(test_misc('test_binaryop_matvec_complex128'))
+        s.addTest(test_misc('test_var_float64'))
+        s.addTest(test_misc('test_var_complex128'))
+        s.addTest(test_misc('test_std_float64'))
+        s.addTest(test_misc('test_std_complex128'))
+    s.addTest(test_misc('test_minmax_float64'))
+    s.addTest(test_misc('test_argminmax_float64'))
     return s
 
 if __name__ == '__main__':

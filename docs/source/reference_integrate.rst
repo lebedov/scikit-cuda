@@ -1,6 +1,6 @@
 .. -*- rst -*-
 
-.. currentmodule:: scikits.cuda.integrate
+.. currentmodule:: skcuda.integrate
 
 Integration Routines
 ====================

@@ -18,7 +18,7 @@ import numpy as np
 import cuda
 
 # Load library:
-_version_list = [6.5, 6.0, 5.5, 5.0, 4.0]
+_version_list = [7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
 if 'linux' in sys.platform:
     _libcusparse_libname_list = ['libcusparse.so'] + \
                                 ['libcusparse.so.%s' % v for v in _version_list]
@@ -298,7 +298,7 @@ def cusparseSetMatType(desc, type):
     cusparseCheckStatus(status)
 
 _libcusparse.cusparseGetMatType.restype = int
-_libcusparse.cusparseGetMatType.argtypes = [cusparseMatDescr]                                 
+_libcusparse.cusparseGetMatType.argtypes = [cusparseMatDescr]    
 def cusparseGetMatType(desc):
     """
     Gets the matrix type of the specified matrix.

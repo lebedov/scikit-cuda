@@ -15,8 +15,8 @@ import numpy as np
 _SEPS = np.finfo(np.float32).eps
 _DEPS = np.finfo(np.float64).eps
 
-import scikits.cuda.cublas as cublas
-import scikits.cuda.misc as misc
+import skcuda.cublas as cublas
+import skcuda.misc as misc
 
 def bptrs(a):
     """
