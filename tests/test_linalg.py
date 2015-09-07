@@ -855,6 +855,32 @@ class test_linalg(TestCase):
 
     def test_det_complex128(self):
         self._impl_test_det(np.complex128)
+        
+        
+    def test_qr_reduced_float32(self):
+        a = np.asarray(np.random.randn(5, 3), np.float32, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        q_gpu, r_gpu = linalg.qr(a_gpu, 'reduced')
+        assert np.allclose(a, np.dot(q_gpu.get(), r_gpu.get()), atol=1e-4)
+
+    def test_qr_reduced_float64(self):
+        a = np.asarray(np.random.randn(5, 3), np.float32, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        q_gpu, r_gpu = linalg.qr(a_gpu, 'reduced')
+        assert np.allclose(a, np.dot(q_gpu.get(), r_gpu.get()), atol=atol_float64)
+
+    def test_qr_reduced_complex64(self):
+        a = np.asarray(np.random.randn(9, 6) + 1j*np.random.randn(9, 6), np.complex64, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        q_gpu, r_gpu = linalg.qr(a_gpu, 'reduced')
+        assert np.allclose(a, np.dot(q_gpu.get(), r_gpu.get()), atol=1e-4)
+
+    def test_qr_reduced_complex128(self):
+        a = np.asarray(np.random.randn(9, 6) + 1j*np.random.randn(9, 6), np.complex64, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        q_gpu, r_gpu = linalg.qr(a_gpu, 'reduced')
+        assert np.allclose(a, np.dot(q_gpu.get(), r_gpu.get()), atol=atol_float64)     
+        
 
 def suite():
     s = TestSuite()
@@ -908,6 +934,11 @@ def suite():
     s.addTest(test_linalg('test_dot_strided_complex64'))
     s.addTest(test_linalg('test_det_float32'))
     s.addTest(test_linalg('test_det_complex64'))
+    s.addTest(test_linalg('test_qr_reduced_float32'))
+    s.addTest(test_linalg('test_qr_reduced_float64'))
+    s.addTest(test_linalg('test_qr_reduced_complex64'))
+    s.addTest(test_linalg('test_qr_reduced_complex128'))
+    
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_linalg('test_svd_ss_float64'))
         s.addTest(test_linalg('test_svd_ss_complex128'))
@@ -953,6 +984,12 @@ def suite():
         s.addTest(test_linalg('test_dot_strided_complex128'))
         s.addTest(test_linalg('test_det_float64'))
         s.addTest(test_linalg('test_det_complex128'))
+        s.addTest(test_linalg('test_qr_reduced_float32'))
+        s.addTest(test_linalg('test_qr_reduced_float64'))
+        s.addTest(test_linalg('test_qr_reduced_complex64'))
+        s.addTest(test_linalg('test_qr_reduced_complex128'))
+        
+        
     return s
 
 if __name__ == '__main__':
