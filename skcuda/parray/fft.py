@@ -12,14 +12,15 @@ import parray
 class fftplan(object):
     """
     This class is to facilitate taking fft
-    of the same type for multiple times 
+    of the same type multiple times.
     """
+
     def __init__(self, shape, dtype, idist, odist,
                  forward = True, econ = False, batch_size = 1,
                  inembed = None, onembed = None):
         """
         Initialize fft plan.
-        
+
         Parameters
         ----------
         shape : int or tuple or list
@@ -53,6 +54,7 @@ class fftplan(object):
             in the output array.
         See CUFFT user guide
         """
+
         self.shape = (shape,) if isinstance(shape, int) else shape
         self.ndim = len(self.shape)
         self.dtype = dtype.type if isinstance(dtype, np.dtype) else dtype

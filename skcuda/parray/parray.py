@@ -1,10 +1,8 @@
 #!/usr/bin/env python
 
-#This is the parray class (pitched array) that serves as
-#a complement to pycuda.GPUArray.
-#The intention here is to automatically create 2D or 3D
-#array with a pitched structure
-#and varies operation on it.
+"""
+Pitched array analogue to pycuda.gpuarray.GPUArray.
+"""
 
 import numpy as np
 import pycuda.driver as cuda
@@ -20,18 +18,15 @@ def _splay_backend(n, M):
         block = (256, 1, 1)
     else:
         block = (32, 8, 1)
-    
     return (block_count, 1), block
 
 
 def splay(n, M):
     return _splay_backend(n, M)
-    
-    
+
 def _get_common_dtype(obj1, obj2):
     """Return the 'least common multiple' of dtype of obj1 and obj2."""
     return (obj1.dtype.type(0) + obj2.dtype.type(0)).dtype
-
 
 def _get_inplace_dtype(obj1, obj2):
     """
@@ -39,12 +34,12 @@ def _get_inplace_dtype(obj1, obj2):
     Raise error if
     1) obj1 is real and obj2 is complex
     2) obj1 is integer and obj2 is floating
-    
+
     Parameters
     ----------
     obj1 : numpy.ndarray like array
     obj2 : numpy.ndarray like array
-    
+
     Returns
     -------
     out : np.dtype
@@ -61,12 +56,12 @@ def _get_common_dtype_with_scalar(scalar, obj1):
     """
     return the common dtype between a native scalar (int, float, complex)
     and the dtype of an ndarray like array.
-    
+
     Parameters
     ----------
     scalar : { int, float, complex }
     obj1 : numpy.ndarray like array.
-    
+
     """
     if issubclass(type(scalar), (int, float, np.integer, np.floating)):
         return obj1.dtype
@@ -85,27 +80,26 @@ def _get_inplace_dtype_with_scalar(scalar, obj1):
     Raise error if
     1) obj1 is real and obj2 is complex
     2) obj1 is integer and obj2 is floating
-    
+
     Parameters
     ----------
     obj1 : numpy.ndarray like array
     obj2 : numpy.ndarray like array
-    
+
     Returns
     -------
     out : np.dtype
-    
     """
+
     if isrealobj(obj1):
         if issubclass(type(scalar), (complex, np.complexfloating)):
             raise TypeError("Cannot cast complex dtype to real dtype")
     if issubclass(obj1.dtype.type, np.integer):
         if issubclass(
-                type(scalar), 
+                type(scalar),
                 (float, complex, np.floating, np.complexfloating)):
             raise TypeError("Cannot cast floating to integer")
     return obj1.dtype
-
 
 def _pd(shape):
     """ Returns the product of all element of shape except shape[0]. """
@@ -114,7 +108,6 @@ def _pd(shape):
         s *= dim
     return s
 
-
 def _assignshape(shape, axis, value):
     a = []
     for i in range(len(shape)):
@@ -122,15 +115,15 @@ def _assignshape(shape, axis, value):
             a.append(value)
         else:
             a.append(shape[i])
-    return tuple(a) 
-
+    return tuple(a)
 
 def PitchTrans(shape, dst, dst_ld, src, src_ld, dtype, aligned=False,
                async = False, stream = None):
     """
-    Wrapper around cuda.Memcpy2D
-    Enable pitched memory transfer.
-    
+    Pitched memory transfer.
+
+    Wraps pycuda.driver.Memcpy2D.
+
     Parameters
     ----------
     shape : tuple of ints
@@ -143,7 +136,7 @@ def PitchTrans(shape, dst, dst_ld, src, src_ld, dtype, aligned=False,
         pointer to the device memory to be transferred from.
     src_ld : int
         leading dimension (pitch) of source.
-    
+
     Optional Parameters
     -------------------
     aligned : bool
@@ -154,8 +147,8 @@ def PitchTrans(shape, dst, dst_ld, src, src_ld, dtype, aligned=False,
         use asynchronous transfer (default: False).
     stream : pycuda.driver.stream
         specify the cuda stream (default: None).
-    
     """
+
     size = np.dtype(dtype).itemsize
 
     trans = cuda.Memcpy2D()
@@ -178,15 +171,14 @@ def PitchTrans(shape, dst, dst_ld, src, src_ld, dtype, aligned=False,
         trans(stream)
     else:
         trans(aligned = aligned)
-        
-"""end of utilities"""  
 
+"""end of utilities"""
 
 class PitchArray(object):
     def __init__(self, shape, dtype, gpudata=None, pitch = None, base = None):
         """
         Create a PitchArray
-        
+
         Parameters
         ----------
         shape: tuple of ints
@@ -201,7 +193,7 @@ class PitchArray(object):
             cudaMallocPitch with pitch
         base: PitchArray
             base PitchArray
-        
+
         Attributes:
         -----------
         .shape: shape of self
@@ -216,17 +208,16 @@ class PitchArray(object):
         .dtype: dtype of array
         .nbytes: total memory allocated for the array in bytes
         .base: base PitchArray
-        
+
         Note:
         -----
         1. any 1-dim shape will result in a row vector with
         new shape as (1, shape) operations of PitchArray
         is elementwise operation
-        
+
         2. only support array of dimension up to 3.
-        
         """
-        
+
         try:
             tmpshape = []
             s = 1
@@ -235,7 +226,7 @@ class PitchArray(object):
                 assert isinstance(dim, int)
                 s *= dim
                 tmpshape.append(dim)
-                
+
             self.shape = tuple(tmpshape)
         except TypeError:
             s = int(shape)
@@ -247,15 +238,15 @@ class PitchArray(object):
 
         if len(self.shape) == 1:
             self.shape = (1, self.shape[0])
-            
+
         self.ndim = len(self.shape)
-        
+
         if self.ndim > 3:
             raise ValueError("Only support array of dimension leq 3")
-        
+
         self.dtype = np.dtype(dtype)
         self.size = s
-        
+
         if gpudata is None:
             if self.size:
                 if _pd(self.shape) == 1 or self.shape[0] == 1:
@@ -285,7 +276,7 @@ class PitchArray(object):
             # by mem_alloc_pitch is required by the shape
             # Not performed to allow base
             # assert gpudata.__class__ == cuda.DeviceAllocation
-            
+
             if self.size:
                 self.gpudata = gpudata
                 if _pd(self.shape) == 1 or self.shape[0] == 1:
@@ -323,50 +314,50 @@ class PitchArray(object):
     def set(self, ary):
         """
         Set PitchArray with an numpy.ndarray
-        
+
         Parameter:
         ----------
         ary: num.ndarray
              must have the same shape as self if ndim > 2,
              and same length as self if ndim == 1
-             
         """
+
         assert ary.ndim <= 3
         assert ary.dtype == ary.dtype
         assert ary.size == self.size
-        
+
         if self.size:
             if self.M == 1:
                 cuda.memcpy_htod(int(self.gpudata), ary)
             else:
-                PitchTrans(self.shape, int(self.gpudata), 
+                PitchTrans(self.shape, int(self.gpudata),
                            self.ld, ary, _pd(self.shape), self.dtype)
-    
+
     def set_async(self, ary, stream=None):
         """
         Set PitchArray with an numpy.ndarray
         using asynchrous memroy transfer
-        
+
         Parameter:
         ----------
         ary: num.ndarray pagelocked
              must have the same shape as self if ndim > 2,
              and same length as self if ndim == 1
              must be created by cuda.HostAllocation
-             
+
         Optional Parameter:
         -------------------
         stream : pycuda.driver.Stream
-        
         """
+
         assert ary.ndim <= 3
         assert ary.dtype == ary.dtype
         assert ary.size == self.size
-        
+
         if ary.base.__class__ != cuda.HostAllocation:
             raise TypeError("asynchronous memory trasfer "
                             "requires pagelocked numpy array")
-                
+
         if self.size:
             if self.M == 1:
                 cuda.memcpy_htod_async(int(self.gpudata), ary, stream)
@@ -378,7 +369,7 @@ class PitchArray(object):
     def get(self, ary = None, pagelocked = False):
         """
         Get the PitchArray to an ndarray
-        
+
         Optional Parameters:
         --------------------
         ary: numpy.ndarray
@@ -389,8 +380,8 @@ class PitchArray(object):
             if True, create a pagelocked ndarray
             if False, create a regular ndarray
             (default: False)
-            
         """
+
         if ary is None:
             if pagelocked:
                 ary = cuda.pagelocked_empty(self.shape, self.dtype)
@@ -400,21 +391,20 @@ class PitchArray(object):
             assert ary.size == self.size
             assert ary.dtype == ary.dtype
 
-        
         if self.size:
             if self.M == 1:
                 cuda.memcpy_dtoh(ary, int(self.gpudata))
             else:
                 PitchTrans(self.shape, ary, _pd(self.shape),
                            int(self.gpudata), self.ld, self.dtype)
-                
+
         return ary
 
 
     def get_async(self, stream = None, ary = None):
         """
         Get the PitchArray to an ndarray asynchronously
-        
+
         Optional Parameters:
         --------------------
         stream: pycuda.driver.Stream
@@ -424,8 +414,8 @@ class PitchArray(object):
             must be pagelocked
             if None, create a new array
             (default: None)
-        
         """
+
         if ary is None:
             ary = cuda.pagelocked_empty(self.shape, self.dtype)
         else:
@@ -434,7 +424,7 @@ class PitchArray(object):
             if ary.base.__class__ != cuda.HostAllocation:
                 raise TypeError("asynchronous memory trasfer "
                                 "requires pagelocked numpy array")
-        
+
         if self.size:
             if self.M == 1:
                 cuda.memcpy_dtoh_async(ary, int(self.gpudata), stream)
@@ -442,7 +432,7 @@ class PitchArray(object):
                 PitchTrans(self.shape, ary, _pd(self.shape),
                            int(self.gpudata), self.ld, self.dtype,
                            async = True, stream = stream)
-                
+
         return ary
 
     def __str__(self):
@@ -453,12 +443,12 @@ class PitchArray(object):
 
     def __hash__(self):
         raise TypeError("PitchArrays are not hashable.")
-    
+
     def _new_like_me(self, dtype = None):
         if dtype is None:
             dtype = self.dtype
         return self.__class__(self.shape, dtype)
-    
+
     """""""""
     Operators:
     operators defined by __op__(self, other) returns new PitchArray
@@ -467,20 +457,21 @@ class PitchArray(object):
     operators defined by __iop__(self, other) also perform inplace
         operation if possbile, otherwise returns a new PitchArray
     """""""""
-    
+
     def __add__(self, other):
         """
         Addition
-        
+
         Parameters
         ----------
         other: scalar or Pitcharray
-        
+
         Returns
         -------
         out : PitchArray
             A new PitchArray
         """
+
         if isinstance(other, PitchArray):
             if self.shape != other.shape:
                 raise ValueError("array dimension misaligned")
@@ -2158,10 +2149,3 @@ def angle(array):
                 array._grid, array._block, array.M, array.N,
                 result.gpudata, result.ld, array.gpudata, array.ld)
         return result
-
-
-
-
-
-
-

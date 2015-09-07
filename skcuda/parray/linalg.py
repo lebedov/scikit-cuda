@@ -1,15 +1,18 @@
 #!/usr/bin/env python
 
+"""
+PyCUDA-based linear algebra functions for PitchArray objects.
+"""
+
 import numpy as np
 import pycuda.driver as cuda
 import pycuda.gpuarray as garray
 from pycuda.tools import dtype_to_ctype, context_dependent_memoize
 from pycuda.compiler import SourceModule
 
-import scikits.cuda.cublas as cublas
-import scikits.cuda.cula as cula
+import skcuda.cublas as cublas
+import skcuda.cula as cula
 import parray
-
 
 """ assuming row major storage as in PitchArray """
 class cublashandle(object):
@@ -17,15 +20,15 @@ class cublashandle(object):
     def __init__(self):
         self.handle = None
         self.create()
-        
+
     def create(self):
         if self.handle is None:
             self.handle = cublas.cublasCreate()
-        
+
     def destroy(self):
         if self.handle is not None:
             cublas.cublasDestroy(self.handle)
-    
+
     def __del__(self):
         self.destroy()
 
@@ -38,7 +41,7 @@ def dot(A, B, opa = 'n', opb = 'n',
     if C is specified, use the memory in C.
     Specified C must have the same leading dimension as that of the result and
     the other dimension must be bigger or equal to that of the result.
-    
+
     Parameters:
     -----------
     A: parray.PitchArray
@@ -63,12 +66,12 @@ def dot(A, B, opa = 'n', opb = 'n',
     Cscale: float
             scaling factor for C
             result will be C = C*Cscale + scale*A*B
-    
+
     Note:
     -----
-    works only for CUDA VERSION > 4.0 where handle is introduced.
+    Works only for CUDA VERSION > 4.0 where handle is introduced.
     """
-    
+
     if A.dtype != B.dtype:
         raise TypeError("matrix multiplication must have same dtype")
 
@@ -308,8 +311,8 @@ def dot(A, B, opa = 'n', opb = 'n',
 
 def norm(A, handle = None):
     """
-    computes the l2 norm of a vector A
-    
+    Computes the l2 norm of a vector A.
+
     Parameters
     ----------
     A : parray.PitchArray
@@ -317,6 +320,7 @@ def norm(A, handle = None):
     handle : cublashandle, optional
         handle to cublas
     """
+
     if handle is None:
         handle = cublashandle()
     dtype = A.dtype
@@ -492,7 +496,7 @@ def pinv(G, rcond = 1e-8):
     Parameters:
     -----------
     G:  PitchArray, GPUArray or numpy.ndarray of shape (m,n)
-        if G is GPUArray or PitchArray, 
+        if G is GPUArray or PitchArray,
         its gpudata will be destroyed after calling the function
     rcond:  float
             Cutoff for small singular values.
@@ -629,7 +633,6 @@ def solve_eq_sym(G, q, rcond = 1e-8, save_singular = None, cut_num = None):
     result = dot(U, qq)
     return result
 
-    
 def eig_sym(G, compute_z = True, uplo = 'U'):
     """
     compute Eigenvalue Decompositon of a symmetric or Hermitian matrix G
@@ -678,10 +681,10 @@ def eig_sym(G, compute_z = True, uplo = 'U'):
             raise TypeError("G must be either parray, or GPUArray or ndarray")
     else:
         A = G
-    
+
     if len(A.shape) != 2:
         raise TypeError("eig only works on 2D matrix")
-    
+
     if A.shape[0] != A.shape[1]:
         raise ValueError("G must be square matrix")
 
@@ -691,10 +694,10 @@ def eig_sym(G, compute_z = True, uplo = 'U'):
         uplo = 'U'
     else:
         raise ValueError("uplo must be 'U' or 'L'")
-    
+
     real_dtype = np.dtype(np.float32)
     if A.dtype == np.complex64:
-        eig_func = cula.culaDeviceCheev        
+        eig_func = cula.culaDeviceCheev
     elif A.dtype == np.float32:
         eig_func = cula.culaDeviceSsyev
     else:
@@ -705,9 +708,9 @@ def eig_sym(G, compute_z = True, uplo = 'U'):
         else:
             raise ValueError('unsupported type')
         real_dtype = np.dtype(np.float64)
-    
+
     D = parray.empty(A.shape[0], real_dtype)
-    
+
     cula.culaInitialize()
     handle = cublashandle()
     if compute_z:
@@ -719,7 +722,6 @@ def eig_sym(G, compute_z = True, uplo = 'U'):
         return D, A.conj().T()
     else:
         return D
-    
 
 def add_eye(A, scale):
     if A.shape[0] != A.shape[1]:
@@ -729,9 +731,6 @@ def add_eye(A, scale):
         (6 * cuda.Context.get_device().MULTIPROCESSOR_COUNT, 1),
         (256,1,1), A.gpudata, A.ld, scale, A.shape[0])
     return A
-
-
-
 
 @context_dependent_memoize
 def _get_sq_kernel(dtype_s, dtype_q):
@@ -768,7 +767,7 @@ sq_Kernel(%(types)s* d_S, %(typeq)s* d_q, %(types)s rcond, int size)
 }
 
     """
-    mod = SourceModule(template % {"types": dtype_to_ctype(dtype_s), 
+    mod = SourceModule(template % {"types": dtype_to_ctype(dtype_s),
                        "typeq": dtype_to_ctype(dtype_q)})
     func = mod.get_function("sq_Kernel")
     func.prepare([np.intp, np.intp,
@@ -778,7 +777,7 @@ sq_Kernel(%(types)s* d_S, %(typeq)s* d_q, %(types)s rcond, int size)
 
 
 @context_dependent_memoize
-def _get_eigsq_kernel(dtype_s, dtype_q):       
+def _get_eigsq_kernel(dtype_s, dtype_q):
     template = """
 #include <pycuda-complex.hpp>
 
@@ -847,8 +846,8 @@ sinv_Kernel(%(types)s* d_S, %(types)s rcond, int size)
         }
     }
 }
-        
     """
+
     mod = SourceModule(template % {"types": dtype_to_ctype(dtype_s)})
     func = mod.get_function("sinv_Kernel")
     func.prepare([np.intp, np.double if dtype == np.double else np.float32,
@@ -909,7 +908,7 @@ __global__ void adddiag(%(type)s* A, int ld, %(type)s value, int N)
     int tid = threadIdx.x + blockIdx.x * blockDim.x;
     int total_threads = blockDim.x * gridDim.x;
 
-    for(int i = tid; i < N; i+=total_threads)                                 
+    for(int i = tid; i < N; i+=total_threads) 
     {
         A[tid * ld + tid] += value;
     }
@@ -923,4 +922,3 @@ __global__ void adddiag(%(type)s* A, int ld, %(type)s value, int N)
         dtype.type if isinstance(dtype, np.dtype) else dtype,
         np.int32])
     return func
-
