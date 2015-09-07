@@ -1779,24 +1779,24 @@ def det(a_gpu, overwrite=False, ipiv_gpu=None, handle=None):
 def qr(a_gpu, mode='reduced'):
     """
     QR Decomposition.
-    Factor the matrix A as QR, where Q is orthonormal and R is upper-triangular.
+    Factor the matrix `A` as `QR`, where `Q` is orthonormal and `R` is upper-triangular.
 
     Parameters
     ----------
     A : pycuda.gpuarray.GPUArray 
-        Input matrix of dimensions (m, n) to decompose in column-major order.
-        A is assumed to be m>=n.
+        Input matrix of dimensions `(m, n)` to decompose in column-major order.
+        `A` is assumed to be `m`>=`n`.
         
     Mode :  {'reduced', 'economic', 'r'}
-            'reduced' : returns Q, R with dimensions (m, k) and (k, n) (default) 
-            'economic' : returns Q only with dimensions (m, k)
-            'r' : returns R only with dimensions (k, n) 
-            With k=min(m,n)
+            'reduced' : returns `Q`, `R` with dimensions `(m, k)` and `(k, n)` (default) 
+            'economic' : returns `Q` only with dimensions `(m, k)`
+            'r' : returns `R` only with dimensions `(k, n)` 
+            With `k`=min`(m,n)`
     
     Returns
     -------
     Q : pycuda.gpuarray.GPUArray
-        Orthonormal/unitary matrix (depending on whether or not A is real/complex)
+        Orthonormal/unitary matrix (depending on whether or not `A` is real/complex)
         
     R : pycuda.gpuarray.GPUArray
         The upper-triangular matrix.
@@ -1806,6 +1806,9 @@ def qr(a_gpu, mode='reduced'):
     Double precision is only supported if the standard version of the
     CULA Dense toolkit is installed.
 
+    This function destroys the contents of the input matrix.
+    
+    Arrays is expected to be stored in column-major order, i.e., order='F'.
 
     Examples
     --------
