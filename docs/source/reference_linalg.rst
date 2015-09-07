@@ -28,6 +28,7 @@ Linear Algebra Routines
    multiply
    norm
    pinv
+   qr
    scale
    svd
    trace

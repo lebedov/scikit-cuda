@@ -1783,25 +1783,24 @@ def det(a_gpu, overwrite=False, ipiv_gpu=None, handle=None):
 def qr(a_gpu, mode='reduced'):
     """
     QR Decomposition.
-    Factor the matrix `A` as `QR`, where `Q` is orthonormal and `R` is upper-triangular.
+    
+    Factor the matrix `A` as `QR`, where `Q` is orthonormal
+    and `R` is upper-triangular.
 
     Parameters
     ----------
     A : pycuda.gpuarray.GPUArray 
         Input matrix of dimensions `(m, n)` to decompose in column-major order.
-        `A` is assumed to be `m`>=`n`.
-        
+        `A` is assumed to be `m`>=`n`.        
     Mode :  {'reduced', 'economic', 'r'}
-            'reduced' : returns `Q`, `R` with dimensions `(m, k)` and `(k, n)` (default) 
-            'economic' : returns `Q` only with dimensions `(m, k)`
-            'r' : returns `R` only with dimensions `(k, n)` 
-            With `k`=min`(m,n)`
+        'reduced' : returns `Q`, `R` with dimensions `(m, k)` and `(k, n)` (default).
+        'economic' : returns `Q` only with dimensions `(m, k)`.
+        'r' : returns `R` only with dimensions `(k, n)` with `k`=min`(m,n)`.
     
     Returns
     -------
     Q : pycuda.gpuarray.GPUArray
-        Orthonormal/unitary matrix (depending on whether or not `A` is real/complex)
-        
+        Orthonormal/unitary matrix (depending on whether or not `A` is real/complex).
     R : pycuda.gpuarray.GPUArray
         The upper-triangular matrix.
 
@@ -1812,37 +1811,39 @@ def qr(a_gpu, mode='reduced'):
 
     This function destroys the contents of the input matrix.
     
-    Arrays is expected to be stored in column-major order, i.e., order='F'.
+    Arrays are assumed to be stored in column-major order, i.e., order='F'.
 
     Examples
     --------
-    import pycuda.gpuarray as gpuarray
-    import pycuda.autoinit
-    import numpy as np
-    from skcuda import linalg
-    linalg.init()
-    #Rectangular matrix A, np.float32
-    A = np.array(np.random.randn(9, 7), np.float32, order='F')
-    A_gpu = gpuarray.to_gpu(A)
-    Q_gpu, R_gpu = linalg.qr(A_gpu, 'reduced')
-    print np.allclose(A, np.dot(Q_gpu.get(), R_gpu.get()), 1e-4)
-
-    #Square matrix A, np.complex128
-    A = np.random.randn(9, 9) + 1j*np.random.randn(9, 9)
-    A = np.asarray(A, np.complex128, order='F')
-    A_gpu = gpuarray.to_gpu(A)
-    Q_gpu, R_gpu = linalg.qr(A_gpu, 'reduced')
-    print np.allclose(A, np.dot(Q_gpu.get(), R_gpu.get()), 1e-4)
-    print np.allclose(np.identity(Q_gpu.shape[0]) + 1j*0, np.dot(Q_gpu.get().conj().T, Q_gpu.get()), 1e-4)
-
-    #Numpy QR and CULA QR
-    A = np.array(np.random.randn(9, 7), np.float32, order='F')
-    Q, R = np.linalg.qr(A, 'reduced')
-    a_gpu = gpuarray.to_gpu(A)
-    Q_gpu, R_gpu = linalg.qr(a_gpu, 'reduced')
-    print np.allclose(Q, Q_gpu.get(), 1e-4)
-    print np.allclose(R, R_gpu.get(), 1e-4)
-
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import pycuda.autoinit
+    >>> import numpy as np
+    >>> from skcuda import linalg
+    >>> linalg.init()
+    >>> # Rectangular matrix A, np.float32
+    >>> A = np.array(np.random.randn(9, 7), np.float32, order='F')
+    >>> A_gpu = gpuarray.to_gpu(A)
+    >>> Q_gpu, R_gpu = linalg.qr(A_gpu, 'reduced')
+    >>> np.allclose(A, np.dot(Q_gpu.get(), R_gpu.get()), 1e-4)
+    True
+    >>> # Square matrix A, np.complex128
+    >>> A = np.random.randn(9, 9) + 1j*np.random.randn(9, 9)
+    >>> A = np.asarray(A, np.complex128, order='F')
+    >>> A_gpu = gpuarray.to_gpu(A)
+    >>> Q_gpu, R_gpu = linalg.qr(A_gpu, 'reduced')
+    >>> np.allclose(A, np.dot(Q_gpu.get(), R_gpu.get()), 1e-4)
+    True
+    >>> np.allclose(np.identity(Q_gpu.shape[0]) + 1j*0, np.dot(Q_gpu.get().conj().T, Q_gpu.get()), 1e-4)
+    True
+    >>> # Numpy QR and CULA QR
+    >>> A = np.array(np.random.randn(9, 7), np.float32, order='F')
+    >>> Q, R = np.linalg.qr(A, 'reduced')
+    >>> a_gpu = gpuarray.to_gpu(A)
+    >>> Q_gpu, R_gpu = linalg.qr(a_gpu, 'reduced')
+    >>> np.allclose(Q, Q_gpu.get(), 1e-4)
+    True
+    >>> np.allclose(R, R_gpu.get(), 1e-4)
+    True
     """
 
     if not _has_cula:
