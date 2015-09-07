@@ -8,7 +8,7 @@ Note: this module does not explicitly depend on PyCUDA.
 
 from . import cudart
 
-if cudart._cudart_version < 7000:
+if int(cudart._cudart_version) < 7000:
     raise ImportError('CUSOLVER library only available in CUDA 7.0 and later')
 
 import ctypes
@@ -128,7 +128,7 @@ def cusolverCheckStatus(status):
     --------
     CUSOLVER_EXCEPTIONS
     """
-    
+
     if status != 0:
         try:
             raise CUSOLVER_EXCEPTIONS[status]
@@ -270,7 +270,7 @@ def cusolverDnSgetrf(handle, m, n, A, lda, Workspace, devIpiv, devInfo):
     `cusolverDn<t>getrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrf>`_
     """
 
-    status = _libcusolver.cusolverDnSgetrf(handle, m, n, int(A), lda,                                          
+    status = _libcusolver.cusolverDnSgetrf(handle, m, n, int(A), lda,
                                           int(Workspace),
                                           int(devIpiv),
                                           int(devInfo))
@@ -317,7 +317,7 @@ def cusolverDnDgetrf(handle, m, n, A, lda, Workspace, devIpiv, devInfo):
     `cusolverDn<t>getrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrf>`_
     """
 
-    status = _libcusolver.cusolverDnDgetrf(handle, m, n, int(A), lda,                                          
+    status = _libcusolver.cusolverDnDgetrf(handle, m, n, int(A), lda,
                                           int(Workspace),
                                           int(devIpiv),
                                           int(devInfo))
@@ -775,7 +775,7 @@ def cusolverDnSgeqrf(handle, m, n, A, lda, TAU, Workspace, Lwork, devInfo):
     ----------
     `cusolverDn<t>geqrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-geqrf>`_
     """
-    
+
     status = _libcusolver.cusolverDnSgeqrf(handle, m, n, int(A), lda,
                                            int(TAU),
                                            int(Workspace),
@@ -822,7 +822,7 @@ def cusolverDnDgeqrf(handle, m, n, A, lda, TAU, Workspace, Lwork, devInfo):
     ----------
     `cusolverDn<t>geqrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-geqrf>`_
     """
-    
+
     status = _libcusolver.cusolverDnDgeqrf(handle, m, n, int(A), lda,
                                            int(TAU),
                                            int(Workspace),
@@ -869,7 +869,7 @@ def cusolverDnCgeqrf(handle, m, n, A, lda, TAU, Workspace, Lwork, devInfo):
     ----------
     `cusolverDn<t>geqrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-geqrf>`_
     """
-    
+
     status = _libcusolver.cusolverDnCgeqrf(handle, m, n, int(A), lda,
                                            int(TAU),
                                            int(Workspace),
@@ -916,7 +916,7 @@ def cusolverDnZgeqrf(handle, m, n, A, lda, TAU, Workspace, Lwork, devInfo):
     ----------
     `cusolverDn<t>geqrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-geqrf>`_
     """
-    
+
     status = _libcusolver.cusolverDnZgeqrf(handle, m, n, int(A), lda,
                                            int(TAU),
                                            int(Workspace),

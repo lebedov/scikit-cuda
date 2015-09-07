@@ -6,6 +6,7 @@ Change Log
 Release 0.5.1 - (under development)
 -----------------------------------
 * More CUSOLVER wrappers.
+* QR decomposition (enh. by N. Ben Erichson).
 
 Release 0.5.0 - (July 14, 2015)
 -------------------------------

@@ -133,7 +133,7 @@ def svd(a_gpu, jobu='A', jobvt='A'):
 
     # Since CUDA assumes that arrays are stored in column-major
     # format, the input matrix is assumed to be transposed:
-    n, m = a_gpu.shape
+    n, m = np.array(a_gpu.shape, int) # workaround for bug #131
     square = (n == m)
 
     # Since the input matrix is transposed, jobu and jobvt must also
@@ -586,8 +586,8 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
     if handle is None:
         handle = misc._global_cublas_handle
 
-    x_shape = x_gpu.shape
-    y_shape = y_gpu.shape
+    x_shape = tuple(int(i) for i in x_gpu.shape) # workaround for bug #131
+    y_shape = tuple(int(i) for i in y_gpu.shape)
     if len(x_shape) == 1:
         x_shape = (1, x_shape[0])
     if len(y_shape) == 1:
@@ -874,7 +874,7 @@ def _transpose(a_gpu, conj=False, handle=None):
         transa = 'c'
     else:
         transa = 't'
-    M, N = a_gpu.shape
+    M, N = np.array(a_gpu.shape, int) # workaround for bug #131
     at_gpu = gpuarray.empty((N, M), a_gpu.dtype)
     func(handle, transa, 't', M, N,
          1.0, a_gpu.gpudata, N, 0.0, a_gpu.gpudata, N,
@@ -1127,7 +1127,7 @@ def diag(v_gpu):
         else:
             raise ValueError('unsupported input type')
 
-        n = min(v_gpu.shape)
+        n = int(min(v_gpu.shape)) # workaround for bug #131
         incx = v_gpu.shape[1]+1
 
         # Allocate the output array
@@ -1419,7 +1419,9 @@ def tril(a_gpu, overwrite=False, handle=None):
     block_dim, grid_dim = misc.select_block_grid_sizes(dev, a_gpu.shape)
     tril = _get_tril_kernel(use_double, use_complex, cols=N)
     if not overwrite:
-        a_orig_gpu = gpuarray.empty(a_gpu.shape, a_gpu.dtype, allocator=alloc)
+        # workaround for bug #131
+        a_orig_gpu = gpuarray.empty(tuple(int(i) for i in a_gpu.shape),
+                                    a_gpu.dtype, allocator=alloc)
         copy_func(handle, a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
 
     tril(a_gpu, np.uint32(a_gpu.size),
@@ -1490,7 +1492,9 @@ def multiply(x_gpu, y_gpu, overwrite=False):
         return y_gpu
     else:
         result_type = np.result_type(x_gpu.dtype, y_gpu.dtype)
-        z_gpu = gpuarray.empty(x_gpu.shape, result_type, allocator=alloc)
+        # workaround for bug #131
+        z_gpu = gpuarray.empty(tuple(int(i) for i in x_gpu.shape), 
+                               result_type, allocator=alloc)
         func = \
                el.ElementwiseKernel("{x_ctype} *x, {y_ctype} *y, {z_type} *z".format(x_ctype=x_ctype,
                                                                                      y_ctype=y_ctype,
@@ -1652,7 +1656,7 @@ def inv(a_gpu, overwrite=False, ipiv_gpu=None):
         getrf = cula.culaDeviceDgetrf
         getri = cula.culaDeviceDgetri
 
-    n = a_gpu.shape[0]
+    n = int(a_gpu.shape[0]) # workaround for bug #131
     if ipiv_gpu is None:
         alloc = misc._global_cublas_allocator
         ipiv_gpu = gpuarray.empty((n, 1), np.int32, allocator=alloc)
@@ -1761,7 +1765,7 @@ def det(a_gpu, overwrite=False, ipiv_gpu=None, handle=None):
     else:
         raise ValueError('unsupported input type')
 
-    n = a_gpu.shape[0]
+    n = int(a_gpu.shape[0]) # workaround for bug #131
     if ipiv_gpu is None:
         alloc = misc._global_cublas_allocator
         ipiv_gpu = gpuarray.empty((n, 1), np.int32, allocator=alloc)
@@ -1774,6 +1778,155 @@ def det(a_gpu, overwrite=False, ipiv_gpu=None, handle=None):
         return _get_det_kernel(a_gpu.dtype)(ipiv_gpu, out, n).get()
     except cula.culaDataError as e:
         raise LinAlgError(e)
+
+
+def qr(a_gpu, mode='reduced'):
+    """
+    QR Decomposition.
+    
+    Factor the matrix `A` as `QR`, where `Q` is orthonormal
+    and `R` is upper-triangular.
+
+    Parameters
+    ----------
+    A : pycuda.gpuarray.GPUArray 
+        Input matrix of dimensions `(m, n)` to decompose in column-major order.
+        `A` is assumed to be `m`>=`n`.        
+    Mode :  {'reduced', 'economic', 'r'}
+        'reduced' : returns `Q`, `R` with dimensions `(m, k)` and `(k, n)` (default).
+        'economic' : returns `Q` only with dimensions `(m, k)`.
+        'r' : returns `R` only with dimensions `(k, n)` with `k`=min`(m,n)`.
+    
+    Returns
+    -------
+    Q : pycuda.gpuarray.GPUArray
+        Orthonormal/unitary matrix (depending on whether or not `A` is real/complex).
+    R : pycuda.gpuarray.GPUArray
+        The upper-triangular matrix.
+
+    Notes
+    -----
+    Double precision is only supported if the standard version of the
+    CULA Dense toolkit is installed.
+
+    This function destroys the contents of the input matrix.
+    
+    Arrays are assumed to be stored in column-major order, i.e., order='F'.
+
+    Examples
+    --------
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import pycuda.autoinit
+    >>> import numpy as np
+    >>> from skcuda import linalg
+    >>> linalg.init()
+    >>> # Rectangular matrix A, np.float32
+    >>> A = np.array(np.random.randn(9, 7), np.float32, order='F')
+    >>> A_gpu = gpuarray.to_gpu(A)
+    >>> Q_gpu, R_gpu = linalg.qr(A_gpu, 'reduced')
+    >>> np.allclose(A, np.dot(Q_gpu.get(), R_gpu.get()), 1e-4)
+    True
+    >>> # Square matrix A, np.complex128
+    >>> A = np.random.randn(9, 9) + 1j*np.random.randn(9, 9)
+    >>> A = np.asarray(A, np.complex128, order='F')
+    >>> A_gpu = gpuarray.to_gpu(A)
+    >>> Q_gpu, R_gpu = linalg.qr(A_gpu, 'reduced')
+    >>> np.allclose(A, np.dot(Q_gpu.get(), R_gpu.get()), 1e-4)
+    True
+    >>> np.allclose(np.identity(Q_gpu.shape[0]) + 1j*0, np.dot(Q_gpu.get().conj().T, Q_gpu.get()), 1e-4)
+    True
+    >>> # Numpy QR and CULA QR
+    >>> A = np.array(np.random.randn(9, 7), np.float32, order='F')
+    >>> Q, R = np.linalg.qr(A, 'reduced')
+    >>> a_gpu = gpuarray.to_gpu(A)
+    >>> Q_gpu, R_gpu = linalg.qr(a_gpu, 'reduced')
+    >>> np.allclose(Q, Q_gpu.get(), 1e-4)
+    True
+    >>> np.allclose(R, R_gpu.get(), 1e-4)
+    True
+    """
+
+    if not _has_cula:
+        raise NotImplementedError('CULA not installed')
+
+    alloc = misc._global_cublas_allocator
+
+    # The free version of CULA only supports single precision floating
+    # point numbers:
+    data_type = a_gpu.dtype.type
+    real_type = np.float32
+    if data_type == np.complex64:
+        cula_func_qr = cula.culaDeviceCgeqrf
+        cula_func_q = cula.culaDeviceCungqr
+        use_double = 0
+        use_complex = 1
+    elif data_type == np.float32:
+        cula_func_qr = cula.culaDeviceSgeqrf
+        cula_func_q = cula.culaDeviceSorgqr
+        use_double = 0
+        use_complex = 0
+         
+    else:
+        if cula._libcula_toolkit == 'standard':
+            if data_type == np.complex128:
+                cula_func_qr = cula.culaDeviceZgeqrf
+                cula_func_q = cula.culaDeviceZungqr
+                use_double = 1
+                use_complex = 1
+            elif data_type == np.float64:
+                cula_func_qr = cula.culaDeviceDgeqrf
+                cula_func_q = cula.culaDeviceDorgqr
+                use_double = 1
+                use_complex = 0
+            else:
+                raise ValueError('unsupported type')
+            real_type = np.float64
+        else:
+            raise ValueError('double precision not supported')
+
+    # CUDA assumes that arrays are stored in column-major order
+    m, n = np.array(a_gpu.shape, int)
+
+    # Set the leading dimension of the input matrix:
+    lda = max(1, m)
+
+    #Set k
+    k = min(m,n)
+
+    # Set the leading dimension and allocate u:
+    tau_gpu = gpuarray.empty(min(m,n), data_type, allocator=alloc, order='F')
+
+    # Compute QR and check error status:
+    cula_func_qr(m, n, int(a_gpu.gpudata), lda, int(tau_gpu.gpudata))
+
+    if mode != 'economic':     
+        #Get upper triangluar matrix R with dimensions (k,n)
+        r_gpu = a_gpu.T[:, :n].copy()
+
+        #Lower triangle of a matrix
+        # Get block/grid sizes:
+        dev = misc.get_current_device()
+        N = r_gpu.shape[0]
+        block_dim, grid_dim = misc.select_block_grid_sizes(dev, r_gpu.shape)
+        
+        #tril       
+        tril = _get_tril_kernel(use_double, use_complex, cols=N)
+        tril(r_gpu, np.uint32(r_gpu.size), block=block_dim, grid=grid_dim)
+        
+        #Mode r
+        if  mode=='r': return r_gpu.T
+    
+    #Compute Q and check error status
+    cula_func_q(m, n, k, int(a_gpu.gpudata), lda, int(tau_gpu.gpudata))    
+    
+    # Free internal CULA memory:
+    cula.culaFreeBuffers()
+    
+    #Mode economic
+    if mode == 'reduced': 
+        return a_gpu, r_gpu.T
+    if mode == 'economic': 
+        return a_gpu
 
 
 if __name__ == "__main__":

@@ -32,6 +32,12 @@ except (ImportError, OSError):
     _has_cula = False
 
 try:
+    from . import cusolver
+    _has_cusolver = True
+except (ImportError, OSError):
+    _has_cusolver = False
+
+try:
     from . import magma
     _has_magma = True
 except (ImportError, OSError):
@@ -135,14 +141,16 @@ def done_context(ctx):
 
 global _global_cublas_handle
 _global_cublas_handle = None
+global _global_cusolver_handle
+_global_cusolver_handle = None
 global _global_cublas_allocator
 _global_cublas_allocator = None
 def init(allocator=drv.mem_alloc):
     """
-    Initialize libraries used by scikits.cuda.
+    Initialize libraries used by scikit-cuda.
 
-    Initialize the CUBLAS and CULA libraries used by high-level functions
-    provided by scikits.cuda.
+    Initialize the CUBLAS, CUSOLVER, and CULA libraries used by 
+    high-level functions provided by scikit-cuda.
 
     Parameters
     ----------
@@ -160,9 +168,14 @@ def init(allocator=drv.mem_alloc):
     if not _global_cublas_handle:
         from . import cublas  # nest to avoid requiring cublas e.g. for FFT
         _global_cublas_handle = cublas.cublasCreate()
-
+    
     if _global_cublas_allocator is None:
         _global_cublas_allocator = allocator
+
+    global _global_cusolver_handle
+    if not _global_cusolver_handle:
+        from . import cusolver
+        _global_cusolver_handle = cusolver.cusolverDnCreate()
 
     # culaSelectDevice() need not (and, in fact, cannot) be called
     # here because the host thread has already been bound to a GPU
@@ -175,10 +188,10 @@ def init(allocator=drv.mem_alloc):
 
 def shutdown():
     """
-    Shutdown libraries used by scikits.cuda.
+    Shutdown libraries used by scikit-cuda.
 
     Shutdown the CUBLAS and CULA libraries used by high-level functions provided
-    by scikits.cuda.
+    by scikits-cuda.
 
     Notes
     -----
@@ -190,6 +203,12 @@ def shutdown():
         from . import cublas  # nest to avoid requiring cublas e.g. for FFT
         cublas.cublasDestroy(_global_cublas_handle)
         _global_cublas_handle = None
+
+    global _global_cusolver_handle
+    if _global_cusolver_handle:
+        from . import cusolver
+        cusolver.cusolverDnDestroy(_global_cusolver_handle)
+        _global_cusolver_handle = None
 
     if _has_cula:
         cula.culaShutdown()
