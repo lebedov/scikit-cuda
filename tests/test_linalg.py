@@ -881,6 +881,32 @@ class test_linalg(TestCase):
         q_gpu, r_gpu = linalg.qr(a_gpu, 'reduced')
         assert np.allclose(a, np.dot(q_gpu.get(), r_gpu.get()), atol=atol_float64)     
         
+    def test_eig_float32(self):
+        a = np.asarray(np.random.rand(9, 9), np.float32, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        w_gpu = linalg.eig(a_gpu, 'N', 'N')
+        assert np.allclose(np.trace(a), sum(w_gpu.get()), atol=1e-4)
+
+    def test_eig_float64(self):
+        a = np.asarray(np.random.rand(9, 9), np.float64, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        w_gpu = linalg.eig(a_gpu, 'N', 'N')
+        assert np.allclose(np.trace(a), sum(w_gpu.get()), atol=atol_float64)
+
+    def test_eig_complex64(self):
+        a = np.asarray(np.random.rand(9, 9) + 1j*np.random.rand(9, 9), np.complex64, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        w_gpu = linalg.eig(a_gpu, 'N', 'N')
+        assert np.allclose(np.trace(a), sum(w_gpu.get()), atol=1e-4)
+
+    def test_eig_complex128(self):
+        a = np.array(np.random.rand(9, 9) + 1j*np.random.rand(9,9), np.complex128, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        w_gpu = linalg.eig(a_gpu, 'N', 'N')
+        assert np.allclose(np.trace(a), sum(w_gpu.get()), atol=atol_float64) 
+
+
+
 
 def suite():
     s = TestSuite()
@@ -938,6 +964,10 @@ def suite():
     s.addTest(test_linalg('test_qr_reduced_float64'))
     s.addTest(test_linalg('test_qr_reduced_complex64'))
     s.addTest(test_linalg('test_qr_reduced_complex128'))
+    s.addTest(test_linalg('test_eig_float32'))
+    s.addTest(test_linalg('test_eig_float64'))
+    s.addTest(test_linalg('test_eig_complex64'))
+    s.addTest(test_linalg('test_eig_complex128'))
     
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_linalg('test_svd_ss_float64'))
@@ -988,7 +1018,10 @@ def suite():
         s.addTest(test_linalg('test_qr_reduced_float64'))
         s.addTest(test_linalg('test_qr_reduced_complex64'))
         s.addTest(test_linalg('test_qr_reduced_complex128'))
-        
+        s.addTest(test_linalg('test_eig_float32'))
+        s.addTest(test_linalg('test_eig_float64'))
+        s.addTest(test_linalg('test_eig_complex64'))
+        s.addTest(test_linalg('test_eig_complex128'))
         
     return s
 

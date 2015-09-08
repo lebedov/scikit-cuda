@@ -1924,6 +1924,181 @@ def qr(a_gpu, mode='reduced'):
         return a_gpu
 
 
+def eig(a_gpu, jobvl='N', jobvr='V', imag='F'):
+    """
+    Eigendecomposition of a matrix.
+    Compute the eigenvalues `w`  for a square matrix `a` and optional the
+    left and right eigenvectors `vl`, `vr`.
+
+    Parameters
+    ----------
+    a : pycuda.gpuarray.GPUArray 
+        Input matrix of dimensions `(m, m)`.
+        
+    jobvl :  {'V', 'N'}
+            'V' : returns `vl`, the left eigenvectors of `a` with dimensions `(m, m)`.
+            'N' : left eigenvectors are not computed.
+
+    jobvr :  {'V', 'N'}
+            'V' : returns `vr`, the right eigenvectors of `a` with dimensions `(m, m)`, (default).
+            'N' : right eigenvectors are not computed.
+
+    imag :  {'F', 'T'} 
+            'F' : imaginary parts of a real matrix is not returned (default).
+            'T' : returns the imaginary parts of a real matrix.
+            (only relevant in the case of singel/ double precision ).
+    Returns
+    -------
+    vr : pycuda.gpuarray.GPUArray
+         The normalized (Euclidean norm equal to 1) right eigenvectors, 
+         such that the column `vr[:,i]` is the eigenvector corresponding 
+         to the eigenvalue `w[i]`.
+         
+    w : pycuda.gpuarray.GPUArray
+        Array containing the eigenvalues, not necessarily ordered.
+        `w` is of length `m`.
+        
+    vl : pycuda.gpuarray.GPUArray
+         The normalized (Euclidean norm equal to 1) left eigenvectors, 
+         such that the column `vl[:,i]` is the eigenvector corresponding 
+         to the eigenvalue `w[i]`.     
+
+
+    Notes
+    -----
+    Double precision is only supported if the standard version of the
+    CULA Dense toolkit is installed.
+
+    This function destroys the contents of the input matrix.
+    
+    Arrays is expected to be stored in column-major order, i.e., order='F'.
+
+    Examples
+    --------
+    >>> #Compute right eigenvectors of a symmetric matrix A and verify A*vr = vr*w
+    >>> a = np.array(([1,3],[3,5]), np.float32, order='F')
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> vr_gpu, w_gpu = linalg.eig(a_gpu, 'N', 'V')
+    >>> np.allclose(np.dot(a, vr_gpu.get()), np.dot(vr_gpu.get(), np.diag(w_gpu.get())), 1e-4)
+    True
+    
+    >>> #Compute left eigenvectors of a symmetric matrix A and verify vl.T*A = w*vl.T 
+    >>> a = np.array(([1,3],[3,5]), np.float32, order='F')
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> w_gpu, vl_gpu = linalg.eig(a_gpu, 'V', 'N')
+    >>> np.allclose(np.dot(vl_gpu.get().T, a), np.dot(np.diag(w_gpu.get()), vl_gpu.get().T), 1e-4)
+    True
+    
+    >>> #Compute left/right eigenvectors of a symmetric matrix A and verify A = vr*w*vl.T 
+    >>> a = np.array(([1,3],[3,5]), np.float32, order='F')
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> vr_gpu, w_gpu, vl_gpu = linalg.eig(a_gpu, 'V', 'V')
+    >>> np.allclose(a, np.dot(vr_gpu.get(), np.dot(np.diag(w_gpu.get()), vl_gpu.get().T)), 1e-4)
+    True
+    
+    >>> #Compute eigenvalues of a square matrix A and verify that trace(A)=sum(w) 
+    >>> a = np.array(np.random.rand(9,9), np.float32, order='F')
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> w_gpu = linalg.eig(a_gpu, 'N', 'N')
+    >>> np.allclose(np.trace(a), sum(w_gpu.get()), 1e-4)
+    True
+    
+    >>> #Compute eigenvalues of a real valued matrix A possessing complex e-valuesand
+    >>> a = np.array(np.array(([1, -2], [1, 3])), np.float32, order='F')
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> w_gpu = linalg.eig(a_gpu, 'N', 'N', imag='T')
+    True
+    
+    >>> #Compute eigenvalues of a complex valued matrix A and verify that trace(A)=sum(w)
+    >>> a = np.array(np.random.rand(2,2) + 1j*np.random.rand(2,2), np.complex64, order='F')
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> w_gpu = linalg.eig(a_gpu, 'N', 'N')
+    >>> np.allclose(np.trace(a), sum(w_gpu.get()), 1e-4)
+    True
+
+    """
+
+    if not _has_cula:
+        raise NotImplementedError('CULA not installed')
+
+    alloc = misc._global_cublas_allocator
+
+    # The free version of CULA only supports single precision floating
+    # point numbers:
+    data_type = a_gpu.dtype.type
+    real_type = np.float32
+    if data_type == np.complex64:
+        cula_func_geev = cula.culaDeviceCgeev
+        imag='F'
+    elif data_type == np.float32:
+        cula_func_geev = cula.culaDeviceSgeev
+
+         
+    else:
+        if cula._libcula_toolkit == 'standard':
+            if data_type == np.complex128:
+                cula_func_geev = cula.culaDeviceZgeev
+                imag='F'
+            elif data_type == np.float64:
+                cula_func_geev = cula.culaDeviceDgeev
+            else:
+                raise ValueError('unsupported type')
+            real_type = np.float64
+        else:
+            raise ValueError('double precision not supported')
+
+    # CUDA assumes that arrays are stored in column-major order
+    m, n = np.array(a_gpu.shape, int)
+    
+    #Check input
+    if(m!=n): raise ValueError('matrix is not square!')
+    jobvl = jobvl.upper()
+    jobvr = jobvr.upper()
+    
+    if jobvl not in ['N', 'V'] :
+        raise ValueError('jobvl has to  be "N" or "V" ')
+    if jobvr not in ['N', 'V'] :
+        raise ValueError('jobvr has to  be "N" or "V" ')
+    if imag not in ['T', 'F'] :
+        raise ValueError('imag has to  be "T" or "F" ')
+    
+    
+    #Allocate vl, vr, and w
+    vl_gpu = gpuarray.empty((m,m), data_type, order="F", allocator=alloc)
+    vr_gpu = gpuarray.empty((m,m), data_type, order="F", allocator=alloc)    
+    w_gpu = gpuarray.empty(m, data_type, order="F", allocator=alloc)
+
+    if data_type == np.complex64 or data_type == np.complex128:   
+        #culaDeviceCgeev(jobvl, jobvr, n, a, lda, w, vl, ldvl, vr, ldvr)
+        cula_func_geev(jobvl, jobvr, m, a_gpu.gpudata, m, w_gpu.gpudata, vl_gpu.gpudata , m , vr_gpu.gpudata, m )
+    
+    elif data_type == np.float32: 
+        wi_gpu = gpuarray.zeros(m, data_type, order="F", allocator=alloc)
+        cula_func_geev(jobvl, jobvr, m, a_gpu.gpudata, m, w_gpu.gpudata, wi_gpu.gpudata, vl_gpu.gpudata , m , vr_gpu.gpudata, m )
+
+    elif data_type == np.float64:
+        wi_gpu = gpuarray.zeros(m, data_type, order="F", allocator=alloc)
+        cula_func_geev(jobvl, jobvr, m, a_gpu.gpudata, m, w_gpu.gpudata, wi_gpu.gpudata, vl_gpu.gpudata , m , vr_gpu.gpudata, m )
+
+        
+    if imag == 'T':
+        w_gpu = w_gpu + (1j)*wi_gpu
+
+
+    # Free internal CULA memory:
+    cula.culaFreeBuffers()
+    
+    #return
+    if jobvl  == 'N' and jobvr == 'N': 
+        return w_gpu
+    elif jobvl == 'V' and jobvr == 'V': 
+        return vr_gpu, w_gpu, vl_gpu
+    elif jobvl == 'V' and jobvr == 'N': 
+        return w_gpu, vl_gpu,
+    elif jobvl == 'N' and jobvr == 'V': 
+        return vr_gpu, w_gpu      
+ 
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()

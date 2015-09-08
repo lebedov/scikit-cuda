@@ -1520,6 +1520,86 @@ def culaDeviceZgemv(trans, m, n, alpha, A, lda, x, incx, beta, y, incy):
                                                beta.imag),
                            int(y), incy)
     culaCheckStatus(status)
+    
+    
+    
+    
+#GEEV    
+# Sgeev, Dgeev, Cgeev, Zgeev
+_libcula.culaDeviceSgeev.restype = \
+_libcula.culaDeviceDgeev.restype = \
+_libcula.culaDeviceCgeev.restype = \
+_libcula.culaDeviceZgeev.restype = int
+
+_libcula.culaDeviceSgeev.argtypes = \
+_libcula.culaDeviceDgeev.argtypes = [ctypes.c_char, #jobvl
+                                     ctypes.c_char, #jobvr
+                                     ctypes.c_int, #n,  the order of the matrix
+                                     ctypes.c_void_p, #a
+                                     ctypes.c_int, #lda
+                                     ctypes.c_void_p, #wr
+                                     ctypes.c_void_p, #wi
+                                     ctypes.c_void_p, #vl
+                                     ctypes.c_int, #ldvl
+                                     ctypes.c_void_p, #vr
+                                     ctypes.c_int] #ldvr
+
+_libcula.culaDeviceCgeev.argtypes = \
+_libcula.culaDeviceZgeev.argtypes = [ctypes.c_char, #jobvl
+                                     ctypes.c_char, #jobvr
+                                     ctypes.c_int, #n,  the order of the matrix
+                                     ctypes.c_void_p, #a
+                                     ctypes.c_int, #lda
+                                     ctypes.c_void_p, #w
+                                     ctypes.c_void_p, #vl
+                                     ctypes.c_int, #ldvl
+                                     ctypes.c_void_p, #vr
+                                     ctypes.c_int] #ldvr
+
+def culaDeviceSgeev(jobvl, jobvr, n, a, lda, wr, wi, vl, ldvl, vr, ldvr):
+    """
+    General Eigenproblem solver.
+
+    """
+    jobvl = jobvl.encode('ascii')
+    jobvr = jobvr.encode('ascii')
+    status = _libcula.culaDeviceSgeev(jobvl, jobvr, n, int(a), lda, int(wr), int(wi),
+                           int(vl), ldvl, int(vr), ldvr)
+    culaCheckStatus(status)
+
+def culaDeviceDgeev(jobvl, jobvr, n, a, lda, wr, wi, vl, ldvl, vr, ldvr):
+    """
+    General Eigenproblem solver.
+
+    """
+    jobvl = jobvl.encode('ascii')
+    jobvr = jobvr.encode('ascii')
+    status = _libcula.culaDeviceDgeev(jobvl, jobvr, n, int(a), lda, int(wr), int(wi),
+                           int(vl), ldvl, int(vr), ldvr)
+    culaCheckStatus(status)
+
+def culaDeviceCgeev(jobvl, jobvr, n, a, lda, w, vl, ldvl, vr, ldvr):
+    """
+    General Eigenproblem solver.
+
+    """
+    jobvl = jobvl.encode('ascii')
+    jobvr = jobvr.encode('ascii')
+    status = _libcula.culaDeviceCgeev(jobvl, jobvr, n, int(a), lda, int(w),
+                           int(vl), ldvl, int(vr), ldvr)
+    culaCheckStatus(status)
+
+def culaDeviceZgeev(jobvl, jobvr, n, a, lda, w, vl, ldvl, vr, ldvr):
+    """
+    General Eigenproblem solver.
+
+    """
+    jobvl = jobvl.encode('ascii')
+    jobvr = jobvr.encode('ascii')
+    status = _libcula.culaDeviceZgeev(jobvl, jobvr, n, int(a), lda, int(w),
+                           int(vl), ldvl, int(vr), ldvr)
+    culaCheckStatus(status)   
+    
 
 # Auxiliary routines:
 
