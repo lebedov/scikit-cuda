@@ -20,6 +20,7 @@ Linear Algebra Routines
    div_matvec
    dot_diag
    dot
+   eig
    eye
    hermitian
    inv
