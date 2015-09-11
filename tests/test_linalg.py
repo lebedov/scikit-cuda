@@ -905,7 +905,29 @@ class test_linalg(TestCase):
         w_gpu = linalg.eig(a_gpu, 'N', 'N')
         assert np.allclose(np.trace(a), sum(w_gpu.get()), atol=atol_float64) 
 
+    def test_vander_float32(self):
+        a = np.array(np.random.uniform(1,2,5), np.float32, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        vander_gpu = linalg.vander(a_gpu)
+        assert np.allclose(np.fliplr(np.vander(a)), vander_gpu.get(), atol=atol_float32)
 
+    def test_vander_float64(self):
+        a = np.array(np.random.uniform(1,2,5), np.float64, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        vander_gpu = linalg.vander(a_gpu)
+        assert np.allclose(np.fliplr(np.vander(a)), vander_gpu.get(), atol=atol_float64)
+
+    def test_vander_complex64(self):
+        a = np.array(np.random.uniform(1,2,5) + 1j*np.random.uniform(1,2,5), np.complex64, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        vander_gpu = linalg.vander(a_gpu)
+        assert np.allclose(np.fliplr(np.vander(a)), vander_gpu.get(), atol=atol_float32)
+
+    def test_vander_complex128(self):
+        a = np.array(np.random.uniform(1,2,5) + 1j*np.random.uniform(1,2,5), np.complex128, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        vander_gpu = linalg.vander(a_gpu)
+        assert np.allclose(np.fliplr(np.vander(a)), vander_gpu.get(), atol=atol_float64)
 
 
 def suite():
@@ -968,6 +990,11 @@ def suite():
     s.addTest(test_linalg('test_eig_float64'))
     s.addTest(test_linalg('test_eig_complex64'))
     s.addTest(test_linalg('test_eig_complex128'))
+    s.addTest(test_linalg('test_vander_float32'))
+    s.addTest(test_linalg('test_vander_float64'))
+    s.addTest(test_linalg('test_vander_complex64'))
+    s.addTest(test_linalg('test_vander_complex128'))
+    
     
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_linalg('test_svd_ss_float64'))
@@ -1022,6 +1049,10 @@ def suite():
         s.addTest(test_linalg('test_eig_float64'))
         s.addTest(test_linalg('test_eig_complex64'))
         s.addTest(test_linalg('test_eig_complex128'))
+        s.addTest(test_linalg('test_vander_float32'))
+        s.addTest(test_linalg('test_vander_float64'))
+        s.addTest(test_linalg('test_vander_complex64'))
+        s.addTest(test_linalg('test_vander_complex128'))
         
     return s
 
