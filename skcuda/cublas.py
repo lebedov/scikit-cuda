@@ -10,7 +10,6 @@ from __future__ import absolute_import
 
 import re
 import os
-import platform
 import sys
 import warnings
 import ctypes
@@ -31,7 +30,7 @@ if 'linux' in sys.platform:
 elif sys.platform == 'darwin':
     _libcublas_libname_list = ['libcublas.dylib']
 elif sys.platform == 'win32':
-    if platform.machine().endswith('64'):
+    if sys.maxsize > 2**32:
         _libcublas_libname_list = ['cublas.dll'] + \
                                   ['cublas64_%s.dll' % int(10*v) for v in _version_list]
     else:

@@ -6,7 +6,8 @@ Python interface to CUFFT functions.
 Note: this module does not explicitly depend on PyCUDA.
 """
 
-import ctypes, platform, sys
+import ctypes
+import sys
 
 # Load library:
 _version_list = [7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
@@ -16,7 +17,7 @@ if 'linux' in sys.platform:
 elif sys.platform == 'darwin':
     _libcufft_libname_list = ['libcufft.dylib']
 elif sys.platform == 'win32':
-    if platform.machine().endswith('64'):
+    if sys.maxsize > 2**32:
         _libcufft_libname_list = ['cufft.dll'] + \
                                  ['cufft64_%s.dll' % int(10*v) for v in _version_list]
     else:

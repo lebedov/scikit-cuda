@@ -15,7 +15,7 @@ if 'linux' in sys.platform:
 elif sys.platform == 'darwin':
     _libcudart_libname_list = ['libcudart.dylib']
 elif sys.platform == 'win32':
-    if platform.machine().endswith('64'):
+    if sys.maxsize > 2**32:
         _libcudart_libname_list = ['cudart.dll'] + \
                                   ['cudart64_%s.dll' % int(10*v) for v in _version_list]
     else:
