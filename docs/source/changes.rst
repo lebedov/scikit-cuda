@@ -8,6 +8,7 @@ Release 0.5.1 - (under development)
 * More CUSOLVER wrappers.
 * Eigenvalue/eigenvector computation (eng. by N. Ben Erichson).
 * QR decomposition (enh. by N. Ben Erichson).
+* Improved Windows 10 compatibility (enh. by N. Ben Erichson).
 
 Release 0.5.0 - (July 14, 2015)
 -------------------------------
