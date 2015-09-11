@@ -2087,6 +2087,128 @@ def eig(a_gpu, jobvl='N', jobvr='V', imag='F'):
     elif jobvl == 'N' and jobvr == 'V': 
         return vr_gpu, w_gpu      
  
+ 
+ 
+@context_dependent_memoize
+def _get_vander_kernel(use_double, use_complex, rows, cols):
+     template = Template("""
+     #include <pycuda-complex.hpp>
+     #if ${use_double}
+     #if ${use_complex}
+     #define FLOAT pycuda::complex<double>
+     #else
+     #define FLOAT double
+     #endif
+     #else
+     #if ${use_complex}
+     #define FLOAT pycuda::complex<float>
+     #else
+     #define FLOAT float
+     #endif
+     #endif
+ 
+ 
+     __global__ void vander(FLOAT *a, FLOAT *b, int m, int n) {
+        
+	  unsigned int ix;        
+	  unsigned int r = blockIdx.x*blockDim.x+threadIdx.x;
+	          
+	  if(r < m) {
+	    for(int i=1; i<n; ++i) {           
+	       ix = r  + m*i  ; 
+	       a[ix] = a[r  + m*(i-1)] * b[r];
+            }
+          }    
+     }
+     """)
+     # Set this to False when debugging to make sure the compiled kernel is
+     # not cached:
+     cache_dir=None
+     tmpl = template.substitute(use_double=use_double,
+                                use_complex=use_complex,
+                                rows=rows,
+                                cols=cols)
+     mod = SourceModule(tmpl, cache_dir=cache_dir)
+     return mod.get_function("vander")
+ 
+ 
+def vander(a_gpu, n=None, handle=None):
+     """
+     Generate a Vandermonde matrix.
+ 
+     A Vandermonde matrix (named for Alexandre- Theophile Vandermonde)
+     is a  matrix where the columns are powers of the input vector, i.e., 
+     the `i-th` column is the input vector raised element-wise to the 
+     power of `i`.
+     
+     Parameters
+     ----------
+     a_gpu : pycuda.gpuarray.GPUArray
+         1-D input array of shape `(m, 1)`.
+         
+     n : int, optional
+        Number of columns in the Vandermonde matrix. 
+        If `n` is not specified, a square array is returned `(m,m)`.
+ 
+     Returns
+     -------
+     vander_gpu : pycuda.gpuarray
+         Vandermonde matrix of shape `(m,n)`.
+  
+     Examples
+     --------
+     >>> a = np.array(np.array([1, 2, 3]), np.float32, order='F')
+     >>> a_gpu = gpuarray.to_gpu(a)
+     >>> linalg.vander(a_gpu, n=4)
+     array([[  1.,   1.,   2.,  12.],
+            [  1.,   2.,   6.,  36.],
+            [  1.,   3.,   3.,  18.]], dtype=float32)
+ 
+ 
+     """
+     if handle is None:
+         handle = misc._global_cublas_handle
+ 
+     alloc = misc._global_cublas_allocator
+ 
+     data_type = a_gpu.dtype.type
+     if a_gpu.dtype == np.float32:
+         use_double = 0
+         use_complex = 0
+     elif a_gpu.dtype == np.float64:
+         use_double = 1
+         use_complex = 0
+     elif a_gpu.dtype == np.complex64:
+         use_double = 0
+         use_complex = 1
+     elif a_gpu.dtype == np.complex128:
+         use_double = 1
+         use_complex = 1
+     else:
+         raise ValueError('unrecognized type')
+ 
+     m = int(a_gpu.shape[0])
+     if n == None: n = int(m)
+ 
+     vander_gpu = gpuarray.empty((m, n), data_type, order='F', allocator=alloc)
+     vander_gpu[ : , 0 ] = vander_gpu[ : , 0 ] * 0  + 1    
+     
+     # Get block/grid sizes:
+     dev = misc.get_current_device()
+     block_dim, grid_dim = misc.select_block_grid_sizes(dev, vander_gpu.shape)   
+     
+     #Allocate Vandermonde Matrix
+     vander = _get_vander_kernel(use_double, use_complex, rows=m, cols=n)
+   
+     #Call kernel
+     vander(vander_gpu, a_gpu,
+            np.uint32(m), np.uint32(n),
+            block=block_dim,
+            grid=grid_dim)
+            
+     #Return
+     return vander_gpu
+ 
 
 if __name__ == "__main__":
     import doctest
