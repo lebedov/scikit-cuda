@@ -18,6 +18,7 @@ Linear Algebra Routines
    det
    diag
    div_matvec
+   dmd
    dot_diag
    dot
    eig
