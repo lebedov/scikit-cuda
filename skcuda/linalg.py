@@ -2163,14 +2163,13 @@ def vander(a_gpu, n=None, handle=None):
      array([[  1.,   1.,   2.,  12.],
             [  1.,   2.,   6.,  36.],
             [  1.,   3.,   3.,  18.]], dtype=float32)
- 
- 
      """
+
      if handle is None:
          handle = misc._global_cublas_handle
- 
+
      alloc = misc._global_cublas_allocator
- 
+
      data_type = a_gpu.dtype.type
      if a_gpu.dtype == np.float32:
          use_double = 0
@@ -2186,64 +2185,62 @@ def vander(a_gpu, n=None, handle=None):
          use_complex = 1
      else:
          raise ValueError('unrecognized type')
- 
+
      m = int(a_gpu.shape[0])
      if n == None: n = int(m)
- 
+
      vander_gpu = gpuarray.empty((m, n), data_type, order='F', allocator=alloc)
-     vander_gpu[ : , 0 ] = vander_gpu[ : , 0 ] * 0  + 1    
-     
+     vander_gpu[ : , 0 ] = vander_gpu[ : , 0 ] * 0  + 1
+
      # Get block/grid sizes:
      dev = misc.get_current_device()
-     block_dim, grid_dim = misc.select_block_grid_sizes(dev, vander_gpu.shape)   
-     
-     #Allocate Vandermonde Matrix
+     block_dim, grid_dim = misc.select_block_grid_sizes(dev, vander_gpu.shape)
+
+     # Allocate Vandermonde matrix:
      vander = _get_vander_kernel(use_double, use_complex, rows=m, cols=n)
-   
-     #Call kernel
+
+     # Call kernel:
      vander(vander_gpu, a_gpu,
             np.uint32(m), np.uint32(n),
             block=block_dim,
             grid=grid_dim)
-            
-     #Return
+
+     # Return
      return vander_gpu
- 
- 
- 
+
 
 def dmd(a_gpu, k=None, method='exact', handle=None):
     """
     Dynamic Mode Decomposition.
 
-    Dynamic Mode Decomposition (DMD) is a data processing algorithm which 
-    allows to decompose a matrix `a` in space and time. 
-    The matrix `a` is decomposed as `a = FBV`, where the columns of `F` 
-    are containing the dynamic modes. The modes are orderd corresponding 
-    to the amplitudes stored in the diagonal matrix `B`. `V` is a Vandermonde 
-    Matrix describing the temporal evolution. 
+    Dynamic Mode Decomposition (DMD) is a data processing algorithm which
+    allows to decompose a matrix `a` in space and time.
+    The matrix `a` is decomposed as `a = FBV`, where the columns of `F`
+    contain the dynamic modes. The modes are ordered corresponding
+    to the amplitudes stored in the diagonal matrix `B`. `V` is a Vandermonde
+    matrix describing the temporal evolution.
 
     Parameters
     ----------
     a_gpu : pycuda.gpuarray.GPUArray
         Input matrix `a` with dimensions `(m, n)`.
     k : int, optional
-        If `k < (n-1)` low-rank Dynamic Mode Decomposition is computed. 
+        If `k < (n-1)` low-rank Dynamic Mode Decomposition is computed.
     method : `{'standard', 'exact'}`
         'standard' : uses the standard definition to compute the dynamic modes,
                     `F = U * W`.
         'exact' : computes the exact dynamic modes, `F = Y * V * (S**-1) * W`.
     handle : int
         CUBLAS context. If no context is specified, the default handle from
-        `skcuda.misc._global_cublas_handle` is used.                
+        `skcuda.misc._global_cublas_handle` is used.
 
     Returns
     -------
-    F_gpu : pycuda.gpuarray
+    F_gpu : pycuda.gpuarray.GPUArray
         Matrix containing the dynamic modes of shape `(m, n-1)`  or `(m, k)`.
-    b_gpu : pycuda.gpuarray
-        1-D array containing the amplitueds of length `min(n-1, k)`.
-    V_gpu : pycuda.gpuarray
+    b_gpu : pycuda.gpuarray.GPUArray
+        1-D array containing the amplitudes of length `min(n-1, k)`.
+    V_gpu : pycuda.gpuarray.GPUArray
         Vandermonde matrix of shape `(n-1, n-1)`  or `(k, n-1)`.
 
     Notes
@@ -2252,32 +2249,25 @@ def dmd(a_gpu, k=None, method='exact', handle=None):
     CULA Dense toolkit is installed.
 
     This function destroys the contents of the input matrix.
-    
+
     Arrays are assumed to be stored in column-major order, i.e., order='F'.
 
     References
     ----------
-    Jovanovic, M. R., P. J. Schmid, and J. W. Nichols. 
-    "Low-rank and sparse dynamic mode decomposition." 
-    Center for Turbulence Research Annual Research Briefs (2012): 139-152.    
-    
-    Tu, Jonathan H., et al. 
-    "On dynamic mode decomposition: theory and applications." 
-    arXiv preprint arXiv:1312.0041 (2013).
-    
-    Examples
-    --------
-    
-    
-    
+    Jovanovic, M. R., P. J. Schmid, and J. W. Nichols.
+    "Low-rank and sparse dynamic mode decomposition."
+    Center for Turbulence Research Annual Research Briefs (2012): 139-152.
 
+    Tu, Jonathan H., et al.
+    "On dynamic mode decomposition: theory and applications."
+    arXiv preprint arXiv:1312.0041 (2013).
     """
+
     #*************************************************************************
     #***        Author: N. Benjamin Erichson <nbe@st-andrews.ac.uk>        ***
     #***                              <2015>                               ***
     #***                       License: BSD 3 clause                       ***
     #*************************************************************************
-    
 
     if not _has_cula:
         raise NotImplementedError('CULA not installed')
