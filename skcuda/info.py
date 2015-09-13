@@ -17,6 +17,7 @@ High-level modules
 - fft            Fast Fourier Transform functions.
 - integrate      Numerical integration functions.
 - linalg         Linear algebra functions.
+- rlinalg        Randomized linear algebra functions.
 - misc           Miscellaneous support functions.
 - special        Special math functions.
 
