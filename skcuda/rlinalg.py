@@ -23,6 +23,8 @@ from . import cublas
 from . import misc
 from . import linalg
 
+rand = curandom.MRG32k3aRandomNumberGenerator()
+
 import sys
 if sys.version_info < (3,):
     range = xrange
@@ -40,6 +42,7 @@ except (ImportError, OSError):
     _has_cula = False
 
 from .misc import init, add_matvec, div_matvec, mult_matvec
+from .linalg import hermitian, transpose
 
 # Get installation location of C headers:
 from . import install_headers
@@ -222,7 +225,6 @@ def rsvd(a_gpu, k=None, p=0, q=0, method="standard", handle=None):
     O_gpu = gpuarray.empty((n,k), real_type, order="F", allocator=alloc) 
 
     #Draw random samples from a ~ Uniform(-1,1) distribution
-    rand = curandom.MRG32k3aRandomNumberGenerator()
     
     if isreal==True: 
         rand.fill_uniform(O_gpu)
@@ -320,9 +322,9 @@ def rsvd(a_gpu, k=None, p=0, q=0, method="standard", handle=None):
         #Note: reduced QR returns Q and R, and destroys B_gpu
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                
         if isreal==True: 
-            B_gpu = linalg.transpose(B_gpu) #transpose B
+            B_gpu = transpose(B_gpu) #transpose B
         else:
-            B_gpu = linalg.hermitian(B_gpu) #transpose B
+            B_gpu = hermitian(B_gpu) #transpose B
         
         Qstar_gpu, Rstar_gpu = linalg.qr(B_gpu, 'reduced')
 
