@@ -931,32 +931,32 @@ class test_linalg(TestCase):
 
     def test_dmd_float32(self):
         m, n = 9, 7
-        a = np.array(np.fliplr(np.vander(np.random.rand(m), n)), np.float32, order='F')
+        a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)), np.float32, order='F')
         a_gpu = gpuarray.to_gpu(a)
-        f_gpu, b_gpu, v_gpu = linalg.dmd(a_gpu, method='standard')
+        f_gpu, b_gpu, v_gpu = linalg.dmd(a_gpu, modes='standard')
         assert np.allclose(a[:,:(n-1)], np.dot(f_gpu.get(), np.dot(np.diag(b_gpu.get()), v_gpu.get()) ), 1e-4)
 
     def test_dmd_float64(self):
         m, n = 9, 7
-        a = np.array(np.fliplr(np.vander(np.random.rand(m), n)), np.float64, order='F')
+        a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)), np.float64, order='F')
         a_gpu = gpuarray.to_gpu(a)
-        f_gpu, b_gpu, v_gpu = linalg.dmd(a_gpu, method='standard')
+        f_gpu, b_gpu, v_gpu = linalg.dmd(a_gpu, modes='standard')
         assert np.allclose(a[:,:(n-1)], np.dot(f_gpu.get(), np.dot(np.diag(b_gpu.get()), v_gpu.get()) ), atol_float64)
     
     def test_dmd_complex64(self):
         m, n = 9, 7
-        a = np.array(np.fliplr(np.vander(np.random.rand(m), n)) + 1j*np.fliplr(np.vander(np.random.rand(m), n)), 
+        a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)) + 1j*np.fliplr(np.vander(np.random.rand(m), n)), 
                      np.complex64, order='F')
         a_gpu = gpuarray.to_gpu(a)
-        f_gpu, b_gpu, v_gpu = linalg.dmd(a_gpu, method='standard')
+        f_gpu, b_gpu, v_gpu = linalg.dmd(a_gpu, modes='standard')
         assert np.allclose(a[:,:(n-1)], np.dot(f_gpu.get(), np.dot(np.diag(b_gpu.get()), v_gpu.get()) ), 1e-4)
         
     def test_dmd_complex128(self):
         m, n = 9, 7
-        a = np.array(np.fliplr(np.vander(np.random.rand(m), n)) + 1j*np.fliplr(np.vander(np.random.rand(m), n)), 
+        a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)) + 1j*np.fliplr(np.vander(np.random.rand(m), n)), 
                      np.complex128, order='F')
         a_gpu = gpuarray.to_gpu(a)
-        f_gpu, b_gpu, v_gpu = linalg.dmd(a_gpu, method='standard')
+        f_gpu, b_gpu, v_gpu = linalg.dmd(a_gpu, modes='standard')
         assert np.allclose(a[:,:(n-1)], np.dot(f_gpu.get(), np.dot(np.diag(b_gpu.get()), v_gpu.get()) ), atol_float64)
         
 
