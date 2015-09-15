@@ -930,7 +930,7 @@ class test_linalg(TestCase):
         assert np.allclose(np.fliplr(np.vander(a)), vander_gpu.get(), atol=atol_float64)
 
     def test_dmd_float32(self):
-        m, n = 9, 7
+        m, n = 6, 4
         a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)), np.float32, order='F')
         a_gpu = gpuarray.to_gpu(a)
         f_gpu, b_gpu, v_gpu = linalg.dmd(a_gpu, modes='standard')
