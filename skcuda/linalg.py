@@ -1780,28 +1780,31 @@ def det(a_gpu, overwrite=False, ipiv_gpu=None, handle=None):
         raise LinAlgError(e)
 
 
-def qr(a_gpu, mode='reduced'):
+def qr(a_gpu, mode='reduced', handle=None):
     """
     QR Decomposition.
     
-    Factor the matrix `A` as `QR`, where `Q` is orthonormal
-    and `R` is upper-triangular.
+    Factor the real/complex matrix `a` as `QR`, where `Q` is an orthonormal/unitary 
+    matrix and `R` is an upper triangular matrix.
 
     Parameters
     ----------
-    A : pycuda.gpuarray.GPUArray 
-        Input matrix of dimensions `(m, n)` to decompose in column-major order.
-        `A` is assumed to be `m`>=`n`.        
-    Mode :  {'reduced', 'economic', 'r'}
+    a_gpu: pycuda.gpuarray.GPUArray 
+        Real/complex input matrix  `a` with dimensions `(m, n)`.
+        `a` is assumed to be `m`>=`n`.        
+    mode :  {'reduced', 'economic', 'r'}
         'reduced' : returns `Q`, `R` with dimensions `(m, k)` and `(k, n)` (default).
         'economic' : returns `Q` only with dimensions `(m, k)`.
         'r' : returns `R` only with dimensions `(k, n)` with `k`=min`(m,n)`.
-    
+    handle : int
+        CUBLAS context. If no context is specified, the default handle from
+        `skcuda.misc._global_cublas_handle` is used.
+        
     Returns
     -------
-    Q : pycuda.gpuarray.GPUArray
+    q_gpu : pycuda.gpuarray.GPUArray
         Orthonormal/unitary matrix (depending on whether or not `A` is real/complex).
-    R : pycuda.gpuarray.GPUArray
+    r_gpu : pycuda.gpuarray.GPUArray
         The upper-triangular matrix.
 
     Notes
@@ -1846,8 +1849,8 @@ def qr(a_gpu, mode='reduced'):
     True
     """
 
-    if not _has_cula:
-        raise NotImplementedError('CULA not installed')
+    if handle is None:
+         handle = misc._global_cublas_handle
 
     alloc = misc._global_cublas_allocator
 
@@ -1858,26 +1861,33 @@ def qr(a_gpu, mode='reduced'):
     if data_type == np.complex64:
         cula_func_qr = cula.culaDeviceCgeqrf
         cula_func_q = cula.culaDeviceCungqr
+        copy_func = cublas.cublasCcopy
         use_double = 0
         use_complex = 1
+        isreal=False
     elif data_type == np.float32:
         cula_func_qr = cula.culaDeviceSgeqrf
         cula_func_q = cula.culaDeviceSorgqr
+        copy_func = cublas.cublasScopy
         use_double = 0
         use_complex = 0
-         
+        isreal=True    
     else:
         if cula._libcula_toolkit == 'standard':
             if data_type == np.complex128:
                 cula_func_qr = cula.culaDeviceZgeqrf
                 cula_func_q = cula.culaDeviceZungqr
+                copy_func = cublas.cublasZcopy
                 use_double = 1
                 use_complex = 1
+                isreal=False
             elif data_type == np.float64:
                 cula_func_qr = cula.culaDeviceDgeqrf
                 cula_func_q = cula.culaDeviceDorgqr
+                copy_func = cublas.cublasDcopy
                 use_double = 1
                 use_complex = 0
+                isreal=True
             else:
                 raise ValueError('unsupported type')
             real_type = np.float64
@@ -1887,58 +1897,60 @@ def qr(a_gpu, mode='reduced'):
     # CUDA assumes that arrays are stored in column-major order
     m, n = np.array(a_gpu.shape, int)
 
+    if m<n and mode != 'r':
+        raise ValueError('if m < n only the mode "r" is supported')
+
     # Set the leading dimension of the input matrix:
     lda = max(1, m)
 
-    #Set k
+    # Set k
     k = min(m,n)
 
     # Set the leading dimension and allocate u:
-    tau_gpu = gpuarray.empty(min(m,n), data_type, allocator=alloc, order='F')
+    tau_gpu = gpuarray.empty(k, data_type, allocator=alloc, order='F')
 
     # Compute QR and check error status:
     cula_func_qr(m, n, int(a_gpu.gpudata), lda, int(tau_gpu.gpudata))
 
     if mode != 'economic':     
-        #Get upper triangluar matrix R with dimensions (k,n)
-        r_gpu = a_gpu.T[:, :n].copy()
+        # Get upper triangluar matrix R with dimensions (n,n)
+        # Note: _get_tril_kernel returns the upper triangular
+        r_gpu = gpuarray.empty((m,n), data_type, allocator=alloc, order='F')
+        copy_func(handle, a_gpu.size, int(a_gpu.gpudata), 1, int(r_gpu.gpudata), 1)
 
-        #Lower triangle of a matrix
-        # Get block/grid sizes:
+        # tril
         dev = misc.get_current_device()
-        N = r_gpu.shape[0]
         block_dim, grid_dim = misc.select_block_grid_sizes(dev, r_gpu.shape)
-        
-        #tril       
-        tril = _get_tril_kernel(use_double, use_complex, cols=N)
+        tril = _get_tril_kernel(use_double, use_complex, cols=m) #cols are here rows
         tril(r_gpu, np.uint32(r_gpu.size), block=block_dim, grid=grid_dim)
-        
-        #Mode r
-        if  mode=='r': return r_gpu.T
-    
-    #Compute Q and check error status
+
+        # Mode r
+        if  mode=='r': return r_gpu[:k, :n]
+            
+    # Compute Q and check error status
     cula_func_q(m, n, k, int(a_gpu.gpudata), lda, int(tau_gpu.gpudata))    
+    q_gpu = a_gpu #pointer
     
     # Free internal CULA memory:
     cula.culaFreeBuffers()
     
-    #Mode economic
+    # Mode economic
     if mode == 'reduced': 
-        return a_gpu, r_gpu.T
+        return q_gpu, r_gpu[:k, :n]
     if mode == 'economic': 
-        return a_gpu
+        return q_gpu
 
 def eig(a_gpu, jobvl='N', jobvr='V', imag='F'):
     """
     Eigendecomposition of a matrix.
 
-    Compute the eigenvalues `w`  for a square matrix `a` and (optionally) the
-    left and right eigenvectors `vl`, `vr`.
+    Compute the eigenvalues `w`  for a real/complex square matrix `a` 
+    and (optionally) the real left and right eigenvectors `vl`, `vr`.
 
     Parameters
     ----------
-    a : pycuda.gpuarray.GPUArray 
-        Input matrix of dimensions `(m, m)`.        
+    a_gpu : pycuda.gpuarray.GPUArray 
+        Real/complex input matrix  `a` with dimensions `(m, n)`.        
     jobvl :  {'V', 'N'}
         'V' : returns `vl`, the left eigenvectors of `a` with dimensions `(m, m)`.
         'N' : left eigenvectors are not computed.
@@ -1953,14 +1965,14 @@ def eig(a_gpu, jobvl='N', jobvr='V', imag='F'):
 
     Returns
     -------
-    vr : pycuda.gpuarray.GPUArray
+    vr_gpu : pycuda.gpuarray.GPUArray
          The normalized (Euclidean norm equal to 1) right eigenvectors, 
          such that the column `vr[:,i]` is the eigenvector corresponding 
          to the eigenvalue `w[i]`.         
-    w : pycuda.gpuarray.GPUArray
-        Array containing the eigenvalues, not necessarily ordered.
+    w_gpu : pycuda.gpuarray.GPUArray
+        Array containing the real/complex eigenvalues, not necessarily ordered.
         `w` is of length `m`.        
-    vl : pycuda.gpuarray.GPUArray
+    vl_gpu : pycuda.gpuarray.GPUArray
          The normalized (Euclidean norm equal to 1) left eigenvectors, 
          such that the column `vl[:,i]` is the eigenvector corresponding 
          to the eigenvalue `w[i]`.     
@@ -2144,7 +2156,7 @@ def vander(a_gpu, n=None, handle=None):
      Parameters
      ----------
      a_gpu : pycuda.gpuarray.GPUArray
-         1-D input array of shape `(m, 1)`.
+         Real/complex 1-D input array of shape `(m, 1)`.
          
      n : int, optional
         Number of columns in the Vandermonde matrix. 
@@ -2209,7 +2221,7 @@ def vander(a_gpu, n=None, handle=None):
      return vander_gpu
 
 
-def dmd(a_gpu, k=None, method='exact', handle=None):
+def dmd(a_gpu, k=None, modes='exact', handle=None):
     """
     Dynamic Mode Decomposition.
 
@@ -2223,10 +2235,10 @@ def dmd(a_gpu, k=None, method='exact', handle=None):
     Parameters
     ----------
     a_gpu : pycuda.gpuarray.GPUArray
-        Input matrix `a` with dimensions `(m, n)`.
+        Real/complex input matrix  `a` with dimensions `(m, n)`.
     k : int, optional
         If `k < (n-1)` low-rank Dynamic Mode Decomposition is computed.
-    method : `{'standard', 'exact'}`
+    modes : `{'standard', 'exact'}`
         'standard' : uses the standard definition to compute the dynamic modes,
                     `F = U * W`.
         'exact' : computes the exact dynamic modes, `F = Y * V * (S**-1) * W`.
@@ -2236,11 +2248,11 @@ def dmd(a_gpu, k=None, method='exact', handle=None):
 
     Returns
     -------
-    F_gpu : pycuda.gpuarray.GPUArray
+    f_gpu : pycuda.gpuarray.GPUArray
         Matrix containing the dynamic modes of shape `(m, n-1)`  or `(m, k)`.
     b_gpu : pycuda.gpuarray.GPUArray
         1-D array containing the amplitudes of length `min(n-1, k)`.
-    V_gpu : pycuda.gpuarray.GPUArray
+    v_gpu : pycuda.gpuarray.GPUArray
         Vandermonde matrix of shape `(n-1, n-1)`  or `(k, n-1)`.
 
     Notes
@@ -2254,11 +2266,11 @@ def dmd(a_gpu, k=None, method='exact', handle=None):
 
     References
     ----------
-    Jovanovic, M. R., P. J. Schmid, and J. W. Nichols.
+    M. R. Jovanovic, P. J. Schmid, and J. W. Nichols.
     "Low-rank and sparse dynamic mode decomposition."
     Center for Turbulence Research Annual Research Briefs (2012): 139-152.
 
-    Tu, Jonathan H., et al.
+    J. H. Tu, et al.
     "On dynamic mode decomposition: theory and applications."
     arXiv preprint arXiv:1312.0041 (2013).
     """
@@ -2337,10 +2349,11 @@ def dmd(a_gpu, k=None, method='exact', handle=None):
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #Note: we need a copy of X_gpu, because SVD destroys X_gpu
     #While Y_gpu is just a pointer
-    X_gpu = gpuarray.empty((m, nx), data_type, order="F", allocator=alloc)  
-    copy_func(handle, X_gpu.size, int(a_gpu[:, :nx].gpudata), 1, int(X_gpu.gpudata), 1)
+    X_gpu = gpuarray.empty((m, n), data_type, order="F", allocator=alloc) 
+    copy_func(handle, X_gpu.size, int(a_gpu.gpudata), 1, int(X_gpu.gpudata), 1)
+    X_gpu = X_gpu[:, :nx]    
     Y_gpu = a_gpu[:, 1:] 
-    
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #Singular Value Decomposition
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
@@ -2371,9 +2384,9 @@ def dmd(a_gpu, k=None, method='exact', handle=None):
    
     #Allocate s, U, Vt for economic SVD
     #Note: singular values are always real
-    s_gpu = gpuarray.empty(k, real_type, order="F", allocator=alloc)
+    s_gpu = gpuarray.empty(nx, real_type, order="F", allocator=alloc)
     U_gpu = gpuarray.empty((m,nx), data_type, order="F", allocator=alloc)
-    Vt_gpu = gpuarray.empty((k,nx), data_type, order="F", allocator=alloc)
+    Vt_gpu = gpuarray.empty((nx,nx), data_type, order="F", allocator=alloc)
     
     #Economic SVD
     cula_func_gesvd('S', 'S', m, nx, int(X_gpu.gpudata), m, int(s_gpu.gpudata), 
@@ -2421,26 +2434,26 @@ def dmd(a_gpu, k=None, method='exact', handle=None):
     #Eigen Decomposition
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #Note: If a_gpu is real the imag part is omitted
-    vr_gpu, w_gpu = eig(M_gpu, 'N', 'V', 'F')
+    Vr_gpu, w_gpu = eig(M_gpu, 'N', 'V', 'F')
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
     #Compute DMD Modes 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
     F_gpu = gpuarray.empty((m,k), data_type, order="F", allocator=alloc)    
-    method = method.lower()
-    if method == 'exact': #Compute (exact) DMD modes: F = Y * V * S**-1 * W = G * W
+    modes = modes.lower()
+    if modes == 'exact': #Compute (exact) DMD modes: F = Y * V * S**-1 * W = G * W
         cublas_func_gemm(handle, 'n', 'n', m, k, k, alpha, 
-                         G_gpu.gpudata, m, vr_gpu.gpudata, k, 
+                         G_gpu.gpudata, m, Vr_gpu.gpudata, k, 
                          beta, G_gpu.gpudata, m  )     
         F_gpu_temp = G_gpu
     
-    elif method == 'standard': #Compute (standard) DMD modes: F = U * W
+    elif modes == 'standard': #Compute (standard) DMD modes: F = U * W
         cublas_func_gemm(handle, 'n', 'n', m, k, k, 
-                         alpha, U_gpu.gpudata, m, vr_gpu.gpudata, k, 
+                         alpha, U_gpu.gpudata, m, Vr_gpu.gpudata, k, 
                          beta, U_gpu.gpudata, m  )     
         F_gpu_temp = U_gpu
     else: 
-        raise ValueError('Method is not supported, choose "exact" or "standard" ')
+        raise ValueError('Type of modes is not supported, choose "exact" or "standard".')
     
     #Copy is required, because gels destroys input    
     copy_func(handle, F_gpu_temp.size, int(F_gpu_temp.gpudata), 
@@ -2449,20 +2462,22 @@ def dmd(a_gpu, k=None, method='exact', handle=None):
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #Compute amplitueds b using least-squares: Fb=x1
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    x1 = a_gpu[:,0].copy() 
-    cula_func_gels( 'N', m, k, int(1) , F_gpu_temp.gpudata, m, x1.gpudata, m)
-    b = x1
+    #x1_gpu = a_gpu[:,0].copy() 
+    x1_gpu = gpuarray.empty(m, data_type, order="F", allocator=alloc) 
+    copy_func(handle, x1_gpu.size, int(a_gpu[:,0].gpudata), 1, int(x1_gpu.gpudata), 1)
+    cula_func_gels( 'N', m, k, int(1) , F_gpu_temp.gpudata, m, x1_gpu.gpudata, m)
+    b_gpu = x1_gpu
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #Compute Vandermonde matrix (CPU)
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    Vander = vander(w_gpu, n=nx)
+    V_gpu = vander(w_gpu, n=nx)
     
     # Free internal CULA memory:
     cula.culaFreeBuffers()
 
     #Return
-    return F_gpu, b[:k], Vander 
+    return F_gpu, b_gpu[:k], V_gpu 
   
 
 

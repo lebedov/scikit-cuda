@@ -80,7 +80,37 @@ class test_rlinalg(TestCase):
         a_gpu = gpuarray.to_gpu(a)
         U, s, Vt = rlinalg.rsvd(a_gpu, k=n, p=0, q=2, method='fast')
         assert np.allclose(a, np.dot(U.get(), np.dot(np.diag(s.get()), Vt.get())), atol_float64) 
+        
+    def test_rdmd_float32(self):
+        m, n = 6, 4
+        a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)), np.float32, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        f_gpu, b_gpu, v_gpu = rlinalg.rdmd(a_gpu, k=(n-1), p=0, q=2, modes='standard')
+        assert np.allclose(a[:,:(n-1)], np.dot(f_gpu.get(), np.dot(np.diag(b_gpu.get()), v_gpu.get()) ), atol_float32)   
 
+    def test_rdmd_float64(self):
+        m, n = 9, 7
+        a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)), np.float64, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        f_gpu, b_gpu, v_gpu = rlinalg.rdmd(a_gpu, k=(n-1), p=0, q=1, modes='standard')
+        assert np.allclose(a[:,:(n-1)], np.dot(f_gpu.get(), np.dot(np.diag(b_gpu.get()), v_gpu.get()) ), atol_float64)  
+
+    def test_rdmd_complex64(self):
+        m, n = 9, 7
+        a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)) + 1j*np.fliplr(np.vander(np.random.rand(m)+1, n)), 
+                     np.complex64, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        f_gpu, b_gpu, v_gpu = rlinalg.rdmd(a_gpu, k=(n-1), p=0, q=1, modes='standard')
+        assert np.allclose(a[:,:(n-1)], np.dot(f_gpu.get(), np.dot(np.diag(b_gpu.get()), v_gpu.get()) ), atol_float32)
+        
+    def test_rdmd_complex128(self):
+        m, n = 9, 7
+        a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)) + 1j*np.fliplr(np.vander(np.random.rand(m)+1, n)), 
+                     np.complex128, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        f_gpu, b_gpu, v_gpu = rlinalg.rdmd(a_gpu, k=(n-1), p=0, q=1, modes='standard')
+        assert np.allclose(a[:,:(n-1)], np.dot(f_gpu.get(), np.dot(np.diag(b_gpu.get()), v_gpu.get()) ), atol_float64)
+        
 def suite():
     s = TestSuite()
     s.addTest(test_linalg('test_rsvd_float32'))
@@ -91,6 +121,10 @@ def suite():
     s.addTest(test_linalg('test_rsvdf_float64'))
     s.addTest(test_linalg('test_rsvdf_complex64'))
     s.addTest(test_linalg('test_rsvdf_complex128'))
+    s.addTest(test_linalg('test_rdmd_float32'))
+    s.addTest(test_linalg('test_rdmd_float64'))
+    s.addTest(test_linalg('test_rdmd_complex64'))
+    s.addTest(test_linalg('test_rdmd_complex128'))
      
     
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
@@ -102,6 +136,10 @@ def suite():
         s.addTest(test_linalg('test_rsvdf_float64'))
         s.addTest(test_linalg('test_rsvdf_complex64'))
         s.addTest(test_linalg('test_rsvdf_complex128'))
+        s.addTest(test_linalg('test_rdmd_float32'))
+        s.addTest(test_linalg('test_rdmd_float64'))
+        s.addTest(test_linalg('test_rdmd_complex64'))
+        s.addTest(test_linalg('test_rdmd_complex128'))
         
     return s
 
