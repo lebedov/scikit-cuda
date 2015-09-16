@@ -9,4 +9,5 @@ Randomized Linear Algebra Routines
    :toctree: generated/
    :nosignatures:
 
+   rdmd
    rsvd
