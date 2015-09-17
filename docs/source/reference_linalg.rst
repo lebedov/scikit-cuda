@@ -36,4 +36,5 @@ Linear Algebra Routines
    trace
    transpose
    tril
+   triu
    vander
