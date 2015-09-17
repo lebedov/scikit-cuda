@@ -587,6 +587,30 @@ class test_linalg(TestCase):
         l_gpu = linalg.tril(a_gpu)
         assert np.allclose(np.tril(a), l_gpu.get())
 
+    def test_triu_float32(self):
+        a = np.asarray(np.random.rand(4, 4), np.float32)
+        a_gpu = gpuarray.to_gpu(a)
+        l_gpu = linalg.triu(a_gpu)
+        assert np.allclose(np.triu(a), l_gpu.get())
+
+    def test_triu_float64(self):
+        a = np.asarray(np.random.rand(4, 4), np.float64)
+        a_gpu = gpuarray.to_gpu(a)
+        l_gpu = linalg.triu(a_gpu)
+        assert np.allclose(np.triu(a), l_gpu.get())
+
+    def test_triu_complex64(self):
+        a = np.asarray(np.random.rand(4, 4), np.complex64)
+        a_gpu = gpuarray.to_gpu(a)
+        l_gpu = linalg.triu(a_gpu)
+        assert np.allclose(np.triu(a), l_gpu.get())
+
+    def test_triu_complex128(self):
+        a = np.asarray(np.random.rand(4, 4), np.complex128)
+        a_gpu = gpuarray.to_gpu(a)
+        l_gpu = linalg.triu(a_gpu)
+        assert np.allclose(np.triu(a), l_gpu.get())
+
     def _impl_test_multiply(self, N, dtype):
         mk_matrix = lambda N, dtype: np.asarray(np.random.rand(N, N), dtype)
         x = mk_matrix(N, dtype)
@@ -994,6 +1018,8 @@ def suite():
     s.addTest(test_linalg('test_pinv_complex64'))
     s.addTest(test_linalg('test_tril_float32'))
     s.addTest(test_linalg('test_tril_complex64'))
+    s.addTest(test_linalg('test_triu_float32'))
+    s.addTest(test_linalg('test_triu_complex64'))
     s.addTest(test_linalg('test_multiply_float32'))
     s.addTest(test_linalg('test_multiply_complex64'))
     s.addTest(test_linalg('test_cho_factor_float32'))
@@ -1061,6 +1087,8 @@ def suite():
         s.addTest(test_linalg('test_pinv_complex128'))
         s.addTest(test_linalg('test_tril_float64'))
         s.addTest(test_linalg('test_tril_complex128'))
+        s.addTest(test_linalg('test_triu_float32'))
+        s.addTest(test_linalg('test_triu_complex64'))
         s.addTest(test_linalg('test_multiply_float64'))
         s.addTest(test_linalg('test_multiply_complex128'))
         s.addTest(test_linalg('test_inv_float64'))

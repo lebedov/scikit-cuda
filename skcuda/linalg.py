@@ -1436,6 +1436,141 @@ def tril(a_gpu, overwrite=False, handle=None):
         swap_func(handle, a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
         return a_orig_gpu
 
+
+@context_dependent_memoize
+def _get_triu_kernel(use_double, use_complex, cols):
+    template = Template("""
+    #include <pycuda-complex.hpp>
+
+    #if ${use_double}
+    #if ${use_complex}
+    #define FLOAT pycuda::complex<double>
+    #else
+    #define FLOAT double
+    #endif
+    #else
+    #if ${use_complex}
+    #define FLOAT pycuda::complex<float>
+    #else
+    #define FLOAT float
+    #endif
+    #endif
+
+    __global__ void triu(FLOAT *a, unsigned int N) {
+        unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
+                           blockIdx.x*blockDim.x+threadIdx.x;
+        unsigned int ix = idx/${cols};
+        unsigned int iy = idx%${cols};
+
+        if (idx < N) {
+            if (ix > iy)
+                a[idx] = 0.0;
+        }
+    }
+    """)
+    # Set this to False when debugging to make sure the compiled kernel is
+    # not cached:
+    cache_dir=None
+    tmpl = template.substitute(use_double=use_double,
+                               use_complex=use_complex,
+                               cols=cols)
+    mod = SourceModule(tmpl, cache_dir=cache_dir)
+    return mod.get_function("triu")
+
+
+def triu(a_gpu, k=0, overwrite=False, handle=None):
+    """
+    Upper triangle of a matrix.
+
+    Return the upper triangle of a square matrix.
+
+    Parameters
+    ----------
+    a_gpu : pycuda.gpuarray.GPUArray
+        Input matrix of shape `(m, m)`
+    overwrite : bool (default: False)
+        If true, zero out the lower triangle of the matrix.
+        If false, return the result in a newly allocated matrix.
+    handle : int
+        CUBLAS context. If no context is specified, the default handle from
+        `skcuda.misc._global_cublas_handle` is used.
+
+    Returns
+    -------
+    u_gpu : pycuda.gpuarray
+        The upper triangle of the original matrix.
+
+    Examples
+    --------
+    >>> import pycuda.driver as drv
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import pycuda.autoinit
+    >>> import numpy as np
+    >>> import linalg
+    >>> linalg.init()
+    >>> a = np.asarray(np.random.rand(4, 4), np.float32)
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> u_gpu = linalg.triu(a_gpu, False)
+    >>> np.allclose(np.triu(a), u_gpu.get())
+    True
+
+    """
+
+    if handle is None:
+        handle = misc._global_cublas_handle
+
+    alloc = misc._global_cublas_allocator
+
+    if len(a_gpu.shape) != 2 or a_gpu.shape[0] != a_gpu.shape[1]:
+        raise ValueError('matrix must be square')
+
+    if a_gpu.dtype == np.float32:
+        swap_func = cublas.cublasSswap
+        copy_func = cublas.cublasScopy
+        use_double = 0
+        use_complex = 0
+    elif a_gpu.dtype == np.float64:
+        swap_func = cublas.cublasDswap
+        copy_func = cublas.cublasDcopy
+        use_double = 1
+        use_complex = 0
+    elif a_gpu.dtype == np.complex64:
+        swap_func = cublas.cublasCswap
+        copy_func = cublas.cublasCcopy
+        use_double = 0
+        use_complex = 1
+    elif a_gpu.dtype == np.complex128:
+        swap_func = cublas.cublasZswap
+        copy_func = cublas.cublasZcopy
+        use_double = 1
+        use_complex = 1
+    else:
+        raise ValueError('unrecognized type')
+
+    N = int(a_gpu.shape[0])
+
+    # Get block/grid sizes:
+    dev = misc.get_current_device()
+    block_dim, grid_dim = misc.select_block_grid_sizes(dev, a_gpu.shape)
+    tril = _get_triu_kernel(use_double, use_complex, cols=N)
+    if not overwrite:
+        
+        a_orig_gpu = gpuarray.empty( (N,N),
+                                    a_gpu.dtype, allocator=alloc)
+        copy_func(handle, a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
+
+    tril(a_gpu, np.uint32(a_gpu.size),
+         block=block_dim,
+         grid=grid_dim)
+
+    if overwrite:
+        return a_gpu
+    else:
+
+        # Restore original contents of a_gpu:
+        swap_func(handle, a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
+        return a_orig_gpu
+
 def multiply(x_gpu, y_gpu, overwrite=False):
     """
     Multiply arguments element-wise.
