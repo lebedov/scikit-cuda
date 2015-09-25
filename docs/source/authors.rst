@@ -14,7 +14,8 @@ Special thanks are due to the following parties for their contributions:
 - David Wei Chiang - Improvements to vectorized functions, bug fixes.
 - Sander Dieleman - CUBLAS 5 bindings.
 - capdevc - MacOS X library search fix.
-- Ben Erichson - QR decomposition.
+- Ben Erichson - QR decomposition, eigenvalue/eigenvector computation, Dynamic 
+  Mode Decomposition, randomized linear algebra routines.
 - Ying Wei (Daniel) Fan - Kindly permitted reuse of CUBLAS wrapper code in his 
   `PARRET <http://www.mathcs.emory.edu/~yfan/PARRET/>`_ software).
 - Michael M. Forbes - Improved MacOSX compatibility, bug fixes.
