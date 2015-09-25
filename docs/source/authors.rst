@@ -13,7 +13,7 @@ Special thanks are due to the following parties for their contributions:
 - `Frédéric Bastien <https://github.com/nouiz>`_ - CUBLAS version detection enhancements.
 - `David Wei Chiang <https://github.com/davidweichiang>`_ - Improvements to vectorized functions, bug fixes.
 - `Sander Dieleman <https://github.com/benanne>`_ - CUBLAS 5 bindings.
-- `Chris Capdevila <https://github.com/capdevc>` - MacOS X library search fix.
+- `Chris Capdevila <https://github.com/capdevc>`_ - MacOS X library search fix.
 - `Ben Erichson <https://github.com/Benli11>`_ - QR decomposition, eigenvalue/eigenvector computation, Dynamic 
   Mode Decomposition, randomized linear algebra routines.
 - `Ying Wei (Daniel) Fan
@@ -24,7 +24,8 @@ Special thanks are due to the following parties for their contributions:
 - Tim Klein - Additional MAGMA wrappers.
 - `Eric Larson <https://github.com/Eric89GXL>`_ - Various enhancements.
 - `Gregory R. Lee <https://github.com/grlee77>`_ - Enhanced FFT plan creation.
-- `Teodor Mihai Moldovan <https://github.com/teodor-moldovan`_ - CUBLAS 5 bindings.
+- `Teodor Mihai Moldovan <https://github.com/teodor-moldovan>`_ - CUBLAS 5 
+  bindings.
 - `Lars Pastewka <https://github.com/pastewka>`_ - FFT tests and FFTW compatibility mode configuration.
 - `Luke Pfister <https://www.linkedin.com/pub/luke-pfister/11/70a/731>`_ - Bug fixes.
 - `Alex Rubinsteyn <https://github.com/iskandr>`_ - Support for CULA Dense Free R17.
