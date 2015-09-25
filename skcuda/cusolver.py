@@ -19,7 +19,7 @@ import numpy as np
 from . import cuda
 
 # Load library:
-_version_list = [7.0]
+_version_list = [7.5, 7.0]
 if 'linux' in sys.platform:
     _libcusolver_libname_list = ['libcusolver.so'] + \
                                 ['libsolver.so.%s' % v for v in _version_list]
