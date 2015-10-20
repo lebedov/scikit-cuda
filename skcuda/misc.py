@@ -1336,7 +1336,7 @@ def var(x_gpu, ddof=0, axis=None, stream=None, keepdims=False):
     return out
 
 
-def std(x_gpu, axis=None, stream=None, keepdims=False):
+def std(x_gpu, ddof=0, axis=None, stream=None, keepdims=False):
     """
     Compute the standard deviation along the specified axis.
 
@@ -1348,6 +1348,11 @@ def std(x_gpu, axis=None, stream=None, keepdims=False):
     ----------
     x_gpu : pycuda.gpuarray.GPUArray
         Array containing numbers whose std is desired.
+    ddof : int (optional)
+        "Delta Degrees of Freedom": the divisor used in computing the 
+        variance is ``N - ddof``, where ``N`` is the number of elements.
+        Setting ``ddof = 1`` is equivalent to applying Bessel's
+        correction.
     axis : int (optional)
         Axis along which the std are computed. The default is to
         compute the std of the flattened array.
@@ -1368,9 +1373,9 @@ def std(x_gpu, axis=None, stream=None, keepdims=False):
                     p, x_gpu.gpudata, x_gpu.gpudata, x_gpu.mem_size)
 
     if axis is None:
-        return var(x_gpu, stream=stream, keepdims=keepdims) ** 0.5
+        return var(x_gpu, ddof=ddof, stream=stream, keepdims=keepdims) ** 0.5
     else:
-        out = var(x_gpu, axis=axis, stream=stream, keepdims=keepdims)
+        out = var(x_gpu, ddof=ddof, axis=axis, stream=stream, keepdims=keepdims)
         _inplace_pow(out, 0.5, stream)
     return out
 
