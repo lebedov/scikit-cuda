@@ -15,6 +15,7 @@ Release 0.5.1 - (under development)
   Erichson).
 * Randomized linear algebra routines (enh. by N. Ben Erichson).
 * Add triu function (enh. by N. Ben Erichson).
+* Support Bessel correction in computation of variance (#143).
 
 Release 0.5.0 - (July 14, 2015)
 -------------------------------
