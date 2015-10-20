@@ -1173,16 +1173,17 @@ def mult_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
     """
     return binaryop_matvec('*', x_gpu, a_gpu, axis, out, stream)
 
-
-def _sum_axis(x_gpu, axis=None, out=None, calc_mean=False, keepdims=False):
+def _sum_axis(x_gpu, axis=None, out=None, calc_mean=False, ddof=0,
+              keepdims=False):
     global _global_cublas_allocator
+    assert isinstance(ddof, numbers.Integral)
 
     if axis is None or len(x_gpu.shape) <= 1:
         out_shape = (1,)*len(x_gpu.shape) if keepdims else ()
         if calc_mean == False:
             return gpuarray.sum(x_gpu).reshape(out_shape)
         else:
-            return gpuarray.sum(x_gpu).reshape(out_shape) / x_gpu.dtype.type(x_gpu.size)
+            return gpuarray.sum(x_gpu).reshape(out_shape) / (x_gpu.dtype.type(x_gpu.size-ddof))
 
     if axis < 0:
         axis += 2
@@ -1200,7 +1201,10 @@ def _sum_axis(x_gpu, axis=None, out=None, calc_mean=False, keepdims=False):
         trans = "t" if axis == 0 else "n"
         sum_axis, out_axis = (n, m) if axis == 0 else (m, n)
 
-    alpha = (1.0 / sum_axis) if calc_mean else 1.0
+    if calc_mean:
+        alpha = (1.0 / (sum_axis-ddof))
+    else:
+        alpha = 1.0
     if (x_gpu.dtype == np.complex64):
         gemv = cublas.cublasCgemv
     elif (x_gpu.dtype == np.float32):
@@ -1279,8 +1283,7 @@ def mean(x_gpu, axis=None, out=None, keepdims=False):
     """
     return _sum_axis(x_gpu, axis, calc_mean=True, out=out, keepdims=keepdims)
 
-
-def var(x_gpu, axis=None, stream=None, keepdims=False):
+def var(x_gpu, ddof=0, axis=None, stream=None, keepdims=False):
     """
     Compute the variance along the specified axis.
 
@@ -1292,6 +1295,11 @@ def var(x_gpu, axis=None, stream=None, keepdims=False):
     ----------
     x_gpu : pycuda.gpuarray.GPUArray
         Array containing numbers whose variance is desired.
+    ddof : int (optional)
+        "Delta Degrees of Freedom": the divisor used in computing the 
+        variance is ``N - ddof``, where ``N`` is the number of elements.
+        Setting ``ddof = 1`` is equivalent to applying Bessel's
+        correction.
     axis : int (optional)
         Axis along which the variance are computed. The default is to
         compute the variance of the flattened array.
@@ -1315,14 +1323,16 @@ def var(x_gpu, axis=None, stream=None, keepdims=False):
         m = mean(x_gpu).get()
         out = x_gpu - m
         out **= 2
-        out = mean(out, keepdims=keepdims)
+        out = _sum_axis(out, axis=None, calc_mean=True,
+                        ddof=ddof, out=None, keepdims=keepdims)
     else:
         if axis < 0:
             axis += 2
         m = mean(x_gpu, axis=axis)
         out = add_matvec(x_gpu, -m, axis=1-axis, stream=stream)
         _inplace_pow(out, 2, stream)
-        out = mean(out, axis=axis, keepdims=keepdims)
+        out = _sum_axis(out, axis=axis, calc_mean=True,
+                        ddof=ddof, out=None, keepdims=keepdims)
     return out
 
 
