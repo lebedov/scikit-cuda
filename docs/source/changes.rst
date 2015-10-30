@@ -3,8 +3,8 @@
 Change Log
 ==========
 
-Release 0.5.1 - (under development)
------------------------------------
+Release 0.5.1 - (October 30, 2015)
+----------------------------------
 * More CUSOLVER wrappers.
 * Eigenvalue/eigenvector computation (eng. by N. Ben Erichson).
 * QR decomposition (enh. by N. Ben Erichson).
