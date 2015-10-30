@@ -17,6 +17,7 @@ Release 0.5.1 - (under development)
 * Add triu function (enh. by N. Ben Erichson).
 * Support Bessel correction in computation of variance and standard 
   deviation (#143).
+* Fix pip installation issues.
 
 Release 0.5.0 - (July 14, 2015)
 -------------------------------
