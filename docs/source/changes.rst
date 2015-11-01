@@ -3,6 +3,10 @@
 Change Log
 ==========
 
+Release 0.5.2 (under development)
+---------------------------------
+* Prevent exceptions when CULA Dense free is present (#146).
+
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------
 * More CUSOLVER wrappers.
