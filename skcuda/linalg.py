@@ -96,7 +96,7 @@ def svd(a_gpu, jobu='A', jobvt='A', lib='cula'):
     Only one of `jobu` or `jobvt` may be set to `O`, and then only for
     a square matrix.
 
-    The 'cusolver' library in CUDA 7.0 only supports `jobu` == `jobvt` == 'A'.
+    The CUSOLVER library in CUDA 7.0 only supports `jobu` == `jobvt` == 'A'.
 
     Examples
     --------
@@ -140,6 +140,9 @@ def svd(a_gpu, jobu='A', jobvt='A', lib='cula'):
             else:
                 raise ValueError('double precision not supported')
     elif lib == 'cusolver':
+        if not _has_cusolver:
+            raise NotImplementedError('CUSOLVER not installed')
+
         cusolverHandle = misc._global_cusolver_handle
 
         if data_type == np.complex64:
@@ -181,7 +184,7 @@ def svd(a_gpu, jobu='A', jobvt='A', lib='cula'):
     jobu = jobu.upper()
     jobvt = jobvt.upper()
     if lib == 'cusolver' and (jobu != 'A' or jobvt != 'A'):
-        raise ValueError("cusolver only supports jobu = jobvt = 'A'")
+        raise ValueError("CUSOLVER only supports jobu = jobvt = 'A'")
 
     # Set the leading dimension and allocate u:
     ldu = m
