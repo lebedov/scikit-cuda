@@ -6,6 +6,7 @@ Change Log
 Release 0.5.2 (under development)
 ---------------------------------
 * Prevent exceptions when CULA Dense free is present (#146).
+* Add support for using either CUSOLVER or CULA for computing SVD.
 
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------
