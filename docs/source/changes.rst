@@ -3,10 +3,26 @@
 Change Log
 ==========
 
-Release 0.5.1 - (under development)
------------------------------------
+Release 0.5.2 (under development)
+---------------------------------
+* Prevent exceptions when CULA Dense free is present (#146).
+* Fix Python 3 issues with CUSOLVER wrapper functions (#145)
+* Add support for using either CUSOLVER or CULA for computing SVD.
+* Compressed Dynamic Mode Decomposition (enh. by N. Benjamin Erichson).
+
+Release 0.5.1 - (October 30, 2015)
+----------------------------------
 * More CUSOLVER wrappers.
-* QR decomposition (enh. by N. Ben Erichson).
+* Eigenvalue/eigenvector computation (eng. by N. Benjamin Erichson).
+* QR decomposition (enh. by N. Benjamin Erichson).
+* Improved Windows 10 compatibility (enh. by N. Benjamin Erichson).
+* Function for constructing Vandermonde matrix in GPU memory (enh. by N. Benjamin Erichson).
+* Standard and randomized Dynamic Mode Decomposition (enh. by N. Benjamin Erichson).
+* Randomized linear algebra routines (enh. by N. Benjamin Erichson).
+* Add triu function (enh. by N. Benjamin Erichson).
+* Support Bessel correction in computation of variance and standard 
+  deviation (#143).
+* Fix pip installation issues.
 
 Release 0.5.0 - (July 14, 2015)
 -------------------------------

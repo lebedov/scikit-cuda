@@ -18,8 +18,10 @@ Linear Algebra Routines
    det
    diag
    div_matvec
+   dmd
    dot_diag
    dot
+   eig
    eye
    hermitian
    inv
@@ -34,3 +36,5 @@ Linear Algebra Routines
    trace
    transpose
    tril
+   triu
+   vander

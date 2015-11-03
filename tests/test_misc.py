@@ -275,6 +275,12 @@ class test_misc(TestCase):
         assert np.allclose(misc.var(x_gpu).get(), x.var())
         assert np.allclose(misc.var(x_gpu, axis=0).get(), x.var(axis=0))
         assert np.allclose(misc.var(x_gpu, axis=1).get(), x.var(axis=1))
+
+        assert np.allclose(misc.var(x_gpu, ddof=1).get(), x.var(ddof=1))
+        assert np.allclose(misc.var(x_gpu, ddof=1, axis=0).get(),
+                           x.var(ddof=1, axis=0))
+        assert np.allclose(misc.var(x_gpu, ddof=1, axis=1).get(),
+                           x.var(ddof=1, axis=1))
         # Currently not working due to a bug in PyCUDA, see Issue #92
         #x = x.astype(dtype=dtype, order='F')
         #x_gpu = gpuarray.to_gpu(x)
@@ -301,6 +307,12 @@ class test_misc(TestCase):
         assert np.allclose(misc.std(x_gpu).get(), x.std())
         assert np.allclose(misc.std(x_gpu, axis=0).get(), x.std(axis=0))
         assert np.allclose(misc.std(x_gpu, axis=1).get(), x.std(axis=1))
+
+        assert np.allclose(misc.std(x_gpu, ddof=1).get(), x.std(ddof=1))
+        assert np.allclose(misc.std(x_gpu, ddof=1, axis=0).get(),
+                           x.std(ddof=1, axis=0))
+        assert np.allclose(misc.std(x_gpu, ddof=1, axis=1).get(),
+                           x.std(ddof=1, axis=1))
         # Currently not working due to a bug in PyCUDA, see Issue #92
         #x = x.astype(dtype=dtype, order='F')
         #x_gpu = gpuarray.to_gpu(x)

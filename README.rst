@@ -34,7 +34,7 @@ Package documentation is available at
 Development
 -----------
 The latest source code can be obtained from
-`<http://github.com/lebedov/scikit-cuda>`_.
+`<https://github.com/lebedov/scikit-cuda>`_.
 
 Authors & Acknowledgments
 -------------------------

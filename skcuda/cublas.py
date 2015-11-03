@@ -10,7 +10,6 @@ from __future__ import absolute_import
 
 import re
 import os
-import platform
 import sys
 import warnings
 import ctypes
@@ -24,14 +23,14 @@ from . import cuda
 from . import utils
 
 # Load library:
-_version_list = [7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
+_version_list = [7.5, 7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
 if 'linux' in sys.platform:
     _libcublas_libname_list = ['libcublas.so'] + \
                               ['libcublas.so.%s' % v for v in _version_list]
 elif sys.platform == 'darwin':
     _libcublas_libname_list = ['libcublas.dylib']
 elif sys.platform == 'win32':
-    if platform.machine().endswith('64'):
+    if sys.maxsize > 2**32:
         _libcublas_libname_list = ['cublas.dll'] + \
                                   ['cublas64_%s.dll' % int(10*v) for v in _version_list]
     else:

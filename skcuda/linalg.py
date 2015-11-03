@@ -12,11 +12,14 @@ from pycuda.tools import context_dependent_memoize
 from pycuda.compiler import SourceModule
 from pycuda.reduction import ReductionKernel
 
+from pycuda import cumath
+
 import pycuda.gpuarray as gpuarray
 import pycuda.driver as drv
 import pycuda.elementwise as el
 import pycuda.tools as tools
 import numpy as np
+
 
 from . import cublas
 from . import misc
@@ -25,11 +28,9 @@ import sys
 if sys.version_info < (3,):
     range = xrange
 
-
 class LinAlgError(Exception):
     """Linear Algebra Error."""
     pass
-
 
 try:
     from . import cula
@@ -37,12 +38,18 @@ try:
 except (ImportError, OSError):
     _has_cula = False
 
+try:
+    from . import cusolver
+    _has_cusolver = True
+except (ImportError, OSError):
+    _has_cusolver = False
+
 from .misc import init, add_matvec, div_matvec, mult_matvec
 
 # Get installation location of C headers:
 from . import install_headers
 
-def svd(a_gpu, jobu='A', jobvt='A'):
+def svd(a_gpu, jobu='A', jobvt='A', lib='cula'):
     """
     Singular Value Decomposition.
 
@@ -66,7 +73,9 @@ def svd(a_gpu, jobu='A', jobvt='A'):
         If 'O', return the `vh` matrix with shape `(k, n) without
         allocating a new matrix.
         If 'N', don't return `vh`.
-
+    lib : str
+        Library to use. May be either 'cula' or 'cusolver'.
+       
     Returns
     -------
     u : pycuda.gpuarray.GPUArray
@@ -90,6 +99,8 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     Only one of `jobu` or `jobvt` may be set to `O`, and then only for
     a square matrix.
 
+    The CUSOLVER library in CUDA 7.0 only supports `jobu` == `jobvt` == 'A'.
+
     Examples
     --------
     >>> import pycuda.gpuarray as gpuarray
@@ -103,11 +114,7 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     >>> u_gpu, s_gpu, vh_gpu = linalg.svd(a_gpu, 'S', 'S')
     >>> np.allclose(a, np.dot(u_gpu.get(), np.dot(np.diag(s_gpu.get()), vh_gpu.get())), 1e-4)
     True
-
     """
-
-    if not _has_cula:
-        raise NotImplementedError('CULA not installed')
 
     alloc = misc._global_cublas_allocator
 
@@ -115,25 +122,54 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     # point numbers:
     data_type = a_gpu.dtype.type
     real_type = np.float32
-    if data_type == np.complex64:
-        cula_func = cula.culaDeviceCgesvd
-    elif data_type == np.float32:
-        cula_func = cula.culaDeviceSgesvd
-    else:
-        if cula._libcula_toolkit == 'standard':
-            if data_type == np.complex128:
-                cula_func = cula.culaDeviceZgesvd
-            elif data_type == np.float64:
-                cula_func = cula.culaDeviceDgesvd
-            else:
-                raise ValueError('unsupported type')
-            real_type = np.float64
+
+    if lib == 'cula':
+        if not _has_cula:
+            raise NotImplementedError('CULA not installed')
+
+        if data_type == np.complex64:
+            func = cula.culaDeviceCgesvd
+        elif data_type == np.float32:
+            func = cula.culaDeviceSgesvd
         else:
-            raise ValueError('double precision not supported')
+            if cula._libcula_toolkit == 'standard':
+                if data_type == np.complex128:
+                    func = cula.culaDeviceZgesvd
+                elif data_type == np.float64:
+                    func = cula.culaDeviceDgesvd
+                else:
+                    raise ValueError('unsupported type')
+                real_type = np.float64
+            else:
+                raise ValueError('double precision not supported')
+    elif lib == 'cusolver':
+        if not _has_cusolver:
+            raise NotImplementedError('CUSOLVER not installed')
+
+        cusolverHandle = misc._global_cusolver_handle
+
+        if data_type == np.complex64:
+            func = cusolver.cusolverDnCgesvd
+            bufsize = cusolver.cusolverDnCgesvd_bufferSize
+        elif data_type == np.float32:
+            func = cusolver.cusolverDnSgesvd
+            bufsize = cusolver.cusolverDnSgesvd_bufferSize
+        elif data_type == np.complex128:
+            real_type = np.float64
+            func = cusolver.cusolverDnZgesvd
+            bufsize = cusolver.cusolverDnZgesvd_bufferSize
+        elif data_type == np.float64:
+            real_type = np.float64
+            func = cusolver.cusolverDnDgesvd
+            bufsize = cusolver.cusolverDnDgesvd_bufferSize
+        else:
+            raise ValueError('unsupported type')
+    else:
+        raise ValueError('invalid library specified')
 
     # Since CUDA assumes that arrays are stored in column-major
     # format, the input matrix is assumed to be transposed:
-    n, m = np.array(a_gpu.shape, int) # workaround for bug #131
+    n, m = a_gpu.shape
     square = (n == m)
 
     # Since the input matrix is transposed, jobu and jobvt must also
@@ -147,9 +183,13 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     # Allocate the array of singular values:
     s_gpu = gpuarray.empty(min(m, n), real_type, allocator=alloc)
 
-    # Set the leading dimension and allocate u:
+    # cusolver only supports jobu = jobvt = 'A':
     jobu = jobu.upper()
     jobvt = jobvt.upper()
+    if lib == 'cusolver' and (jobu != 'A' or jobvt != 'A'):
+        raise ValueError("CUSOLVER only supports jobu = jobvt = 'A'")
+
+    # Set the leading dimension and allocate u:
     ldu = m
     if jobu == 'A':
         u_gpu = gpuarray.empty((ldu, m), data_type, allocator=alloc)
@@ -185,13 +225,29 @@ def svd(a_gpu, jobu='A', jobvt='A'):
         vh_gpu = gpuarray.empty((), data_type, allocator=alloc)
 
     # Compute SVD and check error status:
+    if lib == 'cula':
+        func(jobu, jobvt, m, n, int(a_gpu.gpudata),
+             lda, int(s_gpu.gpudata), int(u_gpu.gpudata),
+             ldu, int(vh_gpu.gpudata), ldvt)
 
-    cula_func(jobu, jobvt, m, n, int(a_gpu.gpudata),
-              lda, int(s_gpu.gpudata), int(u_gpu.gpudata),
-              ldu, int(vh_gpu.gpudata), ldvt)
+        # Free internal CULA memory:
+        cula.culaFreeBuffers()
+    else:
+        # Allocate working space:
+        Lwork = bufsize(misc._global_cusolver_handle, m, n)
+        rwork = gpuarray.empty(5*min(m, n), real_type, allocator=alloc)
+        Work = gpuarray.empty(Lwork, data_type, allocator=alloc)
+        devInfo = gpuarray.empty(1, np.int32, allocator=alloc)
 
-    # Free internal CULA memory:
-    cula.culaFreeBuffers()
+        func(misc._global_cusolver_handle,
+             jobu, jobvt, m, n, int(a_gpu.gpudata),
+             lda, int(s_gpu.gpudata), int(u_gpu.gpudata),
+             ldu, int(vh_gpu.gpudata), ldvt, 
+             int(Work.gpudata), Lwork, int(rwork.gpudata),
+             int(devInfo.gpudata))
+
+        # Free working space:
+        del rwork, Work, devInfo
 
     # Since the input is assumed to be transposed, it is necessary to
     # return the computed matrices in reverse order:
@@ -203,7 +259,6 @@ def svd(a_gpu, jobu='A', jobvt='A'):
         return s_gpu, u_gpu
     else:
         return s_gpu
-
 
 def cho_factor(a_gpu, uplo='L'):
     """
@@ -1436,6 +1491,141 @@ def tril(a_gpu, overwrite=False, handle=None):
         swap_func(handle, a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
         return a_orig_gpu
 
+
+@context_dependent_memoize
+def _get_triu_kernel(use_double, use_complex, cols):
+    template = Template("""
+    #include <pycuda-complex.hpp>
+
+    #if ${use_double}
+    #if ${use_complex}
+    #define FLOAT pycuda::complex<double>
+    #else
+    #define FLOAT double
+    #endif
+    #else
+    #if ${use_complex}
+    #define FLOAT pycuda::complex<float>
+    #else
+    #define FLOAT float
+    #endif
+    #endif
+
+    __global__ void triu(FLOAT *a, unsigned int N) {
+        unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
+                           blockIdx.x*blockDim.x+threadIdx.x;
+        unsigned int ix = idx/${cols};
+        unsigned int iy = idx%${cols};
+
+        if (idx < N) {
+            if (ix > iy)
+                a[idx] = 0.0;
+        }
+    }
+    """)
+    # Set this to False when debugging to make sure the compiled kernel is
+    # not cached:
+    cache_dir=None
+    tmpl = template.substitute(use_double=use_double,
+                               use_complex=use_complex,
+                               cols=cols)
+    mod = SourceModule(tmpl, cache_dir=cache_dir)
+    return mod.get_function("triu")
+
+
+def triu(a_gpu, k=0, overwrite=False, handle=None):
+    """
+    Upper triangle of a matrix.
+
+    Return the upper triangle of a square matrix.
+
+    Parameters
+    ----------
+    a_gpu : pycuda.gpuarray.GPUArray
+        Input matrix of shape `(m, m)`
+    overwrite : bool (default: False)
+        If true, zero out the lower triangle of the matrix.
+        If false, return the result in a newly allocated matrix.
+    handle : int
+        CUBLAS context. If no context is specified, the default handle from
+        `skcuda.misc._global_cublas_handle` is used.
+
+    Returns
+    -------
+    u_gpu : pycuda.gpuarray
+        The upper triangle of the original matrix.
+
+    Examples
+    --------
+    >>> import pycuda.driver as drv
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import pycuda.autoinit
+    >>> import numpy as np
+    >>> import linalg
+    >>> linalg.init()
+    >>> a = np.asarray(np.random.rand(4, 4), np.float32)
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> u_gpu = linalg.triu(a_gpu, False)
+    >>> np.allclose(np.triu(a), u_gpu.get())
+    True
+
+    """
+
+    if handle is None:
+        handle = misc._global_cublas_handle
+
+    alloc = misc._global_cublas_allocator
+
+    if len(a_gpu.shape) != 2 or a_gpu.shape[0] != a_gpu.shape[1]:
+        raise ValueError('matrix must be square')
+
+    if a_gpu.dtype == np.float32:
+        swap_func = cublas.cublasSswap
+        copy_func = cublas.cublasScopy
+        use_double = 0
+        use_complex = 0
+    elif a_gpu.dtype == np.float64:
+        swap_func = cublas.cublasDswap
+        copy_func = cublas.cublasDcopy
+        use_double = 1
+        use_complex = 0
+    elif a_gpu.dtype == np.complex64:
+        swap_func = cublas.cublasCswap
+        copy_func = cublas.cublasCcopy
+        use_double = 0
+        use_complex = 1
+    elif a_gpu.dtype == np.complex128:
+        swap_func = cublas.cublasZswap
+        copy_func = cublas.cublasZcopy
+        use_double = 1
+        use_complex = 1
+    else:
+        raise ValueError('unrecognized type')
+
+    N = int(a_gpu.shape[0])
+
+    # Get block/grid sizes:
+    dev = misc.get_current_device()
+    block_dim, grid_dim = misc.select_block_grid_sizes(dev, a_gpu.shape)
+    tril = _get_triu_kernel(use_double, use_complex, cols=N)
+    if not overwrite:
+        
+        a_orig_gpu = gpuarray.empty( (N,N),
+                                    a_gpu.dtype, allocator=alloc)
+        copy_func(handle, a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
+
+    tril(a_gpu, np.uint32(a_gpu.size),
+         block=block_dim,
+         grid=grid_dim)
+
+    if overwrite:
+        return a_gpu
+    else:
+
+        # Restore original contents of a_gpu:
+        swap_func(handle, a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
+        return a_orig_gpu
+
 def multiply(x_gpu, y_gpu, overwrite=False):
     """
     Multiply arguments element-wise.
@@ -1780,28 +1970,31 @@ def det(a_gpu, overwrite=False, ipiv_gpu=None, handle=None):
         raise LinAlgError(e)
 
 
-def qr(a_gpu, mode='reduced'):
+def qr(a_gpu, mode='reduced', handle=None):
     """
     QR Decomposition.
     
-    Factor the matrix `A` as `QR`, where `Q` is orthonormal
-    and `R` is upper-triangular.
+    Factor the real/complex matrix `a` as `QR`, where `Q` is an orthonormal/unitary 
+    matrix and `R` is an upper triangular matrix.
 
     Parameters
     ----------
-    A : pycuda.gpuarray.GPUArray 
-        Input matrix of dimensions `(m, n)` to decompose in column-major order.
-        `A` is assumed to be `m`>=`n`.        
-    Mode :  {'reduced', 'economic', 'r'}
+    a_gpu: pycuda.gpuarray.GPUArray 
+        Real/complex input matrix  `a` with dimensions `(m, n)`.
+        `a` is assumed to be `m`>=`n`.        
+    mode :  {'reduced', 'economic', 'r'}
         'reduced' : returns `Q`, `R` with dimensions `(m, k)` and `(k, n)` (default).
         'economic' : returns `Q` only with dimensions `(m, k)`.
         'r' : returns `R` only with dimensions `(k, n)` with `k`=min`(m,n)`.
-    
+    handle : int
+        CUBLAS context. If no context is specified, the default handle from
+        `skcuda.misc._global_cublas_handle` is used.
+        
     Returns
     -------
-    Q : pycuda.gpuarray.GPUArray
+    q_gpu : pycuda.gpuarray.GPUArray
         Orthonormal/unitary matrix (depending on whether or not `A` is real/complex).
-    R : pycuda.gpuarray.GPUArray
+    r_gpu : pycuda.gpuarray.GPUArray
         The upper-triangular matrix.
 
     Notes
@@ -1846,8 +2039,8 @@ def qr(a_gpu, mode='reduced'):
     True
     """
 
-    if not _has_cula:
-        raise NotImplementedError('CULA not installed')
+    if handle is None:
+         handle = misc._global_cublas_handle
 
     alloc = misc._global_cublas_allocator
 
@@ -1858,26 +2051,33 @@ def qr(a_gpu, mode='reduced'):
     if data_type == np.complex64:
         cula_func_qr = cula.culaDeviceCgeqrf
         cula_func_q = cula.culaDeviceCungqr
+        copy_func = cublas.cublasCcopy
         use_double = 0
         use_complex = 1
+        isreal=False
     elif data_type == np.float32:
         cula_func_qr = cula.culaDeviceSgeqrf
         cula_func_q = cula.culaDeviceSorgqr
+        copy_func = cublas.cublasScopy
         use_double = 0
         use_complex = 0
-         
+        isreal=True    
     else:
         if cula._libcula_toolkit == 'standard':
             if data_type == np.complex128:
                 cula_func_qr = cula.culaDeviceZgeqrf
                 cula_func_q = cula.culaDeviceZungqr
+                copy_func = cublas.cublasZcopy
                 use_double = 1
                 use_complex = 1
+                isreal=False
             elif data_type == np.float64:
                 cula_func_qr = cula.culaDeviceDgeqrf
                 cula_func_q = cula.culaDeviceDorgqr
+                copy_func = cublas.cublasDcopy
                 use_double = 1
                 use_complex = 0
+                isreal=True
             else:
                 raise ValueError('unsupported type')
             real_type = np.float64
@@ -1887,46 +2087,711 @@ def qr(a_gpu, mode='reduced'):
     # CUDA assumes that arrays are stored in column-major order
     m, n = np.array(a_gpu.shape, int)
 
+    if m<n and mode != 'r':
+        raise ValueError('if m < n only the mode "r" is supported')
+
     # Set the leading dimension of the input matrix:
     lda = max(1, m)
 
-    #Set k
+    # Set k
     k = min(m,n)
 
     # Set the leading dimension and allocate u:
-    tau_gpu = gpuarray.empty(min(m,n), data_type, allocator=alloc, order='F')
+    tau_gpu = gpuarray.empty(k, data_type, allocator=alloc, order='F')
 
     # Compute QR and check error status:
     cula_func_qr(m, n, int(a_gpu.gpudata), lda, int(tau_gpu.gpudata))
 
     if mode != 'economic':     
-        #Get upper triangluar matrix R with dimensions (k,n)
-        r_gpu = a_gpu.T[:, :n].copy()
+        # Get upper triangluar matrix R with dimensions (n,n)
+        # Note: _get_tril_kernel returns the upper triangular
+        r_gpu = gpuarray.empty((m,n), data_type, allocator=alloc, order='F')
+        copy_func(handle, a_gpu.size, int(a_gpu.gpudata), 1, int(r_gpu.gpudata), 1)
 
-        #Lower triangle of a matrix
-        # Get block/grid sizes:
+        # tril
         dev = misc.get_current_device()
-        N = r_gpu.shape[0]
         block_dim, grid_dim = misc.select_block_grid_sizes(dev, r_gpu.shape)
-        
-        #tril       
-        tril = _get_tril_kernel(use_double, use_complex, cols=N)
+        tril = _get_tril_kernel(use_double, use_complex, cols=m) #cols are here rows
         tril(r_gpu, np.uint32(r_gpu.size), block=block_dim, grid=grid_dim)
-        
-        #Mode r
-        if  mode=='r': return r_gpu.T
-    
-    #Compute Q and check error status
+
+        # Mode r
+        if  mode=='r': return r_gpu[:k, :n]
+            
+    # Compute Q and check error status
     cula_func_q(m, n, k, int(a_gpu.gpudata), lda, int(tau_gpu.gpudata))    
+    q_gpu = a_gpu #pointer
     
     # Free internal CULA memory:
     cula.culaFreeBuffers()
     
-    #Mode economic
+    # Mode economic
     if mode == 'reduced': 
-        return a_gpu, r_gpu.T
+        return q_gpu, r_gpu[:k, :n]
     if mode == 'economic': 
-        return a_gpu
+        return q_gpu
+
+def eig(a_gpu, jobvl='N', jobvr='V', imag='F'):
+    """
+    Eigendecomposition of a matrix.
+
+    Compute the eigenvalues `w`  for a real/complex square matrix `a` 
+    and (optionally) the real left and right eigenvectors `vl`, `vr`.
+
+    Parameters
+    ----------
+    a_gpu : pycuda.gpuarray.GPUArray 
+        Real/complex input matrix  `a` with dimensions `(m, n)`.        
+    jobvl :  {'V', 'N'}
+        'V' : returns `vl`, the left eigenvectors of `a` with dimensions `(m, m)`.
+        'N' : left eigenvectors are not computed.
+    jobvr :  {'V', 'N'}
+        'V' : returns `vr`, the right eigenvectors of `a` with dimensions 
+        `(m, m)`, (default).
+        'N' : right eigenvectors are not computed.
+    imag :  {'F', 'T'} 
+         'F' : imaginary parts of a real matrix are not returned (default).
+         'T' : returns the imaginary parts of a real matrix
+         (only relevant in the case of single/double precision ).
+
+    Returns
+    -------
+    vr_gpu : pycuda.gpuarray.GPUArray
+         The normalized (Euclidean norm equal to 1) right eigenvectors, 
+         such that the column `vr[:,i]` is the eigenvector corresponding 
+         to the eigenvalue `w[i]`.         
+    w_gpu : pycuda.gpuarray.GPUArray
+        Array containing the real/complex eigenvalues, not necessarily ordered.
+        `w` is of length `m`.        
+    vl_gpu : pycuda.gpuarray.GPUArray
+         The normalized (Euclidean norm equal to 1) left eigenvectors, 
+         such that the column `vl[:,i]` is the eigenvector corresponding 
+         to the eigenvalue `w[i]`.     
+
+    Notes
+    -----
+    Double precision is only supported if the standard version of the
+    CULA Dense toolkit is installed.
+
+    This function destroys the contents of the input matrix.
+    
+    Arrays are expected to be stored in column-major order, i.e., order='F'.
+
+    Examples
+    --------
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import pycuda.autoinit
+    >>> import numpy as np
+    >>> from skcuda import linalg
+    >>> linalg.init()
+    >>> # Compute right eigenvectors of a symmetric matrix A and verify A*vr = vr*w
+    >>> a = np.array(([1,3],[3,5]), np.float32, order='F')
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> vr_gpu, w_gpu = linalg.eig(a_gpu, 'N', 'V')
+    >>> np.allclose(np.dot(a, vr_gpu.get()), np.dot(vr_gpu.get(), np.diag(w_gpu.get())), 1e-4)
+    True
+    >>> # Compute left eigenvectors of a symmetric matrix A and verify vl.T*A = w*vl.T 
+    >>> a = np.array(([1,3],[3,5]), np.float32, order='F')
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> w_gpu, vl_gpu = linalg.eig(a_gpu, 'V', 'N')
+    >>> np.allclose(np.dot(vl_gpu.get().T, a), np.dot(np.diag(w_gpu.get()), vl_gpu.get().T), 1e-4)
+    True    
+    >>> # Compute left/right eigenvectors of a symmetric matrix A and verify A = vr*w*vl.T 
+    >>> a = np.array(([1,3],[3,5]), np.float32, order='F')
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> vr_gpu, w_gpu, vl_gpu = linalg.eig(a_gpu, 'V', 'V')
+    >>> np.allclose(a, np.dot(vr_gpu.get(), np.dot(np.diag(w_gpu.get()), vl_gpu.get().T)), 1e-4)
+    True
+    >>> # Compute eigenvalues of a square matrix A and verify that trace(A)=sum(w) 
+    >>> a = np.array(np.random.rand(9,9), np.float32, order='F')
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> w_gpu = linalg.eig(a_gpu, 'N', 'N')
+    >>> np.allclose(np.trace(a), sum(w_gpu.get()), 1e-4)
+    True
+    >>> # Compute eigenvalues of a real valued matrix A possessing complex e-valuesand
+    >>> a = np.array(np.array(([1, -2], [1, 3])), np.float32, order='F')
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> w_gpu = linalg.eig(a_gpu, 'N', 'N', imag='T')
+    True
+    >>> # Compute eigenvalues of a complex valued matrix A and verify that trace(A)=sum(w)
+    >>> a = np.array(np.random.rand(2,2) + 1j*np.random.rand(2,2), np.complex64, order='F')
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> w_gpu = linalg.eig(a_gpu, 'N', 'N')
+    >>> np.allclose(np.trace(a), sum(w_gpu.get()), 1e-4)
+    True
+    """
+
+    if not _has_cula:
+        raise NotImplementedError('CULA not installed')
+
+    alloc = misc._global_cublas_allocator
+
+    # The free version of CULA only supports single precision floating
+    # point numbers:
+    data_type = a_gpu.dtype.type
+    real_type = np.float32
+    if data_type == np.complex64:
+        cula_func_geev = cula.culaDeviceCgeev
+        imag='F'
+    elif data_type == np.float32:
+        cula_func_geev = cula.culaDeviceSgeev         
+    else:
+        if cula._libcula_toolkit == 'standard':
+            if data_type == np.complex128:
+                cula_func_geev = cula.culaDeviceZgeev
+                imag='F'
+            elif data_type == np.float64:
+                cula_func_geev = cula.culaDeviceDgeev
+            else:
+                raise ValueError('unsupported type')
+            real_type = np.float64
+        else:
+            raise ValueError('double precision not supported')
+
+    # CUDA assumes that arrays are stored in column-major order
+    m, n = np.array(a_gpu.shape, int)
+    
+    #Check input
+    if(m!=n): raise ValueError('matrix is not square!')
+    jobvl = jobvl.upper()
+    jobvr = jobvr.upper()
+    
+    if jobvl not in ['N', 'V'] :
+        raise ValueError('jobvl has to  be "N" or "V" ')
+    if jobvr not in ['N', 'V'] :
+        raise ValueError('jobvr has to  be "N" or "V" ')
+    if imag not in ['T', 'F'] :
+        raise ValueError('imag has to  be "T" or "F" ')
+        
+    # Allocate vl, vr, and w:
+    vl_gpu = gpuarray.empty((m,m), data_type, order="F", allocator=alloc)
+    vr_gpu = gpuarray.empty((m,m), data_type, order="F", allocator=alloc)    
+    w_gpu = gpuarray.empty(m, data_type, order="F", allocator=alloc)
+
+    if data_type == np.complex64 or data_type == np.complex128:   
+        #culaDeviceCgeev(jobvl, jobvr, n, a, lda, w, vl, ldvl, vr, ldvr)
+        cula_func_geev(jobvl, jobvr, m, a_gpu.gpudata, m, w_gpu.gpudata, vl_gpu.gpudata , m , vr_gpu.gpudata, m )
+    
+    elif data_type == np.float32: 
+        wi_gpu = gpuarray.zeros(m, data_type, order="F", allocator=alloc)
+        cula_func_geev(jobvl, jobvr, m, a_gpu.gpudata, m, w_gpu.gpudata, wi_gpu.gpudata, vl_gpu.gpudata , m , vr_gpu.gpudata, m )
+
+    elif data_type == np.float64:
+        wi_gpu = gpuarray.zeros(m, data_type, order="F", allocator=alloc)
+        cula_func_geev(jobvl, jobvr, m, a_gpu.gpudata, m, w_gpu.gpudata, wi_gpu.gpudata, vl_gpu.gpudata , m , vr_gpu.gpudata, m )
+
+    if imag == 'T':
+        w_gpu = w_gpu + (1j)*wi_gpu
+
+    # Free internal CULA memory:
+    cula.culaFreeBuffers()
+    
+    if jobvl  == 'N' and jobvr == 'N': 
+        return w_gpu
+    elif jobvl == 'V' and jobvr == 'V': 
+        return vr_gpu, w_gpu, vl_gpu
+    elif jobvl == 'V' and jobvr == 'N': 
+        return w_gpu, vl_gpu,
+    elif jobvl == 'N' and jobvr == 'V': 
+        return vr_gpu, w_gpu      
+ 
+ 
+ 
+@context_dependent_memoize
+def _get_vander_kernel(use_double, use_complex, rows, cols):
+     template = Template("""
+     #include <pycuda-complex.hpp>
+     #if ${use_double}
+     #if ${use_complex}
+     #define FLOAT pycuda::complex<double>
+     #else
+     #define FLOAT double
+     #endif
+     #else
+     #if ${use_complex}
+     #define FLOAT pycuda::complex<float>
+     #else
+     #define FLOAT float
+     #endif
+     #endif
+ 
+ 
+     __global__ void vander(FLOAT *a, FLOAT *b, int m, int n) {
+        
+	  unsigned int ix;        
+	  unsigned int r = blockIdx.x*blockDim.x+threadIdx.x;
+	          
+	  if(r < m) {
+	    for(int i=1; i<n; ++i) {           
+	       ix = r  + m*i  ; 
+	       a[ix] = a[r  + m*(i-1)] * b[r];
+            }
+          }    
+     }
+     """)
+     # Set this to False when debugging to make sure the compiled kernel is
+     # not cached:
+     cache_dir=None
+     tmpl = template.substitute(use_double=use_double,
+                                use_complex=use_complex,
+                                rows=rows,
+                                cols=cols)
+     mod = SourceModule(tmpl, cache_dir=cache_dir)
+     return mod.get_function("vander")
+ 
+ 
+def vander(a_gpu, n=None, handle=None):
+     """
+     Generate a Vandermonde matrix.
+ 
+     A Vandermonde matrix (named for Alexandre- Theophile Vandermonde)
+     is a  matrix where the columns are powers of the input vector, i.e., 
+     the `i-th` column is the input vector raised element-wise to the 
+     power of `i`.
+     
+     Parameters
+     ----------
+     a_gpu : pycuda.gpuarray.GPUArray
+         Real/complex 1-D input array of shape `(m, 1)`.
+         
+     n : int, optional
+        Number of columns in the Vandermonde matrix. 
+        If `n` is not specified, a square array is returned `(m,m)`.
+ 
+     Returns
+     -------
+     vander_gpu : pycuda.gpuarray
+         Vandermonde matrix of shape `(m,n)`.
+  
+     Examples
+     --------
+     >>> a = np.array(np.array([1, 2, 3]), np.float32, order='F')
+     >>> a_gpu = gpuarray.to_gpu(a)
+     >>> linalg.vander(a_gpu, n=4)
+     array([[  1.,   1.,   2.,  12.],
+            [  1.,   2.,   6.,  36.],
+            [  1.,   3.,   3.,  18.]], dtype=float32)
+     """
+
+     if handle is None:
+         handle = misc._global_cublas_handle
+
+     alloc = misc._global_cublas_allocator
+
+     data_type = a_gpu.dtype.type
+     if a_gpu.dtype == np.float32:
+         use_double = 0
+         use_complex = 0
+     elif a_gpu.dtype == np.float64:
+         use_double = 1
+         use_complex = 0
+     elif a_gpu.dtype == np.complex64:
+         use_double = 0
+         use_complex = 1
+     elif a_gpu.dtype == np.complex128:
+         use_double = 1
+         use_complex = 1
+     else:
+         raise ValueError('unrecognized type')
+
+     m = int(a_gpu.shape[0])
+     if n == None: n = int(m)
+
+     vander_gpu = gpuarray.empty((m, n), data_type, order='F', allocator=alloc)
+     vander_gpu[ : , 0 ] = vander_gpu[ : , 0 ] * 0  + 1
+
+     # Get block/grid sizes:
+     dev = misc.get_current_device()
+     block_dim, grid_dim = misc.select_block_grid_sizes(dev, vander_gpu.shape)
+
+     # Allocate Vandermonde matrix:
+     vander = _get_vander_kernel(use_double, use_complex, rows=m, cols=n)
+
+     # Call kernel:
+     vander(vander_gpu, a_gpu,
+            np.uint32(m), np.uint32(n),
+            block=block_dim,
+            grid=grid_dim)
+
+     # Return
+     return vander_gpu
+
+
+def dmd(a_gpu, k=None, modes='exact', return_amplitudes=False, return_vandermonde=False, handle=None):
+    """
+    Dynamic Mode Decomposition.
+
+    Dynamic Mode Decomposition (DMD) is a data processing algorithm which
+    allows to decompose a matrix `a` in space and time.
+    The matrix `a` is decomposed as `a = FBV`, where the columns of `F`
+    contain the dynamic modes. The modes are ordered corresponding
+    to the amplitudes stored in the diagonal matrix `B`. `V` is a Vandermonde
+    matrix describing the temporal evolution.
+
+    Parameters
+    ----------
+    a_gpu : pycuda.gpuarray.GPUArray
+        Real/complex input matrix  `a` with dimensions `(m, n)`.
+    k : int, optional
+        If `k < (n-1)` low-rank Dynamic Mode Decomposition is computed.
+    modes : `{'standard', 'exact'}`
+        'standard' : uses the standard definition to compute the dynamic modes,
+                    `F = U * W`.
+        'exact' : computes the exact dynamic modes, `F = Y * V * (S**-1) * W`.
+    return_amplitudes : bool `{True, False}` 
+        True: return amplitudes in addition to dynamic modes. 
+    return_vandermonde : bool `{True, False}`
+        True: return Vandermonde matrix in addition to dynamic modes and amplitudes.    
+    handle : int
+        CUBLAS context. If no context is specified, the default handle from
+        `skcuda.misc._global_cublas_handle` is used.
+
+    Returns
+    -------
+    f_gpu : pycuda.gpuarray.GPUArray
+        Matrix containing the dynamic modes of shape `(m, n-1)`  or `(m, k)`.
+    b_gpu : pycuda.gpuarray.GPUArray
+        1-D array containing the amplitudes of length `min(n-1, k)`.
+    v_gpu : pycuda.gpuarray.GPUArray
+        Vandermonde matrix of shape `(n-1, n-1)`  or `(k, n-1)`.
+
+    Notes
+    -----
+    Double precision is only supported if the standard version of the
+    CULA Dense toolkit is installed.
+
+    This function destroys the contents of the input matrix.
+
+    Arrays are assumed to be stored in column-major order, i.e., order='F'.
+
+    References
+    ----------
+    M. R. Jovanovic, P. J. Schmid, and J. W. Nichols.
+    "Low-rank and sparse dynamic mode decomposition."
+    Center for Turbulence Research Annual Research Briefs (2012): 139-152.
+
+    J. H. Tu, et al.
+    "On dynamic mode decomposition: theory and applications."
+    arXiv preprint arXiv:1312.0041 (2013).
+    
+    
+     Examples
+     --------
+     >>> #Numpy
+     >>> import numpy as np
+    
+     >>> #Plot libs
+     >>> import matplotlib.pyplot as plt
+     >>> from mpl_toolkits.mplot3d import Axes3D
+     >>> from matplotlib import cm
+    
+     >>> #GPU DMD libs
+     >>> import pycuda.gpuarray as gpuarray
+     >>> import pycuda.autoinit
+     >>> from skcuda import linalg, rlinalg
+     >>> linalg.init()
+    
+    
+     >>> # Define time and space discretizations
+     >>> x=np.linspace( -15, 15, 200)
+     >>> t=np.linspace(0, 8*np.pi , 80) 
+     >>> dt=t[2]-t[1]
+     >>> X, T = np.meshgrid(x,t)
+     >>> # Create two patio-temporal patterns
+     >>> F1 = 0.5* np.cos(X)*(1.+0.* T)
+     >>> F2 = ( (1./np.cosh(X)) * np.tanh(X)) *(2.*np.exp(1j*2.8*T))
+     >>> # Add both signals
+     >>> F = (F1+F2)
+    
+    
+     >>> #Plot dataset
+     >>> fig = plt.figure()
+     >>> ax = fig.add_subplot(231, projection='3d')
+     >>> ax = fig.gca(projection='3d')
+     >>> surf = ax.plot_surface(X, T, F, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=True)
+     >>> ax.set_zlim(-1, 1)
+     >>> plt.title('F')
+    
+     >>> ax = fig.add_subplot(232, projection='3d')
+     >>> ax = fig.gca(projection='3d')
+     >>> surf = ax.plot_surface(X, T, F1, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+     >>> ax.set_zlim(-1, 1)
+     >>> plt.title('F1')
+    
+     >>> ax = fig.add_subplot(233, projection='3d')
+     >>> ax = fig.gca(projection='3d')
+     >>> surf = ax.plot_surface(X, T, F2, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+     >>> ax.set_zlim(-1, 1)
+     >>> plt.title('F2')
+    
+    
+     >>> #Dynamic Mode Decomposition
+     >>> F_gpu = np.array(F.T, np.complex64, order='F')
+     >>> F_gpu = gpuarray.to_gpu(F_gpu) 
+     >>> Fmodes_gpu, b_gpu, V_gpu, omega_gpu = linalg.dmd(F_gpu, k=2, modes='exact', return_amplitudes=True, return_vandermonde=True)
+     >>> omega = omega_gpu.get()
+    
+     >>> #Plot
+     >>> plt.scatter(omega.real, omega.imag, marker='o', c='r')
+     >>> F1tilde = np.dot(Fmodes_gpu[:,0:1].get() , np.dot(b_gpu[0].get(), V_gpu[0:1,:].get() ) )
+     >>> F2tilde = np.dot(Fmodes_gpu[:,1:2].get() , np.dot(b_gpu[1].get(), V_gpu[1:2,:].get() ) )
+    
+     >>> #Plot DMD modes
+     >>> #Mode 0
+     >>> ax = fig.add_subplot(235, projection='3d')
+     >>> ax = fig.gca(projection='3d')
+     >>> surf = ax.plot_surface(X[0:F1tilde.shape[1],:], T[0:F1tilde.shape[1],:], F1tilde.T, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+     >>> ax.set_zlim(-1, 1)
+     >>> plt.title('F1_tilde')
+    
+     >>> #Mode 1
+     >>> ax = fig.add_subplot(236, projection='3d')
+     >>> ax = fig.gca(projection='3d')
+     >>> surf = ax.plot_surface(X[0:F2tilde.shape[1],:], T[0:F2tilde.shape[1],:], F2tilde.T, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+     >>> ax.set_zlim(-1, 1)
+     >>> plt.title('F2_tilde')
+    
+     >>> plt.show() 
+    """
+
+    #*************************************************************************
+    #***        Author: N. Benjamin Erichson <nbe@st-andrews.ac.uk>        ***
+    #***                              <2015>                               ***
+    #***                       License: BSD 3 clause                       ***
+    #*************************************************************************
+
+    if not _has_cula:
+        raise NotImplementedError('CULA not installed')
+
+    if handle is None:
+        handle = misc._global_cublas_handle
+
+    alloc = misc._global_cublas_allocator
+
+    # The free version of CULA only supports single precision floating
+    data_type = a_gpu.dtype.type
+    real_type = np.float32
+
+    if data_type == np.complex64:
+        cula_func_gesvd = cula.culaDeviceCgesvd
+        cublas_func_gemm = cublas.cublasCgemm
+        cublas_func_dgmm = cublas.cublasCdgmm
+        cula_func_gels = cula.culaDeviceCgels
+        copy_func = cublas.cublasCcopy
+        transpose_func = cublas.cublasCgeam
+        alpha = np.complex64(1.0)
+        beta = np.complex64(0.0)
+        TRANS_type = 'C'
+        isreal = False
+    elif data_type == np.float32:
+        cula_func_gesvd = cula.culaDeviceSgesvd
+        cublas_func_gemm = cublas.cublasSgemm
+        cublas_func_dgmm = cublas.cublasSdgmm
+        cula_func_gels = cula.culaDeviceSgels
+        copy_func = cublas.cublasScopy
+        transpose_func = cublas.cublasSgeam
+        alpha = np.float32(1.0)
+        beta = np.float32(0.0)
+        TRANS_type = 'T'
+        isreal = True
+    else:
+        if cula._libcula_toolkit == 'standard':
+            if data_type == np.complex128:
+                cula_func_gesvd = cula.culaDeviceZgesvd
+                cublas_func_gemm = cublas.cublasZgemm
+                cublas_func_dgmm = cublas.cublasZdgmm
+                cula_func_gels = cula.culaDeviceZgels
+                copy_func = cublas.cublasZcopy
+                transpose_func = cublas.cublasZgeam
+                alpha = np.complex128(1.0)
+                beta = np.complex128(0.0)
+                TRANS_type = 'C'
+                isreal = False
+            elif data_type == np.float64:
+                cula_func_gesvd = cula.culaDeviceDgesvd
+                cublas_func_gemm = cublas.cublasDgemm
+                cublas_func_dgmm = cublas.cublasDdgmm
+                cula_func_gels = cula.culaDeviceDgels
+                copy_func = cublas.cublasDcopy
+                transpose_func = cublas.cublasDgeam
+                alpha = np.float64(1.0)
+                beta = np.float64(0.0)
+                TRANS_type = 'T'
+                isreal = True
+            else:
+                raise ValueError('unsupported type')
+            real_type = np.float64
+        else:
+            raise ValueError('double precision not supported')
+
+    #CUDA assumes that arrays are stored in column-major order
+    m, n = np.array(a_gpu.shape, int)
+    nx = n-1
+    #Set k     
+    if k == None : k = nx
+    if k > nx or k < 1: raise ValueError('k is not valid')
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #Split data into lef and right snapshot sequence
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #Note: we need a copy of X_gpu, because SVD destroys X_gpu
+    #While Y_gpu is just a pointer
+    X_gpu = gpuarray.empty((m, n), data_type, order="F", allocator=alloc) 
+    copy_func(handle, X_gpu.size, int(a_gpu.gpudata), 1, int(X_gpu.gpudata), 1)
+    X_gpu = X_gpu[:, :nx]    
+    Y_gpu = a_gpu[:, 1:] 
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #Singular Value Decomposition
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
+    #gesvd(jobu, jobvt, m, n, int(a), lda, int(s), int(u), ldu, int(vt), ldvt)
+    #Parameters
+    #----------
+    #a : pycuda.gpuarray.GPUArray of shape (m, n)
+    #jobu : {'A', 'S', 'O', 'N'}
+    #    If 'A', return the full `u` matrix with shape `(m, m)`.
+    #    If 'S', return the `u` matrix with shape `(m, nx)`.
+    #    If 'O', return the `u` matrix with shape `(m, nx) without
+    #    allocating a new matrix.
+    #jobvt : {'A', 'S', 'O', 'N'}
+    #    If 'A', return the full `vh` matrix with shape `(nx, nx)`.
+    #    If 'S', return the `vh` matrix with shape `(nx, nx)`.
+    #    If 'O', return the `vh` matrix with shape `(nx, nx) without
+    #    allocating a new matrix.
+    #
+    #Returns
+    #-------
+    #u : pycuda.gpuarray.GPUArray
+    #    Unitary matrix of shape `(m, m)` or `(m, nx)` 
+    #s : pycuda.gpuarray.GPUArray
+    #    Array containing the singular values, sorted such that `s[i] >= s[i+1]`.
+    #    `s` is of length `min(m, nx)`.
+    #v : pycuda.gpuarray.GPUArray
+    #    Unitary matrix of shape `(nx, nx)` or `(nx, nx)`
+   
+    #Allocate s, U, Vt for economic SVD
+    #Note: singular values are always real
+    #Allocate s, U, Vt for economic SVD
+    #Note: singular values are always real
+    s_gpu = gpuarray.empty(nx, real_type, order="F", allocator=alloc)
+    U_gpu = gpuarray.empty((m,nx), data_type, order="F", allocator=alloc)
+    Vh_gpu = gpuarray.empty((nx,nx), data_type, order="F", allocator=alloc)
+    
+    #Economic SVD
+    cula_func_gesvd('S', 'S', m, nx, int(X_gpu.gpudata), m, int(s_gpu.gpudata), 
+                    int(U_gpu.gpudata), m, int(Vh_gpu.gpudata), nx)
+    
+    #Low-rank DMD: trancate SVD if k < nx   
+    
+    if k != nx:
+        s_gpu = s_gpu[:k]
+        U_gpu = U_gpu[: , :k]
+        #Vt_gpu = Vt_gpu[:k , : ]
+        Vh_gpu = Vh_gpu[:k , : ]
+
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #Solve the LS problem to find estimate for M using the pseudo-inverse    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
+    #real: M = U.T * Y * Vt.T * S**-1
+    #complex: M = U.H * Y * Vt.H * S**-1
+    #Let G = Y * Vt.H * S**-1, hence M = M * G
+    
+    #Allocate G and M  
+    G_gpu = gpuarray.empty((m,k), data_type, order="F", allocator=alloc)    
+    M_gpu = gpuarray.empty((k,k), data_type, order="F", allocator=alloc)     
+    
+    #i) s = s **-1 (inverse)
+    if data_type == np.complex64 or data_type == np.complex128:
+        s_gpu = 1/s_gpu
+        s_gpu = s_gpu + 1j * gpuarray.zeros_like(s_gpu)
+    else:
+        s_gpu = 1.0/s_gpu
+
+    
+    #ii) real/complex: scale Vs =  Vt* x diag(s**-1) 
+    Vs_gpu = gpuarray.empty((nx,k), data_type, order="F", allocator=alloc) 
+    lda = max(1, Vh_gpu.strides[1] // Vh_gpu.dtype.itemsize)
+    ldb = max(1, Vs_gpu.strides[1] // Vs_gpu.dtype.itemsize)     
+    transpose_func(handle, TRANS_type, TRANS_type, nx, k,
+                   alpha, int(Vh_gpu.gpudata), lda, beta, int(Vh_gpu.gpudata), lda,
+                   int(Vs_gpu.gpudata), ldb)    
+    
+    
+    cublas_func_dgmm(handle, 'r', nx, k, int(Vs_gpu.gpudata), nx, 
+                     int(s_gpu.gpudata), 1 , int(Vs_gpu.gpudata), nx)
+   
+
+    #iii) real: G = Y * Vs , complex: G = Y x Vs
+    cublas_func_gemm(handle, 'n', 'n', m, k, nx, alpha, 
+                     int(Y_gpu.gpudata), m, int(Vs_gpu.gpudata), nx, 
+                        beta, int(G_gpu.gpudata), m )      
+   
+    
+    #iv) real/complex: M = U* x G 
+    cublas_func_gemm(handle, TRANS_type, 'n', k, k, m, alpha, 
+                     int(U_gpu.gpudata), m, int(G_gpu.gpudata), m, 
+                    beta, int(M_gpu.gpudata), k )     
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #Eigen Decomposition
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #Note: If a_gpu is real the imag part is omitted
+    Vr_gpu, w_gpu = eig(M_gpu, 'N', 'V', 'F')
+    omega = cumath.log(w_gpu)
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
+    #Compute DMD Modes 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
+    F_gpu = gpuarray.empty((m,k), data_type, order="F", allocator=alloc)    
+    modes = modes.lower()
+    if modes == 'exact': #Compute (exact) DMD modes: F = Y * V * S**-1 * W = G * W
+        cublas_func_gemm(handle, 'n', 'n', m, k, k, alpha, 
+                         G_gpu.gpudata, m, Vr_gpu.gpudata, k, 
+                         beta, G_gpu.gpudata, m  )     
+        F_gpu_temp = G_gpu
+    
+    elif modes == 'standard': #Compute (standard) DMD modes: F = U * W
+        cublas_func_gemm(handle, 'n', 'n', m, k, k, 
+                         alpha, U_gpu.gpudata, m, Vr_gpu.gpudata, k, 
+                         beta, U_gpu.gpudata, m  )     
+        F_gpu_temp = U_gpu
+    else: 
+        raise ValueError('Type of modes is not supported, choose "exact" or "standard".')
+    
+    #Copy is required, because gels destroys input    
+    copy_func(handle, F_gpu_temp.size, int(F_gpu_temp.gpudata), 
+              1, int(F_gpu.gpudata), 1)
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #Compute amplitueds b using least-squares: Fb=x1
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    if return_amplitudes==True:    
+        #x1_gpu = a_gpu[:,0].copy() 
+        x1_gpu = gpuarray.empty(m, data_type, order="F", allocator=alloc) 
+        copy_func(handle, x1_gpu.size, int(a_gpu[:,0].gpudata), 1, int(x1_gpu.gpudata), 1)
+        cula_func_gels( 'N', m, k, int(1) , F_gpu_temp.gpudata, m, x1_gpu.gpudata, m)
+        b_gpu = x1_gpu
+    
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #Compute Vandermonde matrix (CPU)
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    if return_vandermonde==True:      
+        V_gpu = vander(w_gpu, n=nx)
+    
+    # Free internal CULA memory:
+    cula.culaFreeBuffers()
+
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #Return 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
+    if return_amplitudes==True and return_vandermonde==True:
+        return F_gpu, b_gpu[:k], V_gpu, omega
+    elif return_amplitudes==True and return_vandermonde==False:
+        return F_gpu, b_gpu[:k], omega
+    elif return_amplitudes==False and return_vandermonde==True:
+        return F_gpu, V_gpu, omega
+    else:
+        return F_gpu, omega   
 
 
 if __name__ == "__main__":

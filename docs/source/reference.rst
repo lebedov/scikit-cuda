@@ -22,6 +22,7 @@ High-Level Routines
    reference_fft   
    reference_integrate
    reference_linalg
+   reference_rlinalg
    reference_special
 
 Other Routines

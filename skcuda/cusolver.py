@@ -19,14 +19,14 @@ import numpy as np
 from . import cuda
 
 # Load library:
-_version_list = [7.0]
+_version_list = [7.5, 7.0]
 if 'linux' in sys.platform:
     _libcusolver_libname_list = ['libcusolver.so'] + \
                                 ['libsolver.so.%s' % v for v in _version_list]
 elif sys.platform == 'darwin':
     _libcusolver_libname_list = ['libcusolver.dylib']
 elif sys.platform == 'win32':
-    if platform.machine().endswith('64'):
+    if sys.maxsize > 2**32:
         _libcusolver_libname_list = ['cusolver.dll'] + \
                                     ['cusolver64_%s.dll' % int(10*v) for v in _version_list]
     else:
@@ -573,6 +573,8 @@ def cusolverDnSgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
     `cusolverDn<t>gesvd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-gesvd>`_
     """
 
+    jobu = jobu.encode('ascii')
+    jobvt = jobvt.encode('ascii')
     status = _libcusolver.cusolverDnSgesvd(handle, jobu, jobvt, m, n,
                                            int(A), lda, int(S), int(U),
                                            ldu, int(VT), ldvt, int(Work),
@@ -625,6 +627,8 @@ def cusolverDnDgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
     `cusolverDn<t>gesvd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-gesvd>`_
     """
 
+    jobu = jobu.encode('ascii')
+    jobvt = jobvt.encode('ascii')
     status = _libcusolver.cusolverDnDgesvd(handle, jobu, jobvt, m, n,
                                            int(A), lda, int(S), int(U),
                                            ldu, int(VT), ldvt, int(Work),
@@ -677,6 +681,8 @@ def cusolverDnCgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
     `cusolverDn<t>gesvd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-gesvd>`_
     """
 
+    jobu = jobu.encode('ascii')
+    jobvt = jobvt.encode('ascii')
     status = _libcusolver.cusolverDnCgesvd(handle, jobu, jobvt, m, n,
                                            int(A), lda, int(S), int(U),
                                            ldu, int(VT), ldvt, int(Work),
@@ -729,6 +735,8 @@ def cusolverDnZgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
     `cusolverDn<t>gesvd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-gesvd>`_
     """
 
+    jobu = jobu.encode('ascii')
+    jobvt = jobvt.encode('ascii')
     status = _libcusolver.cusolverDnZgesvd(handle, jobu, jobvt, m, n,
                                            int(A), lda, int(S), int(U),
                                            ldu, int(VT), ldvt, int(Work),
@@ -738,10 +746,10 @@ def cusolverDnZgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
 # SGEQRF, DGEQRF, CGEQRF, ZGEQRF
 _libcusolver.cusolverDnSgeqrf_bufferSize.restype = int
 _libcusolver.cusolverDnSgeqrf_bufferSize.argtypes = [ctypes.c_void_p,
-                                                   ctypes.c_int,
-                                                   ctypes.c_void_p,
-                                                   ctypes.c_int,
-                                                   ctypes.c_void_p]
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p]
 def cusolverDnSgeqrf_bufferSize(handle, m, n, A, lda):
     """
     Calculate size of work buffer used by cusolverDnSgeqrf.
