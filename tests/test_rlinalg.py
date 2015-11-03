@@ -195,7 +195,6 @@ def suite():
     s.addTest(test_rlinalg('test_cdmd_float64'))
     s.addTest(test_rlinalg('test_cdmd_complex64'))
     s.addTest(test_rlinalg('test_cdmd_complex128'))   
-
     
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_rlinalg('test_rsvd_float32'))
