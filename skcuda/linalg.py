@@ -28,11 +28,9 @@ import sys
 if sys.version_info < (3,):
     range = xrange
 
-
 class LinAlgError(Exception):
     """Linear Algebra Error."""
     pass
-
 
 try:
     from . import cula
@@ -40,12 +38,18 @@ try:
 except (ImportError, OSError):
     _has_cula = False
 
+try:
+    from . import cusolver
+    _has_cusolver = True
+except (ImportError, OSError):
+    _has_cusolver = False
+
 from .misc import init, add_matvec, div_matvec, mult_matvec
 
 # Get installation location of C headers:
 from . import install_headers
 
-def svd(a_gpu, jobu='A', jobvt='A'):
+def svd(a_gpu, jobu='A', jobvt='A', lib='cula'):
     """
     Singular Value Decomposition.
 
@@ -69,7 +73,9 @@ def svd(a_gpu, jobu='A', jobvt='A'):
         If 'O', return the `vh` matrix with shape `(k, n) without
         allocating a new matrix.
         If 'N', don't return `vh`.
-
+    lib : str
+        Library to use. May be either 'cula' or 'cusolver'.
+       
     Returns
     -------
     u : pycuda.gpuarray.GPUArray
@@ -93,6 +99,8 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     Only one of `jobu` or `jobvt` may be set to `O`, and then only for
     a square matrix.
 
+    The CUSOLVER library in CUDA 7.0 only supports `jobu` == `jobvt` == 'A'.
+
     Examples
     --------
     >>> import pycuda.gpuarray as gpuarray
@@ -106,11 +114,7 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     >>> u_gpu, s_gpu, vh_gpu = linalg.svd(a_gpu, 'S', 'S')
     >>> np.allclose(a, np.dot(u_gpu.get(), np.dot(np.diag(s_gpu.get()), vh_gpu.get())), 1e-4)
     True
-
     """
-
-    if not _has_cula:
-        raise NotImplementedError('CULA not installed')
 
     alloc = misc._global_cublas_allocator
 
@@ -118,25 +122,54 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     # point numbers:
     data_type = a_gpu.dtype.type
     real_type = np.float32
-    if data_type == np.complex64:
-        cula_func = cula.culaDeviceCgesvd
-    elif data_type == np.float32:
-        cula_func = cula.culaDeviceSgesvd
-    else:
-        if cula._libcula_toolkit == 'standard':
-            if data_type == np.complex128:
-                cula_func = cula.culaDeviceZgesvd
-            elif data_type == np.float64:
-                cula_func = cula.culaDeviceDgesvd
-            else:
-                raise ValueError('unsupported type')
-            real_type = np.float64
+
+    if lib == 'cula':
+        if not _has_cula:
+            raise NotImplementedError('CULA not installed')
+
+        if data_type == np.complex64:
+            func = cula.culaDeviceCgesvd
+        elif data_type == np.float32:
+            func = cula.culaDeviceSgesvd
         else:
-            raise ValueError('double precision not supported')
+            if cula._libcula_toolkit == 'standard':
+                if data_type == np.complex128:
+                    func = cula.culaDeviceZgesvd
+                elif data_type == np.float64:
+                    func = cula.culaDeviceDgesvd
+                else:
+                    raise ValueError('unsupported type')
+                real_type = np.float64
+            else:
+                raise ValueError('double precision not supported')
+    elif lib == 'cusolver':
+        if not _has_cusolver:
+            raise NotImplementedError('CUSOLVER not installed')
+
+        cusolverHandle = misc._global_cusolver_handle
+
+        if data_type == np.complex64:
+            func = cusolver.cusolverDnCgesvd
+            bufsize = cusolver.cusolverDnCgesvd_bufferSize
+        elif data_type == np.float32:
+            func = cusolver.cusolverDnSgesvd
+            bufsize = cusolver.cusolverDnSgesvd_bufferSize
+        elif data_type == np.complex128:
+            real_type = np.float64
+            func = cusolver.cusolverDnZgesvd
+            bufsize = cusolver.cusolverDnZgesvd_bufferSize
+        elif data_type == np.float64:
+            real_type = np.float64
+            func = cusolver.cusolverDnDgesvd
+            bufsize = cusolver.cusolverDnDgesvd_bufferSize
+        else:
+            raise ValueError('unsupported type')
+    else:
+        raise ValueError('invalid library specified')
 
     # Since CUDA assumes that arrays are stored in column-major
     # format, the input matrix is assumed to be transposed:
-    n, m = np.array(a_gpu.shape, int) # workaround for bug #131
+    n, m = a_gpu.shape
     square = (n == m)
 
     # Since the input matrix is transposed, jobu and jobvt must also
@@ -150,9 +183,13 @@ def svd(a_gpu, jobu='A', jobvt='A'):
     # Allocate the array of singular values:
     s_gpu = gpuarray.empty(min(m, n), real_type, allocator=alloc)
 
-    # Set the leading dimension and allocate u:
+    # cusolver only supports jobu = jobvt = 'A':
     jobu = jobu.upper()
     jobvt = jobvt.upper()
+    if lib == 'cusolver' and (jobu != 'A' or jobvt != 'A'):
+        raise ValueError("CUSOLVER only supports jobu = jobvt = 'A'")
+
+    # Set the leading dimension and allocate u:
     ldu = m
     if jobu == 'A':
         u_gpu = gpuarray.empty((ldu, m), data_type, allocator=alloc)
@@ -188,13 +225,29 @@ def svd(a_gpu, jobu='A', jobvt='A'):
         vh_gpu = gpuarray.empty((), data_type, allocator=alloc)
 
     # Compute SVD and check error status:
+    if lib == 'cula':
+        func(jobu, jobvt, m, n, int(a_gpu.gpudata),
+             lda, int(s_gpu.gpudata), int(u_gpu.gpudata),
+             ldu, int(vh_gpu.gpudata), ldvt)
 
-    cula_func(jobu, jobvt, m, n, int(a_gpu.gpudata),
-              lda, int(s_gpu.gpudata), int(u_gpu.gpudata),
-              ldu, int(vh_gpu.gpudata), ldvt)
+        # Free internal CULA memory:
+        cula.culaFreeBuffers()
+    else:
+        # Allocate working space:
+        Lwork = bufsize(misc._global_cusolver_handle, m, n)
+        rwork = gpuarray.empty(5*min(m, n), real_type, allocator=alloc)
+        Work = gpuarray.empty(Lwork, data_type, allocator=alloc)
+        devInfo = gpuarray.empty(1, np.int32, allocator=alloc)
 
-    # Free internal CULA memory:
-    cula.culaFreeBuffers()
+        func(misc._global_cusolver_handle,
+             jobu, jobvt, m, n, int(a_gpu.gpudata),
+             lda, int(s_gpu.gpudata), int(u_gpu.gpudata),
+             ldu, int(vh_gpu.gpudata), ldvt, 
+             int(Work.gpudata), Lwork, int(rwork.gpudata),
+             int(devInfo.gpudata))
+
+        # Free working space:
+        del rwork, Work, devInfo
 
     # Since the input is assumed to be transposed, it is necessary to
     # return the computed matrices in reverse order:
@@ -206,7 +259,6 @@ def svd(a_gpu, jobu='A', jobvt='A'):
         return s_gpu, u_gpu
     else:
         return s_gpu
-
 
 def cho_factor(a_gpu, uplo='L'):
     """

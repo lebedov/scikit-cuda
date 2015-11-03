@@ -23,7 +23,7 @@ class test_linalg(TestCase):
         np.random.seed(0)
         linalg.init()
 
-    def test_svd_ss_float32(self):
+    def test_svd_ss_cula_float32(self):
         a = np.asarray(np.random.randn(9, 6), np.float32)
         a_gpu = gpuarray.to_gpu(a)
         u_gpu, s_gpu, vh_gpu = linalg.svd(a_gpu, 's', 's')
@@ -32,7 +32,7 @@ class test_linalg(TestCase):
                                             vh_gpu.get())),
                            atol=atol_float32)
 
-    def test_svd_ss_float64(self):
+    def test_svd_ss_cula_float64(self):
         a = np.asarray(np.random.randn(9, 6), np.float64)
         a_gpu = gpuarray.to_gpu(a)
         u_gpu, s_gpu, vh_gpu = linalg.svd(a_gpu, 's', 's')
@@ -41,7 +41,7 @@ class test_linalg(TestCase):
                                             vh_gpu.get())),
                            atol=atol_float64)
 
-    def test_svd_ss_complex64(self):
+    def test_svd_ss_cula_complex64(self):
         a = np.asarray(np.random.randn(9, 6) + 1j*np.random.randn(9, 6), np.complex64)
         a_gpu = gpuarray.to_gpu(a)
         u_gpu, s_gpu, vh_gpu = linalg.svd(a_gpu, 's', 's')
@@ -50,7 +50,7 @@ class test_linalg(TestCase):
                                             vh_gpu.get())),
                            atol=atol_float32)
 
-    def test_svd_ss_complex128(self):
+    def test_svd_ss_cula_complex128(self):
         a = np.asarray(np.random.randn(9, 6) + 1j*np.random.randn(9, 6), np.complex128)
         a_gpu = gpuarray.to_gpu(a)
         u_gpu, s_gpu, vh_gpu = linalg.svd(a_gpu, 's', 's')
@@ -59,7 +59,7 @@ class test_linalg(TestCase):
                                             vh_gpu.get())),
                            atol=atol_float64)
 
-    def test_svd_so_float32(self):
+    def test_svd_so_cula_float32(self):
         a = np.asarray(np.random.randn(6, 6), np.float32)
         a_gpu = gpuarray.to_gpu(a)
         u_gpu, s_gpu, vh_gpu = linalg.svd(a_gpu, 's', 'o')
@@ -68,7 +68,7 @@ class test_linalg(TestCase):
                                             vh_gpu.get())),
                            atol=atol_float32)
 
-    def test_svd_so_float64(self):
+    def test_svd_so_cula_float64(self):
         a = np.asarray(np.random.randn(6, 6), np.float64)
         a_gpu = gpuarray.to_gpu(a)
         u_gpu, s_gpu, vh_gpu = linalg.svd(a_gpu, 's', 'o')
@@ -77,7 +77,7 @@ class test_linalg(TestCase):
                                             vh_gpu.get())),
                            atol=atol_float64)
 
-    def test_svd_so_complex64(self):
+    def test_svd_so_cula_complex64(self):
         a = np.asarray(np.random.randn(6, 6) + 1j*np.random.randn(6, 6), np.complex64)
         a_gpu = gpuarray.to_gpu(a)
         u_gpu, s_gpu, vh_gpu = linalg.svd(a_gpu, 's', 'o')
@@ -86,10 +86,46 @@ class test_linalg(TestCase):
                                             vh_gpu.get())),
                            atol=atol_float32)
 
-    def test_svd_so_complex128(self):
+    def test_svd_so_cula_complex128(self):
         a = np.asarray(np.random.randn(6, 6) + 1j*np.random.randn(6, 6), np.complex128)
         a_gpu = gpuarray.to_gpu(a)
         u_gpu, s_gpu, vh_gpu = linalg.svd(a_gpu, 's', 'o')
+        assert np.allclose(a, np.dot(u_gpu.get(),
+                                     np.dot(np.diag(s_gpu.get()),
+                                            vh_gpu.get())),
+                           atol=atol_float64)
+
+    def test_svd_aa_cusolver_float32(self):
+        a = np.asarray(np.random.randn(6, 6), np.float32)
+        a_gpu = gpuarray.to_gpu(a)
+        u_gpu, s_gpu, vh_gpu = linalg.svd(a_gpu, lib='cusolver')
+        assert np.allclose(a, np.dot(u_gpu.get(),
+                                     np.dot(np.diag(s_gpu.get()),
+                                            vh_gpu.get())),
+                           atol=atol_float32)
+
+    def test_svd_aa_cusolver_float64(self):
+        a = np.asarray(np.random.randn(6, 6), np.float64)
+        a_gpu = gpuarray.to_gpu(a)
+        u_gpu, s_gpu, vh_gpu = linalg.svd(a_gpu, lib='cusolver')
+        assert np.allclose(a, np.dot(u_gpu.get(),
+                                     np.dot(np.diag(s_gpu.get()),
+                                            vh_gpu.get())),
+                           atol=atol_float64)
+
+    def test_svd_aa_cusolver_complex64(self):
+        a = np.asarray(np.random.randn(6, 6) + 1j*np.random.randn(6, 6), np.complex64)
+        a_gpu = gpuarray.to_gpu(a)
+        u_gpu, s_gpu, vh_gpu = linalg.svd(a_gpu, lib='cusolver')
+        assert np.allclose(a, np.dot(u_gpu.get(),
+                                     np.dot(np.diag(s_gpu.get()),
+                                            vh_gpu.get())),
+                           atol=atol_float32)
+
+    def test_svd_aa_cusolver_complex128(self):
+        a = np.asarray(np.random.randn(6, 6) + 1j*np.random.randn(6, 6), np.complex128)
+        a_gpu = gpuarray.to_gpu(a)
+        u_gpu, s_gpu, vh_gpu = linalg.svd(a_gpu, lib='cusolver')
         assert np.allclose(a, np.dot(u_gpu.get(),
                                      np.dot(np.diag(s_gpu.get()),
                                             vh_gpu.get())),
@@ -986,10 +1022,12 @@ class test_linalg(TestCase):
 
 def suite():
     s = TestSuite()
-    s.addTest(test_linalg('test_svd_ss_float32'))
-    s.addTest(test_linalg('test_svd_ss_complex64'))
-    s.addTest(test_linalg('test_svd_so_float32'))
-    s.addTest(test_linalg('test_svd_so_complex64'))
+    s.addTest(test_linalg('test_svd_ss_cula_float32'))
+    s.addTest(test_linalg('test_svd_ss_cula_complex64'))
+    s.addTest(test_linalg('test_svd_so_cula_float32'))
+    s.addTest(test_linalg('test_svd_so_cula_complex64'))
+    s.addTest(test_linalg('test_svd_aa_cusolver_float32'))
+    s.addTest(test_linalg('test_svd_aa_cusolver_complex64'))
     s.addTest(test_linalg('test_dot_matrix_float32'))
     s.addTest(test_linalg('test_dot_matrix_complex64'))
     s.addTest(test_linalg('test_dot_matrix_h_complex64'))
@@ -1057,10 +1095,12 @@ def suite():
      
     
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
-        s.addTest(test_linalg('test_svd_ss_float64'))
-        s.addTest(test_linalg('test_svd_ss_complex128'))
-        s.addTest(test_linalg('test_svd_so_float64'))
-        s.addTest(test_linalg('test_svd_so_complex128'))
+        s.addTest(test_linalg('test_svd_ss_cula_float64'))
+        s.addTest(test_linalg('test_svd_ss_cula_complex128'))
+        s.addTest(test_linalg('test_svd_so_cula_float64'))
+        s.addTest(test_linalg('test_svd_so_cula_complex128'))
+        s.addTest(test_linalg('test_svd_aa_cusolver_float64'))
+        s.addTest(test_linalg('test_svd_aa_cusolver_complex128'))
         s.addTest(test_linalg('test_dot_matrix_float64'))
         s.addTest(test_linalg('test_dot_matrix_complex128'))
         s.addTest(test_linalg('test_dot_matrix_h_complex128'))

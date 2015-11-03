@@ -10,13 +10,12 @@ except ImportError:
     from ez_setup import use_setuptools
     use_setuptools()
 
-from distutils.command.install import INSTALL_SCHEMES
 from distutils.command.install_headers import install_headers
 from setuptools import find_packages
 from setuptools import setup
 
 NAME =               'scikit-cuda'
-VERSION =            '0.5.1'
+VERSION =            '0.5.2'
 AUTHOR =             'Lev Givon'
 AUTHOR_EMAIL =       'lev@columbia.edu'
 URL =                'https://github.com/lebedov/scikit-cuda/'
@@ -35,7 +34,7 @@ CLASSIFIERS = [
     'Programming Language :: Python :: 3.4',
     'Topic :: Scientific/Engineering',
     'Topic :: Software Development']
-NAMESPACE_PACKAGES = ['scikits', 'skcuda']
+NAMESPACE_PACKAGES = ['scikits']
 PACKAGES =           find_packages()
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
@@ -56,11 +55,6 @@ if __name__ == "__main__":
     if os.path.exists('MANIFEST'):
         os.remove('MANIFEST')
 
-    # This enables the installation of __init__.py files in namespace
-    # directories as a data file:
-    for scheme in INSTALL_SCHEMES.values():
-        scheme['data'] = scheme['purelib']
-
     setup(
         name = NAME,
         version = VERSION,
@@ -73,10 +67,6 @@ if __name__ == "__main__":
         url = URL,
         namespace_packages = NAMESPACE_PACKAGES,
         packages = PACKAGES,
-
-        # Force installation of __init__.py in namespace package:
-        data_files = [('scikits', ['scikits/__init__.py']),
-                      ('skcuda', ['skcuda/__init__.py'])],
         include_package_data = True,
         install_requires = install_requires,
         tests_require = tests_require,

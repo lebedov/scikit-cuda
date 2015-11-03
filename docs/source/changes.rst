@@ -3,8 +3,13 @@
 Change Log
 ==========
 
-Release 0.5.1 - (under development)
------------------------------------
+Release 0.5.2 (under development)
+---------------------------------
+* Prevent exceptions when CULA Dense free is present (#146).
+* Add support for using either CUSOLVER or CULA for computing SVD.
+
+Release 0.5.1 - (October 30, 2015)
+----------------------------------
 * More CUSOLVER wrappers.
 * Eigenvalue/eigenvector computation (eng. by N. Benjamin Erichson).
 * QR decomposition (enh. by N. Benjamin Erichson).
@@ -17,6 +22,7 @@ Release 0.5.1 - (under development)
 * Add triu function (enh. by N. Benjamin Erichson).
 * Support Bessel correction in computation of variance and standard 
   deviation (#143).
+* Fix pip installation issues.
 
 Release 0.5.0 - (July 14, 2015)
 -------------------------------
