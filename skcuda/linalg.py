@@ -12,11 +12,14 @@ from pycuda.tools import context_dependent_memoize
 from pycuda.compiler import SourceModule
 from pycuda.reduction import ReductionKernel
 
+from pycuda import cumath
+
 import pycuda.gpuarray as gpuarray
 import pycuda.driver as drv
 import pycuda.elementwise as el
 import pycuda.tools as tools
 import numpy as np
+
 
 from . import cublas
 from . import misc
@@ -2175,6 +2178,11 @@ def eig(a_gpu, jobvl='N', jobvr='V', imag='F'):
 
     Examples
     --------
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import pycuda.autoinit
+    >>> import numpy as np
+    >>> from skcuda import linalg
+    >>> linalg.init()
     >>> # Compute right eigenvectors of a symmetric matrix A and verify A*vr = vr*w
     >>> a = np.array(([1,3],[3,5]), np.float32, order='F')
     >>> a_gpu = gpuarray.to_gpu(a)
@@ -2408,7 +2416,7 @@ def vander(a_gpu, n=None, handle=None):
      return vander_gpu
 
 
-def dmd(a_gpu, k=None, modes='exact', handle=None):
+def dmd(a_gpu, k=None, modes='exact', return_amplitudes=False, return_vandermonde=False, handle=None):
     """
     Dynamic Mode Decomposition.
 
@@ -2429,6 +2437,10 @@ def dmd(a_gpu, k=None, modes='exact', handle=None):
         'standard' : uses the standard definition to compute the dynamic modes,
                     `F = U * W`.
         'exact' : computes the exact dynamic modes, `F = Y * V * (S**-1) * W`.
+    return_amplitudes : bool `{True, False}` 
+        True: return amplitudes in addition to dynamic modes. 
+    return_vandermonde : bool `{True, False}`
+        True: return Vandermonde matrix in addition to dynamic modes and amplitudes.    
     handle : int
         CUBLAS context. If no context is specified, the default handle from
         `skcuda.misc._global_cublas_handle` is used.
@@ -2460,6 +2472,85 @@ def dmd(a_gpu, k=None, modes='exact', handle=None):
     J. H. Tu, et al.
     "On dynamic mode decomposition: theory and applications."
     arXiv preprint arXiv:1312.0041 (2013).
+    
+    
+     Examples
+     --------
+     >>> #Numpy
+     >>> import numpy as np
+    
+     >>> #Plot libs
+     >>> import matplotlib.pyplot as plt
+     >>> from mpl_toolkits.mplot3d import Axes3D
+     >>> from matplotlib import cm
+    
+     >>> #GPU DMD libs
+     >>> import pycuda.gpuarray as gpuarray
+     >>> import pycuda.autoinit
+     >>> from skcuda import linalg, rlinalg
+     >>> linalg.init()
+    
+    
+     >>> # Define time and space discretizations
+     >>> x=np.linspace( -15, 15, 200)
+     >>> t=np.linspace(0, 8*np.pi , 80) 
+     >>> dt=t[2]-t[1]
+     >>> X, T = np.meshgrid(x,t)
+     >>> # Create two patio-temporal patterns
+     >>> F1 = 0.5* np.cos(X)*(1.+0.* T)
+     >>> F2 = ( (1./np.cosh(X)) * np.tanh(X)) *(2.*np.exp(1j*2.8*T))
+     >>> # Add both signals
+     >>> F = (F1+F2)
+    
+    
+     >>> #Plot dataset
+     >>> fig = plt.figure()
+     >>> ax = fig.add_subplot(231, projection='3d')
+     >>> ax = fig.gca(projection='3d')
+     >>> surf = ax.plot_surface(X, T, F, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=True)
+     >>> ax.set_zlim(-1, 1)
+     >>> plt.title('F')
+    
+     >>> ax = fig.add_subplot(232, projection='3d')
+     >>> ax = fig.gca(projection='3d')
+     >>> surf = ax.plot_surface(X, T, F1, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+     >>> ax.set_zlim(-1, 1)
+     >>> plt.title('F1')
+    
+     >>> ax = fig.add_subplot(233, projection='3d')
+     >>> ax = fig.gca(projection='3d')
+     >>> surf = ax.plot_surface(X, T, F2, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+     >>> ax.set_zlim(-1, 1)
+     >>> plt.title('F2')
+    
+    
+     >>> #Dynamic Mode Decomposition
+     >>> F_gpu = np.array(F.T, np.complex64, order='F')
+     >>> F_gpu = gpuarray.to_gpu(F_gpu) 
+     >>> Fmodes_gpu, b_gpu, V_gpu, omega_gpu = linalg.dmd(F_gpu, k=2, modes='exact', return_amplitudes=True, return_vandermonde=True)
+     >>> omega = omega_gpu.get()
+    
+     >>> #Plot
+     >>> plt.scatter(omega.real, omega.imag, marker='o', c='r')
+     >>> F1tilde = np.dot(Fmodes_gpu[:,0:1].get() , np.dot(b_gpu[0].get(), V_gpu[0:1,:].get() ) )
+     >>> F2tilde = np.dot(Fmodes_gpu[:,1:2].get() , np.dot(b_gpu[1].get(), V_gpu[1:2,:].get() ) )
+    
+     >>> #Plot DMD modes
+     >>> #Mode 0
+     >>> ax = fig.add_subplot(235, projection='3d')
+     >>> ax = fig.gca(projection='3d')
+     >>> surf = ax.plot_surface(X[0:F1tilde.shape[1],:], T[0:F1tilde.shape[1],:], F1tilde.T, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+     >>> ax.set_zlim(-1, 1)
+     >>> plt.title('F1_tilde')
+    
+     >>> #Mode 1
+     >>> ax = fig.add_subplot(236, projection='3d')
+     >>> ax = fig.gca(projection='3d')
+     >>> surf = ax.plot_surface(X[0:F2tilde.shape[1],:], T[0:F2tilde.shape[1],:], F2tilde.T, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+     >>> ax.set_zlim(-1, 1)
+     >>> plt.title('F2_tilde')
+    
+     >>> plt.show() 
     """
 
     #*************************************************************************
@@ -2486,18 +2577,22 @@ def dmd(a_gpu, k=None, modes='exact', handle=None):
         cublas_func_dgmm = cublas.cublasCdgmm
         cula_func_gels = cula.culaDeviceCgels
         copy_func = cublas.cublasCcopy
+        transpose_func = cublas.cublasCgeam
         alpha = np.complex64(1.0)
         beta = np.complex64(0.0)
         TRANS_type = 'C'
+        isreal = False
     elif data_type == np.float32:
         cula_func_gesvd = cula.culaDeviceSgesvd
         cublas_func_gemm = cublas.cublasSgemm
         cublas_func_dgmm = cublas.cublasSdgmm
         cula_func_gels = cula.culaDeviceSgels
         copy_func = cublas.cublasScopy
+        transpose_func = cublas.cublasSgeam
         alpha = np.float32(1.0)
         beta = np.float32(0.0)
         TRANS_type = 'T'
+        isreal = True
     else:
         if cula._libcula_toolkit == 'standard':
             if data_type == np.complex128:
@@ -2506,18 +2601,22 @@ def dmd(a_gpu, k=None, modes='exact', handle=None):
                 cublas_func_dgmm = cublas.cublasZdgmm
                 cula_func_gels = cula.culaDeviceZgels
                 copy_func = cublas.cublasZcopy
+                transpose_func = cublas.cublasZgeam
                 alpha = np.complex128(1.0)
                 beta = np.complex128(0.0)
                 TRANS_type = 'C'
+                isreal = False
             elif data_type == np.float64:
                 cula_func_gesvd = cula.culaDeviceDgesvd
                 cublas_func_gemm = cublas.cublasDgemm
                 cublas_func_dgmm = cublas.cublasDdgmm
                 cula_func_gels = cula.culaDeviceDgels
                 copy_func = cublas.cublasDcopy
+                transpose_func = cublas.cublasDgeam
                 alpha = np.float64(1.0)
                 beta = np.float64(0.0)
                 TRANS_type = 'T'
+                isreal = True
             else:
                 raise ValueError('unsupported type')
             real_type = np.float64
@@ -2571,20 +2670,25 @@ def dmd(a_gpu, k=None, modes='exact', handle=None):
    
     #Allocate s, U, Vt for economic SVD
     #Note: singular values are always real
+    #Allocate s, U, Vt for economic SVD
+    #Note: singular values are always real
     s_gpu = gpuarray.empty(nx, real_type, order="F", allocator=alloc)
     U_gpu = gpuarray.empty((m,nx), data_type, order="F", allocator=alloc)
-    Vt_gpu = gpuarray.empty((nx,nx), data_type, order="F", allocator=alloc)
+    Vh_gpu = gpuarray.empty((nx,nx), data_type, order="F", allocator=alloc)
     
     #Economic SVD
     cula_func_gesvd('S', 'S', m, nx, int(X_gpu.gpudata), m, int(s_gpu.gpudata), 
-                    int(U_gpu.gpudata), m, int(Vt_gpu.gpudata), nx)
+                    int(U_gpu.gpudata), m, int(Vh_gpu.gpudata), nx)
     
-    #Low-rank DMD: trancate SVD if k < nx
+    #Low-rank DMD: trancate SVD if k < nx   
+    
     if k != nx:
         s_gpu = s_gpu[:k]
         U_gpu = U_gpu[: , :k]
-        Vt_gpu = Vt_gpu[:k , : ]
-    
+        #Vt_gpu = Vt_gpu[:k , : ]
+        Vh_gpu = Vh_gpu[:k , : ]
+
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #Solve the LS problem to find estimate for M using the pseudo-inverse    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
@@ -2594,25 +2698,36 @@ def dmd(a_gpu, k=None, modes='exact', handle=None):
     
     #Allocate G and M  
     G_gpu = gpuarray.empty((m,k), data_type, order="F", allocator=alloc)    
-    M_gpu = gpuarray.empty((k,k), data_type, order="F", allocator=alloc)    
+    M_gpu = gpuarray.empty((k,k), data_type, order="F", allocator=alloc)     
     
     #i) s = s **-1 (inverse)
     if data_type == np.complex64 or data_type == np.complex128:
         s_gpu = 1/s_gpu
         s_gpu = s_gpu + 1j * gpuarray.zeros_like(s_gpu)
     else:
-        s_gpu = 1/s_gpu
-        
-    #ii) real/complex: scale Vt = diag(s**-1) * Vt
-    cublas_func_dgmm(handle, 'l', k, k, int(Vt_gpu.gpudata), k, 
-                     int(s_gpu.gpudata), 1, int(Vt_gpu.gpudata), k)
-   
-    #iii) real: G = Y * (S**-1 * Vt).T, complex: G = Y * (S**-1 * Vt).H
-    cublas_func_gemm(handle, 'n', TRANS_type, m, k, k, alpha, 
-                     int(Y_gpu.gpudata), m, int(Vt_gpu.gpudata), k, 
-                        beta, int(G_gpu.gpudata), m )      
+        s_gpu = 1.0/s_gpu
+
     
-    #iv) real/complex: M = M * G 
+    #ii) real/complex: scale Vs =  Vt* x diag(s**-1) 
+    Vs_gpu = gpuarray.empty((nx,k), data_type, order="F", allocator=alloc) 
+    lda = max(1, Vh_gpu.strides[1] // Vh_gpu.dtype.itemsize)
+    ldb = max(1, Vs_gpu.strides[1] // Vs_gpu.dtype.itemsize)     
+    transpose_func(handle, TRANS_type, TRANS_type, nx, k,
+                   alpha, int(Vh_gpu.gpudata), lda, beta, int(Vh_gpu.gpudata), lda,
+                   int(Vs_gpu.gpudata), ldb)    
+    
+    
+    cublas_func_dgmm(handle, 'r', nx, k, int(Vs_gpu.gpudata), nx, 
+                     int(s_gpu.gpudata), 1 , int(Vs_gpu.gpudata), nx)
+   
+
+    #iii) real: G = Y * Vs , complex: G = Y x Vs
+    cublas_func_gemm(handle, 'n', 'n', m, k, nx, alpha, 
+                     int(Y_gpu.gpudata), m, int(Vs_gpu.gpudata), nx, 
+                        beta, int(G_gpu.gpudata), m )      
+   
+    
+    #iv) real/complex: M = U* x G 
     cublas_func_gemm(handle, TRANS_type, 'n', k, k, m, alpha, 
                      int(U_gpu.gpudata), m, int(G_gpu.gpudata), m, 
                     beta, int(M_gpu.gpudata), k )     
@@ -2622,6 +2737,7 @@ def dmd(a_gpu, k=None, modes='exact', handle=None):
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #Note: If a_gpu is real the imag part is omitted
     Vr_gpu, w_gpu = eig(M_gpu, 'N', 'V', 'F')
+    omega = cumath.log(w_gpu)
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
     #Compute DMD Modes 
@@ -2649,23 +2765,33 @@ def dmd(a_gpu, k=None, modes='exact', handle=None):
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #Compute amplitueds b using least-squares: Fb=x1
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    #x1_gpu = a_gpu[:,0].copy() 
-    x1_gpu = gpuarray.empty(m, data_type, order="F", allocator=alloc) 
-    copy_func(handle, x1_gpu.size, int(a_gpu[:,0].gpudata), 1, int(x1_gpu.gpudata), 1)
-    cula_func_gels( 'N', m, k, int(1) , F_gpu_temp.gpudata, m, x1_gpu.gpudata, m)
-    b_gpu = x1_gpu
+    if return_amplitudes==True:    
+        #x1_gpu = a_gpu[:,0].copy() 
+        x1_gpu = gpuarray.empty(m, data_type, order="F", allocator=alloc) 
+        copy_func(handle, x1_gpu.size, int(a_gpu[:,0].gpudata), 1, int(x1_gpu.gpudata), 1)
+        cula_func_gels( 'N', m, k, int(1) , F_gpu_temp.gpudata, m, x1_gpu.gpudata, m)
+        b_gpu = x1_gpu
     
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #Compute Vandermonde matrix (CPU)
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    V_gpu = vander(w_gpu, n=nx)
+    if return_vandermonde==True:      
+        V_gpu = vander(w_gpu, n=nx)
     
     # Free internal CULA memory:
     cula.culaFreeBuffers()
 
-    #Return
-    return F_gpu, b_gpu[:k], V_gpu 
-  
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    #Return 
+    #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
+    if return_amplitudes==True and return_vandermonde==True:
+        return F_gpu, b_gpu[:k], V_gpu, omega
+    elif return_amplitudes==True and return_vandermonde==False:
+        return F_gpu, b_gpu[:k], omega
+    elif return_amplitudes==False and return_vandermonde==True:
+        return F_gpu, V_gpu, omega
+    else:
+        return F_gpu, omega   
 
 
 if __name__ == "__main__":

@@ -11,15 +11,15 @@ Release 0.5.2 (under development)
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------
 * More CUSOLVER wrappers.
-* Eigenvalue/eigenvector computation (eng. by N. Ben Erichson).
-* QR decomposition (enh. by N. Ben Erichson).
-* Improved Windows 10 compatibility (enh. by N. Ben Erichson).
-* Function for constructing Vandermonde matrix in GPU memory (enh. by N. Ben 
+* Eigenvalue/eigenvector computation (eng. by N. Benjamin Erichson).
+* QR decomposition (enh. by N. Benjamin Erichson).
+* Improved Windows 10 compatibility (enh. by N. Benjamin Erichson).
+* Function for constructing Vandermonde matrix in GPU memory (enh. by N. Benjamin 
   Erichson).
-* Unrandomized and randomized Dynamic Mode Decomposition (enh. by N. Ben 
+* Standard and randomized Dynamic Mode Decomposition (enh. by N. Benjamin 
   Erichson).
-* Randomized linear algebra routines (enh. by N. Ben Erichson).
-* Add triu function (enh. by N. Ben Erichson).
+* Randomized linear algebra routines (enh. by N. Benjamin Erichson).
+* Add triu function (enh. by N. Benjamin Erichson).
 * Support Bessel correction in computation of variance and standard 
   deviation (#143).
 * Fix pip installation issues.
