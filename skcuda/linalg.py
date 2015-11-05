@@ -2478,18 +2478,15 @@ def dmd(a_gpu, k=None, modes='exact', return_amplitudes=False, return_vandermond
      --------
      >>> #Numpy
      >>> import numpy as np
-    
      >>> #Plot libs
      >>> import matplotlib.pyplot as plt
      >>> from mpl_toolkits.mplot3d import Axes3D
      >>> from matplotlib import cm
-    
      >>> #GPU DMD libs
      >>> import pycuda.gpuarray as gpuarray
      >>> import pycuda.autoinit
      >>> from skcuda import linalg, rlinalg
      >>> linalg.init()
-    
     
      >>> # Define time and space discretizations
      >>> x=np.linspace( -15, 15, 200)
@@ -2502,7 +2499,6 @@ def dmd(a_gpu, k=None, modes='exact', return_amplitudes=False, return_vandermond
      >>> # Add both signals
      >>> F = (F1+F2)
     
-    
      >>> #Plot dataset
      >>> fig = plt.figure()
      >>> ax = fig.add_subplot(231, projection='3d')
@@ -2510,28 +2506,26 @@ def dmd(a_gpu, k=None, modes='exact', return_amplitudes=False, return_vandermond
      >>> surf = ax.plot_surface(X, T, F, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=True)
      >>> ax.set_zlim(-1, 1)
      >>> plt.title('F')
-    
      >>> ax = fig.add_subplot(232, projection='3d')
      >>> ax = fig.gca(projection='3d')
      >>> surf = ax.plot_surface(X, T, F1, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
      >>> ax.set_zlim(-1, 1)
      >>> plt.title('F1')
-    
      >>> ax = fig.add_subplot(233, projection='3d')
      >>> ax = fig.gca(projection='3d')
      >>> surf = ax.plot_surface(X, T, F2, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
      >>> ax.set_zlim(-1, 1)
      >>> plt.title('F2')
     
-    
      >>> #Dynamic Mode Decomposition
      >>> F_gpu = np.array(F.T, np.complex64, order='F')
      >>> F_gpu = gpuarray.to_gpu(F_gpu) 
      >>> Fmodes_gpu, b_gpu, V_gpu, omega_gpu = linalg.dmd(F_gpu, k=2, modes='exact', return_amplitudes=True, return_vandermonde=True)
      >>> omega = omega_gpu.get()
-    
-     >>> #Plot
      >>> plt.scatter(omega.real, omega.imag, marker='o', c='r')
+
+    
+     >>> #Recover original signal
      >>> F1tilde = np.dot(Fmodes_gpu[:,0:1].get() , np.dot(b_gpu[0].get(), V_gpu[0:1,:].get() ) )
      >>> F2tilde = np.dot(Fmodes_gpu[:,1:2].get() , np.dot(b_gpu[1].get(), V_gpu[1:2,:].get() ) )
     
@@ -2542,14 +2536,12 @@ def dmd(a_gpu, k=None, modes='exact', return_amplitudes=False, return_vandermond
      >>> surf = ax.plot_surface(X[0:F1tilde.shape[1],:], T[0:F1tilde.shape[1],:], F1tilde.T, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
      >>> ax.set_zlim(-1, 1)
      >>> plt.title('F1_tilde')
-    
      >>> #Mode 1
      >>> ax = fig.add_subplot(236, projection='3d')
      >>> ax = fig.gca(projection='3d')
      >>> surf = ax.plot_surface(X[0:F2tilde.shape[1],:], T[0:F2tilde.shape[1],:], F2tilde.T, rstride=1, cstride=1, cmap=cm.coolwarm, linewidth=0, antialiased=False)
      >>> ax.set_zlim(-1, 1)
      >>> plt.title('F2_tilde')
-    
      >>> plt.show() 
     """
 
