@@ -457,3 +457,118 @@ def cufftEstimateMany(rank, n,
                                          ctypes.byref(worksize))
     cufftCheckStatus(status)
     return worksize.value
+
+_libcufft.cufftGetSize1d.restype = int
+_libcufft.cufftGetSize1d.argtypes = [_types.plan,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     ctypes.c_void_p]
+def cufftGetSize1d(plan, nx, fft_type, batch=1):
+    """
+    Return more accurate estimate of work area size required for 1D FFT,
+    taking into account any plan settings that may have been made.
+
+    References
+    ----------
+    `cufftGetSize1d <http://docs.nvidia.com/cuda/cufft/#function-cufftgetsize1d>`_
+    """
+
+    worksize = _types.worksize()
+    status = _libcufft.cufftGetSize1d(plan, nx, fft_type, batch,
+                                      ctypes.byref(worksize))
+    cufftCheckStatus(status)
+    return worksize.value
+
+_libcufft.cufftGetSize2d.restype = int
+_libcufft.cufftGetSize2d.argtypes = [_types.plan,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     ctypes.c_void_p]
+def cufftGetSize2d(plan, nx, ny, fft_type):
+    """
+    Return more accurate estimate of work area size required for 2D FFT,
+    taking into account any plan settings that may have been made.
+
+    References
+    ----------
+    `cufftGetSize2d <http://docs.nvidia.com/cuda/cufft/#function-cufftgetsize2d>`_
+    """
+    worksize = _types.worksize()
+    status = _libcufft.cufftGetSize2d(plan, nx, ny, fft_type,
+                                      ctypes.byref(worksize))
+    cufftCheckStatus(status)
+    return worksize.value
+
+_libcufft.cufftGetSize3d.restype = int
+_libcufft.cufftGetSize3d.argtypes = [_types.plan,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     ctypes.c_int,
+                                     ctypes.c_void_p]
+def cufftGetSize3d(plan, nx, ny, nz, fft_type):
+    """
+    Return more accurate estimate of work area size required for 3D FFT,
+    taking into account any plan settings that may have been made.
+
+    References
+    ----------
+    `cufftGetSize3d <http://docs.nvidia.com/cuda/cufft/#function-cufftgetsize3d>`_
+    """
+    worksize = _types.worksize()
+    status = _libcufft.cufftGetSize3d(plan, nx, ny, nz, fft_type,
+                                      ctypes.byref(worksize))
+    cufftCheckStatus(status)
+    return worksize.value
+
+_libcufft.cufftGetSizeMany.restype = int
+_libcufft.cufftGetSizeMany.argtypes = [_types.plan,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p]
+def cufftGetSizeMany(plan, rank, n,
+                     inembed, istride, idist,
+                     onembed, ostride, odist, fft_type, batch):
+    """
+    Return more accurate estimate of work area size required for batched FFT,
+    taking into account any plan settings that may have been made.
+
+    References
+    ----------
+    `cufftGetSizeMany <http://docs.nvidia.com/cuda/cufft/#function-cufftgetsizemany>`_
+    """
+
+    worksize = _types.worksize()
+    status = _libcufft.cufftGetSizeMany(plan, rank, n,
+                                        inembed, istride, idist,
+                                        onembed, ostride, odist,
+                                        fft_type, batch,
+                                        ctypes.byref(worksize))
+    cufftCheckStatus(status)
+    return worksize.value
+
+_libcufft.cufftGetSize.restype = int
+_libcufft.cufftGetSize.argtypes = [_types.plan,
+                                   ctypes.c_void_p]
+def cufftGetSize(plan):
+    """
+    Return actual size of work area for FFT described in plan.
+
+    References
+    ----------
+    `cufftGetSize <http://docs.nvidia.com/cuda/cufft/#function-cufftgetsize>`_
+    """
+    worksize = _types.worksize()
+    status = _libcufft.cufftGetSize(plan, ctypes.byref(worksize))
+    cufftCheckStatus(status)
+    return worksize.value
