@@ -101,6 +101,7 @@ class _types:
     """Some alias types."""
     plan = ctypes.c_int
     stream = ctypes.c_void_p
+    worksize = ctypes.c_size_t
 
 def cufftCheckStatus(status):
     """Raise an exception if the specified CUBLAS status is an error."""
@@ -202,13 +203,13 @@ _libcufft.cufftPlanMany.argtypes = [ctypes.c_void_p,
                                     ctypes.c_int,
                                     ctypes.c_int,
                                     ctypes.c_int,
-                                    ctypes.c_int]                                    
-def cufftPlanMany(rank, n, 
-                  inembed, istride, idist, 
+                                    ctypes.c_int]
+def cufftPlanMany(rank, n,
+                  inembed, istride, idist,
                   onembed, ostride, odist, fft_type, batch):
     """
     Create batched FFT plan configuration.
-    
+
     References
     ----------
     `cufftPlanMany <http://docs.nvidia.com/cuda/cufft/#function-cufftplanmany>`_
@@ -216,8 +217,8 @@ def cufftPlanMany(rank, n,
 
     plan = _types.plan()
     status = _libcufft.cufftPlanMany(ctypes.byref(plan), rank, n,
-                                     inembed, istride, idist, 
-                                     onembed, ostride, odist, 
+                                     inembed, istride, idist,
+                                     onembed, ostride, odist,
                                      fft_type, batch)
     cufftCheckStatus(status)
     return plan
@@ -231,7 +232,7 @@ def cufftDestroy(plan):
     ----------
     `cufftDestroy <http://docs.nvidia.com/cuda/cufft/#function-cufftdestroy>`_
     """
-    
+
     status = _libcufft.cufftDestroy(plan)
     cufftCheckStatus(status)
 
@@ -331,7 +332,7 @@ def cufftExecD2Z(plan, idata, odata):
     ----------
     `cufftExecD2Z <http://docs.nvidia.com/cuda/cufft/#function-cufftexecr2c-cufftexecd2z>`_
     """
-    
+
     status = _libcufft.cufftExecD2Z(plan, idata, odata)
     cufftCheckStatus(status)
 
@@ -347,7 +348,7 @@ def cufftExecZ2D(plan, idata, odata):
     ----------
     `cufftExecZ2D <http://docs.nvidia.com/cuda/cufft/#function-cufftexecc2r-cufftexecz2d>`_
     """
-    
+
     status = _libcufft.cufftExecZ2D(plan, idata, odata)
     cufftCheckStatus(status)
 
@@ -362,6 +363,97 @@ def cufftSetStream(plan, stream):
     ----------
     `cufftSetStream <http://docs.nvidia.com/cuda/cufft/#function-cufftsetstream>`_
     """
-    
+
     status = _libcufft.cufftSetStream(plan, stream)
     cufftCheckStatus(status)
+
+_libcufft.cufftEstimate1d.restype = int
+_libcufft.cufftEstimate1d.argtypes = [ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p]
+def cufftEstimate1d(nx, fft_type, batch=1):
+    """
+    Return estimated work area for 1D FFT.
+
+    References
+    ----------
+    `cufftEstimate1d <http://docs.nvidia.com/cuda/cufft/#function-cufftestimate1d>`_
+    """
+
+    worksize = _types.worksize()
+    status = _libcufft.cufftEstimate1d(nx, fft_type, batch,
+                                       ctypes.byref(worksize))
+    cufftCheckStatus(status)
+    return worksize.value
+
+_libcufft.cufftEstimate2d.restype = int
+_libcufft.cufftEstimate2d.argtypes = [ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p]
+def cufftEstimate2d(nx, ny, fft_type):
+    """
+    Return estimated work area for 2D FFT.
+
+    References
+    ----------
+    `cufftEstimate2d <http://docs.nvidia.com/cuda/cufft/#function-cufftestimate2d>`_
+    """
+    worksize = _types.worksize()
+    status = _libcufft.cufftEstimate2d(nx, ny, fft_type,
+                                       ctypes.byref(worksize))
+    cufftCheckStatus(status)
+    return worksize.value
+
+_libcufft.cufftEstimate3d.restype = int
+_libcufft.cufftEstimate3d.argtypes = [ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p]
+def cufftEstimate3d(nx, ny, nz, fft_type):
+    """
+    Return estimated work area for 3D FFT.
+
+    References
+    ----------
+    `cufftEstimate3d <http://docs.nvidia.com/cuda/cufft/#function-cufftestimate3d>`_
+    """
+    worksize = _types.worksize()
+    status = _libcufft.cufftEstimate3d(nx, ny, nz, fft_type,
+                                       ctypes.byref(worksize))
+    cufftCheckStatus(status)
+    return worksize.value
+
+_libcufft.cufftEstimateMany.restype = int
+_libcufft.cufftEstimateMany.argtypes = [ctypes.c_int,
+                                        ctypes.c_void_p,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int,
+                                        ctypes.c_int,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int,
+                                        ctypes.c_int,
+                                        ctypes.c_int,
+                                        ctypes.c_int,
+                                        ctypes.c_void_p]
+def cufftEstimateMany(rank, n,
+                      inembed, istride, idist,
+                      onembed, ostride, odist, fft_type, batch):
+    """
+    Return estimated work area for batched FFT.
+
+    References
+    ----------
+    `cufftEstimateMany <http://docs.nvidia.com/cuda/cufft/#function-cufftestimatemany>`_
+    """
+
+    worksize = _types.worksize()
+    status = _libcufft.cufftEstimateMany(rank, n,
+                                         inembed, istride, idist,
+                                         onembed, ostride, odist,
+                                         fft_type, batch,
+                                         ctypes.byref(worksize))
+    cufftCheckStatus(status)
+    return worksize.value
