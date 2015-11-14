@@ -32,3 +32,12 @@ Wrapper Routines
     cufftExecZ2D
     cufftSetCompatibilityMode
     cufftSetStream
+    cufftEstimate1d
+    cufftEstimate2d
+    cufftEstimate3d
+    cufftEstimateMany
+    cufftGetSize1d
+    cufftGetSize2d
+    cufftGetSize3d
+    cufftGetSizeMany
+    cufftGetSize

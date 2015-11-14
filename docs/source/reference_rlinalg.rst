@@ -10,4 +10,5 @@ Randomized Linear Algebra Routines
    :nosignatures:
 
    rdmd
+   cdmd
    rsvd
