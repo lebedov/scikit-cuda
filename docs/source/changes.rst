@@ -9,6 +9,7 @@ Release 0.5.2 (under development)
 * Fix Python 3 issues with CUSOLVER wrapper functions (#145)
 * Add support for using either CUSOLVER or CULA for computing SVD.
 * Compressed Dynamic Mode Decomposition (enh. by N. Benjamin Erichson).
+* Wrappers for CUFFT size estimation (enh. by Luke Pfister).
 
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------
