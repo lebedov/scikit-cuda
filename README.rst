@@ -42,6 +42,11 @@ See the included `AUTHORS`_ file for more information.
 
 .. _AUTHORS: docs/source/authors.rst
 
+Related
+-------
+Python wrappers for cuDNN by Hannes Breschneider are available `here
+<https://github.com/hannes-brt/cudnn-python-wrappers>`_.
+
 License
 -------
 This software is licensed under the 

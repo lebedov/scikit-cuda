@@ -10,6 +10,9 @@ well as interfaces to select functions in the free and standard versions of the
 functions similar to their C counterparts and high-level functions comparable to
 those in `NumPy and Scipy <http://www.scipy.org>`_ are provided.
 
+Python wrappers for cuDNN by Hannes Breschneider are available `here
+<https://github.com/hannes-brt/cudnn-python-wrappers>`_.
+
 Contents
 --------
 .. toctree::
