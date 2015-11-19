@@ -44,7 +44,7 @@ See the included `AUTHORS`_ file for more information.
 
 Related
 -------
-Python wrappers for cuDNN by Hannes Breschneider are available `here
+Python wrappers for cuDNN by Hannes Bretschneider are available `here
 <https://github.com/hannes-brt/cudnn-python-wrappers>`_.
 
 License
