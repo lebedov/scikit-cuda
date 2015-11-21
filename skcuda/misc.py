@@ -820,7 +820,7 @@ def _get_binaryop_vecmat_kernel(dtype, binary_op):
     #include <pycuda-complex.hpp>
 
     __global__ void opColVecToMat(const ${type} *mat, const ${type} *vec, ${type} *out,
-                                   const int32_t n, const int32_t m){
+                                   const int n, const int m){
         const int tx = threadIdx.x;
         const int ty = threadIdx.y;
         const int tidx = blockIdx.x * blockDim.x + threadIdx.x;
