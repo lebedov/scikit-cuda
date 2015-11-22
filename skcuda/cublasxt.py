@@ -102,11 +102,11 @@ _libcublas.cublasXtSgemm.argtypes = [ctypes.c_int,
                                      ctypes.c_int]
 def cublasXtSgemm(handle, transa, transb, m, n, k, alpha, A, lda, B, ldb,
                   beta, C, ldc):
-    _libcublas.cublasXtSgemm(handle, transa, transb, m, n, k,
-                             ctypes.byref(ctypes.c_float(alpha)),
-                             int(A), lda, int(B), ldb,
-                             ctypes.byref(ctypes.c_float(beta)),
-                             int(C), ldc)
+    status = _libcublas.cublasXtSgemm(handle, transa, transb, m, n, k,
+                                      ctypes.byref(ctypes.c_float(alpha)),
+                                      int(A), lda, int(B), ldb,
+                                      ctypes.byref(ctypes.c_float(beta)),
+                                      int(C), ldc)
     cublasCheckStatus(status)
 
 _libcublas.cublasXtDgemm.restype = int
@@ -126,11 +126,11 @@ _libcublas.cublasXtDgemm.argtypes = [ctypes.c_int,
                                      ctypes.c_int]
 def cublasXtDgemm(handle, transa, transb, m, n, k, alpha, A, lda, B, ldb,
                   beta, C, ldc):
-    _libcublas.cublasXtDgemm(handle, transa, transb, m, n, k,
-                             ctypes.byref(ctypes.c_double(alpha)),
-                             int(A), lda, int(B), ldb,
-                             ctypes.byref(ctypes.c_double(beta)),
-                             int(C), ldc)
+    status = _libcublas.cublasXtDgemm(handle, transa, transb, m, n, k,
+                                      ctypes.byref(ctypes.c_double(alpha)),
+                                      int(A), lda, int(B), ldb,
+                                      ctypes.byref(ctypes.c_double(beta)),
+                                      int(C), ldc)
     cublasCheckStatus(status)
 
 _libcublas.cublasXtCgemm.restype = int
@@ -150,13 +150,13 @@ _libcublas.cublasXtCgemm.argtypes = [ctypes.c_int,
                                      ctypes.c_int]
 def cublasXtCgemm(handle, transa, transb, m, n, k, alpha, A, lda, B, ldb,
                   beta, C, ldc):
-    _libcublas.cublasXtCgemm(handle, transa, transb, m, n, k,
-                             ctypes.byref(cuda.cuFloatComplex(alpha.real,
-                                                              alpha.imag)),
-                             int(A), lda, int(B), ldb,
-                             ctypes.byref(cuda.cuFloatComplex(beta.real,
-                                                              beta.imag)),
-                             int(C), ldc)
+    status = _libcublas.cublasXtCgemm(handle, transa, transb, m, n, k,
+                                      ctypes.byref(cuda.cuFloatComplex(alpha.real,
+                                                                       alpha.imag)),
+                                      int(A), lda, int(B), ldb,
+                                      ctypes.byref(cuda.cuFloatComplex(beta.real,
+                                                                       beta.imag)),
+                                      int(C), ldc)
     cublasCheckStatus(status)
 
 _libcublas.cublasXtZgemm.restype = int
@@ -176,11 +176,11 @@ _libcublas.cublasXtZgemm.argtypes = [ctypes.c_int,
                                      ctypes.c_int]
 def cublasXtZgemm(handle, transa, transb, m, n, k, alpha, A, lda, B, ldb,
                   beta, C, ldc):
-    _libcublas.cublasXtZgemm(handle, transa, transb, m, n, k,
-                             ctypes.byref(cuda.cuDoubleComplex(alpha.real,
+    status = _libcublas.cublasXtZgemm(handle, transa, transb, m, n, k,
+                                      ctypes.byref(cuda.cuDoubleComplex(alpha.real,
                                                                alpha.imag)),
-                             int(A), lda, int(B), ldb,
-                             ctypes.byref(cuda.cuDoubleComplex(beta.real,
+                                      int(A), lda, int(B), ldb,
+                                      ctypes.byref(cuda.cuDoubleComplex(beta.real,
                                                                beta.imag)),
-                             int(C), ldc)
+                                      int(C), ldc)
     cublasCheckStatus(status)
