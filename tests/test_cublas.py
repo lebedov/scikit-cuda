@@ -4,8 +4,6 @@
 Unit tests for scikits.cuda.cublas
 """
 
-
-
 from unittest import main, makeSuite, TestCase, TestSuite
 
 import pycuda.autoinit

@@ -6,8 +6,9 @@ Python interface to CUBLAS-XT functions.
 Note: this module does not explicitly depend on PyCUDA.
 """
 
-from cublas import *
-from cublas import _libcublas, _CUBLAS_OP
+import ctypes
+
+from cublas import cublasCheckStatus, _libcublas, _CUBLAS_OP
 from . import cuda
 
 CUBLASXT_FLOAT = 0
@@ -42,6 +43,24 @@ _libcublas.cublasXtDestroy.argtypes = [ctypes.c_int]
 def cublasXtDestroy(handle):
     status = _libcublas.cublasXtDestroy(handle)
     cublasCheckStatus(status)
+
+_libcublas.cublasXtGetNumBoards.restype = int
+_libcublas.cublasXtGetNumBoards.argtypes = [ctypes.c_int,
+                                            ctypes.c_void_p,
+                                            ctypes.c_void_p]
+def cublasXtGetNumBoards(handle, deviceId):
+    nbBoards = ctypes.c_int()
+    status = _libcublas.cublasXtGetNumBoards(handle, deviceId, ctypes.byref(nbBoards))
+    cublasCheckStatus(status)
+    return nbBoards.value
+
+_libcublas.cublasXtMaxBoards.restype = int
+_libcublas.cublasXtMaxBoards.argtypes = [ctypes.c_void_p]
+def cublasXtMaxBoards():
+    nbGpuBoards = ctypes.c_int()
+    status = _libcublas.cublasXtMaxBoards(ctypes.byref(nbGpuBoards))
+    cublasCheckStatus(status)
+    return nbGpuBoards.value
 
 _libcublas.cublasXtDeviceSelect.restype = int
 _libcublas.cublasXtDeviceSelect.argtypes = [ctypes.c_int,
