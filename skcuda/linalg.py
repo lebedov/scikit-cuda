@@ -1077,54 +1077,22 @@ def conj(x_gpu, overwrite=False):
         return y_gpu
 conj.cache = {}
 
-
 @context_dependent_memoize
-def _get_diag_kernel(use_double, use_complex):
-    template = Template("""
-    #include <pycuda-complex.hpp>
-
-    #if ${use_double}
-    #if ${use_complex}
-    #define FLOAT pycuda::complex<double>
-    #else
-    #define FLOAT double
-    #endif
-    #else
-    #if ${use_complex}
-    #define FLOAT pycuda::complex<float>
-    #else
-    #define FLOAT float
-    #endif
-    #endif
-
-    // Assumes that d already contains zeros in all positions.
-    // N must contain the number of elements in v.
-    __global__ void diag(FLOAT *v, FLOAT *d, int N) {
-        unsigned int idx = blockIdx.y*blockDim.x*gridDim.x+
-                           blockIdx.x*blockDim.x+threadIdx.x;
-        if (idx < N)
-            d[idx*(N+1)] = v[idx];
-    }
-    """)
-
-    # Set this to False when debugging to make sure the compiled kernel is
-    # not cached:
-    tmpl = template.substitute(use_double=use_double, use_complex=use_complex)
-    cache_dir=None
-    diag_mod = SourceModule(tmpl, cache_dir=cache_dir)
-    return diag_mod.get_function("diag")
-
+def _get_diag_kernel(dtype):
+    ctype=tools.dtype_to_ctype(dtype)
+    return el.ElementwiseKernel("{ctype} *d, {ctype} *v, int N".format(ctype=ctype), 
+                                "d[i*(N+1)] = v[i]")
 
 def diag(v_gpu):
     """
     Construct a diagonal matrix if input array is one-dimensional,
     or extracts diagonal entries of a two-dimensional array.
 
-    If input-array is one-dimensional: Constructs a matrix in device
+    If input-array is one-dimensional, constructs a matrix in device
     memory whose diagonal elements correspond to the elements in the
     specified array; all non-diagonal elements are set to 0.
 
-    If input-array is two-dimensional: Constructs an array in device memory
+    If input-array is two-dimensional, constructs an array in device memory
     whose elements correspond to the elements along the main-diagonal
     of the specified array.
 
@@ -1194,23 +1162,15 @@ def diag(v_gpu):
     elif len(v_gpu.shape) >= 3:
         raise ValueError('input array cannot have greater than 2-dimensions')
 
-    use_double = int(v_gpu.dtype in [np.float64, np.complex128])
-    use_complex = int(v_gpu.dtype in [np.complex64, np.complex128])
-
     # Initialize output matrix:
-    d_gpu = misc.zeros((v_gpu.size, v_gpu.size), v_gpu.dtype, allocator=alloc)
+    N = len(v_gpu)
+    if N <= 0:
+        raise ValueError('N must be greater than 0')
+    d_gpu = misc.zeros((N, N), v_gpu.dtype, allocator=alloc)
 
-    # Get block/grid sizes:
-    dev = misc.get_current_device()
-    block_dim, grid_dim = misc.select_block_grid_sizes(dev, d_gpu.shape)
-
-    diag = _get_diag_kernel(use_double, use_complex)
-    diag(v_gpu, d_gpu, np.uint32(v_gpu.size),
-         block=block_dim,
-         grid=grid_dim)
-
+    func = _get_diag_kernel(v_gpu.dtype)
+    func(d_gpu, v_gpu, N, slice=slice(0, N))
     return d_gpu
-
 
 @context_dependent_memoize
 def _get_eye_kernel(dtype):
