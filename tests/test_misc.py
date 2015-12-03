@@ -4,6 +4,7 @@
 Unit tests for scikits.cuda.misc
 """
 
+import numbers
 from unittest import main, TestCase, TestSuite
 
 import pycuda.autoinit
@@ -173,12 +174,20 @@ class test_misc(TestCase):
                            np.arange(5, dtype=np.double))
 
     def impl_test_binaryop_2d(self, dtype):
-        a_sca = np.random.normal(scale=5.0, size=()).astype(dtype)
-        b_sca = np.random.normal(scale=5.0, size=()).astype(dtype)
-        a_vec = np.random.normal(scale=5.0, size=(3,)).astype(dtype)
-        b_vec = np.random.normal(scale=5.0, size=(3,)).astype(dtype)
-        a_mat = np.random.normal(scale=5.0, size=(3, 2)).astype(dtype)
-        b_mat = np.random.normal(scale=5.0, size=(3, 2)).astype(dtype)
+        if issubclass(dtype, numbers.Integral):
+            a_sca = np.array(np.random.randint(1, 10), dtype=dtype)
+            b_sca = np.array(np.random.randint(1, 10), dtype=dtype)
+            a_vec = np.random.randint(1, 10, 3).astype(dtype)
+            b_vec = np.random.randint(1, 10, 3).astype(dtype)
+            a_mat = np.random.randint(1, 10, 6).reshape((3, 2)).astype(dtype)
+            b_mat = np.random.randint(1, 10, 6).reshape((3, 2)).astype(dtype)            
+        else:
+            a_sca = np.random.normal(scale=5.0, size=()).astype(dtype)
+            b_sca = np.random.normal(scale=5.0, size=()).astype(dtype)
+            a_vec = np.random.normal(scale=5.0, size=(3,)).astype(dtype)
+            b_vec = np.random.normal(scale=5.0, size=(3,)).astype(dtype)
+            a_mat = np.random.normal(scale=5.0, size=(3, 2)).astype(dtype)
+            b_mat = np.random.normal(scale=5.0, size=(3, 2)).astype(dtype)
 
         a_sca_gpu = gpuarray.to_gpu(a_sca)
         b_sca_gpu = gpuarray.to_gpu(b_sca)
@@ -207,6 +216,12 @@ class test_misc(TestCase):
         assert np.allclose(misc.divide(a_vec_gpu, b_vec_gpu).get(), a_vec/b_vec)
         assert np.allclose(misc.divide(a_mat_gpu, b_mat_gpu).get(), a_mat/b_mat)
 
+    def test_binaryop_2d_int32(self):
+        self.impl_test_binaryop_2d(np.int32)
+
+    def test_binaryop_2d_float32(self):
+        self.impl_test_binaryop_2d(np.float32)
+
     def test_binaryop_2d_float32(self):
         self.impl_test_binaryop_2d(np.float32)
 
@@ -220,13 +235,22 @@ class test_misc(TestCase):
         self.impl_test_binaryop_2d(np.complex128)
 
     def impl_test_binaryop_matvec(self, dtype):
-        x = np.random.normal(scale=5.0, size=(3, 5)).astype(dtype)
-        a = np.random.normal(scale=5.0, size=(1, 5)).astype(dtype)
-        b = np.random.normal(scale=5.0, size=(3, 1)).astype(dtype)
+        if issubclass(dtype, numbers.Integral):
+            x = np.random.randint(1, 10, 15).reshape((3, 5)).astype(dtype)
+            a = np.random.randint(1, 10, 5).reshape((1, 5)).astype(dtype)
+            b = np.random.randint(1, 10, 3).reshape((3, 1)).astype(dtype)
 
-        # the following two test correct broadcasting on 0D vectors
-        c = np.random.normal(scale=5.0, size=(5, )).astype(dtype)
-        d = np.random.normal(scale=5.0, size=(3, )).astype(dtype)
+            # the following two test correct broadcasting on 0D vectors
+            c = np.random.randint(1, 10, 5).reshape((5, )).astype(dtype)
+            d = np.random.randint(1, 10, 3).reshape((3, )).astype(dtype)
+        else:
+            x = np.random.normal(scale=5.0, size=(3, 5)).astype(dtype)
+            a = np.random.normal(scale=5.0, size=(1, 5)).astype(dtype)
+            b = np.random.normal(scale=5.0, size=(3, 1)).astype(dtype)
+
+            # the following two test correct broadcasting on 0D vectors
+            c = np.random.normal(scale=5.0, size=(5, )).astype(dtype)
+            d = np.random.normal(scale=5.0, size=(3, )).astype(dtype)
         x_gpu = gpuarray.to_gpu(x)
         a_gpu = gpuarray.to_gpu(a)
         b_gpu = gpuarray.to_gpu(b)
@@ -251,6 +275,9 @@ class test_misc(TestCase):
         assert np.allclose(misc.div_matvec(x_gpu, b_gpu).get(), x/b)
         assert np.allclose(misc.div_matvec(x_gpu, c_gpu).get(), x/c)
         assert_raises(ValueError, misc.div_matvec, x_gpu, d_gpu)
+
+    def test_binaryop_matvec_int32(self):
+        self.impl_test_binaryop_matvec(np.int32)
 
     def test_binaryop_matvec_float32(self):
         self.impl_test_binaryop_matvec(np.float32)
@@ -433,8 +460,10 @@ def suite():
     s.addTest(test_misc('test_get_by_index_float32'))
     s.addTest(test_misc('test_set_by_index_dest_float32'))
     s.addTest(test_misc('test_set_by_index_src_float32'))
+    s.addTest(test_misc('test_binaryop_2d_int32'))
     s.addTest(test_misc('test_binaryop_2d_float32'))
     s.addTest(test_misc('test_binaryop_2d_complex64'))
+    s.addTest(test_misc('test_binaryop_matvec_int32'))
     s.addTest(test_misc('test_binaryop_matvec_float32'))
     s.addTest(test_misc('test_binaryop_matvec_complex64'))
     s.addTest(test_misc('test_sum_float32'))
