@@ -1081,7 +1081,7 @@ def divide(x_gpu, y_gpu):
     doesn't provide them.
     """
 
-    return binaryop_2d("/", operator.div, False, x_gpu, y_gpu)
+    return binaryop_2d("/", operator.truediv, False, x_gpu, y_gpu)
 
 def add_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
     """
