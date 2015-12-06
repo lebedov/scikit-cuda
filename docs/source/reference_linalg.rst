@@ -11,13 +11,11 @@ Linear Algebra Routines
 
    add_diag
    add_dot
-   add_matvec
    cho_factor
    cho_solve
    conj
    det
    diag
-   div_matvec
    dmd
    dot_diag
    dot
@@ -26,7 +24,6 @@ Linear Algebra Routines
    hermitian
    inv
    mdot
-   mult_matvec
    multiply
    norm
    pinv

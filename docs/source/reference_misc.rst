@@ -14,6 +14,7 @@ Miscellaneous Routines
    argmin
    cumsum
    diff
+   div_matvec
    divide
    done_context
    get_by_index
@@ -30,6 +31,7 @@ Miscellaneous Routines
    maxabs
    mean
    min
+   mult_matvec
    multiply
    ones
    ones_like
