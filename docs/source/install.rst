@@ -35,6 +35,11 @@ installed:
 * `NVIDIA CUDA Toolkit <http://www.nvidia.com/object/cuda_home_new.html>`_ 5.0 
   or later.
 
+Note that both Python and the CUDA Toolkit must be built for the same 
+architecture, i.e., Python compiled for a 32-bit architecture will not find the 
+libraries provided by a 64-bit CUDA installation. CUDA versions from 7.0 onwards 
+are 64-bit.
+
 To run the unit tests, the following packages are also required:
 
 * `nose <http://code.google.com/p/python-nose/>`_ 0.11 or later.
