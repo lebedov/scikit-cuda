@@ -13,9 +13,9 @@ Dense Toolkit <http://www.culatools.com/dense>`_.  Both low-level wrapper
 functions similar to their C counterparts and high-level functions comparable to
 those in `NumPy and Scipy <http://www.scipy.org>`_ are provided.
 
-.. image:: https://zenodo.org/badge/doi/10.5281/zenodo.20211.svg
-    :target: http://dx.doi.org/10.5281/zenodo.20211
-    :alt: 0.5.0
+.. image:: https://zenodo.org/badge/doi/10.5281/zenodo.40565.svg
+    :target: http://dx.doi.org/10.5281/zenodo.40565
+    :alt: 0.5.1
 .. image:: https://img.shields.io/pypi/v/scikit-cuda.svg
     :target: https://pypi.python.org/pypi/scikit-cuda
     :alt: Latest Version

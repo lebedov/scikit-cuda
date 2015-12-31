@@ -131,40 +131,6 @@ class test_linalg(TestCase):
                                             vh_gpu.get())),
                            atol=atol_float64)
 
-    def _dot_matrix_vector_tests(self, dtype):
-        a = np.asarray(np.random.rand(4, 4), dtype)
-        b = np.asarray(np.random.rand(4), dtype)
-        a_gpu = gpuarray.to_gpu(a)
-        b_gpu = gpuarray.to_gpu(b)
-        c_gpu = linalg.dot(a_gpu, b_gpu)
-        assert np.allclose(np.dot(a, b), c_gpu.get())
-
-        a = np.asarray(np.random.rand(4), dtype)
-        b = np.asarray(np.random.rand(4, 4), dtype)
-        a_gpu = gpuarray.to_gpu(a)
-        b_gpu = gpuarray.to_gpu(b)
-        c_gpu = linalg.dot(a_gpu, b_gpu)
-        assert np.allclose(np.dot(a, b), c_gpu.get())
-
-        a = np.asarray(np.random.rand(4, 4), dtype)
-        b = np.asarray(np.random.rand(4, 1), dtype)
-        a_gpu = gpuarray.to_gpu(a)
-        b_gpu = gpuarray.to_gpu(b)
-        c_gpu = linalg.dot(a_gpu, b_gpu)
-        assert np.allclose(np.dot(a, b), c_gpu.get())
-
-    def test_dot_matrix_vector_float32(self):
-        self._dot_matrix_vector_tests(np.float32)
-
-    def test_dot_matrix_vector_float64(self):
-        self._dot_matrix_vector_tests(np.float64)
-
-    def test_dot_matrix_vector_complex64(self):
-        self._dot_matrix_vector_tests(np.complex64)
-
-    def test_dot_matrix_vector_complex128(self):
-        self._dot_matrix_vector_tests(np.complex128)
-
     def _dot_matrix_tests(self, dtype, transa, transb):
         a = np.asarray(np.random.rand(4, 2), dtype)
         if transa == 'n':
@@ -1062,8 +1028,6 @@ def suite():
     s.addTest(test_linalg('test_svd_so_cula_complex64'))
     s.addTest(test_linalg('test_svd_aa_cusolver_float32'))
     s.addTest(test_linalg('test_svd_aa_cusolver_complex64'))
-    s.addTest(test_linalg('test_dot_matrix_vector_float32'))
-    s.addTest(test_linalg('test_dot_matrix_vector_complex64'))
     s.addTest(test_linalg('test_dot_matrix_float32'))
     s.addTest(test_linalg('test_dot_matrix_complex64'))
     s.addTest(test_linalg('test_dot_matrix_h_complex64'))
@@ -1137,8 +1101,6 @@ def suite():
         s.addTest(test_linalg('test_svd_so_cula_complex128'))
         s.addTest(test_linalg('test_svd_aa_cusolver_float64'))
         s.addTest(test_linalg('test_svd_aa_cusolver_complex128'))
-        s.addTest(test_linalg('test_dot_matrix_vector_float64'))
-        s.addTest(test_linalg('test_dot_matrix_vector_complex128'))
         s.addTest(test_linalg('test_dot_matrix_float64'))
         s.addTest(test_linalg('test_dot_matrix_complex128'))
         s.addTest(test_linalg('test_dot_matrix_h_complex128'))
