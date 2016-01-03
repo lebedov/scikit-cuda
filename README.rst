@@ -25,6 +25,9 @@ those in `NumPy and Scipy <http://www.scipy.org>`_ are provided.
 .. image:: http://prime4commit.com/projects/102.svg
     :target: http://prime4commit.com/projects/102
     :alt: Support the project
+.. image:: https://www.openhub.net/p/scikit-cuda/widgets/project_thin_badge?format=gif
+    :target: https://www.openhub.net/p/scikit-cuda?ref=Thin+badge
+    :alt: Open Hub
 
 Documentation
 -------------
