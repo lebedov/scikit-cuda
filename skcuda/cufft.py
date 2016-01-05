@@ -572,3 +572,133 @@ def cufftGetSize(plan):
     status = _libcufft.cufftGetSize(plan, ctypes.byref(worksize))
     cufftCheckStatus(status)
     return worksize.value
+
+_libcufft.cufftCreate.restype = int
+_libcufft.cufftCreate.argtypes = [ctypes.c_void_p]
+def cufftCreate():
+    """
+    Creates only an opaque handle.
+
+    References
+    ----------
+    `cufftCreate <http://docs.nvidia.com/cuda/cufft/#function-cufftcreate>`_
+    """
+    plan = _types.plan()
+    status = _libcufft.cufftCreate(ctypes.byref(plan))
+    cufftCheckStatus(status)
+    return plan
+
+_libcufft.cufftMakePlan1d.restype = int
+_libcufft.cufftMakePlan1d.argtypes = [_types.plan,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p]
+def cufftMakePlan1d(plan, nx, fft_type, batch):
+    """
+    Create 1D FFT plan configuration.
+
+    References
+    ----------
+    `cufftMakePlan1d <http://docs.nvidia.com/cuda/cufft/#function-cufftmakeplan1d>`_
+    """
+    worksize = _types.worksize()
+    status = _libcufft.cufftMakePlan1d(plan, nx, fft_type, batch,
+                                       ctypes.byref(worksize))
+    cufftCheckStatus(status)
+    return worksize.value
+
+_libcufft.cufftMakePlan2d.restype = int
+_libcufft.cufftMakePlan2d.argtypes = [_types.plan,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p]
+def cufftMakePlan2d(plan, nx, ny, fft_type):
+    """
+    Create 2D FFT plan configuration.
+
+    References
+    ----------
+    `cufftMakePlan2d <http://docs.nvidia.com/cuda/cufft/#function-cufftmakeplan2d>`_
+    """
+    worksize = _types.worksize()
+    status = _libcufft.cufftMakePlan2d(plan, nx, ny, fft_type,
+                                       ctypes.byref(worksize))
+    cufftCheckStatus(status)
+    return worksize.value
+
+_libcufft.cufftMakePlan3d.restype = int
+_libcufft.cufftMakePlan3d.argtypes = [_types.plan,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p]
+def cufftMakePlan3d(plan, nx, ny, nz, fft_type):
+    """
+    Create 3D FFT plan configuration.
+
+    References
+    ----------
+    `cufftMakePlan3d <http://docs.nvidia.com/cuda/cufft/#function-cufftmakeplan3d>`_
+    """
+    worksize = _types.worksize()
+    status = _libcufft.cufftMakePlan3d(plan, nx, ny, nz, fft_type,
+                                       ctypes.byref(worksize))
+    cufftCheckStatus(status)
+    return worksize.value
+
+_libcufft.cufftMakePlanMany.restype = int
+_libcufft.cufftMakePlanMany.argtypes = [_types.plan,
+                                        ctypes.c_int,
+                                        ctypes.c_void_p,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int,
+                                        ctypes.c_int,
+                                        ctypes.c_void_p,
+                                        ctypes.c_int,
+                                        ctypes.c_int,
+                                        ctypes.c_int,
+                                        ctypes.c_int,
+                                        ctypes.c_void_p]
+def cufftMakePlanMany(plan, rank, n,
+                      inembed, istride, idist,
+                      onembed, ostride, odist, fft_type, batch):
+    worksize = _types.worksize()
+    status = _libcufft.cufftMakePlanMany(plan, rank, n,
+                                         inembed, istride, idist,
+                                         onembed, ostride, odist,
+                                         fft_type, batch,
+                                         ctypes.byref(worksize))
+    cufftCheckStatus(status)
+    return worksize.value
+
+_libcufft.cufftSetAutoAllocation.restype = int
+_libcufft.cufftSetAutoAllocation.argtypes = [_types.plan,
+                                             ctypes.c_int]
+def cufftSetAutoAllocation(plan, auto_allocate):
+    """
+    Indicate whether the caller intends to allocate and manage work areas for
+    plans that have been generated.
+
+    References
+    ----------
+    `cufftSetAutoAllocation <http://docs.nvidia.com/cuda/cufft/#function-cufftsetautoallocation>`_
+    """
+    status = _libcufft.cufftSetAutoAllocation(plan, auto_allocate)
+    cufftCheckStatus(status)
+
+_libcufft.cufftSetWorkArea.restype = int
+_libcufft.cufftSetWorkArea.argtypes = [_types.plan,
+                                       ctypes.c_void_p]
+def cufftSetWorkArea(plan, work_area):
+    """
+    Override the work area pointer associated with a plan.
+
+    References
+    ----------
+    `cufftSetworkArea <http://docs.nvidia.com/cuda/cufft/#function-cufftsetworkarea>`_
+    """
+    status = _libcufft.cufftSetWorkArea(plan, work_area)
+    cufftCheckStatus(status)
