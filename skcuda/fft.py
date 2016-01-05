@@ -55,11 +55,13 @@ class Plan:
     odist : int
         distance between the first element of two consective batches in the
         output data
+    auto_allocate : bool
+        indicates whether the caller intends to allocate and manage the work area
     """
 
     def __init__(self, shape, in_dtype, out_dtype, batch=1, stream=None,
                  mode=0x01, inembed=None, istride=1, idist=0, onembed=None,
-                 ostride=1, odist=0):
+                 ostride=1, odist=0, auto_allocate=True):
 
         if np.isscalar(shape):
             self.shape = (shape, )
@@ -108,20 +110,31 @@ class Plan:
             onembed = onembed.ctypes.data
 
         # Set up plan:
-        if len(self.shape) > 0:
-            n = np.asarray(self.shape, np.int32)
-            self.handle = cufft.cufftPlanMany(
-                len(self.shape), n.ctypes.data, inembed, istride, idist,
-                onembed, ostride, odist, self.fft_type, self.batch)
-        else:
+        if len(self.shape) <= 0:
             raise ValueError('invalid transform size')
-
+        n = np.asarray(self.shape, np.int32)
+        self.handle = cufft.cufftCreate()
         # Set FFTW compatibility mode:
         cufft.cufftSetCompatibilityMode(self.handle, mode)
+        # Set auto-allocate mode
+        cufft.cufftSetAutoAllocation(self.handle, auto_allocate)
+        self.worksize = cufft.cufftMakePlanMany(
+            self.handle, len(self.shape), n.ctypes.data, inembed, istride, idist,
+            onembed, ostride, odist, self.fft_type, self.batch)
 
         # Associate stream with plan:
         if stream != None:
             cufft.cufftSetStream(self.handle, stream.handle)
+
+    def set_work_area(self, work_area):
+        """
+        Associate a caller-managed work area with the plan.
+
+        Parameters
+        ----------
+        work_area : pycuda.gpuarray.GPUArray
+        """
+        cufft.cufftSetWorkArea(self.handle, int(work_area.gpudata))
 
     def __del__(self):
 
