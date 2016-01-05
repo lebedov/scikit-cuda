@@ -24,6 +24,8 @@ Special thanks are due to the following parties for their contributions:
 - Tim Klein - Additional MAGMA wrappers.
 - `Eric Larson <https://github.com/Eric89GXL>`_ - Various enhancements.
 - `Gregory R. Lee <https://github.com/grlee77>`_ - Enhanced FFT plan creation.
+- `Bruce Merry <https://github.com/bmerry>`_ - Support for CUFFT extensible plan 
+  API.
 - `Teodor Mihai Moldovan <https://github.com/teodor-moldovan>`_ - CUBLAS 5 
   bindings.
 - `Lars Pastewka <https://github.com/pastewka>`_ - FFT tests and FFTW compatibility mode configuration.

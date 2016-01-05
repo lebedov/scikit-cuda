@@ -12,6 +12,12 @@ Helper Routines
     :nosignatures:
 
     cufftCheckStatus
+    cufftCreate
+    cufftDestroy
+    cufftSetAutoAllocation
+    cufftSetCompatibilityMode
+    cufftSetStream
+    cufftSetWorkArea
 
 Wrapper Routines
 ----------------
@@ -30,8 +36,6 @@ Wrapper Routines
     cufftExecZ2Z
     cufftExecD2Z
     cufftExecZ2D
-    cufftSetCompatibilityMode
-    cufftSetStream
     cufftEstimate1d
     cufftEstimate2d
     cufftEstimate3d
@@ -41,3 +45,7 @@ Wrapper Routines
     cufftGetSize3d
     cufftGetSizeMany
     cufftGetSize
+    cufftMakePlan1d
+    cufftMakePlan2d
+    cufftMakePlan3d
+    cufftMakePlanMany
