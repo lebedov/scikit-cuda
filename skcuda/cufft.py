@@ -226,7 +226,8 @@ def cufftPlanMany(rank, n,
 _libcufft.cufftDestroy.restype = int
 _libcufft.cufftDestroy.argtypes = [_types.plan]
 def cufftDestroy(plan):
-    """Destroy FFT plan.
+    """
+    Destroy FFT plan.
 
     References
     ----------
@@ -577,7 +578,7 @@ _libcufft.cufftCreate.restype = int
 _libcufft.cufftCreate.argtypes = [ctypes.c_void_p]
 def cufftCreate():
     """
-    Creates only an opaque handle.
+    Create FFT plan handle.
 
     References
     ----------
@@ -665,6 +666,14 @@ _libcufft.cufftMakePlanMany.argtypes = [_types.plan,
 def cufftMakePlanMany(plan, rank, n,
                       inembed, istride, idist,
                       onembed, ostride, odist, fft_type, batch):
+    """
+    Create batched FFT plan configuration.
+
+    References
+    ----------
+    `cufftMakePlanMany <http://docs.nvidia.com/cuda/cufft/#function-cufftmakeplanmany>`_
+    """
+
     worksize = _types.worksize()
     status = _libcufft.cufftMakePlanMany(plan, rank, n,
                                          inembed, istride, idist,
