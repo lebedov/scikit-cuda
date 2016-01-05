@@ -212,6 +212,17 @@ class test_fft(TestCase):
         assert np.allclose(xf, xf_gpu.get(), atol=atol_float32)
         assert np.allclose(yf, yf_gpu.get(), atol=atol_float32)
 
+    def test_work_area(self):
+        x = np.asarray(np.random.rand(self.N), np.float32)
+        xf = np.fft.rfftn(x)
+        x_gpu = gpuarray.to_gpu(x)
+        xf_gpu = gpuarray.empty(self.N//2+1, np.complex64)
+        plan = fft.Plan(x.shape, np.float32, np.complex64, auto_allocate=False)
+        work_area = gpuarray.empty((plan.worksize,), np.uint8)
+        plan.set_work_area(work_area)
+        fft.fft(x_gpu, xf_gpu, plan)
+        assert np.allclose(xf, xf_gpu.get(), atol=atol_float32)
+
 def suite():
     s = TestSuite()
     s.addTest(test_fft('test_fft_float32_to_complex64_1d'))
@@ -223,6 +234,7 @@ def suite():
     s.addTest(test_fft('test_batch_ifft_complex64_to_float32_1d'))
     s.addTest(test_fft('test_batch_ifft_complex64_to_float32_2d'))
     s.addTest(test_fft('test_multiple_streams'))
+    s.addTest(test_fft('test_work_area'))
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_fft('test_fft_float64_to_complex128_1d'))
         s.addTest(test_fft('test_fft_float64_to_complex128_2d'))
