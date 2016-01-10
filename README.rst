@@ -39,6 +39,43 @@ Development
 The latest source code can be obtained from
 `<https://github.com/lebedov/scikit-cuda>`_.
 
+Citing
+------
+If you use scikit-cuda in a scholarly publication, please cite it as follows: ::
+
+    @misc{givon_scikit-cuda_2015,
+        author       = {Lev E. Givon and
+                        Thomas Unterthiner and
+                        N. Benjamin Erichson and
+                        David Wei Chiang and
+                        Eric Larson and
+                        Luke Pfister and
+                        Sander Dieleman and
+                        Gregory R. Lee and
+                        Stefan van der Walt and
+                        Teodor Mihai Moldovan and
+                        Fr\'{e}d\'{e}ric Bastien and
+                        Xing Shi and
+                        Jan Schl\"{u}ter and
+                        Brian Thomas and
+                        Chris Capdevila and
+                        Alex Rubinsteyn and 
+                        Michael M. Forbes and
+                        Jacob Frelinger and 
+                        Tim Klein and
+                        Bruce Merry and
+                        Lars Pastewka and
+                        Steve Taylor and
+                        Feng Wang and
+                        Yiyin Zhou},
+        title        = {scikit-cuda 0.5.1: a {Python} Interface to {GPU}-Powered Libraries},
+        month        = December,
+        year         = 2015,
+        doi          = {10.5281/zenodo.40565},
+        url          = {http://dx.doi.org/10.5281/zenodo.40565},
+        note         = {\url{http://dx.doi.org/10.5281/zenodo.40565}
+    }
+
 Authors & Acknowledgments
 -------------------------
 See the included `AUTHORS`_ file for more information.
