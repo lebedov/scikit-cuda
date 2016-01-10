@@ -68,12 +68,12 @@ If you use scikit-cuda in a scholarly publication, please cite it as follows: ::
                         Steve Taylor and
                         Feng Wang and
                         Yiyin Zhou},
-        title        = {scikit-cuda 0.5.1: a {Python} Interface to {GPU}-Powered Libraries},
+        title        = {scikit-cuda 0.5.1: a {Python} interface to {GPU}-powered libraries},
         month        = December,
         year         = 2015,
         doi          = {10.5281/zenodo.40565},
         url          = {http://dx.doi.org/10.5281/zenodo.40565},
-        note         = {\url{http://dx.doi.org/10.5281/zenodo.40565}
+        note         = {\url{http://dx.doi.org/10.5281/zenodo.40565}}
     }
 
 Authors & Acknowledgments
