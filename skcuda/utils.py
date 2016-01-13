@@ -151,15 +151,19 @@ def find_lib_path(name):
     if sys.platform == 'win32':
         return ctypes.util.find_library(name)
 
-    # OSX has no ldconfig, search the DYLD_LIBRARY_PATH directories
+    # OSX has no ldconfig:
     if sys.platform == 'darwin':
-        # hacky, but as far as I know this is always a symlink
-        # to the latest version of the library available
-        libname = 'lib' + name + '.dylib'
-        for dir_path in os.environ['DYLD_LIBRARY_PATH'].split(':'):
-            if len(dir_path) > 0 and libname in os.listdir(dir_path):
-                return os.path.join(dir_path, libname)
-        return None
+        from ctypes.macholib.dyld import dyld_find as _dyld_find
+        def find_library(name):
+            possible = ['lib%s.dylib' % name,
+                        '%s.dylib' % name,
+                        '%s.framework/%s' % (name, name)]
+            for name in possible:
+                try:
+                    return _dyld_find(name)
+                except ValueError:
+                    continue
+            return None
 
     # First, check the directories in LD_LIBRARY_PATH:
     expr = r'\s+(lib%s\.[^\s]+)\s+\-\>' % re.escape(name)
