@@ -713,7 +713,6 @@ def get_by_index(src_gpu, ind):
     assert len(np.shape(ind)) == 1
     assert issubclass(ind.dtype.type, numbers.Integral)
     N = len(ind)
-    assert N <= len(src_gpu)
     if not isinstance(ind, gpuarray.GPUArray):
         ind = gpuarray.to_gpu(ind)
     dest_gpu = gpuarray.empty(N, dtype=src_gpu.dtype)
