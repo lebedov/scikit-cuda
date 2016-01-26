@@ -12,6 +12,7 @@ Release 0.5.2 (under development)
 * Support for CUFFT extensible plan API (enh. by Bruce Merry).
 * Wrappers for CUFFT size estimation (enh. by Luke Pfister).
 * Wrappers for CUBLAS-XT functions.
+* Python 3 compatibility improvements (enh. by Joseph Martinot-Lagarde).
 
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------

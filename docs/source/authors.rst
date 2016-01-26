@@ -22,6 +22,8 @@ Special thanks are due to the following parties for their contributions:
 - `Michael M. Forbes <https://github.com/mforbes>`_ - Improved MacOSX compatibility, bug fixes.
 - `Jacob Frelinger <https://github.com/jfrelinger>`_ - Various enhancements.
 - Tim Klein - Additional MAGMA wrappers.
+- `Joseph Martinot-Lagarde <https://github.com/Nodd>`_ - Python 3 compatibility 
+  improvements.
 - `Eric Larson <https://github.com/Eric89GXL>`_ - Various enhancements.
 - `Gregory R. Lee <https://github.com/grlee77>`_ - Enhanced FFT plan creation.
 - `Bruce Merry <https://github.com/bmerry>`_ - Support for CUFFT extensible plan 
