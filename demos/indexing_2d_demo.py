@@ -29,15 +29,15 @@ b = lambda i: np.mod(i, B)
 
 # Check that x[subscript(i)] is equivalent to x.flat[i]:
 subscript = lambda i: (a(i), b(i))
-for i in xrange(x.size):
+for i in range(x.size):
     assert x.flat[i] == x[subscript(i)]
 
 # Check that x[i, j] is equivalent to x.flat[index(i, j)]:
 index = lambda i, j: i*B+j
-for i in xrange(A):
-    for j in xrange(B):
+for i in range(A):
+    for j in range(B):
         assert x[i, j] == x.flat[index(i, j)]
-        
+
 func_mod_template = Template("""
 // Macro for converting subscripts to linear index:
 #define INDEX(a, b) a*${B}+b

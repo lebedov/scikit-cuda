@@ -33,17 +33,17 @@ d = lambda i: np.mod(np.mod(np.mod(i, B*C*D), C*D), D)
 
 # Check that x[subscript(i)] is equivalent to x.flat[i]:
 subscript = lambda i: (a(i), b(i), c(i), d(i))
-for i in xrange(x.size):
+for i in range(x.size):
     assert x.flat[i] == x[subscript(i)]
 
 # Check that x[i,j,k,l] is equivalent to x.flat[index(i,j,k,l)]:
 index = lambda i,j,k,l: i*B*C*D+j*C*D+k*D+l
-for i in xrange(A):
-    for j in xrange(B):
-        for k in xrange(C):
-            for l in xrange(D):
+for i in range(A):
+    for j in range(B):
+        for k in range(C):
+            for l in range(D):
                 assert x[i, j, k, l] == x.flat[index(i, j, k, l)]
-                
+
 func_mod_template = Template("""
 // Macro for converting subscripts to linear index:
 #define INDEX(a, b, c, d) a*${B}*${C}*${D}+b*${C}*${D}+c*${D}+d

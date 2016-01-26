@@ -31,14 +31,14 @@ c = lambda i: np.mod(np.mod(i, B*C), C)
 
 # Check that x[ind(i)] is equivalent to x.flat[i]:
 subscript = lambda i: (a(i), b(i), c(i))
-for i in xrange(x.size):
+for i in range(x.size):
     assert x.flat[i] == x[subscript(i)]
 
 # Check that x[i,j,k] is equivalent to x.flat[index(i,j,k)]:
 index = lambda i,j,k: i*B*C+j*C+k
-for i in xrange(A):
-    for j in xrange(B):
-        for k in xrange(C):
+for i in range(A):
+    for j in range(B):
+        for k in range(C):
             assert x[i, j, k] == x.flat[index(i, j, k)]
 
 func_mod_template = Template("""

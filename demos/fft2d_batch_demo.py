@@ -19,7 +19,7 @@ batch_size = 16
 x = np.empty((batch_size, N, N), np.float32)
 xf = np.empty((batch_size, N, N), np.complex64)
 y = np.empty((batch_size, N, N), np.float32)
-for i in xrange(batch_size):
+for i in range(batch_size):
     x[i, :, :] = np.asarray(np.random.rand(N, N), np.float32)
     xf[i, :, :] = np.fft.fft2(x[i, :, :])
     y[i, :, :] = np.real(np.fft.ifft2(xf[i, :, :]))
