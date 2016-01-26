@@ -4,6 +4,7 @@
 Demonstrates how to access 3D arrays within a PyCUDA kernel in a
 numpy-consistent manner.
 """
+from __future__ import print_function
 
 from string import Template
 import pycuda.autoinit
@@ -16,7 +17,7 @@ import skcuda.misc as misc
 A = 3
 B = 4
 C = 5
-N = A*B*C
+N = A * B * C
 
 # Define a 3D array:
 # x_orig = np.arange(0, N, 1, np.float64)
@@ -24,20 +25,20 @@ x_orig = np.asarray(np.random.rand(N), np.float64)
 x = x_orig.reshape((A, B, C))
 
 # These functions demonstrate how to convert a linear index into subscripts:
-a = lambda i: i/(B*C)
-b = lambda i: np.mod(i, B*C)/C
-c = lambda i: np.mod(np.mod(i, B*C), C)
+a = lambda i: i / (B * C)
+b = lambda i: np.mod(i, B * C) / C
+c = lambda i: np.mod(np.mod(i, B * C), C)
 
 # Check that x[ind(i)] is equivalent to x.flat[i]:
 subscript = lambda i: (a(i), b(i), c(i))
-for i in xrange(x.size):
+for i in range(x.size):
     assert x.flat[i] == x[subscript(i)]
 
 # Check that x[i,j,k] is equivalent to x.flat[index(i,j,k)]:
-index = lambda i,j,k: i*B*C+j*C+k
-for i in xrange(A):
-    for j in xrange(B):
-        for k in xrange(C):
+index = lambda i, j, k: i * B * C + j * C + k
+for i in range(A):
+    for j in range(B):
+        for k in range(C):
             assert x[i, j, k] == x.flat[index(i, j, k)]
 
 func_mod_template = Template("""
@@ -67,9 +68,9 @@ block_dim, grid_dim = misc.select_block_grid_sizes(pycuda.autoinit.device, x.sha
 max_blocks_per_grid = max(max_grid_dim)
 
 func_mod = \
-         SourceModule(func_mod_template.substitute(max_threads_per_block=max_threads_per_block,
-                                                   max_blocks_per_grid=max_blocks_per_grid,
-                                                   A=A, B=B, C=C))
+    SourceModule(func_mod_template.substitute(max_threads_per_block=max_threads_per_block,
+                                              max_blocks_per_grid=max_blocks_per_grid,
+                                              A=A, B=B, C=C))
 func = func_mod.get_function('func')
 x_gpu = gpuarray.to_gpu(x)
 func(x_gpu.gpudata, np.uint32(x_gpu.size),
@@ -78,4 +79,4 @@ func(x_gpu.gpudata, np.uint32(x_gpu.size),
 x_np = x.copy()
 x_np[:, 0, :] = 100
 
-print 'Success status: ', np.allclose(x_np, x_gpu.get())
+print('Success status: ', np.allclose(x_np, x_gpu.get()))
