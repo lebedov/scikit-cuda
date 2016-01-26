@@ -302,7 +302,7 @@ def cho_factor(a_gpu, uplo='L'):
     """
 
     if not _has_cula:
-        raise NotImplementError('CULA not installed')
+        raise NotImplementedError('CULA not installed')
 
     data_type = a_gpu.dtype.type
     real_type = np.float32
@@ -387,7 +387,7 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
     """
 
     if not _has_cula:
-        raise NotImplementError('CULA not installed')
+        raise NotImplementedError('CULA not installed')
 
     data_type = a_gpu.dtype.type
     real_type = np.float32
