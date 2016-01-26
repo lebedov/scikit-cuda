@@ -19,7 +19,7 @@ xf = np.fft.fft(x)
 y = np.real(np.fft.ifft(xf))
 
 x_gpu = gpuarray.to_gpu(x)
-xf_gpu = gpuarray.empty(N/2+1, np.complex64)
+xf_gpu = gpuarray.empty(N//2+1, np.complex64)
 plan_forward = cu_fft.Plan(x_gpu.shape, np.float32, np.complex64)
 cu_fft.fft(x_gpu, xf_gpu, plan_forward)
 

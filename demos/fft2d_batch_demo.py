@@ -25,7 +25,7 @@ for i in range(batch_size):
     y[i, :, :] = np.real(np.fft.ifft2(xf[i, :, :]))
 
 x_gpu = gpuarray.to_gpu(x)
-xf_gpu = gpuarray.empty((batch_size, N, N/2+1), np.complex64)
+xf_gpu = gpuarray.empty((batch_size, N, N//2+1), np.complex64)
 plan_forward = cu_fft.Plan((N, N), np.float32, np.complex64, batch_size)
 cu_fft.fft(x_gpu, xf_gpu, plan_forward)
 
