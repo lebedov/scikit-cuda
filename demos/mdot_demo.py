@@ -24,9 +24,9 @@ if cumisc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
 for t in demo_types:
     print('Testing multiple matrix multiplication for type ' + str(np.dtype(t)))
     if np.iscomplexobj(t()):
-        a = np.asarray(np.random.rand(8, 4)+1j*np.random.rand(8, 4), t)
-        b = np.asarray(np.random.rand(4, 4)+1j*np.random.rand(4, 4), t)
-        c = np.asarray(np.random.rand(4, 4)+1j*np.random.rand(4, 4), t)
+        a = np.asarray(np.random.rand(8, 4) + 1j * np.random.rand(8, 4), t)
+        b = np.asarray(np.random.rand(4, 4) + 1j * np.random.rand(4, 4), t)
+        c = np.asarray(np.random.rand(4, 4) + 1j * np.random.rand(4, 4), t)
     else:
         a = np.asarray(np.random.rand(8, 4), t)
         b = np.asarray(np.random.rand(4, 4), t)

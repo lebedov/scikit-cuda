@@ -20,16 +20,16 @@ import string
 import scikits.cuda.cula as cula
 demo_types = [np.float32, np.complex64]
 if cula._libcula_toolkit == 'premium' and \
-       cumisc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
+        cumisc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
     demo_types.extend([np.float64, np.complex128])
 
 for t in demo_types:
     print('Testing pinv for type ' + str(np.dtype(t)))
-    a = np.asarray((np.random.rand(50, 50)-0.5)/10, t)
+    a = np.asarray((np.random.rand(50, 50) - 0.5) / 10, t)
     a_gpu = gpuarray.to_gpu(a)
     a_inv_gpu = culinalg.pinv(a_gpu)
 
-    print('Success status: ', np.allclose(np.linalg.pinv(a), a_inv_gpu.get(), 
-		                      atol=1e-2))
-    print('Maximum error: ', np.max(np.abs(np.linalg.pinv(a)-a_inv_gpu.get())))
+    print('Success status: ', np.allclose(np.linalg.pinv(a), a_inv_gpu.get(),
+                                          atol=1e-2))
+    print('Maximum error: ', np.max(np.abs(np.linalg.pinv(a) - a_inv_gpu.get())))
     print('')

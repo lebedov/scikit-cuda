@@ -35,6 +35,3 @@ for t in demo_types:
         print('Success status: ', np.all(np.conj(a.T) == at_gpu.get()))
     else:
         print('Success status: ', np.all(a.T == at_gpu.get()))
-
-
-

@@ -18,7 +18,7 @@ A = 3
 B = 4
 C = 5
 D = 6
-N = A*B*C*D
+N = A * B * C * D
 
 # Define a 3D array:
 # x_orig = np.arange(0, N, 1, np.float64)
@@ -26,10 +26,10 @@ x_orig = np.asarray(np.random.rand(N), np.float64)
 x = x_orig.reshape((A, B, C, D))
 
 # These functions demonstrate how to convert a linear index into subscripts:
-a = lambda i: i/(B*C*D)
-b = lambda i: np.mod(i, B*C*D)/(C*D)
-c = lambda i: np.mod(np.mod(i, B*C*D), C*D)/D
-d = lambda i: np.mod(np.mod(np.mod(i, B*C*D), C*D), D)
+a = lambda i: i / (B * C * D)
+b = lambda i: np.mod(i, B * C * D) / (C * D)
+c = lambda i: np.mod(np.mod(i, B * C * D), C * D) / D
+d = lambda i: np.mod(np.mod(np.mod(i, B * C * D), C * D), D)
 
 # Check that x[subscript(i)] is equivalent to x.flat[i]:
 subscript = lambda i: (a(i), b(i), c(i), d(i))
@@ -37,7 +37,7 @@ for i in range(x.size):
     assert x.flat[i] == x[subscript(i)]
 
 # Check that x[i,j,k,l] is equivalent to x.flat[index(i,j,k,l)]:
-index = lambda i,j,k,l: i*B*C*D+j*C*D+k*D+l
+index = lambda i, j, k, l: i * B * C * D + j * C * D + k * D + l
 for i in range(A):
     for j in range(B):
         for k in range(C):
@@ -72,9 +72,9 @@ block_dim, grid_dim = misc.select_block_grid_sizes(pycuda.autoinit.device, x.sha
 max_blocks_per_grid = max(max_grid_dim)
 
 func_mod = \
-         SourceModule(func_mod_template.substitute(max_threads_per_block=max_threads_per_block,
-                                                   max_blocks_per_grid=max_blocks_per_grid,
-                                                   A=A, B=B, C=C, D=D))
+    SourceModule(func_mod_template.substitute(max_threads_per_block=max_threads_per_block,
+                                              max_blocks_per_grid=max_blocks_per_grid,
+                                              A=A, B=B, C=C, D=D))
 func = func_mod.get_function('func')
 x_gpu = gpuarray.to_gpu(x)
 func(x_gpu.gpudata, np.uint32(x_gpu.size),

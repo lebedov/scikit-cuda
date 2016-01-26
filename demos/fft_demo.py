@@ -12,7 +12,7 @@ import numpy as np
 import skcuda.fft as cu_fft
 
 print('Testing fft/ifft..')
-N = 4096*16
+N = 4096 * 16
 
 x = np.asarray(np.random.rand(N), np.float32)
 xf = np.fft.fft(x)
@@ -30,7 +30,7 @@ cu_fft.ifft(xf_gpu, y_gpu, plan_inverse, True)
 print('Success status: ', np.allclose(y, y_gpu.get(), atol=1e-6))
 
 print('Testing in-place fft..')
-x = np.asarray(np.random.rand(N)+1j*np.random.rand(N), np.complex64)
+x = np.asarray(np.random.rand(N) + 1j * np.random.rand(N), np.complex64)
 x_gpu = gpuarray.to_gpu(x)
 
 plan = cu_fft.Plan(x_gpu.shape, np.complex64, np.complex64)
