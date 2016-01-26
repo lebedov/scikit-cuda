@@ -3,6 +3,7 @@
 """
 Demonstrates computation of the pseudoinverse on the GPU.
 """
+from __future__ import print_function
 
 import pycuda.autoinit
 import pycuda.driver as drv
@@ -23,12 +24,12 @@ if cula._libcula_toolkit == 'premium' and \
     demo_types.extend([np.float64, np.complex128])
 
 for t in demo_types:
-    print 'Testing pinv for type ' + str(np.dtype(t))
+    print('Testing pinv for type ' + str(np.dtype(t)))
     a = np.asarray((np.random.rand(50, 50)-0.5)/10, t)
     a_gpu = gpuarray.to_gpu(a)
     a_inv_gpu = culinalg.pinv(a_gpu)
 
-    print 'Success status: ', np.allclose(np.linalg.pinv(a), a_inv_gpu.get(), 
-		                      atol=1e-2)
-    print 'Maximum error: ', np.max(np.abs(np.linalg.pinv(a)-a_inv_gpu.get()))
-    print ''
+    print('Success status: ', np.allclose(np.linalg.pinv(a), a_inv_gpu.get(), 
+		                      atol=1e-2))
+    print('Maximum error: ', np.max(np.abs(np.linalg.pinv(a)-a_inv_gpu.get())))
+    print('')

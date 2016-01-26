@@ -3,6 +3,7 @@
 """
 Demonstrates multiplication of two matrices on the GPU.
 """
+from __future__ import print_function
 
 import pycuda.autoinit
 import pycuda.gpuarray as gpuarray
@@ -21,7 +22,7 @@ if cumisc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
     demo_types.extend([np.float64, np.complex128])
 
 for t in demo_types:
-    print 'Testing matrix multiplication for type ' + str(np.dtype(t))
+    print('Testing matrix multiplication for type ' + str(np.dtype(t)))
     if np.iscomplexobj(t()):
         a = np.asarray(np.random.rand(10, 5)+1j*np.random.rand(10, 5), t)
         b = np.asarray(np.random.rand(5, 5)+1j*np.random.rand(5, 5), t)
@@ -39,9 +40,9 @@ for t in demo_types:
     d_gpu = culinalg.dot(temp_gpu, c_gpu)
     temp_gpu.gpudata.free()
     del(temp_gpu)
-    print 'Success status: ', np.allclose(np.dot(np.dot(a, b), c) , d_gpu.get())
+    print('Success status: ', np.allclose(np.dot(np.dot(a, b), c) , d_gpu.get()))
 
-    print 'Testing vector multiplication for type '  + str(np.dtype(t))
+    print('Testing vector multiplication for type '  + str(np.dtype(t)))
     if np.iscomplexobj(t()):
         d = np.asarray(np.random.rand(5)+1j*np.random.rand(5), t)
         e = np.asarray(np.random.rand(5)+1j*np.random.rand(5), t)
@@ -53,4 +54,4 @@ for t in demo_types:
     e_gpu = gpuarray.to_gpu(e)
 
     temp = culinalg.dot(d_gpu, e_gpu)
-    print 'Success status: ', np.allclose(np.dot(d, e), temp)
+    print('Success status: ', np.allclose(np.dot(d, e), temp))

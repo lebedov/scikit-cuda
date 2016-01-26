@@ -3,6 +3,7 @@
 """
 Demonstrates multiplication of several matrices on the GPU.
 """
+from __future__ import print_function
 
 import pycuda.gpuarray as gpuarray
 import pycuda.driver as drv
@@ -21,7 +22,7 @@ if cumisc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
     demo_types.extend([np.float64, np.complex128])
 
 for t in demo_types:
-    print 'Testing multiple matrix multiplication for type ' + str(np.dtype(t))
+    print('Testing multiple matrix multiplication for type ' + str(np.dtype(t)))
     if np.iscomplexobj(t()):
         a = np.asarray(np.random.rand(8, 4)+1j*np.random.rand(8, 4), t)
         b = np.asarray(np.random.rand(4, 4)+1j*np.random.rand(4, 4), t)
@@ -35,4 +36,4 @@ for t in demo_types:
     b_gpu = gpuarray.to_gpu(b)
     c_gpu = gpuarray.to_gpu(c)
     d_gpu = linalg.mdot(a_gpu, b_gpu, c_gpu)
-    print 'Success status: ', np.allclose(np.dot(a, np.dot(b, c)), d_gpu.get())
+    print('Success status: ', np.allclose(np.dot(a, np.dot(b, c)), d_gpu.get()))

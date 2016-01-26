@@ -4,6 +4,7 @@
 Demonstrates how to use the PyCUDA interface to CUFFT to compute a
 batch of 2D FFTs.
 """
+from __future__ import print_function
 
 import pycuda.autoinit
 import pycuda.gpuarray as gpuarray
@@ -11,7 +12,7 @@ import numpy as np
 
 import skcuda.fft as cu_fft
 
-print 'Testing fft/ifft..'
+print('Testing fft/ifft..')
 N = 256
 batch_size = 16
 
@@ -32,9 +33,9 @@ y_gpu = gpuarray.empty_like(x_gpu)
 plan_inverse = cu_fft.Plan((N, N), np.complex64, np.float32, batch_size)
 cu_fft.ifft(xf_gpu, y_gpu, plan_inverse, True)
 
-print 'Success status: ', np.allclose(y, y_gpu.get(), atol=1e-6)
+print('Success status: ', np.allclose(y, y_gpu.get(), atol=1e-6))
 
-print 'Testing in-place fft..'
+print('Testing in-place fft..')
 x = np.empty((batch_size, N, N), np.complex64)
 x_gpu = gpuarray.to_gpu(x)
 
@@ -43,4 +44,4 @@ cu_fft.fft(x_gpu, x_gpu, plan)
 
 cu_fft.ifft(x_gpu, x_gpu, plan, True)
 
-print 'Success status: ', np.allclose(x, x_gpu.get(), atol=1e-6)
+print('Success status: ', np.allclose(x, x_gpu.get(), atol=1e-6))
