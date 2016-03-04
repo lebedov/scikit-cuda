@@ -13,7 +13,9 @@ Release 0.5.2 (under development)
 * Wrappers for CUFFT size estimation (enh. by Luke Pfister).
 * Wrappers for CUBLAS-XT functions.
 * Python 3 compatibility improvements (enh. by Joseph Martinot-Lagarde).
-
+* Allow specification of order in misc.zeros and misc.ones.
+* Preserve strides in misc.zeros_like and misc.ones_like.
+  
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------
 * More CUSOLVER wrappers.
