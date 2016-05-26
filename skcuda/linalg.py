@@ -20,7 +20,6 @@ import pycuda.elementwise as el
 import pycuda.tools as tools
 import numpy as np
 
-
 from . import cublas
 from . import misc
 
@@ -90,7 +89,7 @@ def svd(a_gpu, jobu='A', jobvt='A', lib='cula'):
 
     Notes
     -----
-    Double precision is only supported if the standard version of the
+    If using CULA, double precision is only supported if the standard version of the
     CULA Dense toolkit is installed.
 
     This function destroys the contents of the input matrix regardless
@@ -260,7 +259,7 @@ def svd(a_gpu, jobu='A', jobvt='A', lib='cula'):
     else:
         return s_gpu
 
-def cho_factor(a_gpu, uplo='L'):
+def cho_factor(a_gpu, uplo='L', lib='cula'):
     """
     Cholesky factorisation
 
@@ -270,18 +269,21 @@ def cho_factor(a_gpu, uplo='L'):
 
     Parameters
     ----------
-    a : pycuda.gpuarray.GPUArray
+    a_gpu : pycuda.gpuarray.GPUArray
         Input matrix of shape `(m, m)` to decompose.
-    uplo: use the upper='U' or lower='L' (default) triangle of 'a'
+    uplo : {'U', 'L'}
+        Use upper or lower (default) triangle of 'a_gpu'
+    lib : str
+        Library to use. May be either 'cula' or 'cusolver'.
 
     Returns
     -------
-    a: pycuda.gpuarray.GPUArray
+    result : pycuda.gpuarray.GPUArray
         Cholesky factorised matrix
 
     Notes
     -----
-    Double precision is only supported if the standard version of the
+    If using CULA, double precision is only supported if the standard version of the
     CULA Dense toolkit is installed.
 
     Examples
@@ -298,28 +300,57 @@ def cho_factor(a_gpu, uplo='L'):
     >>> cho_factor(a_gpu)
     >>> np.allclose(a_gpu.get(), scipy.linalg.cho_factor(a)[0])
     True
-
     """
 
-    if not _has_cula:
-        raise NotImplementedError('CULA not installed')
+    alloc = misc._global_cublas_allocator
 
     data_type = a_gpu.dtype.type
-    real_type = np.float32
-    if cula._libcula_toolkit == 'standard':
+
+    if lib == 'cula':
+        if not _has_cula:
+            raise NotImplementedError('CULA not installed')
+
+        real_type = np.float32
+        if cula._libcula_toolkit == 'standard':
+            if data_type == np.complex64:
+                func = cula.culaDeviceCpotrf
+            elif data_type == np.float32:
+                func = cula.culaDeviceSpotrf
+            elif data_type == np.complex128:
+                func = cula.culaDeviceZpotrf
+            elif data_type == np.float64:
+                func = cula.culaDeviceDpotrf
+            else:
+                raise ValueError('unsupported type')
+            real_type = np.float64
+        else:
+            raise ValueError('Cholesky factorisation not included in CULA Dense Free version')
+
+    elif lib == 'cusolver':
+        if not _has_cusolver:
+            raise NotImplementedError('CUSOLVER not installed')
+
+        cusolverHandle = misc._global_cusolver_handle
+
         if data_type == np.complex64:
-            cula_func = cula.culaDeviceCpotrf
+            func = cusolver.cusolverDnCpotrf
+            bufsize = cusolver.cusolverDnCpotrf_bufferSize
         elif data_type == np.float32:
-            cula_func = cula.culaDeviceSpotrf
+            func = cusolver.cusolverDnSpotrf
+            bufsize = cusolver.cusolverDnSpotrf_bufferSize
         elif data_type == np.complex128:
-            cula_func = cula.culaDeviceZpotrf
+            real_type = np.float64
+            func = cusolver.cusolverDnZpotrf
+            bufsize = cusolver.cusolverDnZpotrf_bufferSize
         elif data_type == np.float64:
-            cula_func = cula.culaDeviceDpotrf
+            real_type = np.float64
+            func = cusolver.cusolverDnDpotrf
+            bufsize = cusolver.cusolverDnDpotrf_bufferSize
         else:
             raise ValueError('unsupported type')
-        real_type = np.float64
+        
     else:
-        raise ValueError('Cholesky factorisation not included in CULA Dense Free version')
+        raise ValueError('invalid library specified')
 
     # Since CUDA assumes that arrays are stored in column-major
     # format, the input matrix is assumed to be transposed:
@@ -330,13 +361,28 @@ def cho_factor(a_gpu, uplo='L'):
     # Set the leading dimension of the input matrix:
     lda = max(1, m)
 
-    cula_func(uplo, n, int(a_gpu.gpudata), lda)
+    # Factorize and check error status:
+    if lib == 'cula':
+        func(uplo, n, int(a_gpu.gpudata), lda)
 
-    # Free internal CULA memory:
-    cula.culaFreeBuffers()
+        # Free internal CULA memory:
+        cula.culaFreeBuffers()
+    else:
+        # CUSOLVER expects uplo to be an int rather than a char:
+        uplo = cublas._CUBLAS_FILL_MODE[uplo]
+
+        # Allocate working space:
+        Lwork = bufsize(misc._global_cusolver_handle, uplo, n, int(a_gpu.gpudata), lda)
+        Work = gpuarray.empty(Lwork, data_type, allocator=alloc)
+        devInfo = gpuarray.empty(1, np.int32, allocator=alloc)
+        
+        func(misc._global_cusolver_handle, uplo, n, int(a_gpu.gpudata), lda,
+             int(Work.gpudata), Lwork, int(devInfo.gpudata))
+
+        # Free working space:
+        del Work, devInfo
 
     # In-place operation. No return matrix. Result is stored in the input matrix.
-
 
 def cho_solve(a_gpu, b_gpu, uplo='L'):
     """

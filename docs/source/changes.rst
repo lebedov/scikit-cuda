@@ -15,6 +15,7 @@ Release 0.5.2 (under development)
 * Python 3 compatibility improvements (enh. by Joseph Martinot-Lagarde).
 * Allow specification of order in misc.zeros and misc.ones.
 * Preserve strides in misc.zeros_like and misc.ones_like.
+* Add support for computing Cholesky factorization using CUSOLVER.
   
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------
