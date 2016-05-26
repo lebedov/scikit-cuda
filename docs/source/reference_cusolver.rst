@@ -33,6 +33,8 @@ Single Precision Routines
    cusolverDnSgetrf_bufferSize
    cusolverDnSgetrf
    cusolverDnSgetrs
+   cusolverDnSpotrf_bufferSize
+   cusolverDnSpotrf
 
    cusolverDnCgeqrf_bufferSize
    cusolverDnCgeqrf
@@ -41,6 +43,8 @@ Single Precision Routines
    cusolverDnCgetrf_bufferSize
    cusolverDnCgetrf
    cusolverDnCgetrs
+   cusolverDnCpotrf_bufferSize
+   cusolverDnCpotrf
 
 Double Precision Routines
 ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -55,6 +59,8 @@ Double Precision Routines
    cusolverDnDgetrf_bufferSize
    cusolverDnDgetrf
    cusolverDnDgetrs
+   cusolverDnDpotrf_bufferSize
+   cusolverDnDpotrf
 
    cusolverDnZgeqrf_bufferSize
    cusolverDnZgeqrf
@@ -63,3 +69,5 @@ Double Precision Routines
    cusolverDnZgetrf_bufferSize
    cusolverDnZgetrf
    cusolverDnZgetrs
+   cusolverDnZpotrf_bufferSize
+   cusolverDnZpotrf
