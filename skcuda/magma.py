@@ -914,11 +914,6 @@ _libmagma.magma_get_sbulge_nb.argtypes = [ctypes.c_int]
 def magma_get_sbulge_nb(m):
     return _libmagma.magma_get_sbulge_nb(m)
 
-_libmagma.magma_get_sbulge_nb_mgpu.restype = int
-_libmagma.magma_get_sbulge_nb_mgpu.argtypes = [ctypes.c_int]
-def magma_get_sbulge_nb_mgpu(m):
-    return _libmagma.magma_get_sbulge_nb_mgpu(m)
-
 _libmagma.magma_get_dsytrd_nb.restype = int
 _libmagma.magma_get_dsytrd_nb.argtypes = [ctypes.c_int]
 def magma_get_dsytrd_nb(m):
@@ -1033,28 +1028,6 @@ def magma_sgeqrf(m, n, A, lda, tau, work, lwork, info):
     """
 
     status = _libmagma.magma_sgeqrf(m, n, int(A), lda,
-                                    int(tau), int(work),
-                                    lwork, int(info))
-    magmaCheckStatus(status)
-
-# SGEQRF4, DGEQRF4, CGEQRF4, ZGEQRF4
-_libmagma.magma_sgeqrf4.restype = int
-_libmagma.magma_sgeqrf4.argtypes = [ctypes.c_int,
-                                    ctypes.c_int,
-                                    ctypes.c_int,
-                                    ctypes.c_void_p,
-                                    ctypes.c_int,
-                                    ctypes.c_void_p,
-                                    ctypes.c_void_p,
-                                    ctypes.c_int,
-                                    ctypes.c_void_p]
-def magma_sgeqrf4(num_gpus, m, n, a, lda, tau, work, lwork, info):
-
-    """
-
-    """
-
-    status = _libmagma.magma_sgeqrf4(num_gpus, m, n, int(a), lda,
                                     int(tau), int(work),
                                     lwork, int(info))
     magmaCheckStatus(status)
