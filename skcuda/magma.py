@@ -1712,6 +1712,7 @@ def magma_ssyevd_gpu(jobz, uplo, n, dA, ldda, w, wA, ldwa, work, lwork, iwork,
     Compute eigenvalues of real symmetric matrix.
     """
 
+    uplo = _uplo_conversion[uplo]
     info = ctypes.c_int()
     status = _libmagma.magma_ssyevd_gpu(jobz, uplo, n, int(dA), ldda,
                                         int(w), int(wA), ldwa, int(work),
@@ -1738,6 +1739,7 @@ def magma_dsyevd_gpu(jobz, uplo, n, dA, ldda, w, wA, ldwa, work, lwork, iwork,
     Compute eigenvalues of real symmetric matrix.
     """
 
+    uplo = _uplo_conversion[uplo]
     info = ctypes.c_int()
     status = _libmagma.magma_dsyevd_gpu(jobz, uplo, n, int(dA), ldda,
                                         int(w), int(wA), ldwa, int(work),
