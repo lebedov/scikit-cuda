@@ -238,15 +238,20 @@ def svd(a_gpu, jobu='A', jobvt='A', lib='cula'):
     else:
         # Allocate working space:
         Lwork = bufsize(misc._global_cusolver_handle, m, n)
-        rwork = gpuarray.empty(5*min(m, n), real_type, allocator=alloc)
+
         Work = gpuarray.empty(Lwork, data_type, allocator=alloc)
         devInfo = gpuarray.empty(1, np.int32, allocator=alloc)
 
+        # rwork is only needed for complex arrays:
+        if data_type != real_type:
+            rwork = np.empty(Lwork, real_type).ctypes.data
+        else:
+            rwork = 0
         func(misc._global_cusolver_handle,
              jobu, jobvt, m, n, int(a_gpu.gpudata),
              lda, int(s_gpu.gpudata), int(u_gpu.gpudata),
              ldu, int(vh_gpu.gpudata), ldvt, 
-             int(Work.gpudata), Lwork, int(rwork.gpudata),
+             int(Work.gpudata), Lwork, rwork,
              int(devInfo.gpudata))
 
         # Free working space:
