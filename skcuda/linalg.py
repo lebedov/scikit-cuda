@@ -171,6 +171,10 @@ def svd(a_gpu, jobu='A', jobvt='A', lib='cula'):
     n, m = a_gpu.shape
     square = (n == m)
 
+    # CUSOLVER's gesvd routines only support m >= n as of CUDA 7.5:
+    if lib == 'cusolver' and m < n:
+        raise ValueError('CUSOLVER only supports a_gpu.shape[1] >= a_gpu.shape[0]')
+    
     # Since the input matrix is transposed, jobu and jobvt must also
     # be switched because the computed matrices will be returned in
     # reversed order:
