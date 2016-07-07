@@ -19,7 +19,9 @@ those in `NumPy and Scipy <http://www.scipy.org>`_ are provided.
 .. image:: https://img.shields.io/pypi/v/scikit-cuda.svg
     :target: https://pypi.python.org/pypi/scikit-cuda
     :alt: Latest Version
-.. image:: https://img.shields.io/pypi/dm/scikit-cuda.svg
+.. Uncomment after pypi is migrated to warehouse and stats are re-enabled:
+.. https://github.com/badges/shields/issues/716
+.. .. image:: https://img.shields.io/pypi/dm/scikit-cuda.svg
     :target: https://pypi.python.org/pypi/scikit-cuda
     :alt: Downloads
 .. image:: http://prime4commit.com/projects/102.svg
