@@ -22,7 +22,7 @@ from . import cuda
 _version_list = [8.0, 7.5, 7.0]
 if 'linux' in sys.platform:
     _libcusolver_libname_list = ['libcusolver.so'] + \
-                                ['libsolver.so.%s' % v for v in _version_list]
+                                ['libcusolver.so.%s' % v for v in _version_list]
 elif sys.platform == 'darwin':
     _libcusolver_libname_list = ['libcusolver.dylib']
 elif sys.platform == 'win32':
