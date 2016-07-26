@@ -16,7 +16,8 @@ Release 0.5.2 (under development)
 * Allow specification of order in misc.zeros and misc.ones.
 * Preserve strides in misc.zeros_like and misc.ones_like.
 * Add support for computing Cholesky factorization using CUSOLVER.
-  
+* Add support for CUDA 8.0 libraries (#171).
+
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------
 * More CUSOLVER wrappers.
