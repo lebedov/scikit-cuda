@@ -1131,11 +1131,11 @@ def div_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
     Parameters
     ----------
     x_gpu : pycuda.gpuarray.GPUArray
-        Matrix to which to add the vector.
+        Matrix to divide by the vector `a_gpu`.
     a_gpu : pycuda.gpuarray.GPUArray
-        Vector to add to `x_gpu`.
+        The matrix `x_gpu` will be divided by this vector.
     axis : int (optional)
-        The axis onto which the vector is added. By default this is
+        The axis on which division occurs. By default this is
         determined automatically by using the first axis with the correct
         dimensionality.
     out : pycuda.gpuarray.GPUArray (optional)
@@ -1146,7 +1146,7 @@ def div_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
     Returns
     -------
     out : pycuda.gpuarray.GPUArray
-        result of `x_gpu` + `a_gpu`
+        result of `x_gpu` / `a_gpu`
     """
     return binaryop_matvec('/', x_gpu, a_gpu, axis, out, stream)
 
@@ -1156,16 +1156,16 @@ def mult_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
     Multiplies a vector elementwise with each column/row of the matrix.
 
     The numpy broadcasting rules apply so this would yield the same result
-    as `x_gpu.get()` + `a_gpu.get()` in host-code.
+    as `x_gpu.get()` * `a_gpu.get()` in host-code.
 
     Parameters
     ----------
     x_gpu : pycuda.gpuarray.GPUArray
-        Matrix to which to add the vector.
+        Matrix to multiply by the vector `a_gpu`.
     a_gpu : pycuda.gpuarray.GPUArray
-        Vector to add to `x_gpu`.
+        The matrix `x_gpu` will be multiplied by this vector.
     axis : int (optional)
-        The axis onto which the vector is added. By default this is
+        The axis on which multiplication occurs. By default this is
         determined automatically by using the first axis with the correct
         dimensionality.
     out : pycuda.gpuarray.GPUArray (optional)
@@ -1176,7 +1176,7 @@ def mult_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
     Returns
     -------
     out : pycuda.gpuarray.GPUArray
-        result of `x_gpu` + `a_gpu`
+        result of `x_gpu` * `a_gpu`
     """
     return binaryop_matvec('*', x_gpu, a_gpu, axis, out, stream)
 
