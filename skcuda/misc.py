@@ -1222,7 +1222,7 @@ def _sum_axis(x_gpu, axis=None, out=None, calc_mean=False, ddof=0,
         gemv = cublas.cublasDgemv
 
     alloc = _global_cublas_allocator
-    ons = ones((sum_axis, ), x_gpu.dtype, alloc)
+    ons = ones((sum_axis, ), x_gpu.dtype, allocator=alloc)
 
     if keepdims:
         out_shape = (1, out_axis) if axis == 0 else (out_axis, 1)
