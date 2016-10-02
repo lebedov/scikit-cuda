@@ -23,6 +23,9 @@ class test_linalg(TestCase):
         np.random.seed(0)
         linalg.init()
 
+    def tearDown(self):
+        linalg.shutdown()
+
     def test_svd_ss_cula_float32(self):
         a = np.asarray(np.random.randn(9, 6), np.float32)
         a_gpu = gpuarray.to_gpu(a)
