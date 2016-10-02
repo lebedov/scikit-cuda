@@ -1857,6 +1857,10 @@ def inv(a_gpu, overwrite=False, ipiv_gpu=None):
         * If `a` is not square, or not 2-dimensional.
         * If ipiv was not None but had the wrong dtype or shape.
     """
+
+    if not _has_cula:
+        raise NotImplementedError('CULA not installed')
+
     if len(a_gpu.shape) != 2 or a_gpu.shape[0] != a_gpu.shape[1]:
         raise ValueError('expected square matrix')
 
@@ -1963,6 +1967,9 @@ def det(a_gpu, overwrite=False, ipiv_gpu=None, handle=None):
         determinant of a_gpu
     """
 
+    if not _has_cula:
+        raise NotImplementedError('CULA not installed')
+
     if handle is None:
         handle = misc._global_cublas_handle
 
@@ -2065,6 +2072,9 @@ def qr(a_gpu, mode='reduced', handle=None):
     >>> np.allclose(R, R_gpu.get(), 1e-4)
     True
     """
+
+    if not _has_cula:
+        raise NotImplementedError('CULA not installed')
 
     if handle is None:
          handle = misc._global_cublas_handle
