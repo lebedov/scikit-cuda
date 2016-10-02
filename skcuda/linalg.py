@@ -43,7 +43,7 @@ try:
 except (ImportError, OSError):
     _has_cusolver = False
 
-from .misc import init, add_matvec, div_matvec, mult_matvec
+from .misc import init, shutdown, add_matvec, div_matvec, mult_matvec
 
 # Get installation location of C headers:
 from . import install_headers
@@ -698,10 +698,19 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
 
     x_shape = tuple(int(i) for i in x_gpu.shape) # workaround for bug #131
     y_shape = tuple(int(i) for i in y_gpu.shape)
-    if len(x_shape) == 1:
+
+    # When one argument is a vector and the other a matrix, increase the number
+    # of dimensions of the vector to 2 so that they can be multiplied using
+    # GEMM, but also set the shape of the output to 1 dimension to conform with
+    # the behavior of numpy.dot:
+    if len(x_shape) == 1 and len(y_shape) > 1:
+        out_shape = (y_shape[1],)
         x_shape = (1, x_shape[0])
-    if len(y_shape) == 1:
-        y_shape = (1, y_shape[0])
+        x_gpu = x_gpu.reshape(x_shape)
+    elif len(x_shape) > 1 and len(y_shape) == 1:
+        out_shape = (x_shape[0],)
+        y_shape = (y_shape[0], 1)
+        y_gpu = y_gpu.reshape(y_shape)
 
     if len(x_gpu.shape) == 1 and len(y_gpu.shape) == 1:
         if x_gpu.size != y_gpu.size:
@@ -741,8 +750,11 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
             else:
                 out = gpuarray.empty((m, n), x_gpu.dtype, order="C", allocator=alloc)
 
-    return add_dot(x_gpu, y_gpu, out, transa, transb, 1.0, 0.0, handle)
-
+    add_dot(x_gpu, y_gpu, out, transa, transb, 1.0, 0.0, handle)
+    if 'out_shape' in locals():
+        return out.reshape(out_shape)
+    else:
+        return out
 
 def mdot(*args, **kwargs):
     """
