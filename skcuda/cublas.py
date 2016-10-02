@@ -88,14 +88,24 @@ class cublasInternalError(cublasError):
     """An internal CUBLAS operation failed."""
     pass
 
+class cublasNotSupported(cublasError):
+    """Not supported."""
+    pass
+
+class cublasLicenseError(cublasError):
+    """License error."""
+    pass
+
 cublasExceptions = {
-    0x1: cublasNotInitialized,
-    0x3: cublasAllocFailed,
-    0x7: cublasInvalidValue,
-    0x8: cublasArchMismatch,
-    0xb: cublasMappingError,
-    0xd: cublasExecutionFailed,
-    0xe: cublasInternalError,
+    1: cublasNotInitialized,
+    3: cublasAllocFailed,
+    7: cublasInvalidValue,
+    8: cublasArchMismatch,
+    11: cublasMappingError,
+    13: cublasExecutionFailed,
+    14: cublasInternalError,
+    15: cublasNotSupported,
+    16: cublasLicenseError
     }
 
 _CUBLAS_OP = {
