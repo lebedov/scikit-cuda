@@ -23,6 +23,12 @@ _version_list = [8.0, 7.5, 7.0]
 if 'linux' in sys.platform:
     _libcusolver_libname_list = ['libcusolver.so'] + \
                                 ['libcusolver.so.%s' % v for v in _version_list]
+
+    # Fix for GOMP weirdness with CUDA 8.0 on Fedora (#171):
+    try:
+        ctypes.CDLL('libgomp.so.1', mode=ctypes.RTLD_GLOBAL)
+    except:
+        pass
 elif sys.platform == 'darwin':
     _libcusolver_libname_list = ['libcusolver.dylib']
 elif sys.platform == 'win32':
