@@ -8,6 +8,7 @@ Release 0.5.2 (under development)
 * Prevent exceptions when CULA Dense free is present (#146).
 * Fix Python 3 issues with CUSOLVER wrapper functions (#145)
 * Add support for using either CUSOLVER or CULA for computing SVD.
+* Add support for using either CUSOLVER or CULA for computing determinant.
 * Compressed Dynamic Mode Decomposition (enh. by N. Benjamin Erichson).
 * Support for CUFFT extensible plan API (enh. by Bruce Merry).
 * Wrappers for CUFFT size estimation (enh. by Luke Pfister).

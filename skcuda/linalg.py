@@ -1945,7 +1945,7 @@ def _get_det_kernel(dtype):
     return ReductionKernel(dtype, "1.0", "a*b",
                            "(ipiv[i] != i+1) ? -x[i*xn+i] : x[i*xn+i]", args)
 
-def det(a_gpu, overwrite=False, ipiv_gpu=None, handle=None):
+def det(a_gpu, overwrite=False, workspace_gpu=None, ipiv_gpu=None, handle=None, lib='cula'):
     """
     Compute the determinant of a square matrix.
 
@@ -1955,11 +1955,16 @@ def det(a_gpu, overwrite=False, ipiv_gpu=None, handle=None):
         The square n*n matrix of which to calculate the determinant.
     overwrite : bool (default: False)
         Discard data in `a` (may improve performance).
+    workspace_gpu : pycuda.gpuarray.GPUArray (optional)
+        Temporary array of size Lwork (typically computed by CUSOLVER helper
+        functions), can be supplied to save allocations. Only used if lib == 'cusolver'.
+    ipiv_gpu : pycuda.gpuarray.GPUArray (optional)
+        Temporary array of size n, can be supplied to save allocations.
     handle : int
         CUBLAS context. If no context is specified, the default handle from
         `skcuda.misc._global_cublas_handle` is used.
-    ipiv_gpu : pycuda.gpuarray.GPUArray (optional)
-        Temporary array of size n, can be supplied to save allocations.
+    lib : str
+        Library to use. May be either 'cula' or 'cusolver'.
 
     Returns
     -------
@@ -1967,42 +1972,88 @@ def det(a_gpu, overwrite=False, ipiv_gpu=None, handle=None):
         determinant of a_gpu
     """
 
-    if not _has_cula:
-        raise NotImplementedError('CULA not installed')
-
     if handle is None:
         handle = misc._global_cublas_handle
 
-    if len(a_gpu.shape) != 2:
-        raise ValueError('Only 2D matrices are supported')
-    if a_gpu.shape[0] != a_gpu.shape[1]:
-        raise ValueError('Only square matrices are supported')
+    if lib == 'cula':
+        if not _has_cula:
+            raise NotImplementedError('CULA not installed')
 
-    if (a_gpu.dtype == np.complex64):
-        getrf = cula.culaDeviceCgetrf
-    elif (a_gpu.dtype == np.float32):
-        getrf = cula.culaDeviceSgetrf
-    elif (a_gpu.dtype == np.complex128):
-        getrf = cula.culaDeviceZgetrf
-    elif (a_gpu.dtype == np.float64):
-        getrf = cula.culaDeviceDgetrf
-    else:
-        raise ValueError('unsupported input type')
+        if len(a_gpu.shape) != 2:
+            raise ValueError('Only 2D matrices are supported')
+        if a_gpu.shape[0] != a_gpu.shape[1]:
+            raise ValueError('Only square matrices are supported')
 
-    n = int(a_gpu.shape[0]) # workaround for bug #131
-    if ipiv_gpu is None:
+        if (a_gpu.dtype == np.complex64):
+            getrf = cula.culaDeviceCgetrf
+        elif (a_gpu.dtype == np.float32):
+            getrf = cula.culaDeviceSgetrf
+        elif (a_gpu.dtype == np.complex128):
+            getrf = cula.culaDeviceZgetrf
+        elif (a_gpu.dtype == np.float64):
+            getrf = cula.culaDeviceDgetrf
+        else:
+            raise ValueError('unsupported input type')
+
+        n = int(a_gpu.shape[0]) # workaround for bug #131
         alloc = misc._global_cublas_allocator
-        ipiv_gpu = gpuarray.empty((n, 1), np.int32, allocator=alloc)
-    elif ipiv_gpu.dtype != np.int32 or np.prod(ipiv_gpu.shape) < n:
-        raise ValueError('invalid ipiv provided')
+        if ipiv_gpu is None:
+            ipiv_gpu = gpuarray.empty((n, 1), np.int32, allocator=alloc)
+        elif ipiv_gpu.dtype != np.int32 or np.prod(ipiv_gpu.shape) < n:
+            raise ValueError('invalid ipiv provided')
 
-    out = a_gpu if overwrite else a_gpu.copy()
-    try:
-        getrf(n, n, out.gpudata, n, ipiv_gpu.gpudata)
-        return _get_det_kernel(a_gpu.dtype)(ipiv_gpu, out, n).get()
-    except cula.culaDataError as e:
-        raise LinAlgError(e)
+        out = a_gpu if overwrite else a_gpu.copy()
+        try:
+            getrf(n, n, out.gpudata, n, ipiv_gpu.gpudata)
+            return _get_det_kernel(a_gpu.dtype)(ipiv_gpu, out, n).get()
+        except cula.culaDataError as e:
+            raise LinAlgError(e)
 
+    elif lib == 'cusolver':
+        if not _has_cusolver:
+            raise NotImplementedError('CUSOLVER not installed')
+
+        cusolverHandle = misc._global_cusolver_handle
+
+        if (a_gpu.dtype == np.complex64):
+            getrf = cusolver.cusolverDnCgetrf
+            bufsize = cusolver.cusolverDnCgetrf_bufferSize
+        elif (a_gpu.dtype == np.float32):
+            getrf = cusolver.cusolverDnSgetrf
+            bufsize = cusolver.cusolverDnSgetrf_bufferSize
+        elif (a_gpu.dtype == np.complex128):
+            getrf = cusolver.cusolverDnZgetrf
+            bufsize = cusolver.cusolverDnZgetrf_bufferSize
+        elif (a_gpu.dtype == np.float64):
+            getrf = cusolver.cusolverDnDgetrf
+            bufsize = cusolver.cusolverDnDgetrf_bufferSize
+        else:
+            raise ValueError('unsupported input type')
+
+        out = a_gpu if overwrite else a_gpu.copy()
+
+        n = int(a_gpu.shape[0]) # workaround for bug #131
+        alloc = misc._global_cublas_allocator
+        Lwork = bufsize(cusolverHandle, n, n, int(out.gpudata), n)
+        if workspace_gpu is None:
+            workspace_gpu = gpuarray.empty(Lwork, a_gpu.dtype, allocator=alloc)
+        elif workspace_gpu.dtype != a_gpu.dtype or len(workspace_gpu) < Lwork:
+            raise ValueError('invalid workspace provided')
+
+        if ipiv_gpu is None:
+            ipiv_gpu = gpuarray.empty((n, 1), np.int32, allocator=alloc)
+        elif ipiv_gpu.dtype != np.int32 or np.prod(ipiv_gpu.shape) < n:
+            raise ValueError('invalid ipiv provided')
+
+        devInfo = gpuarray.empty(1, np.int32, allocator=alloc)
+        try:
+            getrf(cusolverHandle, n, n, out.gpudata, n, workspace_gpu.gpudata,
+                  ipiv_gpu.gpudata, devInfo.gpudata)
+            return _get_det_kernel(a_gpu.dtype)(ipiv_gpu, out, n).get()
+        except cusolver.CUSOLVER_ERROR as e:
+            raise LinAlgError(e)
+    else:
+        raise ValueError('invalid library specified')
 
 def qr(a_gpu, mode='reduced', handle=None):
     """
