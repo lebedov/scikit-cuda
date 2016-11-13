@@ -172,6 +172,11 @@ def init(allocator=drv.mem_alloc):
     if _global_cublas_allocator is None:
         _global_cublas_allocator = allocator
 
+    # Initializing MAGMA after CUSOLVER causes some functions in the latter to
+    # fail with internal errors:
+    if _has_magma:
+        magma.magma_init()
+
     global _global_cusolver_handle
     if not _global_cusolver_handle:
         from . import cusolver
@@ -182,9 +187,6 @@ def init(allocator=drv.mem_alloc):
     # device:
     if _has_cula:
         cula.culaInitialize()
-
-    if _has_magma:
-        magma.magma_init()
 
 def shutdown():
     """
