@@ -46,3 +46,4 @@ print 'lower triangular matrix is correct: ', \
     np.allclose(np.tril(l, -1), l_cuda)
 print 'upper triangular matrix is correct: ', \
     np.allclose(np.triu(u), u_cuda)
+solver.cusolverDnDestroy(h)

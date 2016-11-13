@@ -20,6 +20,8 @@ Release 0.5.2 (under development)
 * Add support for CUDA 8.0 libraries (#171).
 * Workaround for libgomp + CUDA 8.0 weirdness (fix by Kevin Flansburg).
 * Fix broken matrix-vector dot product (#156).
+* Initialize MAGMA before CUSOLVER to prevent internal errors in certain
+  CUSOLVER functions.
 
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------
