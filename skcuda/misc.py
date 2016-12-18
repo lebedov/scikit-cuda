@@ -149,7 +149,7 @@ def init(allocator=drv.mem_alloc):
     """
     Initialize libraries used by scikit-cuda.
 
-    Initialize the CUBLAS, CUSOLVER, and CULA libraries used by 
+    Initialize the CUBLAS, CULA, CUSOLVER, and MAGMA libraries used by 
     high-level functions provided by scikit-cuda.
 
     Parameters
@@ -192,8 +192,8 @@ def shutdown():
     """
     Shutdown libraries used by scikit-cuda.
 
-    Shutdown the CUBLAS and CULA libraries used by high-level functions provided
-    by scikits-cuda.
+    Shutdown the CUBLAS, CULA, CUSOLVER, and MAGMA libraries used by 
+    high-level functions provided by scikits-cuda.
 
     Notes
     -----
@@ -212,6 +212,8 @@ def shutdown():
         cusolver.cusolverDnDestroy(_global_cusolver_handle)
         _global_cusolver_handle = None
 
+    if _has_magma:
+        magma.magma_finalize()
     if _has_cula:
         cula.culaShutdown()
 
