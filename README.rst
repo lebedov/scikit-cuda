@@ -33,8 +33,9 @@ those in `NumPy and Scipy <http://www.scipy.org>`_ are provided.
 
 Documentation
 -------------
-Package documentation is available at
-`<http://scikit-cuda.readthedocs.org/>`_.
+Package documentation is available at `<http://scikit-cuda.readthedocs.org/>`_.
+Many of the high-level functions have examples in their docstrings. More illustrations
+of how to use both the wrappers and high-level functions can be found in the `demos/` and `tests/` subdirectories. 
 
 Development
 -----------
