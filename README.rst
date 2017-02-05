@@ -91,6 +91,8 @@ Python wrappers for `cuDNN <https://developer.nvidia.com/cudnn>`_ by Hannes
 Bretschneider are available `here
 <https://github.com/hannes-brt/cudnn-python-wrappers>`_.
 
+`ArrayFire <https://github.com/arrayfire/arrayfire>`_ is a free library containing many GPU-based routines with an `officially supported Python interface <https://github.com/arrayfire/arrayfire-python>`_.
+
 License
 -------
 This software is licensed under the 
