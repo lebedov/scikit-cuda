@@ -154,16 +154,15 @@ def find_lib_path(name):
     # OSX has no ldconfig:
     if sys.platform == 'darwin':
         from ctypes.macholib.dyld import dyld_find as _dyld_find
-        def find_library(name):
-            possible = ['lib%s.dylib' % name,
-                        '%s.dylib' % name,
-                        '%s.framework/%s' % (name, name)]
-            for name in possible:
-                try:
-                    return _dyld_find(name)
-                except ValueError:
-                    continue
-            return None
+        possible = ['lib%s.dylib' % name,
+                    '%s.dylib' % name,
+                    '%s.framework/%s' % (name, name)]
+        for name in possible:
+            try:
+                return _dyld_find(name)
+            except ValueError:
+                continue
+        return None
 
     # First, check the directories in LD_LIBRARY_PATH:
     expr = r'\s+(lib%s\.[^\s]+)\s+\-\>' % re.escape(name)
