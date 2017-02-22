@@ -38,17 +38,12 @@ if _load_err:
 # Exceptions corresponding to various MAGMA errors:
 _libmagma.magma_strerror.restype = ctypes.c_char_p
 _libmagma.magma_strerror.argtypes = [ctypes.c_int]
-# MAGMA below 1.4.0 uses "L" and "U" to select upper/lower triangular
-# matrices, MAGMA 1.5+ uses numeric constants. This dict will be filled
-# in magma_init() and will convert between the two modes accordingly
-_uplo_conversion = {}
 def magma_strerror(error):
     """
     Return string corresponding to specified MAGMA error code.
     """
 
     return _libmagma.magma_strerror(error)
-
 
 class MagmaError(Exception):
 	def __init__(self, status, info=None):
@@ -82,7 +77,14 @@ def magma_version():
         ctypes.byref(minv), ctypes.byref(micv))
     return (majv.value, minv.value, micv.value)
 
+# MAGMA below 1.4.0 uses LAPACK-style char constants, while MAGMA 1.5+ uses
+# numeric constants. These dicts are filled in magma_init() and can convert
+# between the two modes accordingly:
+_uplo_conversion = {}
+_vec_conversion = {}
 
+_libmagma.magma_vec_const.restype = ctypes.c_int
+_libmagma.magma_vec_const.argtypes = [ctypes.c_char]
 _libmagma.magma_uplo_const.restype = ctypes.c_int
 _libmagma.magma_uplo_const.argtypes = [ctypes.c_char]
 _libmagma.magma_init.restype = int
@@ -92,16 +94,20 @@ def magma_init():
     """
 
     global _uplo_conversion
+    global _vec_conversion
     status = _libmagma.magma_init()
     magmaCheckStatus(status)
     v = magma_version()
     if v >= (1, 5, 0):
-        _uplo_conversion.update({"L": _libmagma.magma_uplo_const(b"L"),
-                                 "l": _libmagma.magma_uplo_const(b"l"),
-                                 "U": _libmagma.magma_uplo_const(b"U"),
-                                 "u": _libmagma.magma_uplo_const(b"u")})
+        for c in ['l', 'L', 'u', 'U']:
+            _uplo_conversion.update({c: _libmagma.magma_uplo_const(c)})
+        for c in ['n', 'N', 'a', 'A', 'o', 'O', 's', 'S', 'i', 'I', 'v', 'V']:
+            _vec_conversion.update({c: _libmagma.magma_vec_const(c)})
     else:
-       _uplo_conversion.update({"L": "L", "l": "l", "U": "u", "u": "u"})
+        for c in ['l', 'L', 'u', 'U']:
+            _uplo_conversion.update({c: c})
+        for c in ['n', 'N', 'a', 'A', 'o', 'O', 's', 'S', 'i', 'I', 'v', 'V']:
+            _vec_conversion.update({c: c})
 
 _libmagma.magma_finalize.restype = int
 def magma_finalize():
@@ -885,24 +891,28 @@ def magma_get_ssygst_nb(m):
     return _libmagma.magma_get_ssgyst_nb(m)
 
 _libmagma.magma_get_sgesvd_nb.restype = int
-_libmagma.magma_get_sgesvd_nb.argtypes = [ctypes.c_int]
-def magma_get_sgesvd_nb(m):
-    return _libmagma.magma_get_sgesvd_nb(m)
+_libmagma.magma_get_sgesvd_nb.argtypes = [ctypes.c_int,
+                                          ctypes.c_int]
+def magma_get_sgesvd_nb(m, n):
+    return _libmagma.magma_get_sgesvd_nb(m, n)
 
 _libmagma.magma_get_dgesvd_nb.restype = int
-_libmagma.magma_get_dgesvd_nb.argtypes = [ctypes.c_int]
-def magma_get_dgesvd_nb(m):
-    return _libmagma.magma_get_dgesvd_nb(m)
+_libmagma.magma_get_dgesvd_nb.argtypes = [ctypes.c_int,
+                                          ctypes.c_int]
+def magma_get_dgesvd_nb(m, n):
+    return _libmagma.magma_get_dgesvd_nb(m, n)
 
 _libmagma.magma_get_cgesvd_nb.restype = int
-_libmagma.magma_get_cgesvd_nb.argtypes = [ctypes.c_int]
-def magma_get_cgesvd_nb(m):
-    return _libmagma.magma_get_cgesvd_nb(m)
+_libmagma.magma_get_cgesvd_nb.argtypes = [ctypes.c_int,
+                                          ctypes.c_int]
+def magma_get_cgesvd_nb(m, n):
+    return _libmagma.magma_get_cgesvd_nb(m, n)
 
 _libmagma.magma_get_zgesvd_nb.restype = int
-_libmagma.magma_get_zgesvd_nb.argtypes = [ctypes.c_int]
-def magma_get_zgesvd_nb(m):
-    return _libmagma.magma_get_zgesvd_nb(m)
+_libmagma.magma_get_zgesvd_nb.argtypes = [ctypes.c_int,
+                                          ctypes.c_int]
+def magma_get_zgesvd_nb(m, n):
+    return _libmagma.magma_get_zgesvd_nb(m, n)
 
 _libmagma.magma_get_ssygst_nb_m.restype = int
 _libmagma.magma_get_ssygst_nb_m.argtypes = [ctypes.c_int]
@@ -914,15 +924,85 @@ _libmagma.magma_get_sbulge_nb.argtypes = [ctypes.c_int]
 def magma_get_sbulge_nb(m):
     return _libmagma.magma_get_sbulge_nb(m)
 
-_libmagma.magma_get_sbulge_nb_mgpu.restype = int
-_libmagma.magma_get_sbulge_nb_mgpu.argtypes = [ctypes.c_int]
-def magma_get_sbulge_nb_mgpu(m):
-    return _libmagma.magma_get_sbulge_nb_mgpu(m)
-
 _libmagma.magma_get_dsytrd_nb.restype = int
 _libmagma.magma_get_dsytrd_nb.argtypes = [ctypes.c_int]
 def magma_get_dsytrd_nb(m):
     return _libmagma.magma_get_dsytrd_nb(m)
+
+# Buffer size algorithms
+
+def _magma_gesvd_buffersize(jobu, jobvt, m, n, nb, speed='fast'):
+    """
+    See src/*gesvd.cpp in MAGMA source for more information.
+    """
+
+    if n > m:
+        n, m = m, n
+        jobu, jobvt = jobvt, jobu
+
+    mx = max(m, n)
+    mn = min(m, n)
+
+    if speed == 'fast':
+        if mx >= 1.6*mn:
+            if jobu == 'N': # path 1
+                return 3*mn+2*mn*nb
+            elif jobu == 'O': 
+                if jobvt in ['N', 'A', 'S']: # path 2, 3
+                    return mn*mn+3*mn+2*mn*nb
+                else:
+                    raise RuntimeError('unrecognized jobu/jobvt: %s/%s' % (jobu,
+                                                                           jobvt))
+            elif jobu == 'S':
+                if jobvt in ['N', 'A', 'S']: # path 4, 6
+                    return mn*mn+3*mn+2*mn*nb
+                elif jobvt == 'O': # path 5
+                    return 2*mn*mn+3*mn+2*mn*nb
+                else:
+                    raise RuntimeError('unrecognized jobu/jobvt: %s/%s' % (jobu,
+                                                                           jobvt))
+            elif jobu == 'A':
+                if jobvt in ['N', 'A', 'S']: # path 7, 9
+                    return mn*mn+max(3*mn+2*mn*nb, mn+mx*nb)
+                elif jobvt == 'O': # path 8
+                    return 2*mn*mn+max(3*mn+2*mn*nb, mn+mx*nb)
+            else:
+                raise RuntimeError('unrecognized jobu/jobvt: %s/%s' % (jobu,
+                                                                       jobvt))
+        else: # path 10
+            return 3*mn+(mx+mn)*nb 
+    elif speed == 'slow':
+        if mx >= 1.6*mn:
+            if jobu == 'N': # path 1 - marked as "n/a"; should 0 be returned?
+                return 0
+            elif jobu == 'O':
+                if jobvt == 'N': # path 2
+                    return 3*mn+(mx+mn)*nb
+                else: # path 3
+                    return 3*mn+max(2*mn*nb, mx*nb)
+            else: # path 3-9
+                return 3*mn+max(2*mn*nb, mx*nb)
+        else: # path 10 - marked as "n/a"; should 0 be returned?
+            return 0
+    else:
+        raise RuntimeError('unrecognized jobu/jobvt: %s/%s' % (jobu,
+                                                               jobvt))
+
+def magma_sgesvd_buffersize(jobu, jobvt, m, n, speed='fast'):
+    nb = magma_get_sgesvd_nb(m, n)
+    return _magma_gesvd_buffersize(jobu, jobvt, m, n, nb, speed)
+
+def magma_dgesvd_buffersize(jobu, jobvt, m, n, speed='fast'):
+    nb = magma_get_dgesvd_nb(m, n)
+    return _magma_gesvd_buffersize(jobu, jobvt, m, n, nb, speed)
+
+def magma_cgesvd_buffersize(jobu, jobvt, m, n, speed='fast'):
+    nb = magma_get_cgesvd_nb(m, n)
+    return _magma_gesvd_buffersize(jobu, jobvt, m, n, nb, speed)
+
+def magma_zgesvd_buffersize(jobu, jobvt, m, n, speed='fast'):
+    nb = magma_get_zgesvd_nb(m, n)
+    return _magma_gesvd_buffersize(jobu, jobvt, m, n, nb, speed)
 
 # LAPACK routines
 
@@ -939,16 +1019,17 @@ _libmagma.magma_sgebrd.argtypes = [ctypes.c_int,
                                    ctypes.c_void_p,
                                    ctypes.c_int,
                                    ctypes.c_void_p]
-def magma_sgebrd(m, n, A, lda, d, e, tauq, taup, work, lwork, info):
+def magma_sgebrd(m, n, A, lda, d, e, tauq, taup, work, lwork):
     """
     Reduce matrix to bidiagonal form.
     """
 
+    info = ctypes.c_int()
     status = _libmagma.magma_sgebrd.argtypes(m, n, int(A), lda,
                                              int(d), int(e),
                                              int(tauq), int(taup),
                                              int(work), int(lwork),
-                                             int(info))
+                                             ctypes.byref(info))
     magmaCheckStatus(status)
 
 # SGEHRD2, DGEHRD2, CGEHRD2, ZGEHRD2
@@ -963,14 +1044,15 @@ _libmagma.magma_sgehrd2.argtypes = [ctypes.c_int,
                                     ctypes.c_int,
                                     ctypes.c_void_p]
 def magma_sgehrd2(n, ilo, ihi, A, lda, tau,
-                  work, lwork, info):
+                  work, lwork):
     """
     Reduce matrix to upper Hessenberg form.
     """
 
+    info = ctypes.c_int()
     status = _libmagma.magma_sgehrd2(n, ilo, ihi, int(A), lda,
                                      int(tau), int(work),
-                                     lwork, int(info))
+                                     lwork, ctypes.byref(info))
     magmaCheckStatus(status)
 
 # SGEHRD, DGEHRD, CGEHRD, ZGEHRD
@@ -985,14 +1067,15 @@ _libmagma.magma_sgehrd.argtypes = [ctypes.c_int,
                                     ctypes.c_int,
                                     ctypes.c_void_p]
 def magma_sgehrd(n, ilo, ihi, A, lda, tau,
-                 work, lwork, dT, info):
+                 work, lwork, dT):
     """
     Reduce matrix to upper Hessenberg form (fast algorithm).
     """
 
+    info = ctypes.c_int()
     status = _libmagma.magma_sgehrd(n, ilo, ihi, int(A), lda,
                                     int(tau), int(work),
-                                    lwork, int(dT), int(info))
+                                    lwork, int(dT), ctypes.byref(info))
     magmaCheckStatus(status)
 
 # SGELQF, DGELQF, CGELQF, ZGELQF
@@ -1005,15 +1088,16 @@ _libmagma.magma_sgelqf.argtypes = [ctypes.c_int,
                                    ctypes.c_void_p,
                                    ctypes.c_int,
                                    ctypes.c_void_p]
-def magma_sgelqf(m, n, A, lda, tau, work, lwork, info):
+def magma_sgelqf(m, n, A, lda, tau, work, lwork):
 
     """
     LQ factorization.
     """
 
+    info = ctypes.c_int()
     status = _libmagma.magma_sgelqf(m, n, int(A), lda,
                                     int(tau), int(work),
-                                    lwork, int(info))
+                                    lwork, ctypes.byref(info))
     magmaCheckStatus(status)
 
 # SGEQRF, DGEQRF, CGEQRF, ZGEQRF
@@ -1026,37 +1110,16 @@ _libmagma.magma_sgeqrf.argtypes = [ctypes.c_int,
                                    ctypes.c_void_p,
                                    ctypes.c_int,
                                    ctypes.c_void_p]
-def magma_sgeqrf(m, n, A, lda, tau, work, lwork, info):
+def magma_sgeqrf(m, n, A, lda, tau, work, lwork):
 
     """
     QR factorization.
     """
 
+    info = ctypes.c_int()
     status = _libmagma.magma_sgeqrf(m, n, int(A), lda,
                                     int(tau), int(work),
-                                    lwork, int(info))
-    magmaCheckStatus(status)
-
-# SGEQRF4, DGEQRF4, CGEQRF4, ZGEQRF4
-_libmagma.magma_sgeqrf4.restype = int
-_libmagma.magma_sgeqrf4.argtypes = [ctypes.c_int,
-                                    ctypes.c_int,
-                                    ctypes.c_int,
-                                    ctypes.c_void_p,
-                                    ctypes.c_int,
-                                    ctypes.c_void_p,
-                                    ctypes.c_void_p,
-                                    ctypes.c_int,
-                                    ctypes.c_void_p]
-def magma_sgeqrf4(num_gpus, m, n, a, lda, tau, work, lwork, info):
-
-    """
-
-    """
-
-    status = _libmagma.magma_sgeqrf4(num_gpus, m, n, int(a), lda,
-                                    int(tau), int(work),
-                                    lwork, int(info))
+                                    lwork, ctypes.byref(info))
     magmaCheckStatus(status)
 
 # SGEQRF, DGEQRF, CGEQRF, ZGEQRF (ooc)
@@ -1069,15 +1132,16 @@ _libmagma.magma_sgeqrf_ooc.argtypes = [ctypes.c_int,
                                        ctypes.c_void_p,
                                        ctypes.c_int,
                                        ctypes.c_void_p]
-def magma_sgeqrf_ooc(m, n, A, lda, tau, work, lwork, info):
+def magma_sgeqrf_ooc(m, n, A, lda, tau, work, lwork):
 
     """
     QR factorization (ooc).
     """
 
+    info = ctypes.c_int()
     status = _libmagma.magma_sgeqrf_ooc(m, n, int(A), lda,
                                         int(tau), int(work),
-                                        lwork, int(info))
+                                        lwork, ctypes.byref(info))
     magmaCheckStatus(status)
 
 # SGESV, DGESV, CGESV, ZGESV
@@ -1090,15 +1154,16 @@ _libmagma.magma_sgesv.argtypes = [ctypes.c_int,
                                   ctypes.c_void_p,
                                   ctypes.c_int,
                                   ctypes.c_void_p]
-def magma_sgesv(n, nhrs, A, lda, ipiv, B, ldb, info):
+def magma_sgesv(n, nhrs, A, lda, ipiv, B, ldb):
 
     """
     Solve system of linear equations.
     """
 
+    info = ctypes.c_int()
     status = _libmagma.magma_sgesv(n, nhrs, int(A), lda,
                                    int(ipiv), int(B),
-                                   ldb, int(info))
+                                   ldb, ctypes.byref(info))
     magmaCheckStatus(status)
 
 # SGETRF, DGETRF, CGETRF, ZGETRF
@@ -1109,14 +1174,15 @@ _libmagma.magma_sgetrf.argtypes = [ctypes.c_int,
                                    ctypes.c_int,
                                    ctypes.c_void_p,
                                    ctypes.c_void_p]
-def magma_sgetrf(m, n, A, lda, ipiv, info):
+def magma_sgetrf(m, n, A, lda, ipiv):
 
     """
     LU factorization.
     """
 
+    info = ctypes.c_int()
     status = _libmagma.magma_sgetrf(m, n, int(A), lda,
-                                    int(ipiv), int(info))
+                                    int(ipiv), ctypes.byref(info))
     magmaCheckStatus(status)
 
 ## SGETRF2, DGETRF2, CGETRF2, ZGETRF2
@@ -1127,14 +1193,15 @@ def magma_sgetrf(m, n, A, lda, ipiv, info):
 #                                    ctypes.c_int,
 #                                    ctypes.c_void_p,
 #                                    ctypes.c_void_p]
-#def magma_sgetrf2(m, n, A, lda, ipiv, info):
+#def magma_sgetrf2(m, n, A, lda, ipiv):
 #
 #    """
 #    LU factorization (multi-GPU).
 #    """
 #
+#    info = ctypes.c_int()
 #    status = _libmagma.magma_sgetrf2(m, n, int(A), lda,
-#                                    int(ipiv), int(info))
+#                                    int(ipiv), ctypes.byref(info))
 #    magmaCheckStatus(status)
 
 # SGEEV, DGEEV, CGEEV, ZGEEV
@@ -1154,15 +1221,15 @@ _libmagma.magma_sgeev.argtypes = [ctypes.c_char,
                                   ctypes.c_void_p,
                                   ctypes.c_void_p]
 def magma_sgeev(jobvl, jobvr, n, a, lda,
-                w, vl, ldvl, vr, ldvr, work, lwork, rwork, info):
-
+                w, vl, ldvl, vr, ldvr, work, lwork, rwork):
     """
     Compute eigenvalues and eigenvectors.
     """
 
+    ctypes.c_int()
     status = _libmagma.magma_sgeev(jobvl, jobvr, n, int(a), lda,
                                    int(w), int(vl), ldvl, int(vr), ldvr,
-                                   int(work), lwork, int(rwork), int(info))
+                                   int(work), lwork, int(rwork), ctypes.byref(info))
     magmaCheckStatus(status)
 
 # SGESVD, DGESVD, CGESVD, ZGESVD
@@ -1181,16 +1248,18 @@ _libmagma.magma_sgesvd.argtypes = [ctypes.c_int,
                                    ctypes.c_void_p,
                                    ctypes.c_int,
                                    ctypes.c_void_p]
-def magma_sgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork,
-                 info):
+def magma_sgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork):
     """
     SVD decomposition.
     """
 
+    jobu = _vec_conversion[jobu]
+    jobvt = _vec_conversion[jobvt]
+    info = ctypes.c_int()
     status = _libmagma.magma_sgesvd(jobu, jobvt, m, n,
                                     int(a), lda, int(s), int(u), ldu,
                                     int(vt), ldvt, int(work), lwork,
-                                    int(info))
+                                    ctypes.byref(info))
     magmaCheckStatus(status)
 
 _libmagma.magma_dgesvd.restype = int
@@ -1208,16 +1277,18 @@ _libmagma.magma_dgesvd.argtypes = [ctypes.c_int,
                                    ctypes.c_void_p,
                                    ctypes.c_int,
                                    ctypes.c_void_p]
-def magma_dgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork,
-                 info):
+def magma_dgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork):
     """
     SVD decomposition.
     """
 
+    jobu = _vec_conversion[jobu]
+    jobvt = _vec_conversion[jobvt]
+    info = ctypes.c_int()
     status = _libmagma.magma_dgesvd(jobu, jobvt, m, n,
                                     int(a), lda, int(s), int(u), ldu,
                                     int(vt), ldvt, int(work), lwork,
-                                    int(info))
+                                    ctypes.byref(info))
     magmaCheckStatus(status)
 
 _libmagma.magma_cgesvd.restype = int
@@ -1236,16 +1307,18 @@ _libmagma.magma_cgesvd.argtypes = [ctypes.c_int,
                                    ctypes.c_int,
                                    ctypes.c_void_p]
 def magma_cgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork,
-                 rwork, info):
+                 rwork):
     """
     SVD decomposition.
     """
 
+    jobu = _vec_conversion[jobu]
+    jobvt = _vec_conversion[jobvt]
+    info = ctypes.c_int()
     status = _libmagma.magma_cgesvd(jobu, jobvt, m, n,
                                     int(a), lda, int(s), int(u), ldu,
                                     int(vt), ldvt, int(work), lwork,
-                                    int(rwork),
-                                    int(info))
+                                    int(rwork), ctypes.byref(info))
     magmaCheckStatus(status)
 
 _libmagma.magma_zgesvd.restype = int
@@ -1265,15 +1338,18 @@ _libmagma.magma_zgesvd.argtypes = [ctypes.c_int,
                                    ctypes.c_void_p,
                                    ctypes.c_void_p]
 def magma_zgesvd(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork,
-                 rwork, info):
+                 rwork):
     """
     SVD decomposition.
     """
 
+    jobu = _vec_conversion[jobu]
+    jobvt = _vec_conversion[jobvt]
+    ctypes.c_int()
     status = _libmagma.magma_zgesvd(jobu, jobvt, m, n,
                                     int(a), lda, int(s), int(u), ldu,
                                     int(vt), ldvt, int(work), lwork,
-                                    int(rwork), int(info))
+                                    int(rwork), ctypes.byref(info))
     magmaCheckStatus(status)
 
 # SGESDD, DGESDD, CGESDD, ZGESDD
@@ -1293,15 +1369,17 @@ _libmagma.magma_sgesdd.argtypes = [ctypes.c_int,
                                    ctypes.c_void_p,
                                    ctypes.c_void_p]
 def magma_sgesdd(jobz, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork,
-                 iwork, info):
+                 iwork):
     """
     SDD decomposition.
     """
 
+    jobz = _vec_conversion[jobz]
+    info = ctypes.c_int()
     status = _libmagma.magma_sgesdd(jobz, m, n,
                                     int(a), lda, int(s), int(u), ldu,
                                     int(vt), ldvt, int(work), lwork,
-                                    int(iwork), int(info))
+                                    int(iwork), ctypes.byref(info))
     magmaCheckStatus(status)
 
 _libmagma.magma_dgesdd.restype = int
@@ -1320,15 +1398,17 @@ _libmagma.magma_dgesdd.argtypes = [ctypes.c_int,
                                    ctypes.c_void_p,
                                    ctypes.c_void_p]
 def magma_dgesdd(jobz, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork,
-                 iwork, info):
+                 iwork):
     """
     SDD decomposition.
     """
 
+    jobz = _vec_conversion[jobz]
+    info = ctypes.c_int()
     status = _libmagma.magma_dgesdd(jobz, m, n,
                                     int(a), lda, int(s), int(u), ldu,
                                     int(vt), ldvt, int(work), lwork,
-                                    int(iwork), int(info))
+                                    int(iwork), ctypes.byref(info))
     magmaCheckStatus(status)
 
 _libmagma.magma_cgesdd.restype = int
@@ -1348,15 +1428,17 @@ _libmagma.magma_cgesdd.argtypes = [ctypes.c_int,
                                    ctypes.c_void_p,
                                    ctypes.c_void_p]
 def magma_cgesdd(jobz, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork,
-                 rwork, iwork, info):
+                 rwork, iwork):
     """
     SDD decomposition.
     """
 
+    jobz = _vec_conversion[jobz]
+    info = ctypes.c_int()
     status = _libmagma.magma_cgesdd(jobz, m, n,
                                     int(a), lda, int(s), int(u), ldu,
                                     int(vt), ldvt, int(work), lwork,
-                                    int(rwork), int(iwork), int(info))
+                                    int(rwork), int(iwork), ctypes.byref(info))
     magmaCheckStatus(status)
 
 _libmagma.magma_zgesdd.restype = int
@@ -1376,15 +1458,17 @@ _libmagma.magma_zgesdd.argtypes = [ctypes.c_int,
                                    ctypes.c_void_p,
                                    ctypes.c_void_p]
 def magma_zgesdd(jobz, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork,
-                 rwork, iwork, info):
+                 rwork, iwork):
     """
     SDD decomposition.
     """
 
+    jobz = _vec_conversion[jobz]
+    info = ctypes.c_int()
     status = _libmagma.magma_zgesdd(jobz, m, n,
                                     int(a), lda, int(s), int(u), ldu,
                                     int(vt), ldvt, int(work), lwork,
-                                    int(rwork), int(iwork), int(info))
+                                    int(rwork), int(iwork), ctypes.byref(info))
     magmaCheckStatus(status)
 
 
@@ -1392,17 +1476,18 @@ def magma_zgesdd(jobz, m, n, a, lda, s, u, ldu, vt, ldvt, work, lwork,
 # SPOSV, DPOSV, CPOSV, ZPOSV
 _libmagma.magma_sposv_gpu.restype = int
 _libmagma.magma_sposv_gpu.argtypes = [ctypes.c_int,
-                                  ctypes.c_int,
-                                  ctypes.c_int,
-                                  ctypes.c_void_p,
-                                  ctypes.c_int,
-                                  ctypes.c_void_p,
-                                  ctypes.c_int,
-                                  ctypes.c_void_p]
+                                      ctypes.c_int,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p,
+                                      ctypes.c_int,
+                                      ctypes.c_void_p]
 def magma_sposv_gpu(uplo, n, nhrs, a_gpu, lda, b_gpu, ldb):
     """
     Solve linear system with positive semidefinite coefficient matrix.
     """
+
     uplo = _uplo_conversion[uplo]
     info = ctypes.c_int()
     status = _libmagma.magma_sposv_gpu(uplo, n, nhrs, int(a_gpu), lda,
@@ -1415,6 +1500,7 @@ def magma_dposv_gpu(uplo, n, nhrs, a_gpu, lda, b_gpu, ldb):
     """
     Solve linear system with positive semidefinite coefficient matrix.
     """
+
     uplo = _uplo_conversion[uplo]
     info = ctypes.c_int()
     status = _libmagma.magma_dposv_gpu(uplo, n, nhrs, int(a_gpu), lda,
@@ -1428,6 +1514,7 @@ def magma_cposv_gpu(uplo, n, nhrs, a_gpu, lda, b_gpu, ldb):
     """
     Solve linear system with positive semidefinite coefficient matrix.
     """
+
     uplo = _uplo_conversion[uplo]
     info = ctypes.c_int()
     status = _libmagma.magma_cposv_gpu(uplo, n, nhrs, int(a_gpu), lda,
@@ -1441,6 +1528,7 @@ def magma_zposv_gpu(uplo, n, nhrs, a_gpu, lda, b_gpu, ldb):
     """
     Solve linear system with positive semidefinite coefficient matrix.
     """
+
     uplo = _uplo_conversion[uplo]
     info = ctypes.c_int()
     status = _libmagma.magma_zposv_gpu(uplo, n, nhrs, int(a_gpu), lda,
@@ -1462,6 +1550,7 @@ def magma_sgesv_gpu(n, nhrs, A, lda, ipiv, B, ldb):
     """
     Solve system of linear equations.
     """
+
     info = ctypes.c_int()
     status = _libmagma.magma_sgesv_gpu(n, nhrs, int(A), lda,
                                    int(ipiv), int(B),
@@ -1475,6 +1564,7 @@ def magma_dgesv_gpu(n, nhrs, A, lda, ipiv, B, ldb):
     """
     Solve system of linear equations.
     """
+
     info = ctypes.c_int()
     status = _libmagma.magma_dgesv_gpu(n, nhrs, int(A), lda,
                                    int(ipiv), int(B),
@@ -1501,6 +1591,7 @@ def magma_zgesv_gpu(n, nhrs, A, lda, ipiv, B, ldb):
     """
     Solve system of linear equations.
     """
+
     info = ctypes.c_int()
     status = _libmagma.magma_zgesv_gpu(n, nhrs, int(A), lda,
                                    int(ipiv), int(B),
@@ -1531,6 +1622,7 @@ def magma_dgesv_nopiv_gpu(n, nhrs, A, lda, B, ldb):
     """
     Solve system of linear equations.
     """
+
     info = ctypes.c_int()
     status = _libmagma.magma_dgesv_nopiv_gpu(n, nhrs, int(A), lda,
                                              int(B), ldb, ctypes.byref(info))
@@ -1542,6 +1634,7 @@ def magma_cgesv_nopiv_gpu(n, nhrs, A, lda, B, ldb):
     """
     Solve system of linear equations.
     """
+
     info = ctypes.c_int()
     status = _libmagma.magma_cgesv_nopiv_gpu(n, nhrs, int(A), lda,
                                              int(B), ldb, ctypes.byref(info))
@@ -1554,6 +1647,7 @@ def magma_zgesv_nopiv_gpu(n, nhrs, A, lda, B, ldb):
     """
     Solve system of linear equations.
     """
+
     info = ctypes.c_int()
     status = _libmagma.magma_zgesv_nopiv_gpu(n, nhrs, int(A), lda,
                                              int(B), ldb, ctypes.byref(info))
@@ -1570,6 +1664,7 @@ def magma_spotrf_gpu(uplo, n, A, lda):
     """
     Cholesky factorization of positive symmetric matrix.
     """
+
     uplo = _uplo_conversion[uplo]
     info = ctypes.c_int()
     status = _libmagma.magma_spotrf_gpu(uplo, n, int(A), lda, ctypes.byref(info))
@@ -1582,6 +1677,7 @@ def magma_dpotrf_gpu(uplo, n, A, lda):
     """
     Cholesky factorization of positive symmetric matrix.
     """
+
     uplo = _uplo_conversion[uplo]
     info = ctypes.c_int()
     status = _libmagma.magma_dpotrf_gpu(uplo, n, int(A), lda, ctypes.byref(info))
@@ -1594,6 +1690,7 @@ def magma_cpotrf_gpu(uplo, n, A, lda):
     """
     Cholesky factorization of positive symmetric matrix.
     """
+
     uplo = _uplo_conversion[uplo]
     info = ctypes.c_int()
     status = _libmagma.magma_cpotrf_gpu(uplo, n, int(A), lda, ctypes.byref(info))
@@ -1606,6 +1703,7 @@ def magma_zpotrf_gpu(uplo, n, A, lda):
     """
     Cholesky factorization of positive symmetric matrix.
     """
+
     uplo = _uplo_conversion[uplo]
     info = ctypes.c_int()
     status = _libmagma.magma_zpotrf_gpu(uplo, n, int(A), lda, ctypes.byref(info))
@@ -1623,6 +1721,7 @@ def magma_spotri_gpu(uplo, n, A, lda):
     """
     Inverse using the Cholesky factorization of positive symmetric matrix.
     """
+
     uplo = _uplo_conversion[uplo]
     info = ctypes.c_int()
     status = _libmagma.magma_spotri_gpu(uplo, n, int(A), lda, ctypes.byref(info))
@@ -1635,6 +1734,7 @@ def magma_dpotri_gpu(uplo, n, A, lda):
     """
     Inverse using the Cholesky factorization of positive symmetric matrix.
     """
+
     uplo = _uplo_conversion[uplo]
     info = ctypes.c_int()
     status = _libmagma.magma_dpotri_gpu(uplo, n, int(A), lda, ctypes.byref(info))
@@ -1647,6 +1747,7 @@ def magma_cpotri_gpu(uplo, n, A, lda):
     """
     Inverse using the Cholesky factorization of positive symmetric matrix.
     """
+
     uplo = _uplo_conversion[uplo]
     info = ctypes.c_int()
     status = _libmagma.magma_cpotri_gpu(uplo, n, int(A), lda, ctypes.byref(info))
@@ -1659,6 +1760,7 @@ def magma_zpotri_gpu(uplo, n, A, lda):
     """
     Inverse using the Cholesky factorization of positive symmetric matrix.
     """
+
     uplo = _uplo_conversion[uplo]
     info = ctypes.c_int()
     status = _libmagma.magma_zpotri_gpu(uplo, n, int(A), lda, ctypes.byref(info))
@@ -1668,15 +1770,16 @@ def magma_zpotri_gpu(uplo, n, A, lda):
 # SGETRF, DGETRF, CGETRF, ZGETRF
 _libmagma.magma_sgetrf_gpu.restype = int
 _libmagma.magma_sgetrf_gpu.argtypes = [ctypes.c_int,
-                                  ctypes.c_int,
-                                  ctypes.c_void_p,
-                                  ctypes.c_int,
-                                  ctypes.c_void_p,
-                                  ctypes.c_void_p]
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_int,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p]
 def magma_sgetrf_gpu(n, m, A, lda, ipiv):
     """
     LU factorization.
     """
+
     info = ctypes.c_int()
     status = _libmagma.magma_sgetrf_gpu(n, m, int(A), lda,
                                    int(ipiv), ctypes.byref(info))
@@ -1689,6 +1792,7 @@ def magma_dgetrf_gpu(n, m, A, lda, ipiv):
     """
     LU factorization.
     """
+
     info = ctypes.c_int()
     status = _libmagma.magma_dgetrf_gpu(n, m, int(A), lda,
                                    int(ipiv), ctypes.byref(info))
@@ -1701,6 +1805,7 @@ def magma_cgetrf_gpu(n, m, A, lda, ipiv):
     """
     LU factorization.
     """
+
     info = ctypes.c_int()
     status = _libmagma.magma_cgetrf_gpu(n, m, int(A), lda,
                                    int(ipiv), ctypes.byref(info))
@@ -1739,6 +1844,7 @@ def magma_ssyevd_gpu(jobz, uplo, n, dA, ldda, w, wA, ldwa, work, lwork, iwork,
     Compute eigenvalues of real symmetric matrix.
     """
 
+    uplo = _uplo_conversion[uplo]
     info = ctypes.c_int()
     status = _libmagma.magma_ssyevd_gpu(jobz, uplo, n, int(dA), ldda,
                                         int(w), int(wA), ldwa, int(work),
@@ -1765,6 +1871,8 @@ def magma_dsyevd_gpu(jobz, uplo, n, dA, ldda, w, wA, ldwa, work, lwork, iwork,
     Compute eigenvalues of real symmetric matrix.
     """
 
+    jobz = _vec_conversion[jobz]
+    uplo = _uplo_conversion[uplo]
     info = ctypes.c_int()
     status = _libmagma.magma_dsyevd_gpu(jobz, uplo, n, int(dA), ldda,
                                         int(w), int(wA), ldwa, int(work),
@@ -1781,6 +1889,7 @@ def magmablas_ssymmetrize(uplo, n, A, lda):
     """
     Symmetrize a triangular matrix.
     """
+
     uplo = _uplo_conversion[uplo]
     status = _libmagma.magmablas_ssymmetrize(uplo, n, int(A), lda)
     magmaCheckStatus(status)
@@ -1792,6 +1901,7 @@ def magmablas_dsymmetrize(uplo, n, A, lda):
     """
     Symmetrize a triangular matrix.
     """
+
     uplo = _uplo_conversion[uplo]
     status = _libmagma.magmablas_dsymmetrize(uplo, n, int(A), lda)
     magmaCheckStatus(status)
@@ -1803,6 +1913,7 @@ def magmablas_csymmetrize(uplo, n, A, lda):
     """
     Symmetrize a triangular matrix.
     """
+
     uplo = _uplo_conversion[uplo]
     status = _libmagma.magmablas_csymmetrize(uplo, n, int(A), lda)
     magmaCheckStatus(status)
@@ -1814,6 +1925,7 @@ def magmablas_zsymmetrize(uplo, n, A, lda):
     """
     Symmetrize a triangular matrix.
     """
+
     uplo = _uplo_conversion[uplo]
     status = _libmagma.magmablas_zsymmetrize(uplo, n, int(A), lda)
     magmaCheckStatus(status)

@@ -19,7 +19,9 @@ those in `NumPy and Scipy <http://www.scipy.org>`_ are provided.
 .. image:: https://img.shields.io/pypi/v/scikit-cuda.svg
     :target: https://pypi.python.org/pypi/scikit-cuda
     :alt: Latest Version
-.. image:: https://img.shields.io/pypi/dm/scikit-cuda.svg
+.. Uncomment after pypi is migrated to warehouse and stats are re-enabled:
+.. https://github.com/badges/shields/issues/716
+.. .. image:: https://img.shields.io/pypi/dm/scikit-cuda.svg
     :target: https://pypi.python.org/pypi/scikit-cuda
     :alt: Downloads
 .. image:: http://prime4commit.com/projects/102.svg
@@ -31,8 +33,9 @@ those in `NumPy and Scipy <http://www.scipy.org>`_ are provided.
 
 Documentation
 -------------
-Package documentation is available at
-`<http://scikit-cuda.readthedocs.org/>`_.
+Package documentation is available at `<http://scikit-cuda.readthedocs.org/>`_.
+Many of the high-level functions have examples in their docstrings. More illustrations
+of how to use both the wrappers and high-level functions can be found in the ``demos/`` and ``tests/`` subdirectories. 
 
 Development
 -----------
@@ -87,6 +90,8 @@ Related
 Python wrappers for `cuDNN <https://developer.nvidia.com/cudnn>`_ by Hannes 
 Bretschneider are available `here
 <https://github.com/hannes-brt/cudnn-python-wrappers>`_.
+
+`ArrayFire <https://github.com/arrayfire/arrayfire>`_ is a free library containing many GPU-based routines with an `officially supported Python interface <https://github.com/arrayfire/arrayfire-python>`_.
 
 License
 -------

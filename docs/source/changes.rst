@@ -8,10 +8,20 @@ Release 0.5.2 (under development)
 * Prevent exceptions when CULA Dense free is present (#146).
 * Fix Python 3 issues with CUSOLVER wrapper functions (#145)
 * Add support for using either CUSOLVER or CULA for computing SVD.
+* Add support for using either CUSOLVER or CULA for computing determinant.
 * Compressed Dynamic Mode Decomposition (enh. by N. Benjamin Erichson).
 * Support for CUFFT extensible plan API (enh. by Bruce Merry).
 * Wrappers for CUFFT size estimation (enh. by Luke Pfister).
 * Wrappers for CUBLAS-XT functions.
+* Python 3 compatibility improvements (enh. by Joseph Martinot-Lagarde).
+* Allow specification of order in misc.zeros and misc.ones.
+* Preserve strides in misc.zeros_like and misc.ones_like.
+* Add support for computing Cholesky factorization using CUSOLVER.
+* Add support for CUDA 8.0 libraries (#171).
+* Workaround for libgomp + CUDA 8.0 weirdness (fix by Kevin Flansburg).
+* Fix broken matrix-vector dot product (#156).
+* Initialize MAGMA before CUSOLVER to prevent internal errors in certain
+  CUSOLVER functions.
 
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------

@@ -23,6 +23,9 @@ class test_linalg(TestCase):
         np.random.seed(0)
         linalg.init()
 
+    def tearDown(self):
+        linalg.shutdown()
+
     def test_svd_ss_cula_float32(self):
         a = np.asarray(np.random.randn(9, 6), np.float32)
         a_gpu = gpuarray.to_gpu(a)
@@ -705,14 +708,42 @@ class test_linalg(TestCase):
     def test_multiply_complex128(self):
         self._impl_test_multiply(4, np.complex128)
 
-    def test_cho_factor_float32(self):
+    def _impl_test_cho_factor(self, N, dtype, lib='cula'):
         from scipy.linalg import cho_factor as cpu_cho_factor
-        x = np.asarray(np.random.rand(4, 4), np.float32)
-        x = np.dot(x.T, x)
+        x = np.asarray(np.random.rand(N, N), dtype)
+        if np.iscomplexobj(x):
+            x += 1j*np.asarray(np.random.rand(N, N), dtype)
+            x = np.dot(np.conj(x.T), x)
+        else:
+            x = np.dot(x.T, x)
         x_gpu = gpuarray.to_gpu(x)
-        linalg.cho_factor(x_gpu)
+        linalg.cho_factor(x_gpu, 'L', lib)
         c = np.triu(cpu_cho_factor(x)[0])
         assert np.allclose(c, np.triu(x_gpu.get()))
+
+    def test_cho_factor_cula_float32(self):
+        self._impl_test_cho_factor(4, np.float32, 'cula')
+
+    def test_cho_factor_cula_float64(self):
+        self._impl_test_cho_factor(4, np.float64, 'cula')
+
+    def test_cho_factor_cula_complex64(self):
+        self._impl_test_cho_factor(4, np.complex64, 'cula')
+
+    def test_cho_factor_cula_complex128(self):
+        self._impl_test_cho_factor(4, np.complex128, 'cula')
+
+    def test_cho_factor_cusolver_float32(self):
+        self._impl_test_cho_factor(4, np.float32, 'cusolver')
+
+    def test_cho_factor_cusolver_float64(self):
+        self._impl_test_cho_factor(4, np.float64, 'cusolver')
+
+    def test_cho_factor_cusolver_complex64(self):
+        self._impl_test_cho_factor(4, np.complex64, 'cusolver')
+
+    def test_cho_factor_cusolver_complex128(self):
+        self._impl_test_cho_factor(4, np.complex128, 'cusolver')
 
     def test_cho_solve_float32(self):
         x = np.asarray(np.random.rand(4, 4), np.float32)
@@ -927,30 +958,42 @@ class test_linalg(TestCase):
     def test_dot_strided_complex128(self):
         self._impl_test_dot_strided(np.complex128)
 
-    def _impl_test_det(self, dtype):
+    def _impl_test_det(self, dtype, lib):
         # random matrix
         x = 10*np.asarray(np.random.rand(4, 4), dtype)
         x_gpu = gpuarray.to_gpu(x)
-        assert np.allclose(linalg.det(x_gpu), np.linalg.det(x))
+        assert np.allclose(linalg.det(x_gpu, lib=lib), np.linalg.det(x))
 
         # known matrix (from http://en.wikipedia.org/wiki/Determinant )
         x = np.asarray([[-2.0, 2, -3.0], [-1, 1, 3], [2, 0, -1]], dtype)
         x_gpu = gpuarray.to_gpu(x)
-        assert np.allclose(linalg.det(x_gpu), 18.0)
+        assert np.allclose(linalg.det(x_gpu, lib=lib), 18.0)
 
-    def test_det_float32(self):
-        self._impl_test_det(np.float32)
+    def test_det_cula_float32(self):
+        self._impl_test_det(np.float32, 'cula')
 
-    def test_det_float64(self):
-        self._impl_test_det(np.float64)
+    def test_det_cula_float64(self):
+        self._impl_test_det(np.float64, 'cula')
 
-    def test_det_complex64(self):
-        self._impl_test_det(np.complex64)
+    def test_det_cula_complex64(self):
+        self._impl_test_det(np.complex64, 'cula')
 
-    def test_det_complex128(self):
-        self._impl_test_det(np.complex128)
+    def test_det_cula_complex128(self):
+        self._impl_test_det(np.complex128, 'cula')
+
+    def test_det_cusolver_float32(self):
+        self._impl_test_det(np.float32, 'cusolver')
+
+    def test_det_cusolver_float64(self):
+        self._impl_test_det(np.float64, 'cusolver')
+
+    def test_det_cusolver_complex64(self):
+        self._impl_test_det(np.complex64, 'cusolver')
+
+    def test_det_cusolver_complex128(self):
+        self._impl_test_det(np.complex128, 'cusolver')
         
-        
+    
     def test_qr_reduced_float32(self):
         a = np.asarray(np.random.randn(5, 3), np.float32, order='F')
         a_gpu = gpuarray.to_gpu(a)
@@ -1096,7 +1139,10 @@ def suite():
     s.addTest(test_linalg('test_triu_complex64'))
     s.addTest(test_linalg('test_multiply_float32'))
     s.addTest(test_linalg('test_multiply_complex64'))
-    s.addTest(test_linalg('test_cho_factor_float32'))
+    s.addTest(test_linalg('test_cho_factor_cula_float32'))
+    s.addTest(test_linalg('test_cho_factor_cula_complex64'))
+    s.addTest(test_linalg('test_cho_factor_cusolver_float32'))
+    s.addTest(test_linalg('test_cho_factor_cusolver_complex64'))
     s.addTest(test_linalg('test_cho_solve_float32'))
     s.addTest(test_linalg('test_inv_float32'))
     s.addTest(test_linalg('test_inv_complex64'))
@@ -1110,8 +1156,10 @@ def suite():
     s.addTest(test_linalg('test_add_dot_matrix_complex64'))
     s.addTest(test_linalg('test_dot_strided_float32'))
     s.addTest(test_linalg('test_dot_strided_complex64'))
-    s.addTest(test_linalg('test_det_float32'))
-    s.addTest(test_linalg('test_det_complex64'))
+    s.addTest(test_linalg('test_det_cula_float32'))
+    s.addTest(test_linalg('test_det_cula_complex64'))
+    s.addTest(test_linalg('test_det_cusolver_float32'))
+    s.addTest(test_linalg('test_det_cusolver_complex64'))
     s.addTest(test_linalg('test_qr_reduced_float32'))
     s.addTest(test_linalg('test_qr_reduced_float64'))
     s.addTest(test_linalg('test_qr_reduced_complex64'))
@@ -1169,6 +1217,10 @@ def suite():
         s.addTest(test_linalg('test_triu_complex64'))
         s.addTest(test_linalg('test_multiply_float64'))
         s.addTest(test_linalg('test_multiply_complex128'))
+        s.addTest(test_linalg('test_cho_factor_cula_float64'))
+        s.addTest(test_linalg('test_cho_factor_cula_complex128'))
+        s.addTest(test_linalg('test_cho_factor_cusolver_float64'))
+        s.addTest(test_linalg('test_cho_factor_cusolver_complex128'))
         s.addTest(test_linalg('test_inv_float64'))
         s.addTest(test_linalg('test_inv_complex128'))
         s.addTest(test_linalg('test_add_diag_float64'))
@@ -1179,8 +1231,10 @@ def suite():
         s.addTest(test_linalg('test_add_dot_matrix_complex128'))
         s.addTest(test_linalg('test_dot_strided_float64'))
         s.addTest(test_linalg('test_dot_strided_complex128'))
-        s.addTest(test_linalg('test_det_float64'))
-        s.addTest(test_linalg('test_det_complex128'))
+        s.addTest(test_linalg('test_det_cula_float64'))
+        s.addTest(test_linalg('test_det_cula_complex128'))
+        s.addTest(test_linalg('test_det_cusolver_float64'))
+        s.addTest(test_linalg('test_det_cusolver_complex128'))
         s.addTest(test_linalg('test_qr_reduced_float32'))
         s.addTest(test_linalg('test_qr_reduced_float64'))
         s.addTest(test_linalg('test_qr_reduced_complex64'))

@@ -149,7 +149,7 @@ def init(allocator=drv.mem_alloc):
     """
     Initialize libraries used by scikit-cuda.
 
-    Initialize the CUBLAS, CUSOLVER, and CULA libraries used by 
+    Initialize the CUBLAS, CULA, CUSOLVER, and MAGMA libraries used by 
     high-level functions provided by scikit-cuda.
 
     Parameters
@@ -172,6 +172,11 @@ def init(allocator=drv.mem_alloc):
     if _global_cublas_allocator is None:
         _global_cublas_allocator = allocator
 
+    # Initializing MAGMA after CUSOLVER causes some functions in the latter to
+    # fail with internal errors:
+    if _has_magma:
+        magma.magma_init()
+
     global _global_cusolver_handle
     if not _global_cusolver_handle:
         from . import cusolver
@@ -183,15 +188,12 @@ def init(allocator=drv.mem_alloc):
     if _has_cula:
         cula.culaInitialize()
 
-    if _has_magma:
-        magma.magma_init()
-
 def shutdown():
     """
     Shutdown libraries used by scikit-cuda.
 
-    Shutdown the CUBLAS and CULA libraries used by high-level functions provided
-    by scikits-cuda.
+    Shutdown the CUBLAS, CULA, CUSOLVER, and MAGMA libraries used by 
+    high-level functions provided by scikits-cuda.
 
     Notes
     -----
@@ -210,6 +212,8 @@ def shutdown():
         cusolver.cusolverDnDestroy(_global_cusolver_handle)
         _global_cusolver_handle = None
 
+    if _has_magma:
+        magma.magma_finalize()
     if _has_cula:
         cula.culaShutdown()
 
@@ -368,7 +372,7 @@ def select_block_grid_sizes(dev, data_shape, threads_per_block=None):
     else:
         raise ValueError('array size too large')
 
-def zeros(shape, dtype, allocator=drv.mem_alloc):
+def zeros(shape, dtype, order='C', allocator=drv.mem_alloc):
     """
     Return an array of the given shape and dtype filled with zeros.
 
@@ -378,14 +382,16 @@ def zeros(shape, dtype, allocator=drv.mem_alloc):
         Array shape.
     dtype : data-type
         Data type for the array.
-    allocator : callable
+    order : {'C', 'F'}, optional
+        Create array using row-major or column-major format.
+    allocator : callable, optional
         Returns an object that represents the memory allocated for
         the requested array.
 
     Returns
     -------
     out : pycuda.gpuarray.GPUArray
-        Array of zeros with the given shape and dtype.
+        Array of zeros with the given shape, dtype, and order.
 
     Notes
     -----
@@ -395,7 +401,7 @@ def zeros(shape, dtype, allocator=drv.mem_alloc):
     http://projects.scipy.org/numpy/ticket/1898
     """
 
-    out = gpuarray.GPUArray(shape, dtype, allocator)
+    out = gpuarray.GPUArray(shape, dtype, allocator, order=order)
     out.fill(0)
     return out
 
@@ -413,14 +419,15 @@ def zeros_like(a):
     Returns
     -------
     out : pycuda.gpuarray.GPUArray
-        Array of zeros with the shape and dtype of `a`.
+        Array of zeros with the shape, dtype, and strides of `a`.
     """
 
-    out = gpuarray.GPUArray(a.shape, a.dtype, drv.mem_alloc)
+    out = gpuarray.GPUArray(a.shape, a.dtype, drv.mem_alloc,
+                            strides=a.strides)
     out.fill(0)
     return out
 
-def ones(shape, dtype, allocator=drv.mem_alloc):
+def ones(shape, dtype, order='C', allocator=drv.mem_alloc):
     """
     Return an array of the given shape and dtype filled with ones.
 
@@ -430,41 +437,44 @@ def ones(shape, dtype, allocator=drv.mem_alloc):
         Array shape.
     dtype : data-type
         Data type for the array.
-    allocator : callable
+    order : {'C', 'F'}, optional
+        Create array using row-major or column-major format.
+    allocator : callable, optional
         Returns an object that represents the memory allocated for
         the requested array.
 
     Returns
     -------
     out : pycuda.gpuarray.GPUArray
-        Array of ones with the given shape and dtype.
+        Array of ones with the given shape, dtype, and order.
     """
 
-    out = gpuarray.GPUArray(shape, dtype, allocator)
+    out = gpuarray.GPUArray(shape, dtype, allocator, order=order)
     out.fill(1)
     return out
 
-def ones_like(other):
+def ones_like(a):
     """
     Return an array of ones with the same shape and type as a given array.
 
     Parameters
     ----------
-    other : pycuda.gpuarray.GPUArray
-        Array whose shape and dtype are to be used to allocate a new array.
+    a : array_like
+        The shape and data type of `a` determine the corresponding
+        attributes of the returned array.
 
     Returns
     -------
     out : pycuda.gpuarray.GPUArray
-        Array of ones with the shape and dtype of `other`.
+        Array of ones with the shape, dtype, and strides of `other`.
     """
 
-    out = gpuarray.GPUArray(other.shape, other.dtype,
-                            other.allocator)
+    out = gpuarray.GPUArray(a.shape, a.dtype,
+                            a.allocator, strides=a.strides)
     out.fill(1)
     return out
 
-def inf(shape, dtype, allocator=drv.mem_alloc):
+def inf(shape, dtype, order='C', allocator=drv.mem_alloc):
     """
     Return an array of the given shape and dtype filled with infs.
 
@@ -474,17 +484,19 @@ def inf(shape, dtype, allocator=drv.mem_alloc):
         Array shape.
     dtype : data-type
         Data type for the array.
-    allocator : callable
+    order : {'C', 'F'}, optional
+        Create array using row-major or column-major format.
+    allocator : callable, optional
         Returns an object that represents the memory allocated for
         the requested array.
 
     Returns
     -------
     out : pycuda.gpuarray.GPUArray
-        Array of infs with the given shape and dtype.
+        Array of infs with the given shape, dtype, and order.
     """
 
-    out = gpuarray.GPUArray(shape, dtype, allocator)
+    out = gpuarray.GPUArray(shape, dtype, allocator, order=order)
     out.fill(np.inf)
     return out
 
@@ -713,7 +725,6 @@ def get_by_index(src_gpu, ind):
     assert len(np.shape(ind)) == 1
     assert issubclass(ind.dtype.type, numbers.Integral)
     N = len(ind)
-    assert N <= len(src_gpu)
     if not isinstance(ind, gpuarray.GPUArray):
         ind = gpuarray.to_gpu(ind)
     dest_gpu = gpuarray.empty(N, dtype=src_gpu.dtype)
@@ -1124,11 +1135,11 @@ def div_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
     Parameters
     ----------
     x_gpu : pycuda.gpuarray.GPUArray
-        Matrix to which to add the vector.
+        Matrix to divide by the vector `a_gpu`.
     a_gpu : pycuda.gpuarray.GPUArray
-        Vector to add to `x_gpu`.
+        The matrix `x_gpu` will be divided by this vector.
     axis : int (optional)
-        The axis onto which the vector is added. By default this is
+        The axis on which division occurs. By default this is
         determined automatically by using the first axis with the correct
         dimensionality.
     out : pycuda.gpuarray.GPUArray (optional)
@@ -1139,7 +1150,7 @@ def div_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
     Returns
     -------
     out : pycuda.gpuarray.GPUArray
-        result of `x_gpu` + `a_gpu`
+        result of `x_gpu` / `a_gpu`
     """
     return binaryop_matvec('/', x_gpu, a_gpu, axis, out, stream)
 
@@ -1149,16 +1160,16 @@ def mult_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
     Multiplies a vector elementwise with each column/row of the matrix.
 
     The numpy broadcasting rules apply so this would yield the same result
-    as `x_gpu.get()` + `a_gpu.get()` in host-code.
+    as `x_gpu.get()` * `a_gpu.get()` in host-code.
 
     Parameters
     ----------
     x_gpu : pycuda.gpuarray.GPUArray
-        Matrix to which to add the vector.
+        Matrix to multiply by the vector `a_gpu`.
     a_gpu : pycuda.gpuarray.GPUArray
-        Vector to add to `x_gpu`.
+        The matrix `x_gpu` will be multiplied by this vector.
     axis : int (optional)
-        The axis onto which the vector is added. By default this is
+        The axis on which multiplication occurs. By default this is
         determined automatically by using the first axis with the correct
         dimensionality.
     out : pycuda.gpuarray.GPUArray (optional)
@@ -1169,7 +1180,7 @@ def mult_matvec(x_gpu, a_gpu, axis=None, out=None, stream=None):
     Returns
     -------
     out : pycuda.gpuarray.GPUArray
-        result of `x_gpu` + `a_gpu`
+        result of `x_gpu` * `a_gpu`
     """
     return binaryop_matvec('*', x_gpu, a_gpu, axis, out, stream)
 
@@ -1215,7 +1226,7 @@ def _sum_axis(x_gpu, axis=None, out=None, calc_mean=False, ddof=0,
         gemv = cublas.cublasDgemv
 
     alloc = _global_cublas_allocator
-    ons = ones((sum_axis, ), x_gpu.dtype, alloc)
+    ons = ones((sum_axis, ), x_gpu.dtype, allocator=alloc)
 
     if keepdims:
         out_shape = (1, out_axis) if axis == 0 else (out_axis, 1)

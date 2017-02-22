@@ -19,10 +19,16 @@ import numpy as np
 from . import cuda
 
 # Load library:
-_version_list = [7.5, 7.0]
+_version_list = [8.0, 7.5, 7.0]
 if 'linux' in sys.platform:
     _libcusolver_libname_list = ['libcusolver.so'] + \
-                                ['libsolver.so.%s' % v for v in _version_list]
+                                ['libcusolver.so.%s' % v for v in _version_list]
+
+    # Fix for GOMP weirdness with CUDA 8.0 on Fedora (#171):
+    try:
+        ctypes.CDLL('libgomp.so.1', mode=ctypes.RTLD_GLOBAL)
+    except:
+        pass
 elif sys.platform == 'darwin':
     _libcusolver_libname_list = ['libcusolver.dylib']
 elif sys.platform == 'win32':
@@ -228,6 +234,195 @@ def cusolverDnGetStream(handle):
 
 # Dense solver functions:
 
+# SPOTRF, DPOTRF, CPOTRF, ZPOTRF
+_libcusolver.cusolverDnSpotrf_bufferSize.restype = int
+_libcusolver.cusolverDnSpotrf_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p]
+def cusolverDnSpotrf_bufferSize(handle, uplo, n, A, lda):
+    """
+    Calculate size of work buffer used by cusolverDnSpotrf.
+
+    References
+    ----------
+    `cusolverDn<t>potrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrf>`_
+    """
+
+    Lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnSpotrf_bufferSize(handle, uplo, n,
+                                                      int(A),
+                                                      lda, ctypes.byref(Lwork))
+    cusolverCheckStatus(status)
+    return Lwork.value
+
+_libcusolver.cusolverDnSpotrf.restype = int
+_libcusolver.cusolverDnSpotrf.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p]
+def cusolverDnSpotrf(handle, uplo, n, A, lda, Workspace, devIpiv, devInfo):
+    """
+    Compute Cholesky factorization of a real single precision Hermitian positive-definite matrix.
+
+    References
+    ----------
+    `cusolverDn<t>potrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrf>`_
+    """
+
+    status = _libcusolver.cusolverDnSpotrf(handle, uplo, n, int(A), lda,
+                                           int(Workspace),
+                                           int(devIpiv),
+                                           int(devInfo))
+    cusolverCheckStatus(status)
+
+_libcusolver.cusolverDnDpotrf_bufferSize.restype = int
+_libcusolver.cusolverDnDpotrf_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p]
+def cusolverDnDpotrf_bufferSize(handle, uplo, n, A, lda):
+    """
+    Calculate size of work buffer used by cusolverDnDpotrf.
+
+    References
+    ----------
+    `cusolverDn<t>potrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrf>`_
+    """
+
+    Lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnDpotrf_bufferSize(handle, uplo, n,
+                                                      int(A),
+                                                      lda, ctypes.byref(Lwork))
+    cusolverCheckStatus(status)
+    return Lwork.value
+
+_libcusolver.cusolverDnDpotrf.restype = int
+_libcusolver.cusolverDnDpotrf.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p]
+def cusolverDnDpotrf(handle, uplo, n, A, lda, Workspace, devIpiv, devInfo):
+    """
+    Compute Cholesky factorization of a real double precision Hermitian positive-definite matrix.
+
+    References
+    ----------
+    `cusolverDn<t>potrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrf>`_
+    """
+
+    status = _libcusolver.cusolverDnDpotrf(handle, uplo, n, int(A), lda,
+                                           int(Workspace),
+                                           int(devIpiv),
+                                           int(devInfo))
+    cusolverCheckStatus(status)
+
+_libcusolver.cusolverDnCpotrf_bufferSize.restype = int
+_libcusolver.cusolverDnCpotrf_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p]
+def cusolverDnCpotrf_bufferSize(handle, uplo, n, A, lda):
+    """
+    Calculate size of work buffer used by cusolverDnCpotrf.
+
+    References
+    ----------
+    `cusolverDn<t>potrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrf>`_
+    """
+
+    Lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnCpotrf_bufferSize(handle, uplo, n,
+                                                      int(A),
+                                                      lda, ctypes.byref(Lwork))
+    cusolverCheckStatus(status)
+    return Lwork.value
+
+_libcusolver.cusolverDnCpotrf.restype = int
+_libcusolver.cusolverDnCpotrf.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p]
+def cusolverDnCpotrf(handle, uplo, n, A, lda, Workspace, devIpiv, devInfo):
+    """
+    Compute Cholesky factorization of a complex single precision Hermitian positive-definite matrix.
+
+    References
+    ----------
+    `cusolverDn<t>potrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrf>`_
+    """
+
+    status = _libcusolver.cusolverDnCpotrf(handle, uplo, n, int(A), lda,
+                                           int(Workspace),
+                                           int(devIpiv),
+                                           int(devInfo))
+    cusolverCheckStatus(status)
+
+_libcusolver.cusolverDnZpotrf_bufferSize.restype = int
+_libcusolver.cusolverDnZpotrf_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p]
+def cusolverDnZpotrf_bufferSize(handle, uplo, n, A, lda):
+    """
+    Calculate size of work buffer used by cusolverDnZpotrf.
+
+    References
+    ----------
+    `cusolverDn<t>potrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrf>`_
+    """
+
+    Lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnZpotrf_bufferSize(handle, uplo, n,
+                                                      int(A),
+                                                      lda, ctypes.byref(Lwork))
+    cusolverCheckStatus(status)
+    return Lwork.value
+
+_libcusolver.cusolverDnZpotrf.restype = int
+_libcusolver.cusolverDnZpotrf.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p]
+def cusolverDnZpotrf(handle, uplo, n, A, lda, Workspace, devIpiv, devInfo):
+    """
+    Compute Cholesky factorization of a complex double precision Hermitian positive-definite matrix.
+
+    References
+    ----------
+    `cusolverDn<t>potrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrf>`_
+    """
+
+    status = _libcusolver.cusolverDnZpotrf(handle, uplo, n, int(A), lda,
+                                           int(Workspace),
+                                           int(devIpiv),
+                                           int(devInfo))
+    cusolverCheckStatus(status)
+
 # SGETRF, DGETRF, CGETRF, ZGETRF
 _libcusolver.cusolverDnSgetrf_bufferSize.restype = int
 _libcusolver.cusolverDnSgetrf_bufferSize.argtypes = [ctypes.c_void_p,
@@ -242,7 +437,7 @@ def cusolverDnSgetrf_bufferSize(handle, m, n, A, lda):
 
     References
     ----------
-    `cusolver<t>nSgetrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrf>`_
+    `cusolverDn<t>getrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrf>`_
     """
 
     Lwork = ctypes.c_int()
