@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
-import sys, os
-from glob import glob
+import os
+import re
+import sys
 
 # Install setuptools if it isn't available:
 try:
@@ -20,7 +21,9 @@ AUTHOR =             'Lev Givon'
 AUTHOR_EMAIL =       'lev@columbia.edu'
 URL =                'https://github.com/lebedov/scikit-cuda/'
 DESCRIPTION =        'Python interface to GPU-powered libraries'
-LONG_DESCRIPTION =   DESCRIPTION
+with open('README.rst', 'r') as f:
+    LONG_DESCRIPTION = f.read()
+LONG_DESCRIPTION = re.search('.*(^Package Description.*)', LONG_DESCRIPTION, re.MULTILINE|re.DOTALL).group(1)
 DOWNLOAD_URL =       URL
 LICENSE =            'BSD'
 CLASSIFIERS = [
@@ -30,8 +33,8 @@ CLASSIFIERS = [
     'License :: OSI Approved :: BSD License',
     'Operating System :: OS Independent',
     'Programming Language :: Python',
-    'Programming Language :: Python :: 2.7',
-    'Programming Language :: Python :: 3.4',
+    'Programming Language :: Python :: 2',
+    'Programming Language :: Python :: 3',
     'Topic :: Scientific/Engineering',
     'Topic :: Software Development']
 NAMESPACE_PACKAGES = ['scikits']
