@@ -1,0 +1,3 @@
+.eggs/
+*.egg-info/
+venv/
