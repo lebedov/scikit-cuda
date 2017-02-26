@@ -4,13 +4,6 @@ import os
 import re
 import sys
 
-# Install setuptools if it isn't available:
-try:
-    import setuptools
-except ImportError:
-    from ez_setup import use_setuptools
-    use_setuptools()
-
 from distutils.command.install_headers import install_headers
 from setuptools import find_packages
 from setuptools import setup
