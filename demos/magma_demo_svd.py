@@ -20,14 +20,15 @@ x_orig = x.copy()
 # Need to reverse dimensions because MAGMA expects column-major matrices:
 n, m = x.shape
 
-# Set up work buffers:
-Lwork = magma.magma_sgesvd_buffersize('A', 'A', m, n)
-workspace = np.zeros(Lwork, np.float32)
-
 # Set up output buffers:
 s = np.zeros(min(m, n), np.float32)
 u = np.zeros((m, m), np.float32)
 vh = np.zeros((n, n), np.float32)
+
+# Set up workspace:
+Lwork = magma.magma_sgesvd_buffersize('A', 'A', m, n, x.ctypes.data, m, s.ctypes.data,
+                                      u.ctypes.data, m, vh.ctypes.data, n)
+workspace = np.zeros(Lwork, np.float32)
 
 # Compute:
 status = magma.magma_sgesvd('A', 'A', m, n, x.ctypes.data, m, s.ctypes.data,

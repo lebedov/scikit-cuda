@@ -890,35 +890,6 @@ _libmagma.magma_get_ssygst_nb.argtypes = [ctypes.c_int]
 def magma_get_ssygst_nb(m):
     return _libmagma.magma_get_ssgyst_nb(m)
 
-_libmagma.magma_get_sgesvd_nb.restype = int
-_libmagma.magma_get_sgesvd_nb.argtypes = [ctypes.c_int,
-                                          ctypes.c_int]
-def magma_get_sgesvd_nb(m, n):
-    return _libmagma.magma_get_sgesvd_nb(m, n)
-
-_libmagma.magma_get_dgesvd_nb.restype = int
-_libmagma.magma_get_dgesvd_nb.argtypes = [ctypes.c_int,
-                                          ctypes.c_int]
-def magma_get_dgesvd_nb(m, n):
-    return _libmagma.magma_get_dgesvd_nb(m, n)
-
-_libmagma.magma_get_cgesvd_nb.restype = int
-_libmagma.magma_get_cgesvd_nb.argtypes = [ctypes.c_int,
-                                          ctypes.c_int]
-def magma_get_cgesvd_nb(m, n):
-    return _libmagma.magma_get_cgesvd_nb(m, n)
-
-_libmagma.magma_get_zgesvd_nb.restype = int
-_libmagma.magma_get_zgesvd_nb.argtypes = [ctypes.c_int,
-                                          ctypes.c_int]
-def magma_get_zgesvd_nb(m, n):
-    return _libmagma.magma_get_zgesvd_nb(m, n)
-
-_libmagma.magma_get_ssygst_nb_m.restype = int
-_libmagma.magma_get_ssygst_nb_m.argtypes = [ctypes.c_int]
-def magma_get_ssygst_nb_m(m):
-    return _libmagma.magma_get_ssgyst_nb_m(m)
-
 _libmagma.magma_get_sbulge_nb.restype = int
 _libmagma.magma_get_sbulge_nb.argtypes = [ctypes.c_int]
 def magma_get_sbulge_nb(m):
@@ -931,78 +902,29 @@ def magma_get_dsytrd_nb(m):
 
 # Buffer size algorithms
 
-def _magma_gesvd_buffersize(jobu, jobvt, m, n, nb, speed='fast'):
-    """
-    See src/*gesvd.cpp in MAGMA source for more information.
-    """
+def _magma_gesvd_buffersize(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt,
+                            func, dtype):
+    work = np.zeros(1, dtype)
+    func(jobu, jobvt, m, n,
+         int(a), lda, int(s), int(u), ldu,
+         int(vt), ldvt, int(work.ctypes.data), -1)
+    return int(work[0])
 
-    if n > m:
-        n, m = m, n
-        jobu, jobvt = jobvt, jobu
+def magma_sgesvd_buffersize(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
+    return _magma_gesvd_buffersize(jobu, jobvt, m, n, a, lda, s, u, ldu, vt,
+                                   ldvt, magma_sgesvd, np.float32)
 
-    mx = max(m, n)
-    mn = min(m, n)
+def magma_dgesvd_buffersize(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
+    return _magma_gesvd_buffersize(jobu, jobvt, m, n, a, lda, s, u, ldu, vt,
+                                   ldvt, magma_dgesvd, np.float64)
 
-    if speed == 'fast':
-        if mx >= 1.6*mn:
-            if jobu == 'N': # path 1
-                return 3*mn+2*mn*nb
-            elif jobu == 'O': 
-                if jobvt in ['N', 'A', 'S']: # path 2, 3
-                    return mn*mn+3*mn+2*mn*nb
-                else:
-                    raise RuntimeError('unrecognized jobu/jobvt: %s/%s' % (jobu,
-                                                                           jobvt))
-            elif jobu == 'S':
-                if jobvt in ['N', 'A', 'S']: # path 4, 6
-                    return mn*mn+3*mn+2*mn*nb
-                elif jobvt == 'O': # path 5
-                    return 2*mn*mn+3*mn+2*mn*nb
-                else:
-                    raise RuntimeError('unrecognized jobu/jobvt: %s/%s' % (jobu,
-                                                                           jobvt))
-            elif jobu == 'A':
-                if jobvt in ['N', 'A', 'S']: # path 7, 9
-                    return mn*mn+max(3*mn+2*mn*nb, mn+mx*nb)
-                elif jobvt == 'O': # path 8
-                    return 2*mn*mn+max(3*mn+2*mn*nb, mn+mx*nb)
-            else:
-                raise RuntimeError('unrecognized jobu/jobvt: %s/%s' % (jobu,
-                                                                       jobvt))
-        else: # path 10
-            return 3*mn+(mx+mn)*nb 
-    elif speed == 'slow':
-        if mx >= 1.6*mn:
-            if jobu == 'N': # path 1 - marked as "n/a"; should 0 be returned?
-                return 0
-            elif jobu == 'O':
-                if jobvt == 'N': # path 2
-                    return 3*mn+(mx+mn)*nb
-                else: # path 3
-                    return 3*mn+max(2*mn*nb, mx*nb)
-            else: # path 3-9
-                return 3*mn+max(2*mn*nb, mx*nb)
-        else: # path 10 - marked as "n/a"; should 0 be returned?
-            return 0
-    else:
-        raise RuntimeError('unrecognized jobu/jobvt: %s/%s' % (jobu,
-                                                               jobvt))
+def magma_cgesvd_buffersize(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
+    return _magma_gesvd_buffersize(jobu, jobvt, m, n, a, lda, s, u, ldu, vt,
+                                   ldvt, magma_cgesvd, np.float32)
 
-def magma_sgesvd_buffersize(jobu, jobvt, m, n, speed='fast'):
-    nb = magma_get_sgesvd_nb(m, n)
-    return _magma_gesvd_buffersize(jobu, jobvt, m, n, nb, speed)
-
-def magma_dgesvd_buffersize(jobu, jobvt, m, n, speed='fast'):
-    nb = magma_get_dgesvd_nb(m, n)
-    return _magma_gesvd_buffersize(jobu, jobvt, m, n, nb, speed)
-
-def magma_cgesvd_buffersize(jobu, jobvt, m, n, speed='fast'):
-    nb = magma_get_cgesvd_nb(m, n)
-    return _magma_gesvd_buffersize(jobu, jobvt, m, n, nb, speed)
-
-def magma_zgesvd_buffersize(jobu, jobvt, m, n, speed='fast'):
-    nb = magma_get_zgesvd_nb(m, n)
-    return _magma_gesvd_buffersize(jobu, jobvt, m, n, nb, speed)
+def magma_zgesvd_buffersize(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
+    return _magma_gesvd_buffersize(jobu, jobvt, m, n, a, lda, s, u, ldu, vt,
+                                   ldvt, magma_zgesvd, np.float64)
 
 # LAPACK routines
 
