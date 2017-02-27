@@ -81,9 +81,9 @@ If you use scikit-cuda in a scholarly publication, please cite it as follows: ::
 
 Authors & Acknowledgments
 -------------------------
-See the included `AUTHORS`_ file for more information.
-
-.. _AUTHORS: docs/source/authors.rst
+See the included `AUTHORS
+<https://github.com/lebedov/scikit-cuda/blob/master/docs/source/authors.rst>`_
+file for more information.
 
 Related
 -------
@@ -95,8 +95,8 @@ Bretschneider are available `here
 
 License
 -------
-This software is licensed under the 
-`BSD License <http://www.opensource.org/licenses/bsd-license.php>`_.
-See the included `LICENSE`_ file for more information.
-
-.. _LICENSE: docs/source/license.rst
+This software is licensed under the `BSD License
+<http://www.opensource.org/licenses/bsd-license.php>`_.  See the included
+`LICENSE
+<https://github.com/lebedov/scikit-cuda/blob/master/docs/source/license.rst>`_
+file for more information.
