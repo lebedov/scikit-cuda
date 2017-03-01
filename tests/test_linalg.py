@@ -992,8 +992,8 @@ class test_linalg(TestCase):
 
     def test_det_cusolver_complex128(self):
         self._impl_test_det(np.complex128, 'cusolver')
-        
-    
+
+
     def test_qr_reduced_float32(self):
         a = np.asarray(np.random.randn(5, 3), np.float32, order='F')
         a_gpu = gpuarray.to_gpu(a)
@@ -1016,31 +1016,43 @@ class test_linalg(TestCase):
         a = np.asarray(np.random.randn(9, 6) + 1j*np.random.randn(9, 6), np.complex64, order='F')
         a_gpu = gpuarray.to_gpu(a)
         q_gpu, r_gpu = linalg.qr(a_gpu, 'reduced')
-        assert np.allclose(a, np.dot(q_gpu.get(), r_gpu.get()), atol=atol_float64)     
-        
-    def test_eig_float32(self):
+        assert np.allclose(a, np.dot(q_gpu.get(), r_gpu.get()), atol=atol_float64)
+
+    def test_eig_cula_float32(self):
         a = np.asarray(np.random.rand(9, 9), np.float32, order='F')
         a_gpu = gpuarray.to_gpu(a)
         w_gpu = linalg.eig(a_gpu, 'N', 'N')
         assert np.allclose(np.trace(a), sum(w_gpu.get()), atol=1e-4)
 
-    def test_eig_float64(self):
+    def test_eig_cula_float64(self):
         a = np.asarray(np.random.rand(9, 9), np.float64, order='F')
         a_gpu = gpuarray.to_gpu(a)
         w_gpu = linalg.eig(a_gpu, 'N', 'N')
         assert np.allclose(np.trace(a), sum(w_gpu.get()), atol=atol_float64)
 
-    def test_eig_complex64(self):
+    def test_eig_cula_complex64(self):
         a = np.asarray(np.random.rand(9, 9) + 1j*np.random.rand(9, 9), np.complex64, order='F')
         a_gpu = gpuarray.to_gpu(a)
         w_gpu = linalg.eig(a_gpu, 'N', 'N')
         assert np.allclose(np.trace(a), sum(w_gpu.get()), atol=1e-4)
 
-    def test_eig_complex128(self):
+    def test_eig_cula_complex128(self):
         a = np.array(np.random.rand(9, 9) + 1j*np.random.rand(9,9), np.complex128, order='F')
         a_gpu = gpuarray.to_gpu(a)
         w_gpu = linalg.eig(a_gpu, 'N', 'N')
-        assert np.allclose(np.trace(a), sum(w_gpu.get()), atol=atol_float64) 
+        assert np.allclose(np.trace(a), sum(w_gpu.get()), atol=atol_float64)
+
+    def test_eig_cusolver_float32(self):
+        a = np.asarray(np.random.rand(9, 9), np.float32, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        w_gpu = linalg.eig(a_gpu, 'N', 'N', lib='cusolver')
+        assert np.allclose(np.trace(a), sum(w_gpu.get()), atol=1e-4)
+
+    def test_eig_cusolver_float64(self):
+        a = np.asarray(np.random.rand(9, 9), np.float64, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        w_gpu = linalg.eig(a_gpu, 'N', 'N', lib='cusolver')
+        assert np.allclose(np.trace(a), sum(w_gpu.get()), atol=atol_float64)
 
     def test_vander_float32(self):
         a = np.array(np.random.uniform(1,2,5), np.float32, order='F')
@@ -1079,23 +1091,23 @@ class test_linalg(TestCase):
         a_gpu = gpuarray.to_gpu(a)
         f_gpu, b_gpu, v_gpu, omega = linalg.dmd(a_gpu, modes='standard', return_amplitudes=True, return_vandermonde=True)
         assert np.allclose(a[:,:(n-1)], np.dot(f_gpu.get(), np.dot(np.diag(b_gpu.get()), v_gpu.get()) ), atol_float64)
-    
+
     def test_dmd_complex64(self):
         m, n = 9, 7
-        a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)) + 1j*np.fliplr(np.vander(np.random.rand(m), n)), 
+        a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)) + 1j*np.fliplr(np.vander(np.random.rand(m), n)),
                      np.complex64, order='F')
         a_gpu = gpuarray.to_gpu(a)
         f_gpu, b_gpu, v_gpu, omega = linalg.dmd(a_gpu, modes='standard', return_amplitudes=True, return_vandermonde=True)
         assert np.allclose(a[:,:(n-1)], np.dot(f_gpu.get(), np.dot(np.diag(b_gpu.get()), v_gpu.get()) ), 1e-4)
-        
+
     def test_dmd_complex128(self):
         m, n = 9, 7
-        a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)) + 1j*np.fliplr(np.vander(np.random.rand(m), n)), 
+        a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)) + 1j*np.fliplr(np.vander(np.random.rand(m), n)),
                      np.complex128, order='F')
         a_gpu = gpuarray.to_gpu(a)
         f_gpu, b_gpu, v_gpu, omega = linalg.dmd(a_gpu, modes='standard', return_amplitudes=True, return_vandermonde=True)
         assert np.allclose(a[:,:(n-1)], np.dot(f_gpu.get(), np.dot(np.diag(b_gpu.get()), v_gpu.get()) ), atol_float64)
-        
+
 
 def suite():
     s = TestSuite()
@@ -1164,10 +1176,10 @@ def suite():
     s.addTest(test_linalg('test_qr_reduced_float64'))
     s.addTest(test_linalg('test_qr_reduced_complex64'))
     s.addTest(test_linalg('test_qr_reduced_complex128'))
-    s.addTest(test_linalg('test_eig_float32'))
-    s.addTest(test_linalg('test_eig_float64'))
-    s.addTest(test_linalg('test_eig_complex64'))
-    s.addTest(test_linalg('test_eig_complex128'))
+    s.addTest(test_linalg('test_eig_cula_float32'))
+    s.addTest(test_linalg('test_eig_cula_float64'))
+    s.addTest(test_linalg('test_eig_cula_complex64'))
+    s.addTest(test_linalg('test_eig_cula_complex128'))
     s.addTest(test_linalg('test_vander_float32'))
     s.addTest(test_linalg('test_vander_float64'))
     s.addTest(test_linalg('test_vander_complex64'))
@@ -1176,8 +1188,8 @@ def suite():
     s.addTest(test_linalg('test_dmd_float64'))
     s.addTest(test_linalg('test_dmd_complex64'))
     s.addTest(test_linalg('test_dmd_complex128'))
-     
-    
+
+
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_linalg('test_svd_ss_cula_float64'))
         s.addTest(test_linalg('test_svd_ss_cula_complex128'))
@@ -1239,10 +1251,12 @@ def suite():
         s.addTest(test_linalg('test_qr_reduced_float64'))
         s.addTest(test_linalg('test_qr_reduced_complex64'))
         s.addTest(test_linalg('test_qr_reduced_complex128'))
-        s.addTest(test_linalg('test_eig_float32'))
-        s.addTest(test_linalg('test_eig_float64'))
-        s.addTest(test_linalg('test_eig_complex64'))
-        s.addTest(test_linalg('test_eig_complex128'))
+        s.addTest(test_linalg('test_eig_cula_float32'))
+        s.addTest(test_linalg('test_eig_cula_float64'))
+        s.addTest(test_linalg('test_eig_cula_complex64'))
+        s.addTest(test_linalg('test_eig_cula_complex128'))
+        s.addTest(test_linalg('test_eig_cusolver_float32'))
+        s.addTest(test_linalg('test_eig_cusolver_float64'))
         s.addTest(test_linalg('test_vander_float32'))
         s.addTest(test_linalg('test_vander_float64'))
         s.addTest(test_linalg('test_vander_complex64'))
@@ -1251,7 +1265,7 @@ def suite():
         s.addTest(test_linalg('test_dmd_float64'))
         s.addTest(test_linalg('test_dmd_complex64'))
         s.addTest(test_linalg('test_dmd_complex128'))
-        
+
     return s
 
 if __name__ == '__main__':

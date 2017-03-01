@@ -118,6 +118,11 @@ CUSOLVER_EXCEPTIONS = {
     11: CUSOLVER_STATUS_INVALID_LICENSE
 }
 
+# Values copied from cusolver_common.h
+_CUSOLVER_EIG_MODE = {
+    'NOVECTOR': 0,
+    'VECTOR': 1,
+}
 def cusolverCheckStatus(status):
     """
     Raise CUSOLVER exception.
@@ -1125,4 +1130,248 @@ def cusolverDnZgeqrf(handle, m, n, A, lda, TAU, Workspace, Lwork, devInfo):
                                            int(Workspace),
                                            Lwork,
                                            int(devInfo))
+    cusolverCheckStatus(status)
+
+# SYEVD
+_libcusolver.cusolverDnSsyevd_bufferSize.restype = int
+_libcusolver.cusolverDnSsyevd_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_void_p]
+def cusolverDnSsyevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
+    """
+    Calculate size of work buffer used by culsolverDnSgebrd.
+
+    References
+    ----------
+    `cusolverDn<t>gebrd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-eigensolver-reference>`_
+    """
+
+    Lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnSsyevd_bufferSize(
+        handle,
+        jobz,
+        uplo,
+        n,
+        int(A),
+        lda,
+        int(W),
+        ctypes.byref(Lwork)
+    )
+    cusolverCheckStatus(status)
+    return Lwork.value
+
+
+_libcusolver.cusolverDnSsyevd.restype = int
+_libcusolver.cusolverDnSsyevd.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p]
+def cusolverDnSsyevd(handle, jobz, uplo, n, A, lda, W, Workspace, Lwork,
+                     devInfo):
+    status = _libcusolver.cusolverDnSsyevd(
+        handle,
+        jobz,
+        uplo,
+        n,
+        int(A),
+        lda,
+        int(W),
+        int(Workspace),
+        Lwork,
+        int(devInfo)
+    )
+    cusolverCheckStatus(status)
+
+
+_libcusolver.cusolverDnDsyevd_bufferSize.restype = int
+_libcusolver.cusolverDnDsyevd_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_void_p]
+def cusolverDnDsyevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
+    """
+    Calculate size of work buffer used by culsolverDnSgebrd.
+
+    References
+    ----------
+    `cusolverDn<t>gebrd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-eigensolver-reference>`_
+    """
+
+    Lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnDsyevd_bufferSize(
+        handle,
+        jobz,
+        uplo,
+        n,
+        int(A),
+        lda,
+        int(W),
+        ctypes.byref(Lwork)
+    )
+    cusolverCheckStatus(status)
+    return Lwork.value
+
+
+_libcusolver.cusolverDnDsyevd.restype = int
+_libcusolver.cusolverDnDsyevd.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p]
+def cusolverDnDsyevd(handle, jobz, uplo, n, A, lda, W, Workspace, Lwork,
+                     devInfo):
+    status = _libcusolver.cusolverDnDsyevd(
+        handle,
+        jobz,
+        uplo,
+        n,
+        int(A),
+        lda,
+        int(W),
+        int(Workspace),
+        Lwork,
+        int(devInfo)
+    )
+    cusolverCheckStatus(status)
+
+
+_libcusolver.cusolverDnCheevd_bufferSize.restype = int
+_libcusolver.cusolverDnCheevd_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_void_p]
+def cusolverDnCheevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
+    """
+    Calculate size of work buffer used by culsolverDnSgebrd.
+
+    References
+    ----------
+    `cusolverDn<t>gebrd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-eigensolver-reference>`_
+    """
+
+    Lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnCheevd_bufferSize(
+        handle,
+        jobz,
+        uplo,
+        n,
+        int(A),
+        lda,
+        int(W),
+        ctypes.byref(Lwork)
+    )
+    cusolverCheckStatus(status)
+    return Lwork.value
+
+
+_libcusolver.cusolverDnCheevd.restype = int
+_libcusolver.cusolverDnCheevd.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p]
+def cusolverDnCheevd(handle, jobz, uplo, n, A, lda, W, Workspace, Lwork,
+                     devInfo):
+    status = _libcusolver.cusolverDnCheevd(
+        handle,
+        jobz,
+        uplo,
+        n,
+        int(A),
+        lda,
+        int(W),
+        int(Workspace),
+        Lwork,
+        int(devInfo)
+    )
+    cusolverCheckStatus(status)
+
+
+_libcusolver.cusolverDnZheevd_bufferSize.restype = int
+_libcusolver.cusolverDnZheevd_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_void_p]
+def cusolverDnZheevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
+    """
+    Calculate size of work buffer used by culsolverDnSgebrd.
+
+    References
+    ----------
+    `cusolverDn<t>gebrd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-eigensolver-reference>`_
+    """
+
+    Lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnZheevd_bufferSize(
+        handle,
+        jobz,
+        uplo,
+        n,
+        int(A),
+        lda,
+        int(W),
+        ctypes.byref(Lwork)
+    )
+    cusolverCheckStatus(status)
+    return Lwork.value
+
+
+_libcusolver.cusolverDnZheevd.restype = int
+_libcusolver.cusolverDnZheevd.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p]
+def cusolverDnZheevd(handle, jobz, uplo, n, A, lda, W, Workspace, Lwork,
+                     devInfo):
+    status = _libcusolver.cusolverDnZheevd(
+        handle,
+        jobz,
+        uplo,
+        n,
+        int(A),
+        lda,
+        int(W),
+        int(Workspace),
+        Lwork,
+        int(devInfo)
+    )
     cusolverCheckStatus(status)
