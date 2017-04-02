@@ -21,6 +21,7 @@ import pycuda.tools as tools
 import numpy as np
 
 from . import cublas
+from . import cudart
 from . import misc
 
 import sys
@@ -186,11 +187,12 @@ def svd(a_gpu, jobu='A', jobvt='A', lib='cula'):
     # Allocate the array of singular values:
     s_gpu = gpuarray.empty(min(m, n), real_type, allocator=alloc)
 
-    # cusolver only supports jobu = jobvt = 'A':
+    # CUSOLVER in CUDA 7.0 only supports jobu = jobvt = 'A':
     jobu = jobu.upper()
     jobvt = jobvt.upper()
-    if lib == 'cusolver' and (jobu != 'A' or jobvt != 'A'):
-        raise ValueError("CUSOLVER only supports jobu = jobvt = 'A'")
+    if lib == 'cusolver' and (jobu != 'A' or jobvt != 'A') and \
+      cudart._cudart_version <= '7000':
+         raise ValueError("CUSOLVER 7.0 only supports jobu = jobvt = 'A'")
 
     # Set the leading dimension and allocate u:
     ldu = m
@@ -1294,7 +1296,7 @@ def eye(N, dtype=np.float32):
     func(e_gpu, slice=slice(0, N*N, N+1))
     return e_gpu
 
-def pinv(a_gpu, rcond=1e-15):
+def pinv(a_gpu, rcond=1e-15, lib='cula'):
     """
     Moore-Penrose pseudoinverse.
 
@@ -1307,6 +1309,8 @@ def pinv(a_gpu, rcond=1e-15):
     rcond : float
         Singular values smaller than `rcond`*max(singular_values)`
         are set to zero.
+    lib : str
+        Library to use. May be either 'cula' or 'cusolver'.
 
     Returns
     -------
@@ -1341,16 +1345,19 @@ def pinv(a_gpu, rcond=1e-15):
     >>> np.allclose(np.linalg.pinv(b), b_inv_gpu.get(), 1e-4)
     True
 
+    Notes
+    -----
+    The CUSOLVER backend cannot be used with CUDA 7.0.
     """
 
-    if not _has_cula:
+    if lib == 'cula' and not _has_cula:
         raise NotImplementedError('CULA not installed')
 
     # Perform in-place SVD if the matrix is square to save memory:
     if a_gpu.shape[0] == a_gpu.shape[1]:
-        u_gpu, s_gpu, vh_gpu = svd(a_gpu, 's', 'o')
+        u_gpu, s_gpu, vh_gpu = svd(a_gpu, 's', 'o', lib)
     else:
-        u_gpu, s_gpu, vh_gpu = svd(a_gpu, 's', 's')
+        u_gpu, s_gpu, vh_gpu = svd(a_gpu, 's', 's', lib)
 
     # Suppress very small singular values and convert the singular value array
     # to complex if the original matrix is complex so that the former can be
