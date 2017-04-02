@@ -102,10 +102,10 @@ def svd(a_gpu, jobu='A', jobvt='A', lib='cula'):
 
     Examples
     --------
-    >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> a = np.random.randn(9, 6) + 1j*np.random.randn(9, 6)
     >>> a = np.asarray(a, np.complex64)
@@ -301,7 +301,7 @@ def cho_factor(a_gpu, uplo='L', lib='cula'):
     >>> import pycuda.autoinit
     >>> import numpy as np
     >>> import scipy.linalg
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> a = np.array([[3.0,0.0],[0.0,7.0]])
     >>> a = np.asarray(a, np.float64)
@@ -427,7 +427,7 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
     >>> import pycuda.autoinit
     >>> import numpy as np
     >>> import scipy.linalg
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> a = np.array([[3.0,0.0],[0.0,7.0]])
     >>> a = np.asarray(a, np.float64)
@@ -671,11 +671,11 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
 
     Examples
     --------
-    >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> import linalg
-    >>> import misc
+    >>> import skcuda.linalg as linalg
+    >>> import skcuda.misc as misc
     >>> linalg.init()
     >>> a = np.asarray(np.random.rand(4, 2), np.float32)
     >>> b = np.asarray(np.random.rand(2, 2), np.float32)
@@ -784,7 +784,7 @@ def mdot(*args, **kwargs):
     >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> a = np.asarray(np.random.rand(4, 2), np.float32)
     >>> b = np.asarray(np.random.rand(2, 2), np.float32)
@@ -847,7 +847,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=False, handle=None):
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> d = np.random.rand(4)
     >>> a = np.random.rand(4, 4)
@@ -1029,7 +1029,7 @@ def transpose(a_gpu, handle=None):
     >>> import pycuda.driver as drv
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> a = np.array([[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]], np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
@@ -1071,7 +1071,7 @@ def hermitian(a_gpu, handle=None):
     >>> import pycuda.driver as drv
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> a = np.array([[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]], np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
@@ -1113,7 +1113,7 @@ def conj(x_gpu, overwrite=False):
     >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> x = np.array([[1+1j, 2-2j, 3+3j, 4-4j], [5+5j, 6-6j, 7+7j, 8-8j]], np.complex64)
     >>> x_gpu = gpuarray.to_gpu(x)
@@ -1180,7 +1180,7 @@ def diag(v_gpu):
     >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> v = np.array([1, 2, 3, 4, 5, 6], np.float32)
     >>> v_gpu = gpuarray.to_gpu(v)
@@ -1270,7 +1270,7 @@ def eye(N, dtype=np.float32):
     >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> N = 5
     >>> e_gpu = linalg.eye(N)
@@ -1328,7 +1328,7 @@ def pinv(a_gpu, rcond=1e-15):
     >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> a = np.asarray(np.random.rand(8, 4), np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
@@ -1449,11 +1449,11 @@ def tril(a_gpu, overwrite=False, handle=None):
 
     Examples
     --------
+    >>> import pycuda.autoinit
     >>> import pycuda.driver as drv
     >>> import pycuda.gpuarray as gpuarray
-    >>> import pycuda.autoinit
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> a = np.asarray(np.random.rand(4, 4), np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
@@ -1584,11 +1584,11 @@ def triu(a_gpu, k=0, overwrite=False, handle=None):
 
     Examples
     --------
+    >>> import pycuda.autoinit
     >>> import pycuda.driver as drv
     >>> import pycuda.gpuarray as gpuarray
-    >>> import pycuda.autoinit
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> a = np.asarray(np.random.rand(4, 4), np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
@@ -1677,7 +1677,7 @@ def multiply(x_gpu, y_gpu, overwrite=False):
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> x = np.asarray(np.random.rand(4, 4), np.float32)
     >>> y = np.asarray(np.random.rand(4, 4), np.float32)
@@ -1744,7 +1744,7 @@ def norm(x_gpu, handle=None):
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> x = np.asarray(np.random.rand(4, 4), np.float32)
     >>> x_gpu = gpuarray.to_gpu(x)
@@ -1801,7 +1801,7 @@ def scale(alpha, x_gpu, alpha_real=False, handle=None):
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> x = np.asarray(np.random.rand(4, 4), np.float32)
     >>> x_gpu = gpuarray.to_gpu(x)
@@ -2093,10 +2093,10 @@ def qr(a_gpu, mode='reduced', handle=None):
 
     Examples
     --------
-    >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> from skcuda import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> # Rectangular matrix A, np.float32
     >>> A = np.array(np.random.randn(9, 7), np.float32, order='F')
