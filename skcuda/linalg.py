@@ -2452,12 +2452,15 @@ def vander(a_gpu, n=None, handle=None):
   
      Examples
      --------
+     >>> import pycuda.autoinit
+     >>> import pycuda.gpuarray as gpuarray
+     >>> import numpy as np
+     >>> import skcuda.linalg as linalg
      >>> a = np.array(np.array([1, 2, 3]), np.float32, order='F')
      >>> a_gpu = gpuarray.to_gpu(a)
-     >>> linalg.vander(a_gpu, n=4)
-     array([[  1.,   1.,   2.,  12.],
-            [  1.,   2.,   6.,  36.],
-            [  1.,   3.,   3.,  18.]], dtype=float32)
+     >>> v_gpu = linalg.vander(a_gpu, n=4)
+     >>> np.allclose(v_gpu.get(), np.fliplr(np.vander(a, 4)), atol=1e-6)
+     True
      """
 
      if handle is None:
