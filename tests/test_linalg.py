@@ -615,7 +615,7 @@ class test_linalg(TestCase):
         assert np.all(np.eye(N, dtype=np.complex128) == e_gpu.get())
 
     @skipUnless(linalg._has_cula, 'CULA required')
-    def test_pinv_float32(self):
+    def test_pinv_cula_float32(self):
         a = np.asarray(np.random.rand(8, 4), np.float32)
         a_gpu = gpuarray.to_gpu(a)
         a_inv_gpu = linalg.pinv(a_gpu)
@@ -623,7 +623,7 @@ class test_linalg(TestCase):
                            atol=atol_float32)
 
     @skipUnless(linalg._has_cula, 'CULA required')
-    def test_pinv_float64(self):
+    def test_pinv_cula_float64(self):
         a = np.asarray(np.random.rand(8, 4), np.float64)
         a_gpu = gpuarray.to_gpu(a)
         a_inv_gpu = linalg.pinv(a_gpu)
@@ -631,7 +631,7 @@ class test_linalg(TestCase):
                            atol=atol_float64)
 
     @skipUnless(linalg._has_cula, 'CULA required')
-    def test_pinv_complex64(self):
+    def test_pinv_cula_complex64(self):
         a = np.asarray(np.random.rand(8, 4) + \
                        1j*np.random.rand(8, 4), np.complex64)
         a_gpu = gpuarray.to_gpu(a)
@@ -640,11 +640,41 @@ class test_linalg(TestCase):
                            atol=atol_float32)
 
     @skipUnless(linalg._has_cula, 'CULA required')
-    def test_pinv_complex128(self):
+    def test_pinv_cula_complex128(self):
         a = np.asarray(np.random.rand(8, 4) + \
                        1j*np.random.rand(8, 4), np.complex128)
         a_gpu = gpuarray.to_gpu(a)
         a_inv_gpu = linalg.pinv(a_gpu)
+        assert np.allclose(np.linalg.pinv(a), a_inv_gpu.get(),
+                           atol=atol_float64)
+
+    def test_pinv_cusolver_float32(self):
+        a = np.asarray(np.random.rand(4, 8), np.float32)
+        a_gpu = gpuarray.to_gpu(a)
+        a_inv_gpu = linalg.pinv(a_gpu, lib='cusolver')
+        assert np.allclose(np.linalg.pinv(a), a_inv_gpu.get(),
+                           atol=atol_float32)
+
+    def test_pinv_cusolver_float64(self):
+        a = np.asarray(np.random.rand(4, 8), np.float64)
+        a_gpu = gpuarray.to_gpu(a)
+        a_inv_gpu = linalg.pinv(a_gpu, lib='cusolver')
+        assert np.allclose(np.linalg.pinv(a), a_inv_gpu.get(),
+                           atol=atol_float64)
+
+    def test_pinv_cusolver_complex64(self):
+        a = np.asarray(np.random.rand(4, 8) + \
+                       1j*np.random.rand(4, 8), np.complex64)
+        a_gpu = gpuarray.to_gpu(a)
+        a_inv_gpu = linalg.pinv(a_gpu, lib='cusolver')
+        assert np.allclose(np.linalg.pinv(a), a_inv_gpu.get(),
+                           atol=atol_float32)
+
+    def test_pinv_cusolver_complex128(self):
+        a = np.asarray(np.random.rand(4, 8) + \
+                       1j*np.random.rand(4, 8), np.complex128)
+        a_gpu = gpuarray.to_gpu(a)
+        a_inv_gpu = linalg.pinv(a_gpu, lib='cusolver')
         assert np.allclose(np.linalg.pinv(a), a_inv_gpu.get(),
                            atol=atol_float64)
 
@@ -1166,8 +1196,10 @@ def suite():
     s.addTest(test_linalg('test_diag_2d_tall_complex64'))
     s.addTest(test_linalg('test_eye_float32'))
     s.addTest(test_linalg('test_eye_complex64'))
-    s.addTest(test_linalg('test_pinv_float32'))
-    s.addTest(test_linalg('test_pinv_complex64'))
+    s.addTest(test_linalg('test_pinv_cula_float32'))
+    s.addTest(test_linalg('test_pinv_cula_complex64'))
+    s.addTest(test_linalg('test_pinv_cusolver_float32'))
+    s.addTest(test_linalg('test_pinv_cusolver_complex64'))
     s.addTest(test_linalg('test_tril_float32'))
     s.addTest(test_linalg('test_tril_complex64'))
     s.addTest(test_linalg('test_triu_float32'))
@@ -1244,8 +1276,10 @@ def suite():
         s.addTest(test_linalg('test_diag_2d_tall_complex128'))
         s.addTest(test_linalg('test_eye_float64'))
         s.addTest(test_linalg('test_eye_complex128'))
-        s.addTest(test_linalg('test_pinv_float64'))
-        s.addTest(test_linalg('test_pinv_complex128'))
+        s.addTest(test_linalg('test_pinv_cula_float64'))
+        s.addTest(test_linalg('test_pinv_cula_complex128'))
+        s.addTest(test_linalg('test_pinv_cusolver_float64'))
+        s.addTest(test_linalg('test_pinv_cusolver_complex128'))
         s.addTest(test_linalg('test_tril_float64'))
         s.addTest(test_linalg('test_tril_complex128'))
         s.addTest(test_linalg('test_triu_float32'))
