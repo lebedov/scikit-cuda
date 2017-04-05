@@ -4,7 +4,7 @@
 Unit tests for scikits.cuda.linalg
 """
 
-from unittest import main, makeSuite, TestCase, TestSuite
+from unittest import main, makeSuite, skipUnless, TestCase, TestSuite
 
 import pycuda.autoinit
 import pycuda.gpuarray as gpuarray
@@ -26,6 +26,7 @@ class test_linalg(TestCase):
     def tearDown(self):
         linalg.shutdown()
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_svd_ss_cula_float32(self):
         a = np.asarray(np.random.randn(9, 6), np.float32)
         a_gpu = gpuarray.to_gpu(a)
@@ -35,6 +36,7 @@ class test_linalg(TestCase):
                                             vh_gpu.get())),
                            atol=atol_float32)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_svd_ss_cula_float64(self):
         a = np.asarray(np.random.randn(9, 6), np.float64)
         a_gpu = gpuarray.to_gpu(a)
@@ -44,6 +46,7 @@ class test_linalg(TestCase):
                                             vh_gpu.get())),
                            atol=atol_float64)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_svd_ss_cula_complex64(self):
         a = np.asarray(np.random.randn(9, 6) + 1j*np.random.randn(9, 6), np.complex64)
         a_gpu = gpuarray.to_gpu(a)
@@ -53,6 +56,7 @@ class test_linalg(TestCase):
                                             vh_gpu.get())),
                            atol=atol_float32)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_svd_ss_cula_complex128(self):
         a = np.asarray(np.random.randn(9, 6) + 1j*np.random.randn(9, 6), np.complex128)
         a_gpu = gpuarray.to_gpu(a)
@@ -62,6 +66,7 @@ class test_linalg(TestCase):
                                             vh_gpu.get())),
                            atol=atol_float64)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_svd_so_cula_float32(self):
         a = np.asarray(np.random.randn(6, 6), np.float32)
         a_gpu = gpuarray.to_gpu(a)
@@ -71,6 +76,7 @@ class test_linalg(TestCase):
                                             vh_gpu.get())),
                            atol=atol_float32)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_svd_so_cula_float64(self):
         a = np.asarray(np.random.randn(6, 6), np.float64)
         a_gpu = gpuarray.to_gpu(a)
@@ -80,6 +86,7 @@ class test_linalg(TestCase):
                                             vh_gpu.get())),
                            atol=atol_float64)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_svd_so_cula_complex64(self):
         a = np.asarray(np.random.randn(6, 6) + 1j*np.random.randn(6, 6), np.complex64)
         a_gpu = gpuarray.to_gpu(a)
@@ -89,6 +96,7 @@ class test_linalg(TestCase):
                                             vh_gpu.get())),
                            atol=atol_float32)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_svd_so_cula_complex128(self):
         a = np.asarray(np.random.randn(6, 6) + 1j*np.random.randn(6, 6), np.complex128)
         a_gpu = gpuarray.to_gpu(a)
@@ -606,21 +614,24 @@ class test_linalg(TestCase):
         e_gpu = linalg.eye(N, dtype=np.complex128)
         assert np.all(np.eye(N, dtype=np.complex128) == e_gpu.get())
 
-    def test_pinv_float32(self):
+    @skipUnless(linalg._has_cula, 'CULA required')
+    def test_pinv_cula_float32(self):
         a = np.asarray(np.random.rand(8, 4), np.float32)
         a_gpu = gpuarray.to_gpu(a)
         a_inv_gpu = linalg.pinv(a_gpu)
         assert np.allclose(np.linalg.pinv(a), a_inv_gpu.get(),
                            atol=atol_float32)
 
-    def test_pinv_float64(self):
+    @skipUnless(linalg._has_cula, 'CULA required')
+    def test_pinv_cula_float64(self):
         a = np.asarray(np.random.rand(8, 4), np.float64)
         a_gpu = gpuarray.to_gpu(a)
         a_inv_gpu = linalg.pinv(a_gpu)
         assert np.allclose(np.linalg.pinv(a), a_inv_gpu.get(),
                            atol=atol_float64)
 
-    def test_pinv_complex64(self):
+    @skipUnless(linalg._has_cula, 'CULA required')
+    def test_pinv_cula_complex64(self):
         a = np.asarray(np.random.rand(8, 4) + \
                        1j*np.random.rand(8, 4), np.complex64)
         a_gpu = gpuarray.to_gpu(a)
@@ -628,11 +639,42 @@ class test_linalg(TestCase):
         assert np.allclose(np.linalg.pinv(a), a_inv_gpu.get(),
                            atol=atol_float32)
 
-    def test_pinv_complex128(self):
+    @skipUnless(linalg._has_cula, 'CULA required')
+    def test_pinv_cula_complex128(self):
         a = np.asarray(np.random.rand(8, 4) + \
                        1j*np.random.rand(8, 4), np.complex128)
         a_gpu = gpuarray.to_gpu(a)
         a_inv_gpu = linalg.pinv(a_gpu)
+        assert np.allclose(np.linalg.pinv(a), a_inv_gpu.get(),
+                           atol=atol_float64)
+
+    def test_pinv_cusolver_float32(self):
+        a = np.asarray(np.random.rand(4, 8), np.float32)
+        a_gpu = gpuarray.to_gpu(a)
+        a_inv_gpu = linalg.pinv(a_gpu, lib='cusolver')
+        assert np.allclose(np.linalg.pinv(a), a_inv_gpu.get(),
+                           atol=atol_float32)
+
+    def test_pinv_cusolver_float64(self):
+        a = np.asarray(np.random.rand(4, 8), np.float64)
+        a_gpu = gpuarray.to_gpu(a)
+        a_inv_gpu = linalg.pinv(a_gpu, lib='cusolver')
+        assert np.allclose(np.linalg.pinv(a), a_inv_gpu.get(),
+                           atol=atol_float64)
+
+    def test_pinv_cusolver_complex64(self):
+        a = np.asarray(np.random.rand(4, 8) + \
+                       1j*np.random.rand(4, 8), np.complex64)
+        a_gpu = gpuarray.to_gpu(a)
+        a_inv_gpu = linalg.pinv(a_gpu, lib='cusolver')
+        assert np.allclose(np.linalg.pinv(a), a_inv_gpu.get(),
+                           atol=atol_float32)
+
+    def test_pinv_cusolver_complex128(self):
+        a = np.asarray(np.random.rand(4, 8) + \
+                       1j*np.random.rand(4, 8), np.complex128)
+        a_gpu = gpuarray.to_gpu(a)
+        a_inv_gpu = linalg.pinv(a_gpu, lib='cusolver')
         assert np.allclose(np.linalg.pinv(a), a_inv_gpu.get(),
                            atol=atol_float64)
 
@@ -721,15 +763,19 @@ class test_linalg(TestCase):
         c = np.triu(cpu_cho_factor(x)[0])
         assert np.allclose(c, np.triu(x_gpu.get()))
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_cho_factor_cula_float32(self):
         self._impl_test_cho_factor(4, np.float32, 'cula')
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_cho_factor_cula_float64(self):
         self._impl_test_cho_factor(4, np.float64, 'cula')
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_cho_factor_cula_complex64(self):
         self._impl_test_cho_factor(4, np.complex64, 'cula')
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_cho_factor_cula_complex128(self):
         self._impl_test_cho_factor(4, np.complex128, 'cula')
 
@@ -745,6 +791,7 @@ class test_linalg(TestCase):
     def test_cho_factor_cusolver_complex128(self):
         self._impl_test_cho_factor(4, np.complex128, 'cusolver')
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_cho_solve_float32(self):
         x = np.asarray(np.random.rand(4, 4), np.float32)
         x = np.dot(x.T, x)
@@ -779,23 +826,27 @@ class test_linalg(TestCase):
         assert np.allclose(xinv, xinv_gpu.get(), atol=1e-5)
         assert xinv_gpu is x_gpu
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_inv_exceptions(self):
         x = np.asarray([[1, 2], [2, 4]], np.float32)
         x_gpu = gpuarray.to_gpu(x)
         assert_raises(linalg.LinAlgError, linalg.inv, x_gpu)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_inv_float32(self):
         self._impl_test_inv(np.float32)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_inv_float64(self):
         self._impl_test_inv(np.float64)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_inv_complex64(self):
         self._impl_test_inv(np.complex64)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_inv_complex128(self):
         self._impl_test_inv(np.complex128)
-
 
     def _impl_test_add_diag(self, dtype):
         x = np.asarray(np.random.rand(4, 4), dtype)
@@ -969,15 +1020,19 @@ class test_linalg(TestCase):
         x_gpu = gpuarray.to_gpu(x)
         assert np.allclose(linalg.det(x_gpu, lib=lib), 18.0)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_det_cula_float32(self):
         self._impl_test_det(np.float32, 'cula')
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_det_cula_float64(self):
         self._impl_test_det(np.float64, 'cula')
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_det_cula_complex64(self):
         self._impl_test_det(np.complex64, 'cula')
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_det_cula_complex128(self):
         self._impl_test_det(np.complex128, 'cula')
 
@@ -993,49 +1048,56 @@ class test_linalg(TestCase):
     def test_det_cusolver_complex128(self):
         self._impl_test_det(np.complex128, 'cusolver')
 
-
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_qr_reduced_float32(self):
         a = np.asarray(np.random.randn(5, 3), np.float32, order='F')
         a_gpu = gpuarray.to_gpu(a)
         q_gpu, r_gpu = linalg.qr(a_gpu, 'reduced')
         assert np.allclose(a, np.dot(q_gpu.get(), r_gpu.get()), atol=1e-4)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_qr_reduced_float64(self):
         a = np.asarray(np.random.randn(5, 3), np.float32, order='F')
         a_gpu = gpuarray.to_gpu(a)
         q_gpu, r_gpu = linalg.qr(a_gpu, 'reduced')
         assert np.allclose(a, np.dot(q_gpu.get(), r_gpu.get()), atol=atol_float64)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_qr_reduced_complex64(self):
         a = np.asarray(np.random.randn(9, 6) + 1j*np.random.randn(9, 6), np.complex64, order='F')
         a_gpu = gpuarray.to_gpu(a)
         q_gpu, r_gpu = linalg.qr(a_gpu, 'reduced')
         assert np.allclose(a, np.dot(q_gpu.get(), r_gpu.get()), atol=1e-4)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_qr_reduced_complex128(self):
         a = np.asarray(np.random.randn(9, 6) + 1j*np.random.randn(9, 6), np.complex64, order='F')
         a_gpu = gpuarray.to_gpu(a)
         q_gpu, r_gpu = linalg.qr(a_gpu, 'reduced')
         assert np.allclose(a, np.dot(q_gpu.get(), r_gpu.get()), atol=atol_float64)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_eig_cula_float32(self):
         a = np.asarray(np.random.rand(9, 9), np.float32, order='F')
         a_gpu = gpuarray.to_gpu(a)
         w_gpu = linalg.eig(a_gpu, 'N', 'N')
         assert np.allclose(np.trace(a), sum(w_gpu.get()), atol=1e-4)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_eig_cula_float64(self):
         a = np.asarray(np.random.rand(9, 9), np.float64, order='F')
         a_gpu = gpuarray.to_gpu(a)
         w_gpu = linalg.eig(a_gpu, 'N', 'N')
         assert np.allclose(np.trace(a), sum(w_gpu.get()), atol=atol_float64)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_eig_cula_complex64(self):
         a = np.asarray(np.random.rand(9, 9) + 1j*np.random.rand(9, 9), np.complex64, order='F')
         a_gpu = gpuarray.to_gpu(a)
         w_gpu = linalg.eig(a_gpu, 'N', 'N')
         assert np.allclose(np.trace(a), sum(w_gpu.get()), atol=1e-4)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_eig_cula_complex128(self):
         a = np.array(np.random.rand(9, 9) + 1j*np.random.rand(9,9), np.complex128, order='F')
         a_gpu = gpuarray.to_gpu(a)
@@ -1078,6 +1140,7 @@ class test_linalg(TestCase):
         vander_gpu = linalg.vander(a_gpu)
         assert np.allclose(np.fliplr(np.vander(a)), vander_gpu.get(), atol=atol_float64)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_dmd_float32(self):
         m, n = 6, 4
         a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)), np.float32, order='F')
@@ -1085,6 +1148,7 @@ class test_linalg(TestCase):
         f_gpu, b_gpu, v_gpu, omega = linalg.dmd(a_gpu, modes='standard', return_amplitudes=True, return_vandermonde=True)
         assert np.allclose(a[:,:(n-1)], np.dot(f_gpu.get(), np.dot(np.diag(b_gpu.get()), v_gpu.get()) ), 1e-4)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_dmd_float64(self):
         m, n = 9, 7
         a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)), np.float64, order='F')
@@ -1092,6 +1156,7 @@ class test_linalg(TestCase):
         f_gpu, b_gpu, v_gpu, omega = linalg.dmd(a_gpu, modes='standard', return_amplitudes=True, return_vandermonde=True)
         assert np.allclose(a[:,:(n-1)], np.dot(f_gpu.get(), np.dot(np.diag(b_gpu.get()), v_gpu.get()) ), atol_float64)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_dmd_complex64(self):
         m, n = 9, 7
         a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)) + 1j*np.fliplr(np.vander(np.random.rand(m), n)),
@@ -1100,6 +1165,7 @@ class test_linalg(TestCase):
         f_gpu, b_gpu, v_gpu, omega = linalg.dmd(a_gpu, modes='standard', return_amplitudes=True, return_vandermonde=True)
         assert np.allclose(a[:,:(n-1)], np.dot(f_gpu.get(), np.dot(np.diag(b_gpu.get()), v_gpu.get()) ), 1e-4)
 
+    @skipUnless(linalg._has_cula, 'CULA required')
     def test_dmd_complex128(self):
         m, n = 9, 7
         a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)) + 1j*np.fliplr(np.vander(np.random.rand(m), n)),
@@ -1107,7 +1173,6 @@ class test_linalg(TestCase):
         a_gpu = gpuarray.to_gpu(a)
         f_gpu, b_gpu, v_gpu, omega = linalg.dmd(a_gpu, modes='standard', return_amplitudes=True, return_vandermonde=True)
         assert np.allclose(a[:,:(n-1)], np.dot(f_gpu.get(), np.dot(np.diag(b_gpu.get()), v_gpu.get()) ), atol_float64)
-
 
 def suite():
     s = TestSuite()
@@ -1143,8 +1208,10 @@ def suite():
     s.addTest(test_linalg('test_diag_2d_tall_complex64'))
     s.addTest(test_linalg('test_eye_float32'))
     s.addTest(test_linalg('test_eye_complex64'))
-    s.addTest(test_linalg('test_pinv_float32'))
-    s.addTest(test_linalg('test_pinv_complex64'))
+    s.addTest(test_linalg('test_pinv_cula_float32'))
+    s.addTest(test_linalg('test_pinv_cula_complex64'))
+    s.addTest(test_linalg('test_pinv_cusolver_float32'))
+    s.addTest(test_linalg('test_pinv_cusolver_complex64'))
     s.addTest(test_linalg('test_tril_float32'))
     s.addTest(test_linalg('test_tril_complex64'))
     s.addTest(test_linalg('test_triu_float32'))
@@ -1221,8 +1288,10 @@ def suite():
         s.addTest(test_linalg('test_diag_2d_tall_complex128'))
         s.addTest(test_linalg('test_eye_float64'))
         s.addTest(test_linalg('test_eye_complex128'))
-        s.addTest(test_linalg('test_pinv_float64'))
-        s.addTest(test_linalg('test_pinv_complex128'))
+        s.addTest(test_linalg('test_pinv_cula_float64'))
+        s.addTest(test_linalg('test_pinv_cula_complex128'))
+        s.addTest(test_linalg('test_pinv_cusolver_float64'))
+        s.addTest(test_linalg('test_pinv_cusolver_complex128'))
         s.addTest(test_linalg('test_tril_float64'))
         s.addTest(test_linalg('test_tril_complex128'))
         s.addTest(test_linalg('test_triu_float32'))

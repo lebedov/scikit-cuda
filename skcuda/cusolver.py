@@ -639,6 +639,7 @@ def cusolverDnSgetrs(handle, trans, n, nrhs, A, lda,
     `cusolverDn<t>getrs <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrs>`_
     """
 
+    trans = trans.encode('ascii')
     status = _libcusolver.cusolverDnSgetrs(handle, trans, n, nrhs,
                                            int(A), lda,
                                            int(devIpiv), int(B),
@@ -666,6 +667,7 @@ def cusolverDnDgetrs(handle, trans, n, nrhs, A, lda,
     `cusolverDn<t>getrs <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrs>`_
     """
 
+    trans = trans.encode('ascii')
     status = _libcusolver.cusolverDnDgetrs(handle, trans, n, nrhs,
                                            int(A), lda,
                                            int(devIpiv), int(B),
@@ -693,6 +695,7 @@ def cusolverDnCgetrs(handle, trans, n, nrhs, A, lda,
     `cusolverDn<t>getrs <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrs>`_
     """
 
+    trans = trans.encode('ascii')    
     status = _libcusolver.cusolverDnCgetrs(handle, trans, n, nrhs,
                                            int(A), lda,
                                            int(devIpiv), int(B),
@@ -720,6 +723,7 @@ def cusolverDnZgetrs(handle, trans, n, nrhs, A, lda,
     `cusolverDn<t>getrs <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrs>`_
     """
 
+    trans = trans.encode('ascii')
     status = _libcusolver.cusolverDnZgetrs(handle, trans, n, nrhs,
                                            int(A), lda,
                                            int(devIpiv), int(B),
