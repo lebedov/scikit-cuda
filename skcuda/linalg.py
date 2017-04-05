@@ -2241,6 +2241,9 @@ def eig(a_gpu, jobvl='N', jobvr='V', imag='F', lib='cula'):
          'F' : imaginary parts of a real matrix are not returned (default).
          'T' : returns the imaginary parts of a real matrix
          (only relevant in the case of single/double precision ).
+    lib : str
+        Library to use. May be either 'cula' or 'cusolver'. If using
+        'cusolver', only symmetric/Hermitian matrices are supported.
 
     Returns
     -------
