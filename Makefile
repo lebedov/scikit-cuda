@@ -7,7 +7,7 @@ VERSION = $(shell $(PYTHON) -c 'import setup; print setup.VERSION')
 .PHONY: package build docs install test clean
 
 package:
-	$(PYTHON) setup.py sdist --formats=gztar
+	$(PYTHON) setup.py sdist --formats=gztar bdist_wheel
 
 build:
 	$(PYTHON) setup.py build

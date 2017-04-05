@@ -22,6 +22,7 @@ Release 0.5.2 (under development)
 * Fix broken matrix-vector dot product (#156).
 * Initialize MAGMA before CUSOLVER to prevent internal errors in certain
   CUSOLVER functions.
+* Skip CULA-dependent unit tests when CULA isn't present.
 
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------

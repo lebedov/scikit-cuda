@@ -21,6 +21,7 @@ import pycuda.tools as tools
 import numpy as np
 
 from . import cublas
+from . import cudart
 from . import misc
 
 import sys
@@ -102,10 +103,10 @@ def svd(a_gpu, jobu='A', jobvt='A', lib='cula'):
 
     Examples
     --------
-    >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> a = np.random.randn(9, 6) + 1j*np.random.randn(9, 6)
     >>> a = np.asarray(a, np.complex64)
@@ -186,11 +187,12 @@ def svd(a_gpu, jobu='A', jobvt='A', lib='cula'):
     # Allocate the array of singular values:
     s_gpu = gpuarray.empty(min(m, n), real_type, allocator=alloc)
 
-    # cusolver only supports jobu = jobvt = 'A':
+    # CUSOLVER in CUDA 7.0 only supports jobu = jobvt = 'A':
     jobu = jobu.upper()
     jobvt = jobvt.upper()
-    if lib == 'cusolver' and (jobu != 'A' or jobvt != 'A'):
-        raise ValueError("CUSOLVER only supports jobu = jobvt = 'A'")
+    if lib == 'cusolver' and (jobu != 'A' or jobvt != 'A') and \
+      cudart._cudart_version <= '7000':
+         raise ValueError("CUSOLVER 7.0 only supports jobu = jobvt = 'A'")
 
     # Set the leading dimension and allocate u:
     ldu = m
@@ -301,7 +303,7 @@ def cho_factor(a_gpu, uplo='L', lib='cula'):
     >>> import pycuda.autoinit
     >>> import numpy as np
     >>> import scipy.linalg
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> a = np.array([[3.0,0.0],[0.0,7.0]])
     >>> a = np.asarray(a, np.float64)
@@ -427,7 +429,7 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
     >>> import pycuda.autoinit
     >>> import numpy as np
     >>> import scipy.linalg
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> a = np.array([[3.0,0.0],[0.0,7.0]])
     >>> a = np.asarray(a, np.float64)
@@ -671,11 +673,11 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
 
     Examples
     --------
-    >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> import linalg
-    >>> import misc
+    >>> import skcuda.linalg as linalg
+    >>> import skcuda.misc as misc
     >>> linalg.init()
     >>> a = np.asarray(np.random.rand(4, 2), np.float32)
     >>> b = np.asarray(np.random.rand(2, 2), np.float32)
@@ -784,7 +786,7 @@ def mdot(*args, **kwargs):
     >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> a = np.asarray(np.random.rand(4, 2), np.float32)
     >>> b = np.asarray(np.random.rand(2, 2), np.float32)
@@ -847,7 +849,7 @@ def dot_diag(d_gpu, a_gpu, trans='N', overwrite=False, handle=None):
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> d = np.random.rand(4)
     >>> a = np.random.rand(4, 4)
@@ -1029,7 +1031,7 @@ def transpose(a_gpu, handle=None):
     >>> import pycuda.driver as drv
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> a = np.array([[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]], np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
@@ -1071,7 +1073,7 @@ def hermitian(a_gpu, handle=None):
     >>> import pycuda.driver as drv
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> a = np.array([[1, 2, 3, 4, 5, 6], [7, 8, 9, 10, 11, 12]], np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
@@ -1113,7 +1115,7 @@ def conj(x_gpu, overwrite=False):
     >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> x = np.array([[1+1j, 2-2j, 3+3j, 4-4j], [5+5j, 6-6j, 7+7j, 8-8j]], np.complex64)
     >>> x_gpu = gpuarray.to_gpu(x)
@@ -1180,7 +1182,7 @@ def diag(v_gpu):
     >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> v = np.array([1, 2, 3, 4, 5, 6], np.float32)
     >>> v_gpu = gpuarray.to_gpu(v)
@@ -1270,7 +1272,7 @@ def eye(N, dtype=np.float32):
     >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> N = 5
     >>> e_gpu = linalg.eye(N)
@@ -1294,7 +1296,7 @@ def eye(N, dtype=np.float32):
     func(e_gpu, slice=slice(0, N*N, N+1))
     return e_gpu
 
-def pinv(a_gpu, rcond=1e-15):
+def pinv(a_gpu, rcond=1e-15, lib='cula'):
     """
     Moore-Penrose pseudoinverse.
 
@@ -1307,6 +1309,8 @@ def pinv(a_gpu, rcond=1e-15):
     rcond : float
         Singular values smaller than `rcond`*max(singular_values)`
         are set to zero.
+    lib : str
+        Library to use. May be either 'cula' or 'cusolver'.
 
     Returns
     -------
@@ -1328,7 +1332,7 @@ def pinv(a_gpu, rcond=1e-15):
     >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> a = np.asarray(np.random.rand(8, 4), np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
@@ -1341,16 +1345,19 @@ def pinv(a_gpu, rcond=1e-15):
     >>> np.allclose(np.linalg.pinv(b), b_inv_gpu.get(), 1e-4)
     True
 
+    Notes
+    -----
+    The CUSOLVER backend cannot be used with CUDA 7.0.
     """
 
-    if not _has_cula:
+    if lib == 'cula' and not _has_cula:
         raise NotImplementedError('CULA not installed')
 
     # Perform in-place SVD if the matrix is square to save memory:
     if a_gpu.shape[0] == a_gpu.shape[1]:
-        u_gpu, s_gpu, vh_gpu = svd(a_gpu, 's', 'o')
+        u_gpu, s_gpu, vh_gpu = svd(a_gpu, 's', 'o', lib)
     else:
-        u_gpu, s_gpu, vh_gpu = svd(a_gpu, 's', 's')
+        u_gpu, s_gpu, vh_gpu = svd(a_gpu, 's', 's', lib)
 
     # Suppress very small singular values and convert the singular value array
     # to complex if the original matrix is complex so that the former can be
@@ -1449,11 +1456,11 @@ def tril(a_gpu, overwrite=False, handle=None):
 
     Examples
     --------
+    >>> import pycuda.autoinit
     >>> import pycuda.driver as drv
     >>> import pycuda.gpuarray as gpuarray
-    >>> import pycuda.autoinit
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> a = np.asarray(np.random.rand(4, 4), np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
@@ -1584,11 +1591,11 @@ def triu(a_gpu, k=0, overwrite=False, handle=None):
 
     Examples
     --------
+    >>> import pycuda.autoinit
     >>> import pycuda.driver as drv
     >>> import pycuda.gpuarray as gpuarray
-    >>> import pycuda.autoinit
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> a = np.asarray(np.random.rand(4, 4), np.float32)
     >>> a_gpu = gpuarray.to_gpu(a)
@@ -1677,7 +1684,7 @@ def multiply(x_gpu, y_gpu, overwrite=False):
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> x = np.asarray(np.random.rand(4, 4), np.float32)
     >>> y = np.asarray(np.random.rand(4, 4), np.float32)
@@ -1744,7 +1751,7 @@ def norm(x_gpu, handle=None):
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> x = np.asarray(np.random.rand(4, 4), np.float32)
     >>> x_gpu = gpuarray.to_gpu(x)
@@ -1801,7 +1808,7 @@ def scale(alpha, x_gpu, alpha_real=False, handle=None):
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> x = np.asarray(np.random.rand(4, 4), np.float32)
     >>> x_gpu = gpuarray.to_gpu(x)
@@ -2093,10 +2100,10 @@ def qr(a_gpu, mode='reduced', handle=None):
 
     Examples
     --------
-    >>> import pycuda.gpuarray as gpuarray
     >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
-    >>> from skcuda import linalg
+    >>> import skcuda.linalg as linalg
     >>> linalg.init()
     >>> # Rectangular matrix A, np.float32
     >>> A = np.array(np.random.randn(9, 7), np.float32, order='F')
@@ -2452,12 +2459,15 @@ def vander(a_gpu, n=None, handle=None):
   
      Examples
      --------
+     >>> import pycuda.autoinit
+     >>> import pycuda.gpuarray as gpuarray
+     >>> import numpy as np
+     >>> import skcuda.linalg as linalg
      >>> a = np.array(np.array([1, 2, 3]), np.float32, order='F')
      >>> a_gpu = gpuarray.to_gpu(a)
-     >>> linalg.vander(a_gpu, n=4)
-     array([[  1.,   1.,   2.,  12.],
-            [  1.,   2.,   6.,  36.],
-            [  1.,   3.,   3.,  18.]], dtype=float32)
+     >>> v_gpu = linalg.vander(a_gpu, n=4)
+     >>> np.allclose(v_gpu.get(), np.fliplr(np.vander(a, 4)), atol=1e-6)
+     True
      """
 
      if handle is None:

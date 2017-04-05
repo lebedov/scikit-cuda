@@ -238,6 +238,7 @@ def fft(x_gpu, y_gpu, plan, scale=False):
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
+    >>> from skcuda.fft import fft, Plan
     >>> N = 128
     >>> x = np.asarray(np.random.rand(N), np.float32)
     >>> xf = np.fft.fft(x)
@@ -289,6 +290,7 @@ def ifft(x_gpu, y_gpu, plan, scale=False):
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
+    >>> from skcuda.fft import fft, Plan
     >>> N = 128
     >>> x = np.asarray(np.random.rand(N), np.float32)
     >>> xf = np.asarray(np.fft.fft(x), np.complex64)
