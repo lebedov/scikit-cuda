@@ -5,13 +5,11 @@ Unit tests for scikits.cuda.cublasxt
 """
 
 from unittest import main, makeSuite, TestCase, TestSuite
-from nose.tools import nottest
 
 import numpy as np
 
 import skcuda.cublasxt as cublasxt
 
-@nottest
 class test_cublasxt(TestCase):
     def setUp(self):
         self.handle = cublasxt.cublasXtCreate()
@@ -38,7 +36,7 @@ class test_cublasxt(TestCase):
         a = np.random.rand(4, 4).astype(np.float64)
         b = np.random.rand(4, 4).astype(np.float64)
         c = np.zeros((4, 4), np.float64)
-
+        
         cublasxt.cublasXtDgemm(self.handle, cublasxt._CUBLAS_OP['N'],
                                cublasxt._CUBLAS_OP['N'], 4, 4, 4, np.float64(1.0),
                                a.ctypes.data, 4, b.ctypes.data, 4, np.float64(0.0),
@@ -49,7 +47,7 @@ class test_cublasxt(TestCase):
         a = (np.random.rand(4, 4)+1j*np.random.rand(4, 4)).astype(np.complex128)
         b = (np.random.rand(4, 4)+1j*np.random.rand(4, 4)).astype(np.complex128)
         c = np.zeros((4, 4), np.complex128)
-
+        
         cublasxt.cublasXtCgemm(self.handle, cublasxt._CUBLAS_OP['N'],
                                cublasxt._CUBLAS_OP['N'], 4, 4, 4, np.complex128(1.0),
                                a.ctypes.data, 4, b.ctypes.data, 4, np.complex128(0.0),
@@ -60,7 +58,7 @@ class test_cublasxt(TestCase):
         a = (np.random.rand(4, 4)+1j*np.random.rand(4, 4)).astype(np.complex256)
         b = (np.random.rand(4, 4)+1j*np.random.rand(4, 4)).astype(np.complex256)
         c = np.zeros((4, 4), np.complex256)
-
+        
         cublasxt.cublasXtZgemm(self.handle, cublasxt._CUBLAS_OP['N'],
                                cublasxt._CUBLAS_OP['N'], 4, 4, 4, np.complex256(1.0),
                                a.ctypes.data, 4, b.ctypes.data, 4, np.complex256(0.0),
