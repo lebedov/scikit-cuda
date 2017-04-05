@@ -49,7 +49,6 @@ if not on_rtd:
                     'scipy >= 0.14.0'],
     extras_require = dict(scipy = ['scipy >= 0.14.0'],
                           sphinx = ['sphinx >= 1.3'],
-                          tests = tests_require,
                           sphinx_rtd_theme = ['sphinx_rtd_theme >= 0.1.6'])
 else:
     install_requires = []
