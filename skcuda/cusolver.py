@@ -634,7 +634,7 @@ def cusolverDnSgetrs(handle, trans, n, nrhs, A, lda,
     `cusolverDn<t>getrs <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrs>`_
     """
 
-    trans = trans.encode('ascii')
+    # trans = trans.encode('ascii')
     status = _libcusolver.cusolverDnSgetrs(handle, trans, n, nrhs,
                                            int(A), lda,
                                            int(devIpiv), int(B),
