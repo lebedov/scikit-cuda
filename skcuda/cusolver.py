@@ -17,6 +17,7 @@ import sys
 import numpy as np
 
 from . import cuda
+from . import cublas
 
 # Load library:
 _version_list = [8.0, 7.5, 7.0]
@@ -634,8 +635,7 @@ def cusolverDnSgetrs(handle, trans, n, nrhs, A, lda,
     `cusolverDn<t>getrs <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrs>`_
     """
 
-    trans = trans.encode('ascii')
-    status = _libcusolver.cusolverDnSgetrs(handle, trans, n, nrhs,
+    status = _libcusolver.cusolverDnSgetrs(handle, cublas._CUBLAS_OP[trans], n, nrhs,
                                            int(A), lda,
                                            int(devIpiv), int(B),
                                            ldb, int(devInfo))
@@ -662,8 +662,7 @@ def cusolverDnDgetrs(handle, trans, n, nrhs, A, lda,
     `cusolverDn<t>getrs <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrs>`_
     """
 
-    trans = trans.encode('ascii')
-    status = _libcusolver.cusolverDnDgetrs(handle, trans, n, nrhs,
+    status = _libcusolver.cusolverDnDgetrs(handle, cublas._CUBLAS_OP[trans], n, nrhs,
                                            int(A), lda,
                                            int(devIpiv), int(B),
                                            ldb, int(devInfo))
@@ -690,8 +689,7 @@ def cusolverDnCgetrs(handle, trans, n, nrhs, A, lda,
     `cusolverDn<t>getrs <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrs>`_
     """
 
-    trans = trans.encode('ascii')    
-    status = _libcusolver.cusolverDnCgetrs(handle, trans, n, nrhs,
+    status = _libcusolver.cusolverDnCgetrs(handle, cublas._CUBLAS_OP[trans], n, nrhs,
                                            int(A), lda,
                                            int(devIpiv), int(B),
                                            ldb, int(devInfo))
@@ -718,8 +716,7 @@ def cusolverDnZgetrs(handle, trans, n, nrhs, A, lda,
     `cusolverDn<t>getrs <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrs>`_
     """
 
-    trans = trans.encode('ascii')
-    status = _libcusolver.cusolverDnZgetrs(handle, trans, n, nrhs,
+    status = _libcusolver.cusolverDnZgetrs(handle, cublas._CUBLAS_OP[trans], n, nrhs,
                                            int(A), lda,
                                            int(devIpiv), int(B),
                                            ldb, int(devInfo))
