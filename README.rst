@@ -56,6 +56,7 @@ If you use scikit-cuda in a scholarly publication, please cite it as follows: ::
                         Sander Dieleman and
                         Gregory R. Lee and
                         Stefan van der Walt and
+                        Bryant Menn and
                         Teodor Mihai Moldovan and
                         Fr\'{e}d\'{e}ric Bastien and
                         Xing Shi and

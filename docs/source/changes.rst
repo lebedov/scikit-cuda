@@ -23,6 +23,7 @@ Release 0.5.2 (under development)
 * Initialize MAGMA before CUSOLVER to prevent internal errors in certain
   CUSOLVER functions.
 * Skip CULA-dependent unit tests when CULA isn't present.
+* CUSOLVER support for symmetric eigenvalue decomposition (enh. by Bryant Menn).
 
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------
