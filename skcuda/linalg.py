@@ -288,11 +288,6 @@ def cho_factor(a_gpu, uplo='L', lib='cula'):
     lib : str
         Library to use. May be either 'cula' or 'cusolver'.
 
-    Returns
-    -------
-    result : pycuda.gpuarray.GPUArray
-        Cholesky factorised matrix
-
     Notes
     -----
     If using CULA, double precision is only supported if the standard version of the
@@ -413,11 +408,6 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
         Input matrix of shape `(m, 1)` to decompose.
     uplo: chr
         use the upper='U' or lower='L' (default) triangle of `a`.
-
-    Returns
-    -------
-    a: pycuda.gpuarray.GPUArray
-        Cholesky factorised matrix
 
     Notes
     -----
