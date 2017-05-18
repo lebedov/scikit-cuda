@@ -13,6 +13,7 @@ Linear Algebra Routines
    add_dot
    cho_factor
    cho_solve
+   cholesky
    conj
    det
    diag

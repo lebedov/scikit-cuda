@@ -273,9 +273,9 @@ def svd(a_gpu, jobu='A', jobvt='A', lib='cula'):
 
 def cho_factor(a_gpu, uplo='L', lib='cula'):
     """
-    Cholesky factorisation
+    Cholesky factorization.
 
-    Performs an in-place cholesky factorisation on the matrix `a`
+    Performs an in-place Cholesky factorization on the matrix `a`
     such that `a = x*x.T` or `x.T*x`, if the lower='L' or upper='U'
     triangle of `a` is used, respectively.
 
@@ -331,7 +331,7 @@ def cho_factor(a_gpu, uplo='L', lib='cula'):
                 raise ValueError('unsupported type')
             real_type = np.float64
         else:
-            raise ValueError('Cholesky factorisation not included in CULA Dense Free version')
+            raise ValueError('Cholesky factorization not included in CULA Dense Free version')
 
     elif lib == 'cusolver':
         if not _has_cusolver:
@@ -391,9 +391,78 @@ def cho_factor(a_gpu, uplo='L', lib='cula'):
 
     # In-place operation. No return matrix. Result is stored in the input matrix.
 
+def cholesky(a_gpu, uplo='L', lib='cula'):
+    """
+    Cholesky factorization.
+
+    Performs an in-place Cholesky factorization on the matrix `a`
+    such that `a = x*x.T` or `x.T*x`, if the lower='L' or upper='U'
+    triangle of `a` is used, respectively. All other entries in `a` are set to 0.
+
+    Parameters
+    ----------
+    a_gpu : pycuda.gpuarray.GPUArray
+        Input matrix of shape `(m, m)` to decompose.
+    uplo : {'U', 'L'}
+        Use upper or lower (default) triangle of 'a_gpu'
+    lib : str
+        Library to use. May be either 'cula' or 'cusolver'.
+
+    Notes
+    -----
+    If using CULA, double precision is only supported if the standard version of the
+    CULA Dense toolkit is installed.
+
+    Examples
+    --------
+    >>> import pycuda.gpuarray as gpuarray
+    >>> import pycuda.autoinit
+    >>> import numpy as np
+    >>> import scipy.linalg
+    >>> import skcuda.linalg as linalg
+    >>> linalg.init()
+    >>> a = np.array([[3.0,0.0],[0.0,7.0]])
+    >>> a = np.asarray(a, np.float64)
+    >>> a_gpu = gpuarray.to_gpu(a)
+    >>> cholesky(a_gpu)
+    >>> np.allclose(a_gpu.get(), scipy.linalg.cholesky(a)[0])
+    True
+    """
+
+    if a_gpu.dtype == np.float32:
+        use_double = 0
+        use_complex = 0
+    elif a_gpu.dtype == np.float64:
+        use_double = 1
+        use_complex = 0
+    elif a_gpu.dtype == np.complex64:
+        use_double = 0
+        use_complex = 1
+    elif a_gpu.dtype == np.complex128:
+        use_double = 1
+        use_complex = 1
+    else:
+        raise ValueError('unrecognized type')
+
+    cho_factor(a_gpu, uplo, lib)
+
+    N = a_gpu.shape[0]
+    dev = misc.get_current_device()
+    block_dim, grid_dim = misc.select_block_grid_sizes(dev, a_gpu.shape)
+
+    # Zero out the opposite triangle of the matrix
+    if cublas._CUBLAS_FILL_MODE[uplo] == 0: # 0 == L
+        func = _get_triu_kernel(use_double, use_complex, cols=N)
+    else:
+        func = _get_tril_kernel(use_double, use_complex, cols=N)
+
+    func(a_gpu, np.uint32(a_gpu.size),
+         block=block_dim,
+         grid=grid_dim)
+
 def cho_solve(a_gpu, b_gpu, uplo='L'):
     """
-    Cholesky solver
+    Cholesky solver.
 
     Solve a system of equations via cholesky factorization,
     i.e. `a*x = b`.
@@ -431,7 +500,6 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
     >>> cho_solve(a_gpu,b_gpu)
     >>> np.allclose(b_gpu.get(), scipy.linalg.cho_solve(scipy.linalg.cho_factor(a), b))
     True
-
     """
 
     if not _has_cula:
@@ -452,7 +520,7 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
             raise ValueError('unsupported type')
         real_type = np.float64
     else:
-        raise ValueError('Cholesky factorisation not included in CULA Dense Free version')
+        raise ValueError('Cholesky factorization not included in CULA Dense Free version')
 
     # Since CUDA assumes that arrays are stored in column-major
     # format, the input matrix is assumed to be transposed:
@@ -1653,7 +1721,7 @@ def triu(a_gpu, k=0, overwrite=False, handle=None):
 
 def multiply(x_gpu, y_gpu, overwrite=False):
     """
-    Multiply arguments element-wise.
+    Element-wise array multiplication (Hadamard product).
 
     Parameters
     ----------

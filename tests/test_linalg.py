@@ -763,6 +763,20 @@ class test_linalg(TestCase):
         c = np.triu(cpu_cho_factor(x)[0])
         assert np.allclose(c, np.triu(x_gpu.get()))
 
+    def _impl_test_cholesky(self, N, dtype, lib='cula'):
+        from scipy.linalg import cholesky as cpu_cholesky
+        x = np.asarray(np.random.rand(N, N), dtype)
+        if np.iscomplexobj(x):
+            x += 1j*np.asarray(np.random.rand(N, N), dtype)
+            x = np.dot(np.conj(x.T), x)
+        else:
+            x = np.dot(x.T, x)
+        x_gpu = gpuarray.to_gpu(x)
+        linalg.cholesky(x_gpu, 'L', lib)
+        c = np.triu(cpu_cholesky(x))
+        d = np.tril(cpu_cholesky(x), -1)
+        assert np.allclose(c, np.triu(x_gpu.get())) and np.allclose(d, np.tril(x_gpu.get(), -1))
+
     @skipUnless(linalg._has_cula, 'CULA required')
     def test_cho_factor_cula_float32(self):
         self._impl_test_cho_factor(4, np.float32, 'cula')
@@ -779,6 +793,22 @@ class test_linalg(TestCase):
     def test_cho_factor_cula_complex128(self):
         self._impl_test_cho_factor(4, np.complex128, 'cula')
 
+    @skipUnless(linalg._has_cula, 'CULA required')
+    def test_cholesky_cula_float32(self):
+        self._impl_test_cholesky(4, np.float32, 'cula')
+
+    @skipUnless(linalg._has_cula, 'CULA required')
+    def test_cholesky_cula_float64(self):
+        self._impl_test_cholesky(4, np.float64, 'cula')
+
+    @skipUnless(linalg._has_cula, 'CULA required')
+    def test_cholesky_cula_complex64(self):
+        self._impl_test_cholesky(4, np.complex64, 'cula')
+
+    @skipUnless(linalg._has_cula, 'CULA required')
+    def test_cholesky_cula_complex128(self):
+        self._impl_test_cholesky(4, np.complex128, 'cula')
+
     def test_cho_factor_cusolver_float32(self):
         self._impl_test_cho_factor(4, np.float32, 'cusolver')
 
@@ -790,6 +820,18 @@ class test_linalg(TestCase):
 
     def test_cho_factor_cusolver_complex128(self):
         self._impl_test_cho_factor(4, np.complex128, 'cusolver')
+
+    def test_cholesky_cusolver_float32(self):
+        self._impl_test_cholesky(4, np.float32, 'cusolver')
+
+    def test_cholesky_cusolver_float64(self):
+        self._impl_test_cholesky(4, np.float64, 'cusolver')
+
+    def test_cholesky_cusolver_complex64(self):
+        self._impl_test_cholesky(4, np.complex64, 'cusolver')
+
+    def test_cholesky_cusolver_complex128(self):
+        self._impl_test_cholesky(4, np.complex128, 'cusolver')
 
     @skipUnless(linalg._has_cula, 'CULA required')
     def test_cho_solve_float32(self):
@@ -1222,6 +1264,10 @@ def suite():
     s.addTest(test_linalg('test_cho_factor_cula_complex64'))
     s.addTest(test_linalg('test_cho_factor_cusolver_float32'))
     s.addTest(test_linalg('test_cho_factor_cusolver_complex64'))
+    s.addTest(test_linalg('test_cholesky_cula_float32'))
+    s.addTest(test_linalg('test_cholesky_cula_complex64'))
+    s.addTest(test_linalg('test_cholesky_cusolver_float32'))
+    s.addTest(test_linalg('test_cholesky_cusolver_complex64'))
     s.addTest(test_linalg('test_cho_solve_float32'))
     s.addTest(test_linalg('test_inv_float32'))
     s.addTest(test_linalg('test_inv_complex64'))
@@ -1302,6 +1348,10 @@ def suite():
         s.addTest(test_linalg('test_cho_factor_cula_complex128'))
         s.addTest(test_linalg('test_cho_factor_cusolver_float64'))
         s.addTest(test_linalg('test_cho_factor_cusolver_complex128'))
+        s.addTest(test_linalg('test_cholesky_cula_float64'))
+        s.addTest(test_linalg('test_cholesky_cula_complex128'))
+        s.addTest(test_linalg('test_cholesky_cusolver_float64'))
+        s.addTest(test_linalg('test_cholesky_cusolver_complex128'))
         s.addTest(test_linalg('test_inv_float64'))
         s.addTest(test_linalg('test_inv_complex128'))
         s.addTest(test_linalg('test_add_diag_float64'))
