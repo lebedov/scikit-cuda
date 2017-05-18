@@ -17,6 +17,7 @@ Release 0.5.2 (under development)
 * Allow specification of order in misc.zeros and misc.ones.
 * Preserve strides in misc.zeros_like and misc.ones_like.
 * Add support for computing Cholesky factorization using CUSOLVER.
+* Add cholesky() function that zeros out non-factor entries in result.
 * Add support for CUDA 8.0 libraries (#171).
 * Workaround for libgomp + CUDA 8.0 weirdness (fix by Kevin Flansburg).
 * Fix broken matrix-vector dot product (#156).
