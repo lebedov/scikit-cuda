@@ -6,6 +6,8 @@ Python interface to CUSOLVER functions.
 Note: this module does not explicitly depend on PyCUDA.
 """
 
+import re
+
 from . import cudart
 
 if int(cudart._cudart_version) < 7000:
@@ -146,6 +148,32 @@ def cusolverCheckStatus(status):
             raise CUSOLVER_EXCEPTIONS[status]
         except KeyError:
             raise CUSOLVER_ERROR
+
+class _cusolver_version_req(object):
+    """
+    Decorator to replace function with a placeholder that raises an exception
+    if the installed CUSOLVER version is not greater than `v`.
+    """
+
+    def __init__(self, v):
+        self.vs = str(v)
+        if isinstance(v, int):
+            major = str(v)
+            minor = '0'
+        else:
+            major, minor = re.search('(\d+)\.(\d+)', self.vs).groups()
+        self.vi = major.ljust(2, '0')+minor.ljust(2, '0')
+
+    def __call__(self,f):
+        def f_new(*args,**kwargs):
+            raise NotImplementedError('CUSOLVER '+self.vs+' required')
+        f_new.__doc__ = f.__doc__
+
+        # Assumes that the CUSOLVER version is the same as that of the CUDART version:
+        if int(cudart._cudart_version) >= int(self.vi):
+            return f
+        else:
+            return f_new
 
 # Helper functions:
 
@@ -1145,7 +1173,7 @@ _libcusolver.cusolverDnSsyevd_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_void_p]
 def cusolverDnSsyevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
     """
-    Calculate size of work buffer used by culsolverDnSgebrd.
+    Calculate size of work buffer used by culsolverDnSsyevd.
 
     References
     ----------
@@ -1206,7 +1234,7 @@ _libcusolver.cusolverDnDsyevd_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_void_p]
 def cusolverDnDsyevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
     """
-    Calculate size of work buffer used by culsolverDnSgebrd.
+    Calculate size of work buffer used by culsolverDnDsyevd.
 
     References
     ----------
@@ -1267,7 +1295,7 @@ _libcusolver.cusolverDnCheevd_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_void_p]
 def cusolverDnCheevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
     """
-    Calculate size of work buffer used by culsolverDnSgebrd.
+    Calculate size of work buffer used by culsolverDnCheevd.
 
     References
     ----------
@@ -1328,7 +1356,7 @@ _libcusolver.cusolverDnZheevd_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_void_p]
 def cusolverDnZheevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
     """
-    Calculate size of work buffer used by culsolverDnSgebrd.
+    Calculate size of work buffer used by culsolverDnZheevd.
 
     References
     ----------
