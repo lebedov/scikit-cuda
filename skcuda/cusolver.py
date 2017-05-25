@@ -1162,15 +1162,17 @@ def cusolverDnZgeqrf(handle, m, n, A, lda, TAU, Workspace, Lwork, devInfo):
     cusolverCheckStatus(status)
 
 # SYEVD
-_libcusolver.cusolverDnSsyevd_bufferSize.restype = int
-_libcusolver.cusolverDnSsyevd_bufferSize.argtypes = [ctypes.c_void_p,
-                                                     ctypes.c_int,
-                                                     ctypes.c_int,
-                                                     ctypes.c_int,
-                                                     ctypes.c_void_p,
-                                                     ctypes.c_int,
-                                                     ctypes.c_void_p,
-                                                     ctypes.c_void_p]
+if cudart._cudart_version >= 8000:
+    _libcusolver.cusolverDnSsyevd_bufferSize.restype = int
+    _libcusolver.cusolverDnSsyevd_bufferSize.argtypes = [ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_void_p]
+@_cusolver_version_req(8.0)
 def cusolverDnSsyevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
     """
     Calculate size of work buffer used by culsolverDnSsyevd.
@@ -1194,18 +1196,19 @@ def cusolverDnSsyevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
     cusolverCheckStatus(status)
     return Lwork.value
 
-
-_libcusolver.cusolverDnSsyevd.restype = int
-_libcusolver.cusolverDnSsyevd.argtypes = [ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p]
+if cudart._cudart_version >= 8000:
+    _libcusolver.cusolverDnSsyevd.restype = int
+    _libcusolver.cusolverDnSsyevd.argtypes = [ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p]
+@_cusolver_version_req(8.0)
 def cusolverDnSsyevd(handle, jobz, uplo, n, A, lda, W, Workspace, Lwork,
                      devInfo):
     status = _libcusolver.cusolverDnSsyevd(
@@ -1222,16 +1225,17 @@ def cusolverDnSsyevd(handle, jobz, uplo, n, A, lda, W, Workspace, Lwork,
     )
     cusolverCheckStatus(status)
 
-
-_libcusolver.cusolverDnDsyevd_bufferSize.restype = int
-_libcusolver.cusolverDnDsyevd_bufferSize.argtypes = [ctypes.c_void_p,
-                                                     ctypes.c_int,
-                                                     ctypes.c_int,
-                                                     ctypes.c_int,
-                                                     ctypes.c_void_p,
-                                                     ctypes.c_int,
-                                                     ctypes.c_void_p,
-                                                     ctypes.c_void_p]
+if cudart._cudart_version >= 8000:
+    _libcusolver.cusolverDnDsyevd_bufferSize.restype = int
+    _libcusolver.cusolverDnDsyevd_bufferSize.argtypes = [ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_void_p]
+@_cusolver_version_req(8.0)
 def cusolverDnDsyevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
     """
     Calculate size of work buffer used by culsolverDnDsyevd.
@@ -1255,18 +1259,19 @@ def cusolverDnDsyevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
     cusolverCheckStatus(status)
     return Lwork.value
 
-
-_libcusolver.cusolverDnDsyevd.restype = int
-_libcusolver.cusolverDnDsyevd.argtypes = [ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p]
+if cudart._cudart_version >= 8000:
+    _libcusolver.cusolverDnDsyevd.restype = int
+    _libcusolver.cusolverDnDsyevd.argtypes = [ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p]
+@_cusolver_version_req(8.0)
 def cusolverDnDsyevd(handle, jobz, uplo, n, A, lda, W, Workspace, Lwork,
                      devInfo):
     status = _libcusolver.cusolverDnDsyevd(
@@ -1284,15 +1289,17 @@ def cusolverDnDsyevd(handle, jobz, uplo, n, A, lda, W, Workspace, Lwork,
     cusolverCheckStatus(status)
 
 
-_libcusolver.cusolverDnCheevd_bufferSize.restype = int
-_libcusolver.cusolverDnCheevd_bufferSize.argtypes = [ctypes.c_void_p,
-                                                     ctypes.c_int,
-                                                     ctypes.c_int,
-                                                     ctypes.c_int,
-                                                     ctypes.c_void_p,
-                                                     ctypes.c_int,
-                                                     ctypes.c_void_p,
-                                                     ctypes.c_void_p]
+if cudart._cudart_version >= 8000:
+    _libcusolver.cusolverDnCheevd_bufferSize.restype = int
+    _libcusolver.cusolverDnCheevd_bufferSize.argtypes = [ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_void_p]
+@_cusolver_version_req(8.0)
 def cusolverDnCheevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
     """
     Calculate size of work buffer used by culsolverDnCheevd.
@@ -1316,18 +1323,19 @@ def cusolverDnCheevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
     cusolverCheckStatus(status)
     return Lwork.value
 
-
-_libcusolver.cusolverDnCheevd.restype = int
-_libcusolver.cusolverDnCheevd.argtypes = [ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p]
+if cudart._cudart_version >= 8000:
+    _libcusolver.cusolverDnCheevd.restype = int
+    _libcusolver.cusolverDnCheevd.argtypes = [ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p]
+@_cusolver_version_req(8.0)
 def cusolverDnCheevd(handle, jobz, uplo, n, A, lda, W, Workspace, Lwork,
                      devInfo):
     status = _libcusolver.cusolverDnCheevd(
@@ -1345,15 +1353,17 @@ def cusolverDnCheevd(handle, jobz, uplo, n, A, lda, W, Workspace, Lwork,
     cusolverCheckStatus(status)
 
 
-_libcusolver.cusolverDnZheevd_bufferSize.restype = int
-_libcusolver.cusolverDnZheevd_bufferSize.argtypes = [ctypes.c_void_p,
-                                                     ctypes.c_int,
-                                                     ctypes.c_int,
-                                                     ctypes.c_int,
-                                                     ctypes.c_void_p,
-                                                     ctypes.c_int,
-                                                     ctypes.c_void_p,
-                                                     ctypes.c_void_p]
+if cudart._cudart_version >= 8000:
+    _libcusolver.cusolverDnZheevd_bufferSize.restype = int
+    _libcusolver.cusolverDnZheevd_bufferSize.argtypes = [ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_void_p]
+@_cusolver_version_req(8.0)
 def cusolverDnZheevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
     """
     Calculate size of work buffer used by culsolverDnZheevd.
@@ -1377,18 +1387,19 @@ def cusolverDnZheevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
     cusolverCheckStatus(status)
     return Lwork.value
 
-
-_libcusolver.cusolverDnZheevd.restype = int
-_libcusolver.cusolverDnZheevd.argtypes = [ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p,
-                                          ctypes.c_void_p,
-                                          ctypes.c_int,
-                                          ctypes.c_void_p]
+if cudart._cudart_version >= 8000:
+    _libcusolver.cusolverDnZheevd.restype = int
+    _libcusolver.cusolverDnZheevd.argtypes = [ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p]
+@_cusolver_version_req(8.0)
 def cusolverDnZheevd(handle, jobz, uplo, n, A, lda, W, Workspace, Lwork,
                      devInfo):
     status = _libcusolver.cusolverDnZheevd(

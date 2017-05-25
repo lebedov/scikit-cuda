@@ -192,7 +192,7 @@ def svd(a_gpu, jobu='A', jobvt='A', lib='cula'):
     jobu = jobu.upper()
     jobvt = jobvt.upper()
     if lib == 'cusolver' and (jobu != 'A' or jobvt != 'A') and \
-      cudart._cudart_version <= '7000':
+      cudart._cudart_version <= 7000:
          raise ValueError("CUSOLVER 7.0 only supports jobu = jobvt = 'A'")
 
     # Set the leading dimension and allocate u:
