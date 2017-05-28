@@ -39,7 +39,7 @@ if not on_rtd:
                         'numpy >= 1.2.0',
                         'pycuda >= 2014.1']
     tests_require = ['nose >= 0.11',
-                    'scipy >= 0.14.0'],
+                     'scipy >= 0.14.0'],
     extras_require = dict(scipy = ['scipy >= 0.14.0'],
                           sphinx = ['sphinx >= 1.3'],
                           sphinx_rtd_theme = ['sphinx_rtd_theme >= 0.1.6'])
