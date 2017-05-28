@@ -457,6 +457,99 @@ def cusolverDnZpotrf(handle, uplo, n, A, lda, Workspace, devIpiv, devInfo):
                                            int(devInfo))
     cusolverCheckStatus(status)
 
+# SPOTRS, DPOTRS, CPOTRS, ZPOTRS
+_libcusolver.cusolverDnSpotrs.restype = int
+_libcusolver.cusolverDnSpotrs.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p]
+def cusolverDnSpotrs(handle, uplo, n, nrhs, A, lda, B, ldb, devInfo):
+    """
+    Solve real single precision Hermitian positive-definite system.
+
+    References
+    ----------
+    `cusolverDn<t>potrs <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrs>`_
+    """
+
+    status = _libcusolver.cusolverDnSpotrs(handle, uplo, n, nrhs, int(A), lda,
+                                           int(B), ldb, int(devInfo))
+    cusolverCheckStatus(status)
+
+_libcusolver.cusolverDnDpotrs.restype = int
+_libcusolver.cusolverDnDpotrs.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p]
+def cusolverDnDpotrs(handle, uplo, n, nrhs, A, lda, B, ldb, devInfo):
+    """
+    Solve real double precision Hermitian positive-definite system.
+
+    References
+    ----------
+    `cusolverDn<t>potrs <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrs>`_
+    """
+
+    status = _libcusolver.cusolverDnDpotrs(handle, uplo, n, nrhs, int(A), lda,
+                                           int(B), ldb, int(devInfo))
+    cusolverCheckStatus(status)
+
+_libcusolver.cusolverDnCpotrs.restype = int
+_libcusolver.cusolverDnCpotrs.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p]
+def cusolverDnCpotrs(handle, uplo, n, nrhs, A, lda, B, ldb, devInfo):
+    """
+    Solve complex single precision Hermitian positive-definite system.
+
+    References
+    ----------
+    `cusolverDn<t>potrs <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrs>`_
+    """
+
+    status = _libcusolver.cusolverDnCpotrs(handle, uplo, n, nrhs, int(A), lda,
+                                           int(B), ldb, int(devInfo))
+    cusolverCheckStatus(status)
+
+_libcusolver.cusolverDnZpotrs.restype = int
+_libcusolver.cusolverDnZpotrs.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p]
+def cusolverDnZpotrs(handle, uplo, n, nrhs, A, lda, B, ldb, devInfo):
+    """
+    Solve complex double precision Hermitian positive-definite system.
+
+    References
+    ----------
+    `cusolverDn<t>potrs <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrs>`_
+    """
+
+    status = _libcusolver.cusolverDnZpotrs(handle, uplo, n, nrhs, int(A), lda,
+                                           int(B), ldb, int(devInfo))
+    cusolverCheckStatus(status)
+
 # SGETRF, DGETRF, CGETRF, ZGETRF
 _libcusolver.cusolverDnSgetrf_bufferSize.restype = int
 _libcusolver.cusolverDnSgetrf_bufferSize.argtypes = [ctypes.c_void_p,

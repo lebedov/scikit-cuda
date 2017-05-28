@@ -460,14 +460,14 @@ def cholesky(a_gpu, uplo='L', lib='cula'):
          block=block_dim,
          grid=grid_dim)
 
-def cho_solve(a_gpu, b_gpu, uplo='L'):
+def cho_solve(a_gpu, b_gpu, uplo='L', lib='cula'):
     """
     Cholesky solver.
 
-    Solve a system of equations via cholesky factorization,
+    Solve a system of equations via Cholesky factorization,
     i.e. `a*x = b`.
     Overwrites `b` to give `inv(a)*b`, and overwrites the chosen triangle
-    of `a` with factorized triangle
+    of `a` with factorized triangle.
 
     Parameters
     ----------
@@ -476,11 +476,13 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
     b : pycuda.gpuarray.GPUArray
         Input matrix of shape `(m, 1)` to decompose.
     uplo: chr
-        use the upper='U' or lower='L' (default) triangle of `a`.
+        Use the upper='U' or lower='L' (default) triangle of `a`.
+    lib : str
+        Library to use. May be either 'cula' or 'cusolver'.
 
     Notes
     -----
-    Double precision is only supported if the standard version of the
+    If using CULA, double precision is only supported if the standard version of the
     CULA Dense toolkit is installed.
 
     Examples
@@ -491,36 +493,54 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
     >>> import scipy.linalg
     >>> import skcuda.linalg as linalg
     >>> linalg.init()
-    >>> a = np.array([[3.0,0.0],[0.0,7.0]])
-    >>> a = np.asarray(a, np.float64)
+    >>> a = np.array([[3, 0], [0, 7]]).asarray(np.float64)
     >>> a_gpu = gpuarray.to_gpu(a)
-    >>> b = np.array([11.,19.])
-    >>> b = np.asarray(b, np.float64)
+    >>> b = np.array([11, 19]).astype(np.float64)
     >>> b_gpu  = gpuarray.to_gpu(b)
-    >>> cho_solve(a_gpu,b_gpu)
+    >>> cho_solve(a_gpu, b_gpu)
     >>> np.allclose(b_gpu.get(), scipy.linalg.cho_solve(scipy.linalg.cho_factor(a), b))
     True
     """
 
-    if not _has_cula:
-        raise NotImplementedError('CULA not installed')
+    alloc = misc._global_cublas_allocator
 
     data_type = a_gpu.dtype.type
-    real_type = np.float32
-    if cula._libcula_toolkit == 'standard':
+    if lib == 'cula':
+        if not _has_cula:
+            raise NotImplementedError('CULA not installed')
+
+        if cula._libcula_toolkit == 'standard':
+            if data_type == np.complex64:
+                func = cula.culaDeviceCposv
+            elif data_type == np.float32:
+                func = cula.culaDeviceSposv
+            elif data_type == np.complex128:
+                func = cula.culaDeviceZposv
+            elif data_type == np.float64:
+                func = cula.culaDeviceDposv
+            else:
+                raise ValueError('unsupported type')
+        else:
+            raise ValueError('Cholesky factorization not included in CULA Dense Free version')
+
+    elif lib == 'cusolver':
+        if not _has_cusolver:
+            raise NotImplementedError('CUSOLVER not installed')
+        cusolverHandle = misc._global_cusolver_handle
+
         if data_type == np.complex64:
-            cula_func = cula.culaDeviceCposv
+            func = cusolver.cusolverDnCpotrs
         elif data_type == np.float32:
-            cula_func = cula.culaDeviceSposv
+            func = cusolver.cusolverDnSpotrs
         elif data_type == np.complex128:
-            cula_func = cula.culaDeviceZposv
+            func = cusolver.cusolverDnZpotrs
         elif data_type == np.float64:
-            cula_func = cula.culaDeviceDposv
+            func = cusolver.cusolverDnDpotrs
         else:
             raise ValueError('unsupported type')
-        real_type = np.float64
+
     else:
-        raise ValueError('Cholesky factorization not included in CULA Dense Free version')
+        raise ValueError('invalid library specified')
 
     # Since CUDA assumes that arrays are stored in column-major
     # format, the input matrix is assumed to be transposed:
@@ -545,16 +565,24 @@ def cho_solve(a_gpu, b_gpu, uplo='L'):
         if b_shape[1] > 1:
             raise ValueError('only vectors allowed in c-order RHS')
 
-    # Assuming we are only solving for a vector. Hence, nrhs = 1
-    cula_func(uplo, na, b_shape[1], int(a_gpu.gpudata), lda,
-              int(b_gpu.gpudata), ldb)
+    if lib == 'cula':
+        # Assuming we are only solving for a vector. Hence, nrhs = 1
+        func(uplo, na, b_shape[1], int(a_gpu.gpudata), lda,
+             int(b_gpu.gpudata), ldb)
 
-    # Free internal CULA memory:
-    cula.culaFreeBuffers()
+        # Free internal CULA memory:
+        cula.culaFreeBuffers()
+    else:
+        # CUSOLVER expects uplo to be an int rather than a char:
+        uplo = cublas._CUBLAS_FILL_MODE[uplo]
+
+        # Assuming we are only solving for a vector. Hence, nrhs = 1
+        devInfo = gpuarray.empty(1, np.int32, allocator=alloc)
+        func(cusolverHandle, uplo, na, b_shape[1], int(a_gpu.gpudata), lda,
+             int(b_gpu.gpudata), ldb, int(devInfo.gpudata))
 
     # In-place operation. No return matrix. Result is stored in the input matrix
     # and in the input vector.
-
 
 def add_dot(a_gpu, b_gpu, c_gpu, transa='N', transb='N', alpha=1.0, beta=1.0, handle=None):
     """
@@ -574,7 +602,7 @@ def add_dot(a_gpu, b_gpu, c_gpu, transa='N', transb='N', alpha=1.0, beta=1.0, ha
     b_gpu : pycuda.gpuarray.GPUArray
         Input array.
     c_gpu : pycuda.gpuarray.GPUArray
-        Cummulative array.
+        Cumulative array.
     transa : char
         If 'T', compute the product of the transpose of `a_gpu`.
         If 'C', compute the product of the Hermitian of `a_gpu`.
@@ -593,6 +621,7 @@ def add_dot(a_gpu, b_gpu, c_gpu, transa='N', transb='N', alpha=1.0, beta=1.0, ha
     -----
     The matrices must all contain elements of the same data type.
     """
+
     if handle is None:
         handle = misc._global_cublas_handle
 
