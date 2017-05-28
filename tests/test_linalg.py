@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Unit tests for scikits.cuda.linalg
+Unit tests for skcuda.linalg
 """
 
 from unittest import main, makeSuite, skipUnless, TestCase, TestSuite
@@ -23,12 +23,6 @@ dtype_to_rtol = {np.float32: 1e-5,
                  np.complex64: 1e-5,
                  np.float64: 1e-5,
                  np.complex128: 1e-5}
-
-atol_float32 = dtype_to_atol[np.float32]
-atol_float64 = dtype_to_atol[np.float64]
-
-rtol_float32 = dtype_to_rtol[np.float32]
-rtol_float64 = dtype_to_rtol[np.float64]
 
 class test_linalg(TestCase):
     def setUp(self):

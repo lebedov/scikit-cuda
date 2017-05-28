@@ -1,5 +1,5 @@
 """
-Unit tests for scikits.cuda.integrate
+Unit tests for skcuda.integrate
 """
 
 from unittest import main, TestCase, TestSuite

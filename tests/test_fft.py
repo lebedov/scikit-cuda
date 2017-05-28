@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Unit tests for scikits.cuda.fft
+Unit tests for skcuda.fft
 """
 
 from __future__ import division

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Unit tests for scikits.cuda.linalg
+Unit tests for skcuda.special
 """
 
 

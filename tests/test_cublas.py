@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Unit tests for scikits.cuda.cublas
+Unit tests for skcuda.cublas
 """
 
 from unittest import main, makeSuite, TestCase, TestSuite
