@@ -1003,44 +1003,61 @@ class test_linalg(TestCase):
     def test_cho_solve_cusolver_complex128(self):
         self._impl_test_cho_solve(4, np.complex128, 'cusolver')
 
-    def _impl_test_inv(self, dtype):
+    def _impl_test_inv(self, dtype, lib):
         from scipy.linalg import inv as cpu_inv
         x = np.asarray(np.random.rand(4, 4), dtype)
         x = np.dot(x.T, x)
         x_gpu = gpuarray.to_gpu(x)
         xinv = cpu_inv(x)
-        xinv_gpu = linalg.inv(x_gpu)
+        xinv_gpu = linalg.inv(x_gpu, lib=lib)
         assert_allclose(xinv, xinv_gpu.get(),
                             rtol=dtype_to_rtol[dtype],
                             atol=dtype_to_atol[dtype])
         assert xinv_gpu is not x_gpu
-        xinv_gpu = linalg.inv(x_gpu, overwrite=True)
+        xinv_gpu = linalg.inv(x_gpu, overwrite=True, lib=lib)
         assert_allclose(xinv, xinv_gpu.get(),
                             rtol=dtype_to_rtol[dtype],
                             atol=dtype_to_atol[dtype])
         assert xinv_gpu is x_gpu
 
     @skipUnless(linalg._has_cula, 'CULA required')
-    def test_inv_exceptions(self):
+    def test_inv_cula_exceptions(self):
         x = np.asarray([[1, 2], [2, 4]], np.float32)
         x_gpu = gpuarray.to_gpu(x)
-        assert_raises(linalg.LinAlgError, linalg.inv, x_gpu)
+        assert_raises(linalg.LinAlgError, linalg.inv, x_gpu, lib='cula')
+
+    def test_inv_cusolver_exceptions(self):
+        x = np.asarray([[1, 2], [2, 4]], np.float32)
+        x_gpu = gpuarray.to_gpu(x)
+        assert_raises(linalg.LinAlgError, linalg.inv, x_gpu, lib='cusolver')
 
     @skipUnless(linalg._has_cula, 'CULA required')
-    def test_inv_float32(self):
-        self._impl_test_inv(np.float32)
+    def test_inv_cula_float32(self):
+        self._impl_test_inv(np.float32, 'cula')
 
     @skipUnless(linalg._has_cula, 'CULA required')
-    def test_inv_float64(self):
-        self._impl_test_inv(np.float64)
+    def test_inv_cula_float64(self):
+        self._impl_test_inv(np.float64, 'cula')
 
     @skipUnless(linalg._has_cula, 'CULA required')
-    def test_inv_complex64(self):
-        self._impl_test_inv(np.complex64)
+    def test_inv_cula_complex64(self):
+        self._impl_test_inv(np.complex64, 'cula')
 
     @skipUnless(linalg._has_cula, 'CULA required')
-    def test_inv_complex128(self):
-        self._impl_test_inv(np.complex128)
+    def test_inv_cula_complex128(self):
+        self._impl_test_inv(np.complex128, 'cula')
+
+    def test_inv_cusolver_float32(self):
+        self._impl_test_inv(np.float32, 'cusolver')
+
+    def test_inv_cusolver_float64(self):
+        self._impl_test_inv(np.float64, 'cusolver')
+
+    def test_inv_cusolver_complex64(self):
+        self._impl_test_inv(np.complex64, 'cusolver')
+
+    def test_inv_cusolver_complex128(self):
+        self._impl_test_inv(np.complex128, 'cusolver')
 
     def _impl_test_add_diag(self, dtype):
         x = np.asarray(np.random.rand(4, 4), dtype)
@@ -1468,11 +1485,14 @@ def suite():
     s.addTest(test_linalg('test_cho_solve_cula_complex64'))
     s.addTest(test_linalg('test_cho_solve_cusolver_float32'))
     s.addTest(test_linalg('test_cho_solve_cusolver_complex64'))
-    s.addTest(test_linalg('test_inv_float32'))
-    s.addTest(test_linalg('test_inv_complex64'))
+    s.addTest(test_linalg('test_inv_cula_float32'))
+    s.addTest(test_linalg('test_inv_cula_complex64'))
+    s.addTest(test_linalg('test_inv_cusolver_float32'))
+    s.addTest(test_linalg('test_inv_cusolver_complex64'))
     s.addTest(test_linalg('test_add_diag_float32'))
     s.addTest(test_linalg('test_add_diag_complex64'))
-    s.addTest(test_linalg('test_inv_exceptions'))
+    s.addTest(test_linalg('test_inv_cula_exceptions'))
+    s.addTest(test_linalg('test_inv_cusolver_exceptions'))
     s.addTest(test_linalg('test_eye_large_float32'))
     s.addTest(test_linalg('test_trace_float32'))
     s.addTest(test_linalg('test_trace_complex64'))
@@ -1555,8 +1575,10 @@ def suite():
         s.addTest(test_linalg('test_cho_solve_cula_complex128'))
         s.addTest(test_linalg('test_cho_solve_cusolver_float64'))
         s.addTest(test_linalg('test_cho_solve_cusolver_complex128'))
-        s.addTest(test_linalg('test_inv_float64'))
-        s.addTest(test_linalg('test_inv_complex128'))
+        s.addTest(test_linalg('test_inv_cula_float64'))
+        s.addTest(test_linalg('test_inv_cula_complex128'))
+        s.addTest(test_linalg('test_inv_cusolver_float64'))
+        s.addTest(test_linalg('test_inv_cusolver_complex128'))
         s.addTest(test_linalg('test_add_diag_float64'))
         s.addTest(test_linalg('test_add_diag_complex128'))
         s.addTest(test_linalg('test_trace_float64'))

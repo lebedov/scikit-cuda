@@ -1926,7 +1926,7 @@ def scale(alpha, x_gpu, alpha_real=False, handle=None):
     else:
         raise ValueError('unsupported input type')
 
-def inv(a_gpu, overwrite=False, ipiv_gpu=None):
+def inv(a_gpu, overwrite=False, ipiv_gpu=None, lib='cula'):
     """
     Compute the inverse of a matrix.
 
@@ -1937,7 +1937,9 @@ def inv(a_gpu, overwrite=False, ipiv_gpu=None):
     overwrite : bool (default: False)
         Discard data in `a` (may improve performance).
     ipiv_gpu : pycuda.gpuarray.GPUArray (optional)
-        Temporary array of size n, can be supplied to save allocations.
+        Temporary array of size `n`, can be supplied to save allocations.
+    lib : str
+        Library to use. May be either 'cula' or 'cusolver'.
 
     Returns
     -------
@@ -1951,26 +1953,18 @@ def inv(a_gpu, overwrite=False, ipiv_gpu=None):
     ValueError :
         * If `a` is not square, or not 2-dimensional.
         * If ipiv was not None but had the wrong dtype or shape.
+
+    Notes
+    -----
+    When the CUSOLVER backend is selected, an extra copy will be performed if
+    `overwrite` is set to transfer the result back into the input matrix.
     """
 
-    if not _has_cula:
-        raise NotImplementedError('CULA not installed')
+    alloc = misc._global_cublas_allocator
+    data_dtype = a_gpu.dtype.type
 
     if len(a_gpu.shape) != 2 or a_gpu.shape[0] != a_gpu.shape[1]:
         raise ValueError('expected square matrix')
-
-    if (a_gpu.dtype == np.complex64):
-        getrf = cula.culaDeviceCgetrf
-        getri = cula.culaDeviceCgetri
-    elif (a_gpu.dtype == np.float32):
-        getrf = cula.culaDeviceSgetrf
-        getri = cula.culaDeviceSgetri
-    elif (a_gpu.dtype == np.complex128):
-        getrf = cula.culaDeviceZgetrf
-        getri = cula.culaDeviceZgetri
-    elif (a_gpu.dtype == np.float64):
-        getrf = cula.culaDeviceDgetrf
-        getri = cula.culaDeviceDgetri
 
     n = int(a_gpu.shape[0]) # workaround for bug #131
     if ipiv_gpu is None:
@@ -1979,14 +1973,78 @@ def inv(a_gpu, overwrite=False, ipiv_gpu=None):
     elif ipiv_gpu.dtype != np.int32 or np.prod(ipiv_gpu.shape) < n:
         raise ValueError('invalid ipiv provided')
 
-    out = a_gpu if overwrite else a_gpu.copy()
-    try:
-        getrf(n, n, out.gpudata, n, ipiv_gpu.gpudata)
-        getri(n, out.gpudata, n, ipiv_gpu.gpudata)
-    except cula.culaDataError as e:
-        raise LinAlgError(e)
-    return out
+    if lib == 'cula':
+        if not _has_cula:
+            raise NotImplementedError('CULA not installed')
 
+        if (data_dtype == np.complex64):
+            getrf = cula.culaDeviceCgetrf
+            getri = cula.culaDeviceCgetri
+        elif (data_dtype == np.float32):
+            getrf = cula.culaDeviceSgetrf
+            getri = cula.culaDeviceSgetri
+        elif (data_dtype == np.complex128):
+            getrf = cula.culaDeviceZgetrf
+            getri = cula.culaDeviceZgetri
+        elif (data_dtype == np.float64):
+            getrf = cula.culaDeviceDgetrf
+            getri = cula.culaDeviceDgetri
+
+        out = a_gpu if overwrite else a_gpu.copy()
+        try:
+            getrf(n, n, out.gpudata, n, ipiv_gpu.gpudata)
+            getri(n, out.gpudata, n, ipiv_gpu.gpudata)
+        except cula.culaDataError as e:
+            raise LinAlgError(e)
+        return out
+    elif lib == 'cusolver':
+        if (data_dtype == np.complex64):
+            getrf = cusolver.cusolverDnCgetrf
+            bufsize = cusolver.cusolverDnCgetrf_bufferSize
+            getrs = cusolver.cusolverDnCgetrs
+        elif (data_dtype == np.float32):
+            getrf = cusolver.cusolverDnSgetrf
+            bufsize = cusolver.cusolverDnSgetrf_bufferSize
+            getrs = cusolver.cusolverDnSgetrs
+        elif (data_dtype == np.complex128):
+            getrf = cusolver.cusolverDnZgetrf
+            bufsize = cusolver.cusolverDnZgetrf_bufferSize
+            getrs = cusolver.cusolverDnZgetrs
+        elif (data_dtype == np.float64):
+            getrf = cusolver.cusolverDnDgetrf
+            bufsize = cusolver.cusolverDnDgetrf_bufferSize
+            getrs = cusolver.cusolverDnDgetrs
+
+        try:
+            in_gpu = a_gpu if overwrite else a_gpu.copy()
+            Lwork = bufsize(misc._global_cusolver_handle, n, n, in_gpu.gpudata, n)
+            Work = gpuarray.empty(Lwork, data_dtype, allocator=alloc)
+            devInfo = gpuarray.empty(1, np.int32, allocator=alloc)
+            getrf(misc._global_cusolver_handle, n, n, in_gpu.gpudata, n, 
+                  Work.gpudata, ipiv_gpu.gpudata, devInfo.gpudata)
+        except cusolver.CUSOLVER_ERROR as e:
+            raise LinAlgError(e)
+
+        d = devInfo.get()[0]
+        if d != 0:
+            raise LinAlgError(d) # raised for singular matrix or bad params
+        try:
+            b_gpu = eye(n, data_dtype)
+            getrs(misc._global_cusolver_handle, cublas._CUBLAS_OP['n'], n, n,
+                  in_gpu.gpudata, n, ipiv_gpu.gpudata, b_gpu.gpudata, n,
+                  devInfo.gpudata)
+
+            # Since CUSOLVER's getrs functions save their output in b_gpu, we
+            # need to copy it back to the input matrix if overwrite is requested:
+            if overwrite:
+                a_gpu.set(b_gpu)
+                return a_gpu
+            else:
+                return b_gpu
+        except cusolver.CUSOLVER_ERROR as e:
+            raise LinAlgError(e)
+    else:
+        raise ValueError('invalid library specified')
 
 def trace(x_gpu, handle=None):
     """
