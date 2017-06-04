@@ -956,7 +956,7 @@ class test_linalg(TestCase):
 
         x_gpu = gpuarray.to_gpu(x)
         y_gpu = gpuarray.to_gpu(y)
-        linalg.cho_solve(x_gpu, y_gpu)
+        linalg.cho_solve(x_gpu, y_gpu, lib=lib)
         assert_allclose(c, y_gpu.get(), atol=1e-1) # need higher tolerance for
                                                    # this test
 
@@ -972,7 +972,7 @@ class test_linalg(TestCase):
 
         x_gpu = gpuarray.to_gpu(x)
         y_gpu = gpuarray.to_gpu(y)
-        linalg.cho_solve(x_gpu, y_gpu)
+        linalg.cho_solve(x_gpu, y_gpu, lib=lib)
         assert_allclose(c, y_gpu.get(), atol=1e-1)
 
     @skipUnless(linalg._has_cula, 'CULA required')
