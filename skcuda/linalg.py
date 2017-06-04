@@ -576,6 +576,10 @@ def cho_solve(a_gpu, b_gpu, uplo='L', lib='cula'):
         # CUSOLVER expects uplo to be an int rather than a char:
         uplo = cublas._CUBLAS_FILL_MODE[uplo]
 
+        # Since CUSOLVER doesn't implement POSV as of 8.0, we need to factor the
+        # given matrix before calling POTRS:
+        cho_factor(a_gpu, uplo, lib)
+
         # Assuming we are only solving for a vector. Hence, nrhs = 1
         devInfo = gpuarray.empty(1, np.int32, allocator=alloc)
         func(cusolverHandle, uplo, na, b_shape[1], int(a_gpu.gpudata), lda,
