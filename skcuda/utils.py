@@ -48,7 +48,8 @@ except ImportError:
             cmds = ['objdump', '-p', filename]
 
         try:
-            p = subprocess.Popen(cmds, stdout=subprocess.PIPE)
+            p = subprocess.Popen(cmds, stdout=subprocess.PIPE,
+                                 env=dict(os.environ, LANG="en"))
             out = p.communicate()[0].decode()
         except:
             raise RuntimeError('error executing {0}'.format(cmds))
