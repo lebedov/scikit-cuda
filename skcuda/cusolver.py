@@ -1254,6 +1254,103 @@ def cusolverDnZgeqrf(handle, m, n, A, lda, TAU, Workspace, Lwork, devInfo):
                                            int(devInfo))
     cusolverCheckStatus(status)
 
+# SORGQR, DORGQR, CUNGQR, ZUNGQR
+_libcusolver.cusolverDnSorgqr.restype = int
+_libcusolver.cusolverDnSorgqr.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p]
+def cusolverDnSorgqr(handle, m, n, k, A, lda, tau, work, lwork, devInfo):
+    """
+    Create unitary m x n matrix from single precision real reflection vectors.
+
+    References
+    ----------
+    `cusolverDn<t>orgqr <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-orgqr>`_
+    """
+
+    status = _libcusolver.cusolverDnSorgqr(handle, m, n, k, int(A), lda,
+                                           int(tau), int(work), lwork, int(devInfo))
+    cusolverCheckStatus(status)
+
+_libcusolver.cusolverDnDorgqr.restype = int
+_libcusolver.cusolverDnDorgqr.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p]
+def cusolverDnDorgqr(handle, m, n, k, A, lda, tau, work, lwork, devInfo):
+    """
+    Create unitary m x n matrix from double precision real reflection vectors.
+
+    References
+    ----------
+    `cusolverDn<t>orgqr <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-orgqr>`_
+    """
+
+    status = _libcusolver.cusolverDnDorgqr(handle, m, n, k, int(A), lda,
+                                           int(tau), int(work), lwork, int(devInfo))
+    cusolverCheckStatus(status)
+
+_libcusolver.cusolverDnCungqr.restype = int
+_libcusolver.cusolverDnCungqr.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p]
+def cusolverDnCungqr(handle, m, n, k, A, lda, tau, work, lwork, devInfo):
+    """
+    Create unitary m x n matrix from single precision complex reflection vectors.
+
+    References
+    ----------
+    `cusolverDn<t>orgqr <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-orgqr>`_
+    """
+
+    status = _libcusolver.cusolverDnCungqr(handle, m, n, k, int(A), lda,
+                                           int(tau), int(work), lwork, int(devInfo))
+    cusolverCheckStatus(status)
+
+_libcusolver.cusolverDnZungqr.restype = int
+_libcusolver.cusolverDnZungqr.argtypes = [ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p,
+                                          ctypes.c_void_p,
+                                          ctypes.c_int,
+                                          ctypes.c_void_p]
+def cusolverDnZungqr(handle, m, n, k, A, lda, tau, work, lwork, devInfo):
+    """
+    Create unitary m x n matrix from double precision complex reflection vectors.
+
+    References
+    ----------
+    `cusolverDn<t>orgqr <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-orgqr>`_
+    """
+
+    status = _libcusolver.cusolverDnZungqr(handle, m, n, k, int(A), lda,
+                                           int(tau), int(work), lwork, int(devInfo))
+    cusolverCheckStatus(status)
+
 # SYEVD
 if cudart._cudart_version >= 8000:
     _libcusolver.cusolverDnSsyevd_bufferSize.restype = int
