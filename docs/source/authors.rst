@@ -11,7 +11,10 @@ is developed independently of PyCUDA.
 Special thanks are due to the following parties for their contributions:
 
 - `Frédéric Bastien <https://github.com/nouiz>`_ - CUBLAS version detection enhancements.
-- `David Wei Chiang <https://github.com/davidweichiang>`_ - Improvements to vectorized functions, bug fixes.
+- `Arnaud Bergeron <https://github.com/abergeron>`_ - Fix to prevent LANG from 
+  affecting objdump output.
+- `David Wei Chiang <https://github.com/davidweichiang>`_ - Improvements to 
+  vectorized functions, bug fixes.
 - `Sander Dieleman <https://github.com/benanne>`_ - CUBLAS 5 bindings.
 - `Chris Capdevila <https://github.com/capdevc>`_ - MacOS X library search fix.
 - `Ben Erichson <https://github.com/Benli11>`_ - QR decomposition, eigenvalue/eigenvector computation, Dynamic 

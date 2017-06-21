@@ -26,7 +26,9 @@ Release 0.5.2 (under development)
 * Skip CULA-dependent unit tests when CULA isn't present.
 * CUSOLVER support for symmetric eigenvalue decomposition (enh. by Bryant Menn).
 * CUSOLVER support for matrix inversion (#198).
-
+* Prevent objdump output from changing due to environment language (fix by 
+  Arnaud Bergeron).
+  
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------
 * More CUSOLVER wrappers.
