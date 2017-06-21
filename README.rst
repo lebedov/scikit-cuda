@@ -8,10 +8,9 @@ Package Description
 scikit-cuda provides Python interfaces to many of the functions in the CUDA
 device/runtime, CUBLAS, CUFFT, and CUSOLVER libraries distributed as part of
 NVIDIA's `CUDA Programming Toolkit <http://www.nvidia.com/cuda/>`_, as well as
-interfaces to select functions in the free and standard versions of the `CULA
-Dense Toolkit <http://www.culatools.com/dense>`_.  Both low-level wrapper
-functions similar to their C counterparts and high-level functions comparable to
-those in `NumPy and Scipy <http://www.scipy.org>`_ are provided.
+interfaces to select functions in the `CULA Dense Toolkit <http://www.culatools.com/dense>`_.
+Both low-level wrapper functions similar to their C counterparts and high-level
+functions comparable to those in `NumPy and Scipy <http://www.scipy.org>`_ are provided.
 
 .. image:: https://zenodo.org/badge/doi/10.5281/zenodo.40565.svg
     :target: http://dx.doi.org/10.5281/zenodo.40565
@@ -33,9 +32,11 @@ those in `NumPy and Scipy <http://www.scipy.org>`_ are provided.
 
 Documentation
 -------------
-Package documentation is available at `<http://scikit-cuda.readthedocs.org/>`_.
-Many of the high-level functions have examples in their docstrings. More illustrations
-of how to use both the wrappers and high-level functions can be found in the ``demos/`` and ``tests/`` subdirectories. 
+Package documentation is available at
+`<http://scikit-cuda.readthedocs.org/>`_.  Many of the high-level
+functions have examples in their docstrings. More illustrations of how
+to use both the wrappers and high-level functions can be found in the
+``demos/`` and ``tests/`` subdirectories.
 
 Development
 -----------
@@ -88,8 +89,9 @@ file for more information.
 
 Note Regarding CULA Availability
 --------------------------------
-The CULA library is available to premium tier users of `Celerity Tools 
-<http://www.celeritytools.com>`_ (EM Photonics' new HPC site).
+As of 2017, the CULA toolkit is available to premium tier users of
+`Celerity Tools <http://www.celeritytools.com>`_ (EM Photonics' new
+HPC site).
 
 Related
 -------

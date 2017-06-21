@@ -45,10 +45,9 @@ To run the unit tests, the following packages are also required:
 * `nose <http://code.google.com/p/python-nose/>`_ 0.11 or later.
 * `SciPy <http://www.scipy.org>`_ 0.14.0 or later.
 
-Some of the linear algebra functionality relies on the CULA Dense toolkit; the 
-single precision release of the toolkit is free of charge, but requires 
-registration.  Depending on the version of CULA installed, some functions may 
-not be available:
+Some of the linear algebra functionality relies on the CULA toolkit;
+as of 2017, it is available to premium tier users of E.M. Photonics' HPC site
+`Celerity Tools <http://www.celeritytools.com>`:
 
 * `CULA <http://www.culatools.com/dense/>`_ R16a or later.
 
