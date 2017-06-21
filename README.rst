@@ -86,6 +86,11 @@ See the included `AUTHORS
 <https://github.com/lebedov/scikit-cuda/blob/master/docs/source/authors.rst>`_
 file for more information.
 
+Note Regarding CULA Availability
+--------------------------------
+The CULA library is available to premium tier users of `Celerity Tools 
+<http://www.celeritytools.com>`_ (EM Photonics' new HPC site).
+
 Related
 -------
 Python wrappers for `cuDNN <https://developer.nvidia.com/cudnn>`_ by Hannes 
