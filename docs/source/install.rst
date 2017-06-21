@@ -47,7 +47,7 @@ To run the unit tests, the following packages are also required:
 
 Some of the linear algebra functionality relies on the CULA toolkit;
 as of 2017, it is available to premium tier users of E.M. Photonics' HPC site
-`Celerity Tools <http://www.celeritytools.com>`:
+`Celerity Tools <http://www.celeritytools.com>`_:
 
 * `CULA <http://www.culatools.com/dense/>`_ R16a or later.
 
