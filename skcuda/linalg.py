@@ -2212,7 +2212,7 @@ def det(a_gpu, overwrite=False, workspace_gpu=None, ipiv_gpu=None, handle=None, 
     else:
         raise ValueError('invalid library specified')
 
-def qr(a_gpu, mode='reduced', handle=None):
+def qr(a_gpu, mode='reduced', handle=None, lib='cula'):
     """
     QR Decomposition.
 
@@ -2231,6 +2231,8 @@ def qr(a_gpu, mode='reduced', handle=None):
     handle : int
         CUBLAS context. If no context is specified, the default handle from
         `skcuda.misc._global_cublas_handle` is used.
+    lib : str
+        Library to use. May be either 'cula' or 'cusolver'.
 
     Returns
     -------
@@ -2281,53 +2283,96 @@ def qr(a_gpu, mode='reduced', handle=None):
     True
     """
 
-    if not _has_cula:
-        raise NotImplementedError('CULA not installed')
+    alloc = misc._global_cublas_allocator
 
     if handle is None:
          handle = misc._global_cublas_handle
 
-    alloc = misc._global_cublas_allocator
-
-    # The free version of CULA only supports single precision floating
-    # point numbers:
     data_type = a_gpu.dtype.type
-    real_type = np.float32
-    if data_type == np.complex64:
-        cula_func_qr = cula.culaDeviceCgeqrf
-        cula_func_q = cula.culaDeviceCungqr
-        copy_func = cublas.cublasCcopy
-        use_double = 0
-        use_complex = 1
-        isreal=False
-    elif data_type == np.float32:
-        cula_func_qr = cula.culaDeviceSgeqrf
-        cula_func_q = cula.culaDeviceSorgqr
-        copy_func = cublas.cublasScopy
-        use_double = 0
-        use_complex = 0
-        isreal=True
-    else:
-        if cula._libcula_toolkit == 'standard':
-            if data_type == np.complex128:
-                cula_func_qr = cula.culaDeviceZgeqrf
-                cula_func_q = cula.culaDeviceZungqr
-                copy_func = cublas.cublasZcopy
-                use_double = 1
-                use_complex = 1
-                isreal=False
-            elif data_type == np.float64:
-                cula_func_qr = cula.culaDeviceDgeqrf
-                cula_func_q = cula.culaDeviceDorgqr
-                copy_func = cublas.cublasDcopy
-                use_double = 1
-                use_complex = 0
-                isreal=True
-            else:
-                raise ValueError('unsupported type')
-            real_type = np.float64
+
+    if lib == 'cula':
+        if not _has_cula:
+            raise NotImplementedError('CULA not installed')
+
+        # The free version of CULA only supports single precision floating
+        # point numbers:
+
+        real_type = np.float32
+        if data_type == np.complex64:
+            func_qr = cula.culaDeviceCgeqrf
+            func_q = cula.culaDeviceCungqr
+            copy_func = cublas.cublasCcopy
+            use_double = 0
+            use_complex = 1
+        elif data_type == np.float32:
+            func_qr = cula.culaDeviceSgeqrf
+            func_q = cula.culaDeviceSorgqr
+            copy_func = cublas.cublasScopy
+            use_double = 0
+            use_complex = 0
         else:
-            raise ValueError('double precision not supported')
+            if cula._libcula_toolkit == 'standard':
+                if data_type == np.complex128:
+                    func_qr = cula.culaDeviceZgeqrf
+                    func_q = cula.culaDeviceZungqr
+                    copy_func = cublas.cublasZcopy
+                    use_double = 1
+                    use_complex = 1
+                elif data_type == np.float64:
+                    func_qr = cula.culaDeviceDgeqrf
+                    func_q = cula.culaDeviceDorgqr
+                    copy_func = cublas.cublasDcopy
+                    use_double = 1
+                    use_complex = 0
+                else:
+                    raise ValueError('unsupported type')
+                real_type = np.float64
+            else:
+                raise ValueError('double precision not supported')
+    elif lib == 'cusolver':
+        if not _has_cusolver:
+            raise NotImplementedError('CUSOLVER not installed')
+
+        cusolverHandle = misc._global_cusolver_handle
+        if data_type == np.complex64:
+            func_qr = cusolver.cusolverDnCgeqrf
+            func_q = cusolver.cusolverDnCungqr
+            bufsize_qr = cusolver.cusolverDnCgeqrf_bufferSize
+            bufsize_q = cusolver.cusolverDnCungqr_bufferSize
+            copy_func = cublas.cublasCcopy
+            use_double = 0
+            use_complex = 1
+        elif data_type == np.float32:
+            func_qr = cusolver.cusolverDnSgeqrf
+            func_q = cusolver.cusolverDnSorgqr
+            bufsize_qr = cusolver.cusolverDnSgeqrf_bufferSize
+            bufsize_q = cusolver.cusolverDnSorgqr_bufferSize
+            copy_func = cublas.cublasScopy
+            use_double = 0
+            use_complex = 0
+        elif data_type == np.complex128:
+            real_type = np.float64
+            func_qr = cusolver.cusolverDnZgeqrf
+            func_q = cusolver.cusolverDnZungqr
+            bufsize_qr = cusolver.cusolverDnZgeqrf_bufferSize
+            bufsize_q = cusolver.cusolverDnZungqr_bufferSize
+            copy_func = cublas.cublasZcopy
+            use_double = 1
+            use_complex = 1
+        elif data_type == np.float64:
+            real_type = np.float64
+            func_qr = cusolver.cusolverDnDgeqrf
+            func_q = cusolver.cusolverDnDorgqr
+            bufsize_qr = cusolver.cusolverDnDgeqrf_bufferSize
+            bufsize_q = cusolver.cusolverDnDorgqr_bufferSize
+            copy_func = cublas.cublasDcopy
+            use_double = 1
+            use_complex = 0
+        else:
+            raise ValueError('unsupported type')
+
+    else:
+        raise ValueError('invalid library specified')
 
     # CUDA assumes that arrays are stored in column-major order
     m, n = np.array(a_gpu.shape, int)
@@ -2338,19 +2383,26 @@ def qr(a_gpu, mode='reduced', handle=None):
     # Set the leading dimension of the input matrix:
     lda = max(1, m)
 
-    # Set k
-    k = min(m,n)
+    # Set k:
+    k = min(m, n)
 
     # Set the leading dimension and allocate u:
     tau_gpu = gpuarray.empty(k, data_type, allocator=alloc, order='F')
 
     # Compute QR and check error status:
-    cula_func_qr(m, n, int(a_gpu.gpudata), lda, int(tau_gpu.gpudata))
+    if lib == 'cula':
+        func_qr(m, n, int(a_gpu.gpudata), lda, int(tau_gpu.gpudata))
+    else:
+        Lwork = bufsize_qr(cusolverHandle, m, n, int(a_gpu.gpudata), m)      
+        workspace_gpu = gpuarray.empty(Lwork, data_type, allocator=alloc)
+        devInfo = gpuarray.empty(1, np.int32, allocator=alloc)
+        func_qr(cusolverHandle, m, n, int(a_gpu.gpudata), lda, int(tau_gpu.gpudata),
+                int(workspace_gpu.gpudata), Lwork, int(devInfo.gpudata))
 
     if mode != 'economic':
-        # Get upper triangluar matrix R with dimensions (n,n)
+        # Get upper triangular matrix R with dimensions (n,n)
         # Note: _get_tril_kernel returns the upper triangular
-        r_gpu = gpuarray.empty((m,n), data_type, allocator=alloc, order='F')
+        r_gpu = gpuarray.empty((m, n), data_type, allocator=alloc, order='F')
         copy_func(handle, a_gpu.size, int(a_gpu.gpudata), 1, int(r_gpu.gpudata), 1)
 
         # tril
@@ -2360,14 +2412,23 @@ def qr(a_gpu, mode='reduced', handle=None):
         tril(r_gpu, np.uint32(r_gpu.size), block=block_dim, grid=grid_dim)
 
         # Mode r
-        if  mode=='r': return r_gpu[:k, :n]
+        if mode == 'r':
+            return r_gpu[:k, :n]
 
-    # Compute Q and check error status
-    cula_func_q(m, n, k, int(a_gpu.gpudata), lda, int(tau_gpu.gpudata))
-    q_gpu = a_gpu #pointer
+    # Compute Q and check error status:
+    if lib == 'cula':
+        func_q(m, n, k, int(a_gpu.gpudata), lda, int(tau_gpu.gpudata))
 
-    # Free internal CULA memory:
-    cula.culaFreeBuffers()
+        # Free internal CULA memory:
+        cula.culaFreeBuffers()
+    else:
+        Lwork = bufsize_q(cusolverHandle, m, n, k, int(a_gpu.gpudata), lda, int(tau_gpu.gpudata))
+        workspace_gpu = gpuarray.empty(Lwork, data_type, allocator=alloc)
+        # Reuse devInfo allocated earlier:
+        func_q(cusolverHandle, m, n, k, int(a_gpu.gpudata), lda,
+               int(tau_gpu.gpudata), int(workspace_gpu.gpudata), Lwork,
+               int(devInfo.gpudata))
+    q_gpu = a_gpu
 
     # Mode economic
     if mode == 'reduced':
