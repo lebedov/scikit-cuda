@@ -276,7 +276,7 @@ _libcusolver.cusolverDnSpotrf_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
                                                      ctypes.c_void_p]
-def cusolverDnSpotrf_bufferSize(handle, uplo, n, A, lda):
+def cusolverDnSpotrf_bufferSize(handle, uplo, n, a, lda):
     """
     Calculate size of work buffer used by cusolverDnSpotrf.
 
@@ -285,12 +285,12 @@ def cusolverDnSpotrf_bufferSize(handle, uplo, n, A, lda):
     `cusolverDn<t>potrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrf>`_
     """
 
-    Lwork = ctypes.c_int()
+    lwork = ctypes.c_int()
     status = _libcusolver.cusolverDnSpotrf_bufferSize(handle, uplo, n,
-                                                      int(A),
-                                                      lda, ctypes.byref(Lwork))
+                                                      int(a),
+                                                      lda, ctypes.byref(lwork))
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 _libcusolver.cusolverDnSpotrf.restype = int
 _libcusolver.cusolverDnSpotrf.argtypes = [ctypes.c_void_p,
@@ -301,7 +301,7 @@ _libcusolver.cusolverDnSpotrf.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
-def cusolverDnSpotrf(handle, uplo, n, A, lda, Workspace, devIpiv, devInfo):
+def cusolverDnSpotrf(handle, uplo, n, a, lda, workspace, devIpiv, devInfo):
     """
     Compute Cholesky factorization of a real single precision Hermitian positive-definite matrix.
 
@@ -310,8 +310,8 @@ def cusolverDnSpotrf(handle, uplo, n, A, lda, Workspace, devIpiv, devInfo):
     `cusolverDn<t>potrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrf>`_
     """
 
-    status = _libcusolver.cusolverDnSpotrf(handle, uplo, n, int(A), lda,
-                                           int(Workspace),
+    status = _libcusolver.cusolverDnSpotrf(handle, uplo, n, int(a), lda,
+                                           int(workspace),
                                            int(devIpiv),
                                            int(devInfo))
     cusolverCheckStatus(status)
@@ -323,7 +323,7 @@ _libcusolver.cusolverDnDpotrf_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
                                                      ctypes.c_void_p]
-def cusolverDnDpotrf_bufferSize(handle, uplo, n, A, lda):
+def cusolverDnDpotrf_bufferSize(handle, uplo, n, a, lda):
     """
     Calculate size of work buffer used by cusolverDnDpotrf.
 
@@ -332,12 +332,12 @@ def cusolverDnDpotrf_bufferSize(handle, uplo, n, A, lda):
     `cusolverDn<t>potrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrf>`_
     """
 
-    Lwork = ctypes.c_int()
+    lwork = ctypes.c_int()
     status = _libcusolver.cusolverDnDpotrf_bufferSize(handle, uplo, n,
-                                                      int(A),
-                                                      lda, ctypes.byref(Lwork))
+                                                      int(a),
+                                                      lda, ctypes.byref(lwork))
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 _libcusolver.cusolverDnDpotrf.restype = int
 _libcusolver.cusolverDnDpotrf.argtypes = [ctypes.c_void_p,
@@ -348,7 +348,7 @@ _libcusolver.cusolverDnDpotrf.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
-def cusolverDnDpotrf(handle, uplo, n, A, lda, Workspace, devIpiv, devInfo):
+def cusolverDnDpotrf(handle, uplo, n, a, lda, workspace, devIpiv, devInfo):
     """
     Compute Cholesky factorization of a real double precision Hermitian positive-definite matrix.
 
@@ -357,8 +357,8 @@ def cusolverDnDpotrf(handle, uplo, n, A, lda, Workspace, devIpiv, devInfo):
     `cusolverDn<t>potrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrf>`_
     """
 
-    status = _libcusolver.cusolverDnDpotrf(handle, uplo, n, int(A), lda,
-                                           int(Workspace),
+    status = _libcusolver.cusolverDnDpotrf(handle, uplo, n, int(a), lda,
+                                           int(workspace),
                                            int(devIpiv),
                                            int(devInfo))
     cusolverCheckStatus(status)
@@ -370,7 +370,7 @@ _libcusolver.cusolverDnCpotrf_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
                                                      ctypes.c_void_p]
-def cusolverDnCpotrf_bufferSize(handle, uplo, n, A, lda):
+def cusolverDnCpotrf_bufferSize(handle, uplo, n, a, lda):
     """
     Calculate size of work buffer used by cusolverDnCpotrf.
 
@@ -379,12 +379,12 @@ def cusolverDnCpotrf_bufferSize(handle, uplo, n, A, lda):
     `cusolverDn<t>potrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrf>`_
     """
 
-    Lwork = ctypes.c_int()
+    lwork = ctypes.c_int()
     status = _libcusolver.cusolverDnCpotrf_bufferSize(handle, uplo, n,
-                                                      int(A),
-                                                      lda, ctypes.byref(Lwork))
+                                                      int(a),
+                                                      lda, ctypes.byref(lwork))
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 _libcusolver.cusolverDnCpotrf.restype = int
 _libcusolver.cusolverDnCpotrf.argtypes = [ctypes.c_void_p,
@@ -395,7 +395,7 @@ _libcusolver.cusolverDnCpotrf.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
-def cusolverDnCpotrf(handle, uplo, n, A, lda, Workspace, devIpiv, devInfo):
+def cusolverDnCpotrf(handle, uplo, n, a, lda, workspace, devIpiv, devInfo):
     """
     Compute Cholesky factorization of a complex single precision Hermitian positive-definite matrix.
 
@@ -404,8 +404,8 @@ def cusolverDnCpotrf(handle, uplo, n, A, lda, Workspace, devIpiv, devInfo):
     `cusolverDn<t>potrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrf>`_
     """
 
-    status = _libcusolver.cusolverDnCpotrf(handle, uplo, n, int(A), lda,
-                                           int(Workspace),
+    status = _libcusolver.cusolverDnCpotrf(handle, uplo, n, int(a), lda,
+                                           int(workspace),
                                            int(devIpiv),
                                            int(devInfo))
     cusolverCheckStatus(status)
@@ -417,7 +417,7 @@ _libcusolver.cusolverDnZpotrf_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
                                                      ctypes.c_void_p]
-def cusolverDnZpotrf_bufferSize(handle, uplo, n, A, lda):
+def cusolverDnZpotrf_bufferSize(handle, uplo, n, a, lda):
     """
     Calculate size of work buffer used by cusolverDnZpotrf.
 
@@ -426,12 +426,12 @@ def cusolverDnZpotrf_bufferSize(handle, uplo, n, A, lda):
     `cusolverDn<t>potrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrf>`_
     """
 
-    Lwork = ctypes.c_int()
+    lwork = ctypes.c_int()
     status = _libcusolver.cusolverDnZpotrf_bufferSize(handle, uplo, n,
-                                                      int(A),
-                                                      lda, ctypes.byref(Lwork))
+                                                      int(a),
+                                                      lda, ctypes.byref(lwork))
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 _libcusolver.cusolverDnZpotrf.restype = int
 _libcusolver.cusolverDnZpotrf.argtypes = [ctypes.c_void_p,
@@ -442,7 +442,7 @@ _libcusolver.cusolverDnZpotrf.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
-def cusolverDnZpotrf(handle, uplo, n, A, lda, Workspace, devIpiv, devInfo):
+def cusolverDnZpotrf(handle, uplo, n, a, lda, workspace, devIpiv, devInfo):
     """
     Compute Cholesky factorization of a complex double precision Hermitian positive-definite matrix.
 
@@ -451,8 +451,8 @@ def cusolverDnZpotrf(handle, uplo, n, A, lda, Workspace, devIpiv, devInfo):
     `cusolverDn<t>potrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrf>`_
     """
 
-    status = _libcusolver.cusolverDnZpotrf(handle, uplo, n, int(A), lda,
-                                           int(Workspace),
+    status = _libcusolver.cusolverDnZpotrf(handle, uplo, n, int(a), lda,
+                                           int(workspace),
                                            int(devIpiv),
                                            int(devInfo))
     cusolverCheckStatus(status)
@@ -468,7 +468,7 @@ _libcusolver.cusolverDnSpotrs.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p]
-def cusolverDnSpotrs(handle, uplo, n, nrhs, A, lda, B, ldb, devInfo):
+def cusolverDnSpotrs(handle, uplo, n, nrhs, a, lda, B, ldb, devInfo):
     """
     Solve real single precision Hermitian positive-definite system.
 
@@ -477,7 +477,7 @@ def cusolverDnSpotrs(handle, uplo, n, nrhs, A, lda, B, ldb, devInfo):
     `cusolverDn<t>potrs <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrs>`_
     """
 
-    status = _libcusolver.cusolverDnSpotrs(handle, uplo, n, nrhs, int(A), lda,
+    status = _libcusolver.cusolverDnSpotrs(handle, uplo, n, nrhs, int(a), lda,
                                            int(B), ldb, int(devInfo))
     cusolverCheckStatus(status)
 
@@ -491,7 +491,7 @@ _libcusolver.cusolverDnDpotrs.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p]
-def cusolverDnDpotrs(handle, uplo, n, nrhs, A, lda, B, ldb, devInfo):
+def cusolverDnDpotrs(handle, uplo, n, nrhs, a, lda, B, ldb, devInfo):
     """
     Solve real double precision Hermitian positive-definite system.
 
@@ -500,7 +500,7 @@ def cusolverDnDpotrs(handle, uplo, n, nrhs, A, lda, B, ldb, devInfo):
     `cusolverDn<t>potrs <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrs>`_
     """
 
-    status = _libcusolver.cusolverDnDpotrs(handle, uplo, n, nrhs, int(A), lda,
+    status = _libcusolver.cusolverDnDpotrs(handle, uplo, n, nrhs, int(a), lda,
                                            int(B), ldb, int(devInfo))
     cusolverCheckStatus(status)
 
@@ -514,7 +514,7 @@ _libcusolver.cusolverDnCpotrs.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p]
-def cusolverDnCpotrs(handle, uplo, n, nrhs, A, lda, B, ldb, devInfo):
+def cusolverDnCpotrs(handle, uplo, n, nrhs, a, lda, B, ldb, devInfo):
     """
     Solve complex single precision Hermitian positive-definite system.
 
@@ -523,7 +523,7 @@ def cusolverDnCpotrs(handle, uplo, n, nrhs, A, lda, B, ldb, devInfo):
     `cusolverDn<t>potrs <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrs>`_
     """
 
-    status = _libcusolver.cusolverDnCpotrs(handle, uplo, n, nrhs, int(A), lda,
+    status = _libcusolver.cusolverDnCpotrs(handle, uplo, n, nrhs, int(a), lda,
                                            int(B), ldb, int(devInfo))
     cusolverCheckStatus(status)
 
@@ -537,7 +537,7 @@ _libcusolver.cusolverDnZpotrs.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p]
-def cusolverDnZpotrs(handle, uplo, n, nrhs, A, lda, B, ldb, devInfo):
+def cusolverDnZpotrs(handle, uplo, n, nrhs, a, lda, B, ldb, devInfo):
     """
     Solve complex double precision Hermitian positive-definite system.
 
@@ -546,7 +546,7 @@ def cusolverDnZpotrs(handle, uplo, n, nrhs, A, lda, B, ldb, devInfo):
     `cusolverDn<t>potrs <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-potrs>`_
     """
 
-    status = _libcusolver.cusolverDnZpotrs(handle, uplo, n, nrhs, int(A), lda,
+    status = _libcusolver.cusolverDnZpotrs(handle, uplo, n, nrhs, int(a), lda,
                                            int(B), ldb, int(devInfo))
     cusolverCheckStatus(status)
 
@@ -558,7 +558,7 @@ _libcusolver.cusolverDnSgetrf_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
                                                      ctypes.c_void_p]
-def cusolverDnSgetrf_bufferSize(handle, m, n, A, lda):
+def cusolverDnSgetrf_bufferSize(handle, m, n, a, lda):
     """
     Calculate size of work buffer used by cusolverDnSgetrf.
 
@@ -567,12 +567,12 @@ def cusolverDnSgetrf_bufferSize(handle, m, n, A, lda):
     `cusolverDn<t>getrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrf>`_
     """
 
-    Lwork = ctypes.c_int()
+    lwork = ctypes.c_int()
     status = _libcusolver.cusolverDnSgetrf_bufferSize(handle, m, n,
-                                                      int(A),
-                                                      n, ctypes.byref(Lwork))
+                                                      int(a),
+                                                      n, ctypes.byref(lwork))
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 _libcusolver.cusolverDnSgetrf.restype = int
 _libcusolver.cusolverDnSgetrf.argtypes = [ctypes.c_void_p,
@@ -583,7 +583,7 @@ _libcusolver.cusolverDnSgetrf.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
-def cusolverDnSgetrf(handle, m, n, A, lda, Workspace, devIpiv, devInfo):
+def cusolverDnSgetrf(handle, m, n, a, lda, workspace, devIpiv, devInfo):
     """
     Compute LU factorization of a real single precision m x n matrix.
 
@@ -592,8 +592,8 @@ def cusolverDnSgetrf(handle, m, n, A, lda, Workspace, devIpiv, devInfo):
     `cusolverDn<t>getrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrf>`_
     """
 
-    status = _libcusolver.cusolverDnSgetrf(handle, m, n, int(A), lda,
-                                          int(Workspace),
+    status = _libcusolver.cusolverDnSgetrf(handle, m, n, int(a), lda,
+                                          int(workspace),
                                           int(devIpiv),
                                           int(devInfo))
     cusolverCheckStatus(status)
@@ -605,7 +605,7 @@ _libcusolver.cusolverDnDgetrf_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
                                                      ctypes.c_void_p]
-def cusolverDnDgetrf_bufferSize(handle, m, n, A, lda):
+def cusolverDnDgetrf_bufferSize(handle, m, n, a, lda):
     """
     Calculate size of work buffer used by cusolverDnDgetrf.
 
@@ -614,12 +614,12 @@ def cusolverDnDgetrf_bufferSize(handle, m, n, A, lda):
     `cusolverDn<t>getrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrf>`_
     """
 
-    Lwork = ctypes.c_int()
+    lwork = ctypes.c_int()
     status = _libcusolver.cusolverDnDgetrf_bufferSize(handle, m, n,
-                                                      int(A),
-                                                      n, ctypes.byref(Lwork))
+                                                      int(a),
+                                                      n, ctypes.byref(lwork))
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 _libcusolver.cusolverDnDgetrf.restype = int
 _libcusolver.cusolverDnDgetrf.argtypes = [ctypes.c_void_p,
@@ -630,7 +630,7 @@ _libcusolver.cusolverDnDgetrf.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
-def cusolverDnDgetrf(handle, m, n, A, lda, Workspace, devIpiv, devInfo):
+def cusolverDnDgetrf(handle, m, n, a, lda, workspace, devIpiv, devInfo):
     """
     Compute LU factorization of a real double precision m x n matrix.
 
@@ -639,8 +639,8 @@ def cusolverDnDgetrf(handle, m, n, A, lda, Workspace, devIpiv, devInfo):
     `cusolverDn<t>getrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrf>`_
     """
 
-    status = _libcusolver.cusolverDnDgetrf(handle, m, n, int(A), lda,
-                                          int(Workspace),
+    status = _libcusolver.cusolverDnDgetrf(handle, m, n, int(a), lda,
+                                          int(workspace),
                                           int(devIpiv),
                                           int(devInfo))
     cusolverCheckStatus(status)
@@ -652,7 +652,7 @@ _libcusolver.cusolverDnCgetrf_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
                                                      ctypes.c_void_p]
-def cusolverDnCgetrf_bufferSize(handle, m, n, A, lda):
+def cusolverDnCgetrf_bufferSize(handle, m, n, a, lda):
     """
     Calculate size of work buffer used by cusolverDnCgetrf.
 
@@ -661,12 +661,12 @@ def cusolverDnCgetrf_bufferSize(handle, m, n, A, lda):
     `cusolverDn<t>getrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrf>`_
     """
 
-    Lwork = ctypes.c_int()
+    lwork = ctypes.c_int()
     status = _libcusolver.cusolverDnCgetrf_bufferSize(handle, m, n,
-                                                      int(A),
-                                                      n, ctypes.byref(Lwork))
+                                                      int(a),
+                                                      n, ctypes.byref(lwork))
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 _libcusolver.cusolverDnCgetrf.restype = int
 _libcusolver.cusolverDnCgetrf.argtypes = [ctypes.c_void_p,
@@ -677,7 +677,7 @@ _libcusolver.cusolverDnCgetrf.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
-def cusolverDnCgetrf(handle, m, n, A, lda, Workspace, devIpiv, devInfo):
+def cusolverDnCgetrf(handle, m, n, a, lda, workspace, devIpiv, devInfo):
     """
     Compute LU factorization of a complex single precision m x n matrix.
 
@@ -686,8 +686,8 @@ def cusolverDnCgetrf(handle, m, n, A, lda, Workspace, devIpiv, devInfo):
     `cusolverDn<t>getrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrf>`_
     """
 
-    status = _libcusolver.cusolverDnCgetrf(handle, m, n, int(A), lda,
-                                           int(Workspace),
+    status = _libcusolver.cusolverDnCgetrf(handle, m, n, int(a), lda,
+                                           int(workspace),
                                            int(devIpiv),
                                            int(devInfo))
     cusolverCheckStatus(status)
@@ -699,7 +699,7 @@ _libcusolver.cusolverDnZgetrf_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
                                                      ctypes.c_void_p]
-def cusolverDnZgetrf_bufferSize(handle, m, n, A, lda):
+def cusolverDnZgetrf_bufferSize(handle, m, n, a, lda):
     """
     Calculate size of work buffer used by cusolverDnZgetrf.
 
@@ -708,12 +708,12 @@ def cusolverDnZgetrf_bufferSize(handle, m, n, A, lda):
     `cusolverDn<t>getrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrf>`_
     """
 
-    Lwork = ctypes.c_int()
+    lwork = ctypes.c_int()
     status = _libcusolver.cusolverDnZgetrf_bufferSize(handle, m, n,
-                                                      int(A),
-                                                      n, ctypes.byref(Lwork))
+                                                      int(a),
+                                                      n, ctypes.byref(lwork))
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 _libcusolver.cusolverDnZgetrf.restype = int
 _libcusolver.cusolverDnZgetrf.argtypes = [ctypes.c_void_p,
@@ -724,7 +724,7 @@ _libcusolver.cusolverDnZgetrf.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
-def cusolverDnZgetrf(handle, m, n, A, lda, Workspace, devIpiv, devInfo):
+def cusolverDnZgetrf(handle, m, n, a, lda, workspace, devIpiv, devInfo):
     """
     Compute LU factorization of a complex double precision m x n matrix.
 
@@ -733,8 +733,8 @@ def cusolverDnZgetrf(handle, m, n, A, lda, Workspace, devIpiv, devInfo):
     `cusolverDn<t>getrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-getrf>`_
     """
 
-    status = _libcusolver.cusolverDnZgetrf(handle, m, n, int(A), lda,
-                                           int(Workspace),
+    status = _libcusolver.cusolverDnZgetrf(handle, m, n, int(a), lda,
+                                           int(workspace),
                                            int(devIpiv),
                                            int(devInfo))
     cusolverCheckStatus(status)
@@ -751,7 +751,7 @@ _libcusolver.cusolverDnSgetrs.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p]
-def cusolverDnSgetrs(handle, trans, n, nrhs, A, lda,
+def cusolverDnSgetrs(handle, trans, n, nrhs, a, lda,
                      devIpiv, B, ldb, devInfo):
     """
     Solve real single precision linear system.
@@ -762,7 +762,7 @@ def cusolverDnSgetrs(handle, trans, n, nrhs, A, lda,
     """
 
     status = _libcusolver.cusolverDnSgetrs(handle, cublas._CUBLAS_OP[trans], n, nrhs,
-                                           int(A), lda,
+                                           int(a), lda,
                                            int(devIpiv), int(B),
                                            ldb, int(devInfo))
     cusolverCheckStatus(status)
@@ -778,7 +778,7 @@ _libcusolver.cusolverDnDgetrs.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p]
-def cusolverDnDgetrs(handle, trans, n, nrhs, A, lda,
+def cusolverDnDgetrs(handle, trans, n, nrhs, a, lda,
                      devIpiv, B, ldb, devInfo):
     """
     Solve real double precision linear system.
@@ -789,7 +789,7 @@ def cusolverDnDgetrs(handle, trans, n, nrhs, A, lda,
     """
 
     status = _libcusolver.cusolverDnDgetrs(handle, cublas._CUBLAS_OP[trans], n, nrhs,
-                                           int(A), lda,
+                                           int(a), lda,
                                            int(devIpiv), int(B),
                                            ldb, int(devInfo))
     cusolverCheckStatus(status)
@@ -805,7 +805,7 @@ _libcusolver.cusolverDnCgetrs.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p]
-def cusolverDnCgetrs(handle, trans, n, nrhs, A, lda,
+def cusolverDnCgetrs(handle, trans, n, nrhs, a, lda,
                      devIpiv, B, ldb, devInfo):
     """
     Solve complex single precision linear system.
@@ -816,7 +816,7 @@ def cusolverDnCgetrs(handle, trans, n, nrhs, A, lda,
     """
 
     status = _libcusolver.cusolverDnCgetrs(handle, cublas._CUBLAS_OP[trans], n, nrhs,
-                                           int(A), lda,
+                                           int(a), lda,
                                            int(devIpiv), int(B),
                                            ldb, int(devInfo))
     cusolverCheckStatus(status)
@@ -832,7 +832,7 @@ _libcusolver.cusolverDnZgetrs.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p]
-def cusolverDnZgetrs(handle, trans, n, nrhs, A, lda,
+def cusolverDnZgetrs(handle, trans, n, nrhs, a, lda,
                      devIpiv, B, ldb, devInfo):
     """
     Solve complex double precision linear system.
@@ -843,7 +843,7 @@ def cusolverDnZgetrs(handle, trans, n, nrhs, A, lda,
     """
 
     status = _libcusolver.cusolverDnZgetrs(handle, cublas._CUBLAS_OP[trans], n, nrhs,
-                                           int(A), lda,
+                                           int(a), lda,
                                            int(devIpiv), int(B),
                                            ldb, int(devInfo))
     cusolverCheckStatus(status)
@@ -863,10 +863,10 @@ def cusolverDnSgesvd_bufferSize(handle, m, n):
     `cusolverDn<t>gesvd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-gesvd>`_
     """
 
-    Lwork = ctypes.c_int()
-    status = _libcusolver.cusolverDnSgesvd_bufferSize(handle, m, n, ctypes.byref(Lwork))
+    lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnSgesvd_bufferSize(handle, m, n, ctypes.byref(lwork))
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 _libcusolver.cusolverDnSgesvd.restype = int
 _libcusolver.cusolverDnSgesvd.argtypes = [ctypes.c_void_p,
@@ -885,8 +885,8 @@ _libcusolver.cusolverDnSgesvd.argtypes = [ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
-def cusolverDnSgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
-        ldu, VT, ldvt, Work, Lwork, rwork, devInfo):
+def cusolverDnSgesvd(handle, jobu, jobvt, m, n, a, lda, s, U,
+        ldu, vt, ldvt, work, lwork, rwork, devInfo):
     """
     Compute real single precision singular value decomposition.
 
@@ -898,9 +898,9 @@ def cusolverDnSgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
     jobu = jobu.encode('ascii')
     jobvt = jobvt.encode('ascii')
     status = _libcusolver.cusolverDnSgesvd(handle, jobu, jobvt, m, n,
-                                           int(A), lda, int(S), int(U),
-                                           ldu, int(VT), ldvt, int(Work),
-                                           Lwork, int(rwork), int(devInfo))
+                                           int(a), lda, int(s), int(U),
+                                           ldu, int(vt), ldvt, int(work),
+                                           lwork, int(rwork), int(devInfo))
     cusolverCheckStatus(status)
 
 _libcusolver.cusolverDnDgesvd_bufferSize.restype = int
@@ -917,10 +917,10 @@ def cusolverDnDgesvd_bufferSize(handle, m, n):
     `cusolverDn<t>gesvd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-gesvd>`_
     """
 
-    Lwork = ctypes.c_int()
-    status = _libcusolver.cusolverDnDgesvd_bufferSize(handle, m, n, ctypes.byref(Lwork))
+    lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnDgesvd_bufferSize(handle, m, n, ctypes.byref(lwork))
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 _libcusolver.cusolverDnDgesvd.restype = int
 _libcusolver.cusolverDnDgesvd.argtypes = [ctypes.c_void_p,
@@ -939,8 +939,8 @@ _libcusolver.cusolverDnDgesvd.argtypes = [ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
-def cusolverDnDgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
-                     ldu, VT, ldvt, Work, Lwork, rwork, devInfo):
+def cusolverDnDgesvd(handle, jobu, jobvt, m, n, a, lda, s, U,
+                     ldu, vt, ldvt, work, lwork, rwork, devInfo):
     """
     Compute real double precision singular value decomposition.
 
@@ -952,9 +952,9 @@ def cusolverDnDgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
     jobu = jobu.encode('ascii')
     jobvt = jobvt.encode('ascii')
     status = _libcusolver.cusolverDnDgesvd(handle, jobu, jobvt, m, n,
-                                           int(A), lda, int(S), int(U),
-                                           ldu, int(VT), ldvt, int(Work),
-                                           Lwork, int(rwork), int(devInfo))
+                                           int(a), lda, int(s), int(U),
+                                           ldu, int(vt), ldvt, int(work),
+                                           lwork, int(rwork), int(devInfo))
     cusolverCheckStatus(status)
 
 _libcusolver.cusolverDnCgesvd_bufferSize.restype = int
@@ -971,10 +971,10 @@ def cusolverDnCgesvd_bufferSize(handle, m, n):
     `cusolverDn<t>gesvd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-gesvd>`_
     """
 
-    Lwork = ctypes.c_int()
-    status = _libcusolver.cusolverDnCgesvd_bufferSize(handle, m, n, ctypes.byref(Lwork))
+    lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnCgesvd_bufferSize(handle, m, n, ctypes.byref(lwork))
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 _libcusolver.cusolverDnCgesvd.restype = int
 _libcusolver.cusolverDnCgesvd.argtypes = [ctypes.c_void_p,
@@ -993,8 +993,8 @@ _libcusolver.cusolverDnCgesvd.argtypes = [ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
-def cusolverDnCgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
-                     ldu, VT, ldvt, Work, Lwork, rwork, devInfo):
+def cusolverDnCgesvd(handle, jobu, jobvt, m, n, a, lda, s, U,
+                     ldu, vt, ldvt, work, lwork, rwork, devInfo):
     """
     Compute complex single precision singular value decomposition.
 
@@ -1006,9 +1006,9 @@ def cusolverDnCgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
     jobu = jobu.encode('ascii')
     jobvt = jobvt.encode('ascii')
     status = _libcusolver.cusolverDnCgesvd(handle, jobu, jobvt, m, n,
-                                           int(A), lda, int(S), int(U),
-                                           ldu, int(VT), ldvt, int(Work),
-                                           Lwork, int(rwork), int(devInfo))
+                                           int(a), lda, int(s), int(U),
+                                           ldu, int(vt), ldvt, int(work),
+                                           lwork, int(rwork), int(devInfo))
     cusolverCheckStatus(status)
 
 _libcusolver.cusolverDnZgesvd_bufferSize.restype = int
@@ -1025,10 +1025,10 @@ def cusolverDnZgesvd_bufferSize(handle, m, n):
     `cusolverDn<t>gesvd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-gesvd>`_
     """
 
-    Lwork = ctypes.c_int()
-    status = _libcusolver.cusolverDnZgesvd_bufferSize(handle, m, n, ctypes.byref(Lwork))
+    lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnZgesvd_bufferSize(handle, m, n, ctypes.byref(lwork))
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 _libcusolver.cusolverDnZgesvd.restype = int
 _libcusolver.cusolverDnZgesvd.argtypes = [ctypes.c_void_p,
@@ -1047,8 +1047,8 @@ _libcusolver.cusolverDnZgesvd.argtypes = [ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p,
                                           ctypes.c_void_p]
-def cusolverDnZgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
-                     ldu, VT, ldvt, Work, Lwork, rwork, devInfo):
+def cusolverDnZgesvd(handle, jobu, jobvt, m, n, a, lda, s, U,
+                     ldu, vt, ldvt, work, lwork, rwork, devInfo):
     """
     Compute complex double precision singular value decomposition.
 
@@ -1060,9 +1060,9 @@ def cusolverDnZgesvd(handle, jobu, jobvt, m, n, A, lda, S, U,
     jobu = jobu.encode('ascii')
     jobvt = jobvt.encode('ascii')
     status = _libcusolver.cusolverDnZgesvd(handle, jobu, jobvt, m, n,
-                                           int(A), lda, int(S), int(U),
-                                           ldu, int(VT), ldvt, int(Work),
-                                           Lwork, int(rwork), int(devInfo))
+                                           int(a), lda, int(s), int(U),
+                                           ldu, int(vt), ldvt, int(work),
+                                           lwork, int(rwork), int(devInfo))
     cusolverCheckStatus(status)
 
 # SGEQRF, DGEQRF, CGEQRF, ZGEQRF
@@ -1072,7 +1072,7 @@ _libcusolver.cusolverDnSgeqrf_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
                                                      ctypes.c_void_p]
-def cusolverDnSgeqrf_bufferSize(handle, m, n, A, lda):
+def cusolverDnSgeqrf_bufferSize(handle, m, n, a, lda):
     """
     Calculate size of work buffer used by cusolverDnSgeqrf.
 
@@ -1081,11 +1081,11 @@ def cusolverDnSgeqrf_bufferSize(handle, m, n, A, lda):
     `cusolverDn<t>geqrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-geqrf>`_
     """
 
-    Lwork = ctypes.c_int()
-    status = _libcusolver.cusolverDnSgeqrf_bufferSize(handle, m, n, int(A),
-                                                      lda, ctypes.byref(Lwork))
+    lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnSgeqrf_bufferSize(handle, m, n, int(a),
+                                                      lda, ctypes.byref(lwork))
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 _libcusolver.cusolverDnSgeqrf.restype = int
 _libcusolver.cusolverDnSgeqrf.argtypes = [ctypes.c_void_p,
@@ -1097,7 +1097,7 @@ _libcusolver.cusolverDnSgeqrf.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p]
-def cusolverDnSgeqrf(handle, m, n, A, lda, TAU, Workspace, Lwork, devInfo):
+def cusolverDnSgeqrf(handle, m, n, a, lda, tau, workspace, lwork, devInfo):
     """
     Compute QR factorization of a real single precision m x n matrix.
 
@@ -1106,10 +1106,10 @@ def cusolverDnSgeqrf(handle, m, n, A, lda, TAU, Workspace, Lwork, devInfo):
     `cusolverDn<t>geqrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-geqrf>`_
     """
 
-    status = _libcusolver.cusolverDnSgeqrf(handle, m, n, int(A), lda,
-                                           int(TAU),
-                                           int(Workspace),
-                                           Lwork,
+    status = _libcusolver.cusolverDnSgeqrf(handle, m, n, int(a), lda,
+                                           int(tau),
+                                           int(workspace),
+                                           lwork,
                                            int(devInfo))
     cusolverCheckStatus(status)
 
@@ -1119,7 +1119,7 @@ _libcusolver.cusolverDnDgeqrf_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
                                                      ctypes.c_void_p]
-def cusolverDnDgeqrf_bufferSize(handle, m, n, A, lda):
+def cusolverDnDgeqrf_bufferSize(handle, m, n, a, lda):
     """
     Calculate size of work buffer used by cusolverDnDgeqrf.
 
@@ -1128,11 +1128,11 @@ def cusolverDnDgeqrf_bufferSize(handle, m, n, A, lda):
     `cusolverDn<t>geqrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-geqrf>`_
     """
 
-    Lwork = ctypes.c_int()
-    status = _libcusolver.cusolverDnDgeqrf_bufferSize(handle, m, n, int(A),
-                                                      lda, ctypes.byref(Lwork))
+    lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnDgeqrf_bufferSize(handle, m, n, int(a),
+                                                      lda, ctypes.byref(lwork))
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 _libcusolver.cusolverDnDgeqrf.restype = int
 _libcusolver.cusolverDnDgeqrf.argtypes = [ctypes.c_void_p,
@@ -1144,7 +1144,7 @@ _libcusolver.cusolverDnDgeqrf.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p]
-def cusolverDnDgeqrf(handle, m, n, A, lda, TAU, Workspace, Lwork, devInfo):
+def cusolverDnDgeqrf(handle, m, n, a, lda, tau, workspace, lwork, devInfo):
     """
     Compute QR factorization of a real double precision m x n matrix.
 
@@ -1153,10 +1153,10 @@ def cusolverDnDgeqrf(handle, m, n, A, lda, TAU, Workspace, Lwork, devInfo):
     `cusolverDn<t>geqrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-geqrf>`_
     """
 
-    status = _libcusolver.cusolverDnDgeqrf(handle, m, n, int(A), lda,
-                                           int(TAU),
-                                           int(Workspace),
-                                           Lwork,
+    status = _libcusolver.cusolverDnDgeqrf(handle, m, n, int(a), lda,
+                                           int(tau),
+                                           int(workspace),
+                                           lwork,
                                            int(devInfo))
     cusolverCheckStatus(status)
 
@@ -1166,7 +1166,7 @@ _libcusolver.cusolverDnCgeqrf_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
                                                      ctypes.c_void_p]
-def cusolverDnCgeqrf_bufferSize(handle, m, n, A, lda):
+def cusolverDnCgeqrf_bufferSize(handle, m, n, a, lda):
     """
     Calculate size of work buffer used by cusolverDnCgeqrf.
 
@@ -1175,11 +1175,11 @@ def cusolverDnCgeqrf_bufferSize(handle, m, n, A, lda):
     `cusolverDn<t>geqrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-geqrf>`_
     """
 
-    Lwork = ctypes.c_int()
-    status = _libcusolver.cusolverDnCgeqrf_bufferSize(handle, m, n, int(A),
-                                                      lda, ctypes.byref(Lwork))
+    lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnCgeqrf_bufferSize(handle, m, n, int(a),
+                                                      lda, ctypes.byref(lwork))
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 _libcusolver.cusolverDnCgeqrf.restype = int
 _libcusolver.cusolverDnCgeqrf.argtypes = [ctypes.c_void_p,
@@ -1191,7 +1191,7 @@ _libcusolver.cusolverDnCgeqrf.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p]
-def cusolverDnCgeqrf(handle, m, n, A, lda, TAU, Workspace, Lwork, devInfo):
+def cusolverDnCgeqrf(handle, m, n, a, lda, tau, workspace, lwork, devInfo):
     """
     Compute QR factorization of a complex single precision m x n matrix.
 
@@ -1200,10 +1200,10 @@ def cusolverDnCgeqrf(handle, m, n, A, lda, TAU, Workspace, Lwork, devInfo):
     `cusolverDn<t>geqrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-geqrf>`_
     """
 
-    status = _libcusolver.cusolverDnCgeqrf(handle, m, n, int(A), lda,
-                                           int(TAU),
-                                           int(Workspace),
-                                           Lwork,
+    status = _libcusolver.cusolverDnCgeqrf(handle, m, n, int(a), lda,
+                                           int(tau),
+                                           int(workspace),
+                                           lwork,
                                            int(devInfo))
     cusolverCheckStatus(status)
 
@@ -1213,7 +1213,7 @@ _libcusolver.cusolverDnZgeqrf_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
                                                      ctypes.c_void_p]
-def cusolverDnZgeqrf_bufferSize(handle, m, n, A, lda):
+def cusolverDnZgeqrf_bufferSize(handle, m, n, a, lda):
     """
     Calculate size of work buffer used by cusolverDnZgeqrf.
 
@@ -1222,11 +1222,11 @@ def cusolverDnZgeqrf_bufferSize(handle, m, n, A, lda):
     `cusolverDn<t>geqrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-geqrf>`_
     """
 
-    Lwork = ctypes.c_int()
-    status = _libcusolver.cusolverDnZgeqrf_bufferSize(handle, m, n, int(A),
-                                                      lda, ctypes.byref(Lwork))
+    lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnZgeqrf_bufferSize(handle, m, n, int(a),
+                                                      lda, ctypes.byref(lwork))
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 _libcusolver.cusolverDnZgeqrf.restype = int
 _libcusolver.cusolverDnZgeqrf.argtypes = [ctypes.c_void_p,
@@ -1238,7 +1238,7 @@ _libcusolver.cusolverDnZgeqrf.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p]
-def cusolverDnZgeqrf(handle, m, n, A, lda, TAU, Workspace, Lwork, devInfo):
+def cusolverDnZgeqrf(handle, m, n, a, lda, tau, workspace, lwork, devInfo):
     """
     Compute QR factorization of a complex double precision m x n matrix.
 
@@ -1247,10 +1247,10 @@ def cusolverDnZgeqrf(handle, m, n, A, lda, TAU, Workspace, Lwork, devInfo):
     `cusolverDn<t>geqrf <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-geqrf>`_
     """
 
-    status = _libcusolver.cusolverDnZgeqrf(handle, m, n, int(A), lda,
-                                           int(TAU),
-                                           int(Workspace),
-                                           Lwork,
+    status = _libcusolver.cusolverDnZgeqrf(handle, m, n, int(a), lda,
+                                           int(tau),
+                                           int(workspace),
+                                           lwork,
                                            int(devInfo))
     cusolverCheckStatus(status)
 
@@ -1262,8 +1262,9 @@ _libcusolver.cusolverDnSorgqr_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_int,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
+                                                     ctypes.c_void_p,
                                                      ctypes.c_void_p]
-def cusolverDnSorgqr_bufferSize(handle, m, n, k, A, lda):
+def cusolverDnSorgqr_bufferSize(handle, m, n, k, a, lda, tau):
     """
     Calculate size of work buffer used by cusolverDnSorgqr.
 
@@ -1272,11 +1273,11 @@ def cusolverDnSorgqr_bufferSize(handle, m, n, k, A, lda):
     `cusolverDn<t>orgqr <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-orgqr>`_
     """
 
-    Lwork = ctypes.c_int()
-    status = _libcusolver.cusolverDnSorgqr_bufferSize(handle, m, n, k, int(A),
-                                                      lda, ctypes.byref(Lwork))
+    lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnSorgqr_bufferSize(handle, m, n, k, int(a),
+                                                      lda, int(tau), ctypes.byref(lwork))
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
  
 _libcusolver.cusolverDnSorgqr.restype = int
 _libcusolver.cusolverDnSorgqr.argtypes = [ctypes.c_void_p,
@@ -1289,7 +1290,7 @@ _libcusolver.cusolverDnSorgqr.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p]
-def cusolverDnSorgqr(handle, m, n, k, A, lda, tau, work, lwork, devInfo):
+def cusolverDnSorgqr(handle, m, n, k, a, lda, tau, work, lwork, devInfo):
     """
     Create unitary m x n matrix from single precision real reflection vectors.
 
@@ -1298,7 +1299,7 @@ def cusolverDnSorgqr(handle, m, n, k, A, lda, tau, work, lwork, devInfo):
     `cusolverDn<t>orgqr <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-orgqr>`_
     """
 
-    status = _libcusolver.cusolverDnSorgqr(handle, m, n, k, int(A), lda,
+    status = _libcusolver.cusolverDnSorgqr(handle, m, n, k, int(a), lda,
                                            int(tau), int(work), lwork, int(devInfo))
     cusolverCheckStatus(status)
 
@@ -1309,8 +1310,9 @@ _libcusolver.cusolverDnDorgqr_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_int,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
+                                                     ctypes.c_void_p,
                                                      ctypes.c_void_p]
-def cusolverDnDorgqr_bufferSize(handle, m, n, k, A, lda):
+def cusolverDnDorgqr_bufferSize(handle, m, n, k, a, lda, tau):
     """
     Calculate size of work buffer used by cusolverDnDorgqr.
 
@@ -1319,11 +1321,11 @@ def cusolverDnDorgqr_bufferSize(handle, m, n, k, A, lda):
     `cusolverDn<t>orgqr <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-orgqr>`_
     """
 
-    Lwork = ctypes.c_int()
-    status = _libcusolver.cusolverDnDorgqr_bufferSize(handle, m, n, k, int(A),
-                                                      lda, ctypes.byref(Lwork))
+    lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnDorgqr_bufferSize(handle, m, n, k, int(a),
+                                                      lda, int(tau), ctypes.byref(lwork))
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 _libcusolver.cusolverDnDorgqr.restype = int
 _libcusolver.cusolverDnDorgqr.argtypes = [ctypes.c_void_p,
@@ -1336,7 +1338,7 @@ _libcusolver.cusolverDnDorgqr.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p]
-def cusolverDnDorgqr(handle, m, n, k, A, lda, tau, work, lwork, devInfo):
+def cusolverDnDorgqr(handle, m, n, k, a, lda, tau, work, lwork, devInfo):
     """
     Create unitary m x n matrix from double precision real reflection vectors.
 
@@ -1345,7 +1347,7 @@ def cusolverDnDorgqr(handle, m, n, k, A, lda, tau, work, lwork, devInfo):
     `cusolverDn<t>orgqr <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-orgqr>`_
     """
 
-    status = _libcusolver.cusolverDnDorgqr(handle, m, n, k, int(A), lda,
+    status = _libcusolver.cusolverDnDorgqr(handle, m, n, k, int(a), lda,
                                            int(tau), int(work), lwork, int(devInfo))
     cusolverCheckStatus(status)
 
@@ -1356,8 +1358,9 @@ _libcusolver.cusolverDnCungqr_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_int,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
+                                                     ctypes.c_void_p,
                                                      ctypes.c_void_p]
-def cusolverDnCungqr_bufferSize(handle, m, n, k, A, lda):
+def cusolverDnCungqr_bufferSize(handle, m, n, k, a, lda, tau):
     """
     Calculate size of work buffer used by cusolverDnCungqr.
 
@@ -1366,11 +1369,11 @@ def cusolverDnCungqr_bufferSize(handle, m, n, k, A, lda):
     `cusolverDn<t>orgqr <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-orgqr>`_
     """
 
-    Lwork = ctypes.c_int()
-    status = _libcusolver.cusolverDnCungqr_bufferSize(handle, m, n, k, int(A),
-                                                      lda, ctypes.byref(Lwork))
+    lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnCungqr_bufferSize(handle, m, n, k, int(a),
+                                                      lda, int(tau), ctypes.byref(lwork))
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 _libcusolver.cusolverDnCungqr.restype = int
 _libcusolver.cusolverDnCungqr.argtypes = [ctypes.c_void_p,
@@ -1383,7 +1386,7 @@ _libcusolver.cusolverDnCungqr.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p]
-def cusolverDnCungqr(handle, m, n, k, A, lda, tau, work, lwork, devInfo):
+def cusolverDnCungqr(handle, m, n, k, a, lda, tau, work, lwork, devInfo):
     """
     Create unitary m x n matrix from single precision complex reflection vectors.
 
@@ -1392,7 +1395,7 @@ def cusolverDnCungqr(handle, m, n, k, A, lda, tau, work, lwork, devInfo):
     `cusolverDn<t>orgqr <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-orgqr>`_
     """
 
-    status = _libcusolver.cusolverDnCungqr(handle, m, n, k, int(A), lda,
+    status = _libcusolver.cusolverDnCungqr(handle, m, n, k, int(a), lda,
                                            int(tau), int(work), lwork, int(devInfo))
     cusolverCheckStatus(status)
 
@@ -1403,8 +1406,9 @@ _libcusolver.cusolverDnZungqr_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_int,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
+                                                     ctypes.c_void_p,
                                                      ctypes.c_void_p]
-def cusolverDnZungqr_bufferSize(handle, m, n, k, A, lda):
+def cusolverDnZungqr_bufferSize(handle, m, n, k, a, lda, tau):
     """
     Calculate size of work buffer used by cusolverDnZungqr.
 
@@ -1413,11 +1417,11 @@ def cusolverDnZungqr_bufferSize(handle, m, n, k, A, lda):
     `cusolverDn<t>orgqr <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-orgqr>`_
     """
 
-    Lwork = ctypes.c_int()
-    status = _libcusolver.cusolverDnZungqr_bufferSize(handle, m, n, k, int(A),
-                                                      lda, ctypes.byref(Lwork))
+    lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnZungqr_bufferSize(handle, m, n, k, int(a),
+                                                      lda, int(tau), ctypes.byref(lwork))
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 _libcusolver.cusolverDnZungqr.restype = int
 _libcusolver.cusolverDnZungqr.argtypes = [ctypes.c_void_p,
@@ -1430,7 +1434,7 @@ _libcusolver.cusolverDnZungqr.argtypes = [ctypes.c_void_p,
                                           ctypes.c_void_p,
                                           ctypes.c_int,
                                           ctypes.c_void_p]
-def cusolverDnZungqr(handle, m, n, k, A, lda, tau, work, lwork, devInfo):
+def cusolverDnZungqr(handle, m, n, k, a, lda, tau, work, lwork, devInfo):
     """
     Create unitary m x n matrix from double precision complex reflection vectors.
 
@@ -1439,7 +1443,7 @@ def cusolverDnZungqr(handle, m, n, k, A, lda, tau, work, lwork, devInfo):
     `cusolverDn<t>orgqr <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-orgqr>`_
     """
 
-    status = _libcusolver.cusolverDnZungqr(handle, m, n, k, int(A), lda,
+    status = _libcusolver.cusolverDnZungqr(handle, m, n, k, int(a), lda,
                                            int(tau), int(work), lwork, int(devInfo))
     cusolverCheckStatus(status)
 
@@ -1455,7 +1459,7 @@ if cudart._cudart_version >= 8000:
                                                          ctypes.c_void_p,
                                                          ctypes.c_void_p]
 @_cusolver_version_req(8.0)
-def cusolverDnSsyevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
+def cusolverDnSsyevd_bufferSize(handle, jobz, uplo, n, a, lda, w):
     """
     Calculate size of work buffer used by culsolverDnSsyevd.
 
@@ -1464,19 +1468,19 @@ def cusolverDnSsyevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
     `cusolverDn<t>gebrd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-eigensolver-reference>`_
     """
 
-    Lwork = ctypes.c_int()
+    lwork = ctypes.c_int()
     status = _libcusolver.cusolverDnSsyevd_bufferSize(
         handle,
         jobz,
         uplo,
         n,
-        int(A),
+        int(a),
         lda,
-        int(W),
-        ctypes.byref(Lwork)
+        int(w),
+        ctypes.byref(lwork)
     )
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 if cudart._cudart_version >= 8000:
     _libcusolver.cusolverDnSsyevd.restype = int
@@ -1491,18 +1495,18 @@ if cudart._cudart_version >= 8000:
                                               ctypes.c_int,
                                               ctypes.c_void_p]
 @_cusolver_version_req(8.0)
-def cusolverDnSsyevd(handle, jobz, uplo, n, A, lda, W, Workspace, Lwork,
+def cusolverDnSsyevd(handle, jobz, uplo, n, a, lda, w, workspace, lwork,
                      devInfo):
     status = _libcusolver.cusolverDnSsyevd(
         handle,
         jobz,
         uplo,
         n,
-        int(A),
+        int(a),
         lda,
-        int(W),
-        int(Workspace),
-        Lwork,
+        int(w),
+        int(workspace),
+        lwork,
         int(devInfo)
     )
     cusolverCheckStatus(status)
@@ -1518,7 +1522,7 @@ if cudart._cudart_version >= 8000:
                                                          ctypes.c_void_p,
                                                          ctypes.c_void_p]
 @_cusolver_version_req(8.0)
-def cusolverDnDsyevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
+def cusolverDnDsyevd_bufferSize(handle, jobz, uplo, n, a, lda, w):
     """
     Calculate size of work buffer used by culsolverDnDsyevd.
 
@@ -1527,19 +1531,19 @@ def cusolverDnDsyevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
     `cusolverDn<t>gebrd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-eigensolver-reference>`_
     """
 
-    Lwork = ctypes.c_int()
+    lwork = ctypes.c_int()
     status = _libcusolver.cusolverDnDsyevd_bufferSize(
         handle,
         jobz,
         uplo,
         n,
-        int(A),
+        int(a),
         lda,
-        int(W),
-        ctypes.byref(Lwork)
+        int(w),
+        ctypes.byref(lwork)
     )
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 if cudart._cudart_version >= 8000:
     _libcusolver.cusolverDnDsyevd.restype = int
@@ -1554,18 +1558,18 @@ if cudart._cudart_version >= 8000:
                                               ctypes.c_int,
                                               ctypes.c_void_p]
 @_cusolver_version_req(8.0)
-def cusolverDnDsyevd(handle, jobz, uplo, n, A, lda, W, Workspace, Lwork,
+def cusolverDnDsyevd(handle, jobz, uplo, n, a, lda, w, workspace, lwork,
                      devInfo):
     status = _libcusolver.cusolverDnDsyevd(
         handle,
         jobz,
         uplo,
         n,
-        int(A),
+        int(a),
         lda,
-        int(W),
-        int(Workspace),
-        Lwork,
+        int(w),
+        int(workspace),
+        lwork,
         int(devInfo)
     )
     cusolverCheckStatus(status)
@@ -1582,7 +1586,7 @@ if cudart._cudart_version >= 8000:
                                                          ctypes.c_void_p,
                                                          ctypes.c_void_p]
 @_cusolver_version_req(8.0)
-def cusolverDnCheevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
+def cusolverDnCheevd_bufferSize(handle, jobz, uplo, n, a, lda, w):
     """
     Calculate size of work buffer used by culsolverDnCheevd.
 
@@ -1591,19 +1595,19 @@ def cusolverDnCheevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
     `cusolverDn<t>gebrd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-eigensolver-reference>`_
     """
 
-    Lwork = ctypes.c_int()
+    lwork = ctypes.c_int()
     status = _libcusolver.cusolverDnCheevd_bufferSize(
         handle,
         jobz,
         uplo,
         n,
-        int(A),
+        int(a),
         lda,
-        int(W),
-        ctypes.byref(Lwork)
+        int(w),
+        ctypes.byref(lwork)
     )
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 if cudart._cudart_version >= 8000:
     _libcusolver.cusolverDnCheevd.restype = int
@@ -1618,18 +1622,18 @@ if cudart._cudart_version >= 8000:
                                               ctypes.c_int,
                                               ctypes.c_void_p]
 @_cusolver_version_req(8.0)
-def cusolverDnCheevd(handle, jobz, uplo, n, A, lda, W, Workspace, Lwork,
+def cusolverDnCheevd(handle, jobz, uplo, n, a, lda, w, workspace, lwork,
                      devInfo):
     status = _libcusolver.cusolverDnCheevd(
         handle,
         jobz,
         uplo,
         n,
-        int(A),
+        int(a),
         lda,
-        int(W),
-        int(Workspace),
-        Lwork,
+        int(w),
+        int(workspace),
+        lwork,
         int(devInfo)
     )
     cusolverCheckStatus(status)
@@ -1646,7 +1650,7 @@ if cudart._cudart_version >= 8000:
                                                          ctypes.c_void_p,
                                                          ctypes.c_void_p]
 @_cusolver_version_req(8.0)
-def cusolverDnZheevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
+def cusolverDnZheevd_bufferSize(handle, jobz, uplo, n, a, lda, w):
     """
     Calculate size of work buffer used by culsolverDnZheevd.
 
@@ -1655,19 +1659,19 @@ def cusolverDnZheevd_bufferSize(handle, jobz, uplo, n, A, lda, W):
     `cusolverDn<t>gebrd <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-eigensolver-reference>`_
     """
 
-    Lwork = ctypes.c_int()
+    lwork = ctypes.c_int()
     status = _libcusolver.cusolverDnZheevd_bufferSize(
         handle,
         jobz,
         uplo,
         n,
-        int(A),
+        int(a),
         lda,
-        int(W),
-        ctypes.byref(Lwork)
+        int(w),
+        ctypes.byref(lwork)
     )
     cusolverCheckStatus(status)
-    return Lwork.value
+    return lwork.value
 
 if cudart._cudart_version >= 8000:
     _libcusolver.cusolverDnZheevd.restype = int
@@ -1682,18 +1686,18 @@ if cudart._cudart_version >= 8000:
                                               ctypes.c_int,
                                               ctypes.c_void_p]
 @_cusolver_version_req(8.0)
-def cusolverDnZheevd(handle, jobz, uplo, n, A, lda, W, Workspace, Lwork,
+def cusolverDnZheevd(handle, jobz, uplo, n, a, lda, w, workspace, lwork,
                      devInfo):
     status = _libcusolver.cusolverDnZheevd(
         handle,
         jobz,
         uplo,
         n,
-        int(A),
+        int(a),
         lda,
-        int(W),
-        int(Workspace),
-        Lwork,
+        int(w),
+        int(workspace),
+        lwork,
         int(devInfo)
     )
     cusolverCheckStatus(status)
