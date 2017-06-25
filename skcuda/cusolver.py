@@ -1083,7 +1083,7 @@ def cusolverDnSgeqrf_bufferSize(handle, m, n, A, lda):
 
     Lwork = ctypes.c_int()
     status = _libcusolver.cusolverDnSgeqrf_bufferSize(handle, m, n, int(A),
-                                                      n, ctypes.byref(Lwork))
+                                                      lda, ctypes.byref(Lwork))
     cusolverCheckStatus(status)
     return Lwork.value
 
@@ -1130,7 +1130,7 @@ def cusolverDnDgeqrf_bufferSize(handle, m, n, A, lda):
 
     Lwork = ctypes.c_int()
     status = _libcusolver.cusolverDnDgeqrf_bufferSize(handle, m, n, int(A),
-                                                      n, ctypes.byref(Lwork))
+                                                      lda, ctypes.byref(Lwork))
     cusolverCheckStatus(status)
     return Lwork.value
 
@@ -1177,7 +1177,7 @@ def cusolverDnCgeqrf_bufferSize(handle, m, n, A, lda):
 
     Lwork = ctypes.c_int()
     status = _libcusolver.cusolverDnCgeqrf_bufferSize(handle, m, n, int(A),
-                                                      n, ctypes.byref(Lwork))
+                                                      lda, ctypes.byref(Lwork))
     cusolverCheckStatus(status)
     return Lwork.value
 
@@ -1224,7 +1224,7 @@ def cusolverDnZgeqrf_bufferSize(handle, m, n, A, lda):
 
     Lwork = ctypes.c_int()
     status = _libcusolver.cusolverDnZgeqrf_bufferSize(handle, m, n, int(A),
-                                                      n, ctypes.byref(Lwork))
+                                                      lda, ctypes.byref(Lwork))
     cusolverCheckStatus(status)
     return Lwork.value
 
@@ -1255,6 +1255,29 @@ def cusolverDnZgeqrf(handle, m, n, A, lda, TAU, Workspace, Lwork, devInfo):
     cusolverCheckStatus(status)
 
 # SORGQR, DORGQR, CUNGQR, ZUNGQR
+_libcusolver.cusolverDnSorgqr_bufferSize.restype = int
+_libcusolver.cusolverDnSorgqr_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p]
+def cusolverDnSorgqr_bufferSize(handle, m, n, k, A, lda):
+    """
+    Calculate size of work buffer used by cusolverDnSorgqr.
+
+    References
+    ----------
+    `cusolverDn<t>orgqr <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-orgqr>`_
+    """
+
+    Lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnSorgqr_bufferSize(handle, m, n, k, int(A),
+                                                      lda, ctypes.byref(Lwork))
+    cusolverCheckStatus(status)
+    return Lwork.value
+ 
 _libcusolver.cusolverDnSorgqr.restype = int
 _libcusolver.cusolverDnSorgqr.argtypes = [ctypes.c_void_p,
                                           ctypes.c_int,
@@ -1278,6 +1301,29 @@ def cusolverDnSorgqr(handle, m, n, k, A, lda, tau, work, lwork, devInfo):
     status = _libcusolver.cusolverDnSorgqr(handle, m, n, k, int(A), lda,
                                            int(tau), int(work), lwork, int(devInfo))
     cusolverCheckStatus(status)
+
+_libcusolver.cusolverDnDorgqr_bufferSize.restype = int
+_libcusolver.cusolverDnDorgqr_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p]
+def cusolverDnDorgqr_bufferSize(handle, m, n, k, A, lda):
+    """
+    Calculate size of work buffer used by cusolverDnDorgqr.
+
+    References
+    ----------
+    `cusolverDn<t>orgqr <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-orgqr>`_
+    """
+
+    Lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnDorgqr_bufferSize(handle, m, n, k, int(A),
+                                                      lda, ctypes.byref(Lwork))
+    cusolverCheckStatus(status)
+    return Lwork.value
 
 _libcusolver.cusolverDnDorgqr.restype = int
 _libcusolver.cusolverDnDorgqr.argtypes = [ctypes.c_void_p,
@@ -1303,6 +1349,29 @@ def cusolverDnDorgqr(handle, m, n, k, A, lda, tau, work, lwork, devInfo):
                                            int(tau), int(work), lwork, int(devInfo))
     cusolverCheckStatus(status)
 
+_libcusolver.cusolverDnCungqr_bufferSize.restype = int
+_libcusolver.cusolverDnCungqr_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p]
+def cusolverDnCungqr_bufferSize(handle, m, n, k, A, lda):
+    """
+    Calculate size of work buffer used by cusolverDnCungqr.
+
+    References
+    ----------
+    `cusolverDn<t>orgqr <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-orgqr>`_
+    """
+
+    Lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnCungqr_bufferSize(handle, m, n, k, int(A),
+                                                      lda, ctypes.byref(Lwork))
+    cusolverCheckStatus(status)
+    return Lwork.value
+
 _libcusolver.cusolverDnCungqr.restype = int
 _libcusolver.cusolverDnCungqr.argtypes = [ctypes.c_void_p,
                                           ctypes.c_int,
@@ -1326,6 +1395,29 @@ def cusolverDnCungqr(handle, m, n, k, A, lda, tau, work, lwork, devInfo):
     status = _libcusolver.cusolverDnCungqr(handle, m, n, k, int(A), lda,
                                            int(tau), int(work), lwork, int(devInfo))
     cusolverCheckStatus(status)
+
+_libcusolver.cusolverDnZungqr_bufferSize.restype = int
+_libcusolver.cusolverDnZungqr_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p]
+def cusolverDnZungqr_bufferSize(handle, m, n, k, A, lda):
+    """
+    Calculate size of work buffer used by cusolverDnZungqr.
+
+    References
+    ----------
+    `cusolverDn<t>orgqr <http://docs.nvidia.com/cuda/cusolver/index.html#cuds-lt-t-gt-orgqr>`_
+    """
+
+    Lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnZungqr_bufferSize(handle, m, n, k, int(A),
+                                                      lda, ctypes.byref(Lwork))
+    cusolverCheckStatus(status)
+    return Lwork.value
 
 _libcusolver.cusolverDnZungqr.restype = int
 _libcusolver.cusolverDnZungqr.argtypes = [ctypes.c_void_p,
