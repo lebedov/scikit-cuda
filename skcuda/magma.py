@@ -1008,21 +1008,30 @@ _libmagma.magma_get_dsytrd_nb.argtypes = [ctypes.c_int]
 def magma_get_dsytrd_nb(m):
     return _libmagma.magma_get_dsytrd_nb(m)
 
-_libmagma.magma_queue_create.restype = int
-_libmagma.magma_queue_create.argtypes = [ctypes.c_int,
-                                         ctypes.c_void_p]
+_libmagma.magma_queue_create_internal.restype = int
+_libmagma.magma_queue_create_internal.argtypes = [ctypes.c_int,
+                                                  ctypes.c_void_p,
+                                                  ctypes.c_char_p,
+                                                  ctypes.c_char_p,
+                                                  ctypes.c_int]
 def magma_queue_create(device, queue_ptr):
-    return _libmagma.magma_queue_create.restype(device, queue_ptr)
+    return _libmagma.magma_queue_create_internal.restype(device, queue_ptr, '', '', 0)
 
-_libmagma.magma_queue_destroy.restype = int
-_libmagma.magma_queue_destroy.argtypes = [ctypes.c_void_p]
+_libmagma.magma_queue_destroy_internal.restype = int
+_libmagma.magma_queue_destroy_internal.argtypes = [ctypes.c_void_p,
+                                                   ctypes.c_char_p,
+                                                   ctypes.c_char_p,
+                                                   ctypes.c_int]
 def magma_queue_destroy(queue_ptr):
-    return _libmagma.magma_queue_destroy.restype(queue_ptr)
+    return _libmagma.magma_queue_destroy_internal.restype(queue_ptr, '', '', 0)
 
-_libmagma.magma_queue_sync.restype = int
-_libmagma.magma_queue_sync.argtypes = [ctypes.c_void_p]
+_libmagma.magma_queue_sync_internal.restype = int
+_libmagma.magma_queue_sync_internal.argtypes = [ctypes.c_void_p,
+                                                ctypes.c_char_p,
+                                                ctypes.c_char_p,
+                                                ctypes.c_int]
 def magma_queue_sync(queue_ptr):
-    return _libmagma.magma_queue_sync.restype(queue_ptr)
+    return _libmagma.magma_queue_sync_internal.restype(queue_ptr, '', '', 0)
 
 # Buffer size algorithms
 
