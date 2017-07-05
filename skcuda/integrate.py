@@ -12,10 +12,10 @@ import pycuda.gpuarray as gpuarray
 import pycuda.tools as tools
 import numpy as np
 
-import cublas
-import misc
+from .misc import init
 
-from misc import init
+from . import cublas
+from . import misc
 
 def gen_trapz_mult(N, dtype):
     """
