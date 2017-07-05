@@ -10,8 +10,19 @@ from unittest import main, TestCase, TestSuite
 import pycuda.autoinit
 import pycuda.gpuarray as gpuarray
 import numpy as np
-from numpy.testing import assert_raises
+from numpy.testing import assert_allclose, assert_equal, assert_raises
 import skcuda.misc as misc
+
+dtype_to_atol = {np.int32: 1e-6,
+                 np.float32: 1e-6,
+                 np.complex64: 1e-6,
+                 np.float64: 1e-8,
+                 np.complex128: 1e-8}
+dtype_to_rtol = {np.int32: 1e-5,
+                 np.float32: 1e-5,
+                 np.complex64: 1e-5,
+                 np.float64: 1e-5,
+                 np.complex128: 1e-5}
 
 class test_misc(TestCase):
 
@@ -23,155 +34,206 @@ class test_misc(TestCase):
         x = np.array([-1, 2, -3], np.float32)
         x_gpu = gpuarray.to_gpu(x)
         m_gpu = misc.maxabs(x_gpu)
-        assert np.allclose(m_gpu.get(), np.max(np.abs(x)))
+        assert_allclose(m_gpu.get(), np.max(np.abs(x)),
+                        rtol=dtype_to_rtol[np.float32],
+                        atol=dtype_to_atol[np.float32])
 
     def test_maxabs_float64(self):
         x = np.array([-1, 2, -3], np.float64)
         x_gpu = gpuarray.to_gpu(x)
         m_gpu = misc.maxabs(x_gpu)
-        assert np.allclose(m_gpu.get(), np.max(np.abs(x)))
+        assert_allclose(m_gpu.get(), np.max(np.abs(x)),
+                        rtol=dtype_to_rtol[np.float64],
+                        atol=dtype_to_atol[np.float64])
+
 
     def test_maxabs_complex64(self):
         x = np.array([-1j, 2, -3j], np.complex64)
         x_gpu = gpuarray.to_gpu(x)
         m_gpu = misc.maxabs(x_gpu)
-        assert np.allclose(m_gpu.get(), np.max(np.abs(x)))
+        assert_allclose(m_gpu.get(), np.max(np.abs(x)),
+                        rtol=dtype_to_rtol[np.complex64],
+                        atol=dtype_to_atol[np.complex64])
+
 
     def test_maxabs_complex128(self):
         x = np.array([-1j, 2, -3j], np.complex128)
         x_gpu = gpuarray.to_gpu(x)
         m_gpu = misc.maxabs(x_gpu)
-        assert np.allclose(m_gpu.get(), np.max(np.abs(x)))
+        assert_allclose(m_gpu.get(), np.max(np.abs(x)),
+                        rtol=dtype_to_rtol[np.complex128],
+                        atol=dtype_to_atol[np.complex128])
+
 
     def test_cumsum_float32(self):
         x = np.array([1, 4, 3, 2, 8], np.float32)
         x_gpu = gpuarray.to_gpu(x)
         c_gpu = misc.cumsum(x_gpu)
-        assert np.allclose(c_gpu.get(), np.cumsum(x))
+        assert_allclose(c_gpu.get(), np.cumsum(x),
+                        rtol=dtype_to_rtol[np.float32],
+                        atol=dtype_to_atol[np.float32])
+
 
     def test_cumsum_float64(self):
         x = np.array([1, 4, 3, 2, 8], np.float64)
         x_gpu = gpuarray.to_gpu(x)
         c_gpu = misc.cumsum(x_gpu)
-        assert np.allclose(c_gpu.get(), np.cumsum(x))
+        assert_allclose(c_gpu.get(), np.cumsum(x),
+                        rtol=dtype_to_rtol[np.float64],
+                        atol=dtype_to_atol[np.float64])
+
 
     def test_cumsum_complex64(self):
         x = np.array([1, 4j, 3, 2j, 8], np.complex64)
         x_gpu = gpuarray.to_gpu(x)
         c_gpu = misc.cumsum(x_gpu)
-        assert np.allclose(c_gpu.get(), np.cumsum(x))
+        assert_allclose(c_gpu.get(), np.cumsum(x),
+                        rtol=dtype_to_rtol[np.complex64],
+                        atol=dtype_to_atol[np.complex64])
+
 
     def test_cumsum_complex128(self):
         x = np.array([1, 4j, 3, 2j, 8], np.complex128)
         x_gpu = gpuarray.to_gpu(x)
         c_gpu = misc.cumsum(x_gpu)
-        assert np.allclose(c_gpu.get(), np.cumsum(x))
+        assert_allclose(c_gpu.get(), np.cumsum(x),
+                        rtol=dtype_to_rtol[np.complex128],
+                        atol=dtype_to_atol[np.complex128])
+
 
     def test_diff_float32(self):
         x = np.array([1.3, 2.7, 4.9, 5.1], np.float32)
         x_gpu = gpuarray.to_gpu(x)
         y_gpu = misc.diff(x_gpu)
-        assert np.allclose(y_gpu.get(), np.diff(x))
+        assert_allclose(y_gpu.get(), np.diff(x),
+                        rtol=dtype_to_rtol[np.float32],
+                        atol=dtype_to_atol[np.float32])
 
     def test_diff_float64(self):
         x = np.array([1.3, 2.7, 4.9, 5.1], np.float64)
         x_gpu = gpuarray.to_gpu(x)
         y_gpu = misc.diff(x_gpu)
-        assert np.allclose(y_gpu.get(), np.diff(x))
+        assert_allclose(y_gpu.get(), np.diff(x),
+                        rtol=dtype_to_rtol[np.float64],
+                        atol=dtype_to_atol[np.float64])
 
     def test_diff_complex64(self):
         x = np.array([1.3+2.0j, 2.7-3.9j, 4.9+1.0j, 5.1-9.0j], np.complex64)
         x_gpu = gpuarray.to_gpu(x)
         y_gpu = misc.diff(x_gpu)
-        assert np.allclose(y_gpu.get(), np.diff(x))
+        assert_allclose(y_gpu.get(), np.diff(x),
+                        rtol=dtype_to_rtol[np.complex64],
+                        atol=dtype_to_atol[np.complex64])
 
     def test_diff_complex128(self):
         x = np.array([1.3+2.0j, 2.7-3.9j, 4.9+1.0j, 5.1-9.0j], np.complex128)
         x_gpu = gpuarray.to_gpu(x)
         y_gpu = misc.diff(x_gpu)
-        assert np.allclose(y_gpu.get(), np.diff(x))
+        assert_allclose(y_gpu.get(), np.diff(x),
+                        rtol=dtype_to_rtol[np.complex128],
+                        atol=dtype_to_atol[np.complex128])
 
     def test_get_by_index_float32(self):
         src = np.random.rand(5).astype(np.float32)
         src_gpu = gpuarray.to_gpu(src)
         ind = gpuarray.to_gpu(np.array([0, 2, 4]))
         res_gpu = misc.get_by_index(src_gpu, ind)
-        assert np.allclose(res_gpu.get(), src[[0, 2, 4]])
+        assert_allclose(res_gpu.get(), src[[0, 2, 4]],
+                        rtol=dtype_to_rtol[np.float32],
+                        atol=dtype_to_atol[np.float32])
 
         ind = gpuarray.to_gpu(np.array([], np.int64))
         res_gpu = misc.get_by_index(src_gpu, ind)
-        assert len(res_gpu) == 0
+        assert_equal(len(res_gpu), 0)
 
     def test_get_by_index_float64(self):
         src = np.random.rand(5).astype(np.float64)
         src_gpu = gpuarray.to_gpu(src)
         ind = gpuarray.to_gpu(np.array([0, 2, 4]))
         res_gpu = misc.get_by_index(src_gpu, ind)
-        assert np.allclose(res_gpu.get(), src[[0, 2, 4]])
+        assert_allclose(res_gpu.get(), src[[0, 2, 4]],
+                        rtol=dtype_to_rtol[np.float64],
+                        atol=dtype_to_atol[np.float64])
 
         ind = gpuarray.to_gpu(np.array([], np.int64))
         res_gpu = misc.get_by_index(src_gpu, ind)
-        assert len(res_gpu) == 0
+        assert_equal(len(res_gpu), 0)
 
     def test_set_by_index_dest_float32(self):
         dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.float32))
         ind = gpuarray.to_gpu(np.array([0, 2, 4]))
         src_gpu = gpuarray.to_gpu(np.array([1, 1, 1], dtype=np.float32))
         misc.set_by_index(dest_gpu, ind, src_gpu, 'dest')
-        assert np.allclose(dest_gpu.get(),
-                           np.array([1, 1, 1, 3, 1], dtype=np.float32))
+        assert_allclose(dest_gpu.get(),
+                        np.array([1, 1, 1, 3, 1], dtype=np.float32),
+                        rtol=dtype_to_rtol[np.float32],
+                        atol=dtype_to_atol[np.float32])
 
         dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.float32))
         ind = gpuarray.to_gpu(np.array([], np.int64))
         src_gpu = gpuarray.to_gpu(np.array([1, 1, 1], dtype=np.float32))
         misc.set_by_index(dest_gpu, ind, src_gpu, 'dest')
-        assert np.allclose(dest_gpu.get(),
-                           np.arange(5, dtype=np.float32))
+        assert_allclose(dest_gpu.get(),
+                        np.arange(5, dtype=np.float32),
+                        rtol=dtype_to_rtol[np.float32],
+                        atol=dtype_to_atol[np.float32])
 
-    def test_set_by_index_dest_float64(self):
+    def test_set_by_index_dest_float64(self): #XXX
         dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.double))
         ind = gpuarray.to_gpu(np.array([0, 2, 4]))
         src_gpu = gpuarray.to_gpu(np.array([1, 1, 1], dtype=np.double))
         misc.set_by_index(dest_gpu, ind, src_gpu, 'dest')
-        assert np.allclose(dest_gpu.get(),
-                           np.array([1, 1, 1, 3, 1], dtype=np.double))
+        assert_allclose(dest_gpu.get(),
+                        np.array([1, 1, 1, 3, 1], dtype=np.double),
+                        rtol=dtype_to_rtol[np.float64],
+                        atol=dtype_to_atol[np.float64])
 
         dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.double))
         ind = gpuarray.to_gpu(np.array([], np.int64))
         src_gpu = gpuarray.to_gpu(np.array([1, 1, 1], dtype=np.double))
         misc.set_by_index(dest_gpu, ind, src_gpu, 'dest')
-        assert np.allclose(dest_gpu.get(),
-                           np.arange(5, dtype=np.double))
+        assert_allclose(dest_gpu.get(),
+                        np.arange(5, dtype=np.double),
+                        rtol=dtype_to_rtol[np.float64],
+                        atol=dtype_to_atol[np.float64])
 
     def test_set_by_index_src_float32(self):
         dest_gpu = gpuarray.to_gpu(np.zeros(3, dtype=np.float32))
         ind = gpuarray.to_gpu(np.array([0, 2, 4]))
         src_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.float32))
         misc.set_by_index(dest_gpu, ind, src_gpu, 'src')
-        assert np.allclose(dest_gpu.get(),
-                           np.array([0, 2, 4], dtype=np.float32))
+        assert_allclose(dest_gpu.get(),
+                        np.array([0, 2, 4], dtype=np.float32),
+                        rtol=dtype_to_rtol[np.float32],
+                        atol=dtype_to_atol[np.float32])
 
         dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.float32))
         ind = gpuarray.to_gpu(np.array([], np.int64))
         src_gpu = gpuarray.to_gpu(np.array([1, 1, 1], dtype=np.float32))
         misc.set_by_index(dest_gpu, ind, src_gpu, 'src')
-        assert np.allclose(dest_gpu.get(),
-                           np.arange(5, dtype=np.float32))
+        assert_allclose(dest_gpu.get(),
+                        np.arange(5, dtype=np.float32),
+                        rtol=dtype_to_rtol[np.float32],
+                        atol=dtype_to_atol[np.float32])
 
     def test_set_by_index_src_float64(self):
         dest_gpu = gpuarray.to_gpu(np.zeros(3, dtype=np.double))
         ind = gpuarray.to_gpu(np.array([0, 2, 4]))
         src_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.double))
         misc.set_by_index(dest_gpu, ind, src_gpu, 'src')
-        assert np.allclose(dest_gpu.get(),
-                           np.array([0, 2, 4], dtype=np.double))
+        assert_allclose(dest_gpu.get(),
+                        np.array([0, 2, 4], dtype=np.double),
+                        rtol=dtype_to_rtol[np.float64],
+                        atol=dtype_to_atol[np.float64])
 
         dest_gpu = gpuarray.to_gpu(np.arange(5, dtype=np.double))
         ind = gpuarray.to_gpu(np.array([], np.int64))
         src_gpu = gpuarray.to_gpu(np.array([1, 1, 1], dtype=np.double))
         misc.set_by_index(dest_gpu, ind, src_gpu, 'src')
-        assert np.allclose(dest_gpu.get(),
-                           np.arange(5, dtype=np.double))
+        assert_allclose(dest_gpu.get(),
+                        np.arange(5, dtype=np.double),
+                        rtol=dtype_to_rtol[np.float64],
+                        atol=dtype_to_atol[np.float64])
 
     def impl_test_binaryop_2d(self, dtype):
         if issubclass(dtype, numbers.Integral):
@@ -197,24 +259,59 @@ class test_misc(TestCase):
         b_mat_gpu = gpuarray.to_gpu(b_mat)
 
         # addition
-        assert np.allclose(misc.add(a_sca_gpu, b_sca_gpu).get(), a_sca+b_sca)
-        assert np.allclose(misc.add(a_vec_gpu, b_vec_gpu).get(), a_vec+b_vec)
-        assert np.allclose(misc.add(a_mat_gpu, b_mat_gpu).get(), a_mat+b_mat)
+        assert_allclose(misc.add(a_sca_gpu, b_sca_gpu).get(), a_sca+b_sca,
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.add(a_vec_gpu, b_vec_gpu).get(), a_vec+b_vec,
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.add(a_mat_gpu, b_mat_gpu).get(), a_mat+b_mat,
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
 
         # subtract
-        assert np.allclose(misc.subtract(a_sca_gpu, b_sca_gpu).get(), a_sca-b_sca)
-        assert np.allclose(misc.subtract(a_vec_gpu, b_vec_gpu).get(), a_vec-b_vec)
-        assert np.allclose(misc.subtract(a_mat_gpu, b_mat_gpu).get(), a_mat-b_mat)
+        assert_allclose(misc.subtract(a_sca_gpu, b_sca_gpu).get(), a_sca-b_sca,
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.subtract(a_vec_gpu, b_vec_gpu).get(), a_vec-b_vec,
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.subtract(a_mat_gpu, b_mat_gpu).get(), a_mat-b_mat,
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
 
         # multiplication
-        assert np.allclose(misc.multiply(a_sca_gpu, b_sca_gpu).get(), a_sca*b_sca)
-        assert np.allclose(misc.multiply(a_vec_gpu, b_vec_gpu).get(), a_vec*b_vec)
-        assert np.allclose(misc.multiply(a_mat_gpu, b_mat_gpu).get(), a_mat*b_mat)
+        assert_allclose(misc.multiply(a_sca_gpu, b_sca_gpu).get(), a_sca*b_sca,
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.multiply(a_vec_gpu, b_vec_gpu).get(), a_vec*b_vec,
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.multiply(a_mat_gpu, b_mat_gpu).get(), a_mat*b_mat,
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
 
         # division
-        assert np.allclose(misc.divide(a_sca_gpu, b_sca_gpu).get(), a_sca/b_sca)
-        assert np.allclose(misc.divide(a_vec_gpu, b_vec_gpu).get(), a_vec/b_vec)
-        assert np.allclose(misc.divide(a_mat_gpu, b_mat_gpu).get(), a_mat/b_mat)
+        if issubclass(dtype, numbers.Integral):
+            assert_allclose(misc.divide(a_sca_gpu, b_sca_gpu).get(), a_sca//b_sca,
+                            rtol=dtype_to_rtol[dtype],
+                            atol=dtype_to_atol[dtype])
+            assert_allclose(misc.divide(a_vec_gpu, b_vec_gpu).get(), a_vec//b_vec,
+                            rtol=dtype_to_rtol[dtype],
+                            atol=dtype_to_atol[dtype])
+            assert_allclose(misc.divide(a_mat_gpu, b_mat_gpu).get(), a_mat//b_mat,
+                            rtol=dtype_to_rtol[dtype],
+                            atol=dtype_to_atol[dtype])
+        else:
+            assert_allclose(misc.divide(a_sca_gpu, b_sca_gpu).get(), a_sca/b_sca,
+                            rtol=dtype_to_rtol[dtype],
+                            atol=dtype_to_atol[dtype])
+            assert_allclose(misc.divide(a_vec_gpu, b_vec_gpu).get(), a_vec/b_vec,
+                            rtol=dtype_to_rtol[dtype],
+                            atol=dtype_to_atol[dtype])
+            assert_allclose(misc.divide(a_mat_gpu, b_mat_gpu).get(), a_mat/b_mat,
+                            rtol=dtype_to_rtol[dtype],
+                            atol=dtype_to_atol[dtype])
 
     def test_binaryop_2d_int32(self):
         self.impl_test_binaryop_2d(np.int32)
@@ -257,23 +354,56 @@ class test_misc(TestCase):
         c_gpu = gpuarray.to_gpu(c)
         d_gpu = gpuarray.to_gpu(d)
         out = gpuarray.empty(x.shape, dtype=dtype)
+
         # addition
         res = misc.add_matvec(x_gpu, a_gpu, out=out).get()
-        assert np.allclose(res, x+a)
-        assert np.allclose(misc.add_matvec(x_gpu, b_gpu).get(), x+b)
-        assert np.allclose(misc.add_matvec(x_gpu, c_gpu).get(), x+c)
+        assert_allclose(res, x+a,
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.add_matvec(x_gpu, b_gpu).get(), x+b,
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.add_matvec(x_gpu, c_gpu).get(), x+c,
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
         assert_raises(ValueError, misc.add_matvec, x_gpu, d_gpu)
+
         # multiplication
         res = misc.mult_matvec(x_gpu, a_gpu, out=out).get()
-        assert np.allclose(res, x*a)
-        assert np.allclose(misc.mult_matvec(x_gpu, b_gpu).get(), x*b)
-        assert np.allclose(misc.mult_matvec(x_gpu, c_gpu).get(), x*c)
+        assert_allclose(res, x*a,
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.mult_matvec(x_gpu, b_gpu).get(), x*b,
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.mult_matvec(x_gpu, c_gpu).get(), x*c,
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
         assert_raises(ValueError, misc.mult_matvec, x_gpu, d_gpu)
+
         # division
         res = misc.div_matvec(x_gpu, a_gpu, out=out).get()
-        assert np.allclose(res, x/a)
-        assert np.allclose(misc.div_matvec(x_gpu, b_gpu).get(), x/b)
-        assert np.allclose(misc.div_matvec(x_gpu, c_gpu).get(), x/c)
+        if issubclass(dtype, numbers.Integral):
+            assert_allclose(res, x//a,
+                            rtol=dtype_to_rtol[dtype],
+                            atol=dtype_to_atol[dtype])
+            assert_allclose(misc.div_matvec(x_gpu, b_gpu).get(), x//b,
+                            rtol=dtype_to_rtol[dtype],
+                            atol=dtype_to_atol[dtype])
+            assert_allclose(misc.div_matvec(x_gpu, c_gpu).get(), x//c,
+                            rtol=dtype_to_rtol[dtype],
+                            atol=dtype_to_atol[dtype])
+        else:
+            assert_allclose(res, x/a,
+                            rtol=dtype_to_rtol[dtype],
+                            atol=dtype_to_atol[dtype])
+            assert_allclose(misc.div_matvec(x_gpu, b_gpu).get(), x/b,
+                            rtol=dtype_to_rtol[dtype],
+                            atol=dtype_to_atol[dtype])
+            assert_allclose(misc.div_matvec(x_gpu, c_gpu).get(), x/c,
+                            rtol=dtype_to_rtol[dtype],
+                            atol=dtype_to_atol[dtype])
+
         assert_raises(ValueError, misc.div_matvec, x_gpu, d_gpu)
 
     def test_binaryop_matvec_int32(self):
@@ -295,14 +425,26 @@ class test_misc(TestCase):
         x = np.random.normal(scale=5.0, size=(3, 5))
         x = x.astype(dtype=dtype, order='C')
         x_gpu = gpuarray.to_gpu(x)
-        assert np.allclose(misc.sum(x_gpu).get(), x.sum())
-        assert np.allclose(misc.sum(x_gpu, axis=0).get(), x.sum(axis=0))
-        assert np.allclose(misc.sum(x_gpu, axis=1).get(), x.sum(axis=1))
+        assert_allclose(misc.sum(x_gpu).get(), x.sum(),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.sum(x_gpu, axis=0).get(), x.sum(axis=0),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.sum(x_gpu, axis=1).get(), x.sum(axis=1),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
         x = x.astype(dtype=dtype, order='F')
         x_gpu = gpuarray.to_gpu(x)
-        assert np.allclose(misc.sum(x_gpu).get(), x.sum())
-        assert np.allclose(misc.sum(x_gpu, axis=0).get(), x.sum(axis=0))
-        assert np.allclose(misc.sum(x_gpu, axis=1).get(), x.sum(axis=1))
+        assert_allclose(misc.sum(x_gpu).get(), x.sum(),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.sum(x_gpu, axis=0).get(), x.sum(axis=0),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.sum(x_gpu, axis=1).get(), x.sum(axis=1),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
 
     def test_sum_float32(self):
         self.impl_test_sum(np.float32)
@@ -320,14 +462,26 @@ class test_misc(TestCase):
         x = np.random.normal(scale=5.0, size=(3, 5))
         x = x.astype(dtype=dtype, order='C')
         x_gpu = gpuarray.to_gpu(x)
-        assert np.allclose(misc.mean(x_gpu).get(), x.mean())
-        assert np.allclose(misc.mean(x_gpu, axis=0).get(), x.mean(axis=0))
-        assert np.allclose(misc.mean(x_gpu, axis=1).get(), x.mean(axis=1))
+        assert_allclose(misc.mean(x_gpu).get(), x.mean(),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.mean(x_gpu, axis=0).get(), x.mean(axis=0),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.mean(x_gpu, axis=1).get(), x.mean(axis=1),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
         x = x.astype(dtype=dtype, order='F')
         x_gpu = gpuarray.to_gpu(x)
-        assert np.allclose(misc.mean(x_gpu).get(), x.mean())
-        assert np.allclose(misc.mean(x_gpu, axis=-1).get(), x.mean(axis=-1))
-        assert np.allclose(misc.mean(x_gpu, axis=-2).get(), x.mean(axis=-2))
+        assert_allclose(misc.mean(x_gpu).get(), x.mean(),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.mean(x_gpu, axis=-1).get(), x.mean(axis=-1),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.mean(x_gpu, axis=-2).get(), x.mean(axis=-2),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
 
     def test_mean_float32(self):
         self.impl_test_mean(np.float32)
@@ -345,21 +499,39 @@ class test_misc(TestCase):
         x = np.random.normal(scale=5.0, size=(3, 5))
         x = x.astype(dtype=dtype, order='C')
         x_gpu = gpuarray.to_gpu(x)
-        assert np.allclose(misc.var(x_gpu).get(), x.var())
-        assert np.allclose(misc.var(x_gpu, axis=0).get(), x.var(axis=0))
-        assert np.allclose(misc.var(x_gpu, axis=1).get(), x.var(axis=1))
+        assert_allclose(misc.var(x_gpu).get(), x.var(),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.var(x_gpu, axis=0).get(), x.var(axis=0),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.var(x_gpu, axis=1).get(), x.var(axis=1),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
 
-        assert np.allclose(misc.var(x_gpu, ddof=1).get(), x.var(ddof=1))
-        assert np.allclose(misc.var(x_gpu, ddof=1, axis=0).get(),
-                           x.var(ddof=1, axis=0))
-        assert np.allclose(misc.var(x_gpu, ddof=1, axis=1).get(),
-                           x.var(ddof=1, axis=1))
+        assert_allclose(misc.var(x_gpu, ddof=1).get(), x.var(ddof=1),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.var(x_gpu, ddof=1, axis=0).get(),
+                        x.var(ddof=1, axis=0),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.var(x_gpu, ddof=1, axis=1).get(),
+                        x.var(ddof=1, axis=1),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
         # Currently not working due to a bug in PyCUDA, see Issue #92
         #x = x.astype(dtype=dtype, order='F')
         #x_gpu = gpuarray.to_gpu(x)
-        #assert np.allclose(misc.var(x_gpu).get(), x.var())
-        #assert np.allclose(misc.var(x_gpu, axis=-1).get(), x.var(axis=-1))
-        #assert np.allclose(misc.var(x_gpu, axis=-2).get(), x.var(axis=-2))
+        #assert_allclose(misc.var(x_gpu).get(), x.var(),
+        #                rtol=dtype_to_rtol[dtype],
+        #                atol=dtype_to_atol[dtype])
+        #assert_allclose(misc.var(x_gpu, axis=-1).get(), x.var(axis=-1),
+        #                rtol=dtype_to_rtol[dtype],
+        #                atol=dtype_to_atol[dtype])
+        #assert_allclose(misc.var(x_gpu, axis=-2).get(), x.var(axis=-2),
+        #                rtol=dtype_to_rtol[dtype],
+        #                atol=dtype_to_atol[dtype])
 
     def test_var_float32(self):
         self.impl_test_var(np.float32)
@@ -377,21 +549,40 @@ class test_misc(TestCase):
         x = np.random.normal(scale=5.0, size=(3, 5))
         x = x.astype(dtype=dtype, order='C')
         x_gpu = gpuarray.to_gpu(x)
-        assert np.allclose(misc.std(x_gpu).get(), x.std())
-        assert np.allclose(misc.std(x_gpu, axis=0).get(), x.std(axis=0))
-        assert np.allclose(misc.std(x_gpu, axis=1).get(), x.std(axis=1))
+        assert_allclose(misc.std(x_gpu).get(), x.std(),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.std(x_gpu, axis=0).get(), x.std(axis=0),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.std(x_gpu, axis=1).get(), x.std(axis=1),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
 
-        assert np.allclose(misc.std(x_gpu, ddof=1).get(), x.std(ddof=1))
-        assert np.allclose(misc.std(x_gpu, ddof=1, axis=0).get(),
-                           x.std(ddof=1, axis=0))
-        assert np.allclose(misc.std(x_gpu, ddof=1, axis=1).get(),
-                           x.std(ddof=1, axis=1))
+        assert_allclose(misc.std(x_gpu, ddof=1).get(), x.std(ddof=1),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.std(x_gpu, ddof=1, axis=0).get(),
+                        x.std(ddof=1, axis=0),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.std(x_gpu, ddof=1, axis=1).get(),
+                        x.std(ddof=1, axis=1),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+
         # Currently not working due to a bug in PyCUDA, see Issue #92
         #x = x.astype(dtype=dtype, order='F')
         #x_gpu = gpuarray.to_gpu(x)
-        #assert np.allclose(misc.std(x_gpu).get(), x.std())
-        #assert np.allclose(misc.std(x_gpu, axis=-1).get(), x.std(axis=-1))
-        #assert np.allclose(misc.std(x_gpu, axis=-2).get(), x.std(axis=-2))
+        #assert_allclose(misc.std(x_gpu).get(), x.std(),
+        #                rtol=dtype_to_rtol[dtype],
+        #                atol=dtype_to_atol[dtype])
+        #assert_allclose(misc.std(x_gpu, axis=-1).get(), x.std(axis=-1),
+        #                rtol=dtype_to_rtol[dtype],
+        #                atol=dtype_to_atol[dtype])
+        #assert_allclose(misc.std(x_gpu, axis=-2).get(), x.std(axis=-2),
+        #                rtol=dtype_to_rtol[dtype],
+        #                atol=dtype_to_atol[dtype])
 
     def test_std_float32(self):
         self.impl_test_std(np.float32)
@@ -409,17 +600,33 @@ class test_misc(TestCase):
         x = np.random.normal(scale=5.0, size=(3, 5))
         x = x.astype(dtype=dtype, order='C')
         x_gpu = gpuarray.to_gpu(x)
-        assert np.allclose(misc.max(x_gpu, axis=0).get(), x.max(axis=0))
-        assert np.allclose(misc.max(x_gpu, axis=1).get(), x.max(axis=1))
-        assert np.allclose(misc.min(x_gpu, axis=0).get(), x.min(axis=0))
-        assert np.allclose(misc.min(x_gpu, axis=1).get(), x.min(axis=1))
+        assert_allclose(misc.max(x_gpu, axis=0).get(), x.max(axis=0),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.max(x_gpu, axis=1).get(), x.max(axis=1),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.min(x_gpu, axis=0).get(), x.min(axis=0),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.min(x_gpu, axis=1).get(), x.min(axis=1),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
 
         x = x.astype(dtype=dtype, order='F')
         x_gpu = gpuarray.to_gpu(x)
-        assert np.allclose(misc.max(x_gpu, axis=0).get(), x.max(axis=0))
-        assert np.allclose(misc.max(x_gpu, axis=1).get(), x.max(axis=1))
-        assert np.allclose(misc.min(x_gpu, axis=0).get(), x.min(axis=0))
-        assert np.allclose(misc.min(x_gpu, axis=1).get(), x.min(axis=1))
+        assert_allclose(misc.max(x_gpu, axis=0).get(), x.max(axis=0),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.max(x_gpu, axis=1).get(), x.max(axis=1),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.min(x_gpu, axis=0).get(), x.min(axis=0),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.min(x_gpu, axis=1).get(), x.min(axis=1),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
 
     def test_minmax_float32(self):
         self._impl_test_minmax(np.float32)
@@ -431,17 +638,33 @@ class test_misc(TestCase):
         x = np.random.normal(scale=5.0, size=(3, 5))
         x = x.astype(dtype=dtype, order='C')
         x_gpu = gpuarray.to_gpu(x)
-        assert np.allclose(misc.argmax(x_gpu, axis=0).get(), x.argmax(axis=0))
-        assert np.allclose(misc.argmax(x_gpu, axis=1).get(), x.argmax(axis=1))
-        assert np.allclose(misc.argmin(x_gpu, axis=0).get(), x.argmin(axis=0))
-        assert np.allclose(misc.argmin(x_gpu, axis=1).get(), x.argmin(axis=1))
+        assert_allclose(misc.argmax(x_gpu, axis=0).get(), x.argmax(axis=0),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.argmax(x_gpu, axis=1).get(), x.argmax(axis=1),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.argmin(x_gpu, axis=0).get(), x.argmin(axis=0),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.argmin(x_gpu, axis=1).get(), x.argmin(axis=1),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
 
         x = x.astype(dtype=dtype, order='F')
         x_gpu = gpuarray.to_gpu(x)
-        assert np.allclose(misc.argmax(x_gpu, axis=0).get(), x.argmax(axis=0))
-        assert np.allclose(misc.argmax(x_gpu, axis=1).get(), x.argmax(axis=1))
-        assert np.allclose(misc.argmin(x_gpu, axis=0).get(), x.argmin(axis=0))
-        assert np.allclose(misc.argmin(x_gpu, axis=1).get(), x.argmin(axis=1))
+        assert_allclose(misc.argmax(x_gpu, axis=0).get(), x.argmax(axis=0),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.argmax(x_gpu, axis=1).get(), x.argmax(axis=1),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.argmin(x_gpu, axis=0).get(), x.argmin(axis=0),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
+        assert_allclose(misc.argmin(x_gpu, axis=1).get(), x.argmin(axis=1),
+                        rtol=dtype_to_rtol[dtype],
+                        atol=dtype_to_atol[dtype])
 
     def test_argminmax_float32(self):
         self._impl_test_argminmax(np.float32)
