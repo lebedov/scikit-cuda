@@ -99,9 +99,9 @@ def magma_init():
     magmaCheckStatus(status)
     v = magma_version()
     if v >= (1, 5, 0):
-        for c in ['l', 'L', 'u', 'U']:
+        for c in [b'l', b'L', b'u', b'U']:
             _uplo_conversion.update({c: _libmagma.magma_uplo_const(c)})
-        for c in ['n', 'N', 'a', 'A', 'o', 'O', 's', 'S', 'i', 'I', 'v', 'V']:
+        for c in [b'n', b'N', b'a', b'A', b'o', b'O', b's', b'S', b'i', b'I', b'v', b'V']:
             _vec_conversion.update({c: _libmagma.magma_vec_const(c)})
     else:
         for c in ['l', 'L', 'u', 'U']:
