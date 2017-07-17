@@ -205,7 +205,7 @@ def svd(a_gpu, jobu='A', jobvt='A', lib='cula'):
         if not square:
             raise ValueError('in-place computation of singular vectors '+
                              'of non-square matrix not allowed')
-        ldu = 1
+        ldu = a_gpu.shape[1]
         u_gpu = a_gpu
     else:
         ldu = 1
@@ -224,7 +224,7 @@ def svd(a_gpu, jobu='A', jobvt='A', lib='cula'):
         if not square:
             raise ValueError('in-place computation of singular vectors '+
                              'of non-square matrix not allowed')
-        ldvt = 1
+        ldvt = a_gpu.shape[1]
         vh_gpu = a_gpu
     else:
         ldvt = 1
