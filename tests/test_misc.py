@@ -235,7 +235,7 @@ class test_misc(TestCase):
                         rtol=dtype_to_rtol[np.float64],
                         atol=dtype_to_atol[np.float64])
 
-    def impl_test_binaryop_2d(self, dtype):
+    def _impl_test_binaryop_2d(self, dtype):
         if issubclass(dtype, numbers.Integral):
             a_sca = np.array(np.random.randint(1, 10), dtype=dtype)
             b_sca = np.array(np.random.randint(1, 10), dtype=dtype)
@@ -314,24 +314,24 @@ class test_misc(TestCase):
                             atol=dtype_to_atol[dtype])
 
     def test_binaryop_2d_int32(self):
-        self.impl_test_binaryop_2d(np.int32)
+        self._impl_test_binaryop_2d(np.int32)
 
     def test_binaryop_2d_float32(self):
-        self.impl_test_binaryop_2d(np.float32)
+        self._impl_test_binaryop_2d(np.float32)
 
     def test_binaryop_2d_float32(self):
-        self.impl_test_binaryop_2d(np.float32)
+        self._impl_test_binaryop_2d(np.float32)
 
     def test_binaryop_2d_float64(self):
-        self.impl_test_binaryop_2d(np.float64)
+        self._impl_test_binaryop_2d(np.float64)
 
     def test_binaryop_2d_complex64(self):
-        self.impl_test_binaryop_2d(np.complex64)
+        self._impl_test_binaryop_2d(np.complex64)
 
     def test_binaryop_2d_complex128(self):
-        self.impl_test_binaryop_2d(np.complex128)
+        self._impl_test_binaryop_2d(np.complex128)
 
-    def impl_test_binaryop_matvec(self, dtype):
+    def _impl_test_binaryop_matvec(self, dtype):
         if issubclass(dtype, numbers.Integral):
             x = np.random.randint(1, 10, 15).reshape((3, 5)).astype(dtype)
             a = np.random.randint(1, 10, 5).reshape((1, 5)).astype(dtype)
@@ -407,21 +407,21 @@ class test_misc(TestCase):
         assert_raises(ValueError, misc.div_matvec, x_gpu, d_gpu)
 
     def test_binaryop_matvec_int32(self):
-        self.impl_test_binaryop_matvec(np.int32)
+        self._impl_test_binaryop_matvec(np.int32)
 
     def test_binaryop_matvec_float32(self):
-        self.impl_test_binaryop_matvec(np.float32)
+        self._impl_test_binaryop_matvec(np.float32)
 
     def test_binaryop_matvec_float64(self):
-        self.impl_test_binaryop_matvec(np.float64)
+        self._impl_test_binaryop_matvec(np.float64)
 
     def test_binaryop_matvec_complex64(self):
-        self.impl_test_binaryop_matvec(np.complex64)
+        self._impl_test_binaryop_matvec(np.complex64)
 
     def test_binaryop_matvec_complex128(self):
-        self.impl_test_binaryop_matvec(np.complex128)
+        self._impl_test_binaryop_matvec(np.complex128)
 
-    def impl_test_sum(self, dtype):
+    def _impl_test_sum(self, dtype):
         x = np.random.normal(scale=5.0, size=(3, 5))
         x = x.astype(dtype=dtype, order='C')
         x_gpu = gpuarray.to_gpu(x)
@@ -447,18 +447,18 @@ class test_misc(TestCase):
                         atol=dtype_to_atol[dtype])
 
     def test_sum_float32(self):
-        self.impl_test_sum(np.float32)
+        self._impl_test_sum(np.float32)
 
     def test_sum_float64(self):
-        self.impl_test_sum(np.float64)
+        self._impl_test_sum(np.float64)
 
     def test_sum_complex64(self):
-        self.impl_test_sum(np.complex64)
+        self._impl_test_sum(np.complex64)
 
     def test_sum_complex128(self):
-        self.impl_test_sum(np.complex128)
+        self._impl_test_sum(np.complex128)
 
-    def impl_test_mean(self, dtype):
+    def _impl_test_mean(self, dtype):
         x = np.random.normal(scale=5.0, size=(3, 5))
         x = x.astype(dtype=dtype, order='C')
         x_gpu = gpuarray.to_gpu(x)
@@ -484,18 +484,18 @@ class test_misc(TestCase):
                         atol=dtype_to_atol[dtype])
 
     def test_mean_float32(self):
-        self.impl_test_mean(np.float32)
+        self._impl_test_mean(np.float32)
 
     def test_mean_float64(self):
-        self.impl_test_mean(np.float64)
+        self._impl_test_mean(np.float64)
 
     def test_mean_complex64(self):
-        self.impl_test_mean(np.complex64)
+        self._impl_test_mean(np.complex64)
 
     def test_mean_complex128(self):
-        self.impl_test_mean(np.complex128)
+        self._impl_test_mean(np.complex128)
 
-    def impl_test_var(self, dtype):
+    def _impl_test_var(self, dtype):
         x = np.random.normal(scale=5.0, size=(3, 5))
         x = x.astype(dtype=dtype, order='C')
         x_gpu = gpuarray.to_gpu(x)
@@ -534,18 +534,18 @@ class test_misc(TestCase):
         #                atol=dtype_to_atol[dtype])
 
     def test_var_float32(self):
-        self.impl_test_var(np.float32)
+        self._impl_test_var(np.float32)
 
     def test_var_float64(self):
-        self.impl_test_var(np.float64)
+        self._impl_test_var(np.float64)
 
     def test_var_complex64(self):
-        self.impl_test_var(np.complex64)
+        self._impl_test_var(np.complex64)
 
     def test_var_complex128(self):
-        self.impl_test_var(np.complex128)
+        self._impl_test_var(np.complex128)
 
-    def impl_test_std(self, dtype):
+    def _impl_test_std(self, dtype):
         x = np.random.normal(scale=5.0, size=(3, 5))
         x = x.astype(dtype=dtype, order='C')
         x_gpu = gpuarray.to_gpu(x)
@@ -585,16 +585,16 @@ class test_misc(TestCase):
         #                atol=dtype_to_atol[dtype])
 
     def test_std_float32(self):
-        self.impl_test_std(np.float32)
+        self._impl_test_std(np.float32)
 
     def test_std_float64(self):
-        self.impl_test_std(np.float64)
+        self._impl_test_std(np.float64)
 
     def test_std_complex64(self):
-        self.impl_test_std(np.complex64)
+        self._impl_test_std(np.complex64)
 
     def test_std_complex128(self):
-        self.impl_test_std(np.complex128)
+        self._impl_test_std(np.complex128)
 
     def _impl_test_minmax(self, dtype):
         x = np.random.normal(scale=5.0, size=(3, 5))
