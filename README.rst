@@ -71,7 +71,8 @@ If you use scikit-cuda in a scholarly publication, please cite it as follows: ::
                         Bruce Merry and
                         Lars Pastewka and
                         Steve Taylor and
-			Arnaud Bergeron and
+                        Arnaud Bergeron and
+                        Nikul H. Ukani and
                         Feng Wang and
                         Yiyin Zhou},
         title        = {scikit-cuda 0.5.1: a {Python} interface to {GPU}-powered libraries},

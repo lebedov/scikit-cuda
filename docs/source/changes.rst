@@ -13,6 +13,7 @@ Release 0.5.2 (under development)
 * Support for CUFFT extensible plan API (enh. by Bruce Merry).
 * Wrappers for CUFFT size estimation (enh. by Luke Pfister).
 * Wrappers for CUBLAS-XT functions.
+* More wrappers for MAGMA functions (enh. by Nikul H. Ukani).
 * Python 3 compatibility improvements (enh. by Joseph Martinot-Lagarde).
 * Allow specification of order in misc.zeros and misc.ones.
 * Preserve strides in misc.zeros_like and misc.ones_like.
@@ -28,7 +29,7 @@ Release 0.5.2 (under development)
 * CUSOLVER support for matrix inversion, QR decomposition (#198).
 * Prevent objdump output from changing due to environment language (fix by 
   Arnaud Bergeron).
-  
+
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------
 * More CUSOLVER wrappers.

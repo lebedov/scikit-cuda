@@ -42,6 +42,7 @@ Special thanks are due to the following parties for their contributions:
 - `Steve Taylor <https://github.com/stevertaylor>`_ - Cholesky factorization/solve functions.
 - Rob Turetsky - Useful feedback.
 - `Thomas Unterthiner <https://github.com/untom>`_ - Additional high-level and wrapper functions.
+- `Nikul H. Ukani <https://github.com/nikulukani>`_ - Additional MAGMA wrappers.
 - `Stefan van der Walt <https://github.com/stefanv>`_ - Bug fixes.
 - `Feng Wang <https://github.com/cnwangfeng>`_ - Bug reports.
 - `Yiyin Zhou <https://github.com/yiyin>`_ - Patches, bug reports, and function wrappers 
