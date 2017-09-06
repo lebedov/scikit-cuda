@@ -242,7 +242,8 @@ class test_misc(TestCase):
             a_vec = np.random.randint(1, 10, 3).astype(dtype)
             b_vec = np.random.randint(1, 10, 3).astype(dtype)
             a_mat = np.random.randint(1, 10, 6).reshape((3, 2)).astype(dtype)
-            b_mat = np.random.randint(1, 10, 6).reshape((3, 2)).astype(dtype)            
+            b_mat = np.random.randint(1, 10, 6).reshape((3, 2)).astype(dtype)
+            b_mat_f = np.random.randint(1, 10, 6).reshape((3, 2)).astype(dtype, order='F')
         else:
             a_sca = np.random.normal(scale=5.0, size=()).astype(dtype)
             b_sca = np.random.normal(scale=5.0, size=()).astype(dtype)
@@ -250,6 +251,7 @@ class test_misc(TestCase):
             b_vec = np.random.normal(scale=5.0, size=(3,)).astype(dtype)
             a_mat = np.random.normal(scale=5.0, size=(3, 2)).astype(dtype)
             b_mat = np.random.normal(scale=5.0, size=(3, 2)).astype(dtype)
+            b_mat_f = np.random.normal(scale=5.0, size=(3, 2)).astype(dtype, order='F')
 
         a_sca_gpu = gpuarray.to_gpu(a_sca)
         b_sca_gpu = gpuarray.to_gpu(b_sca)
@@ -257,6 +259,7 @@ class test_misc(TestCase):
         b_vec_gpu = gpuarray.to_gpu(b_vec)
         a_mat_gpu = gpuarray.to_gpu(a_mat)
         b_mat_gpu = gpuarray.to_gpu(b_mat)
+        b_mat_f_gpu = gpuarray.to_gpu(b_mat_f)
 
         # addition
         assert_allclose(misc.add(a_sca_gpu, b_sca_gpu).get(), a_sca+b_sca,
@@ -312,6 +315,9 @@ class test_misc(TestCase):
             assert_allclose(misc.divide(a_mat_gpu, b_mat_gpu).get(), a_mat/b_mat,
                             rtol=dtype_to_rtol[dtype],
                             atol=dtype_to_atol[dtype])
+
+        # mismatched order
+        assert_raises(ValueError, misc.add, a_mat_gpu, b_mat_f_gpu)
 
     def test_binaryop_2d_int32(self):
         self.impl_test_binaryop_2d(np.int32)

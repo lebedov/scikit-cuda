@@ -967,6 +967,9 @@ def binaryop_matvec(binary_op, x_gpu, a_gpu, axis=None, out=None, stream=None):
 import operator
 
 def binaryop_2d(c_op, py_op, commutative, x_gpu, y_gpu):
+    if x_gpu.flags.c_contiguous != y_gpu.flags.c_contiguous:
+        raise ValueError('unsupported combination of input order')
+
     if x_gpu.shape == y_gpu.shape:
         return py_op(x_gpu, y_gpu)
     elif x_gpu.size == 1:
