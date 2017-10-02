@@ -22,7 +22,7 @@ from . import cuda
 from . import cublas
 
 # Load library:
-_version_list = [8.0, 7.5, 7.0]
+_version_list = [9.0, 8.0, 7.5, 7.0]
 if 'linux' in sys.platform:
     _libcusolver_libname_list = ['libcusolver.so'] + \
                                 ['libcusolver.so.%s' % v for v in _version_list]
@@ -122,10 +122,24 @@ CUSOLVER_EXCEPTIONS = {
 }
 
 # Values copied from cusolver_common.h
-_CUSOLVER_EIG_MODE = {
-    'NOVECTOR': 0,
-    'VECTOR': 1,
+_CUSOLVER_EIG_TYPE = {
+    1: 1,
+    2: 2,
+    3: 3,
+    'CUSOLVER_EIG_TYPE_1': 1,
+    'CUSOLVER_EIG_TYPE_2': 2,
+    'CUSOLVER_EIG_TYPE_1': 3
 }
+
+_CUSOLVER_EIG_MODE = {
+    0: 0,
+    1: 1,
+    'CUSOLVER_EIG_MODE_NOVECTOR': 0,
+    'CUSOLVER_EIG_MODE_VECTOR': 1,
+    'novector': 0,
+    'vector': 1
+}
+
 def cusolverCheckStatus(status):
     """
     Raise CUSOLVER exception.
@@ -265,6 +279,88 @@ def cusolverDnGetStream(handle):
     status = _libcusolver.cusolverDnGetStream(handle, ctypes.byref(stream))
     cusolverCheckStatus(status)
     return status.value
+
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnCreateSyevjInfo.restype = int
+    _libcusolver.cusolverDnCreateSyevjInfo.argtypes = [ctypes.c_void_p]
+
+@_cusolver_version_req(9.0)
+def cusolverDnCreateSyevjInfo():
+    info = ctypes.c_void_p()
+    status = _libcusolver.cusolverDnCreateSyevjInfo(ctypes.byref(info))
+    cusolverCheckStatus(status)
+    return info.value
+
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnDestroySyevjInfo.restype = int
+    _libcusolver.cusolverDnDestroySyevjInfo.argtypes = [ctypes.c_void_p]
+
+@_cusolver_version_req(9.0)
+def cusolverDnDestroySyevjInfo(info):
+    status = _libcusolver.cusolverDnDestroySyevjInfo(info)
+    cusolverCheckStatus(status)
+
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnXsyevjSetTolerance.restype = int
+    _libcusolver.cusolverDnXsyevjSetTolerance.argtypes = [ctypes.c_void_p,
+                                                          ctypes.c_void_p]
+
+@_cusolver_version_req(9.0)
+def cusolverDnXsyevjSetTolerance(info, tolerance):
+    status = _libcusolver.cusolverDnXsyevjSetTolerance(
+        info,
+        ctypes.byref(ctypes.c_double(tolerance))
+    )
+    cusolverCheckStatus(status)
+
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnXsyevjSetMaxSweeps.restype = int
+    _libcusolver.cusolverDnXsyevjSetMaxSweeps.argtypes = [ctypes.c_void_p,
+                                                          ctypes.c_int]
+
+@_cusolver_version_req(9.0)
+def cusolverDnXsyevjSetMaxSweeps(info, max_sweeps):
+    status = _libcusolver.cusolverDnXsyevjSetMaxSweeps(info, max_sweeps)
+    cusolverCheckStatus(status)
+
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnXsyevjSetSortEig.restype = int
+    _libcusolver.cusolverDnXsyevjSetSortEig.argtypes = [ctypes.c_void_p,
+                                                        ctypes.c_int]
+
+@_cusolver_version_req(9.0)
+def cusolverDnXsyevjSetSortEig(info, sort_eig):
+    status = _libcusolver.cusolverDnXsyevjSetSortEig(info, sort_eig)
+    cusolverCheckStatus(status)
+
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnXsyevjGetResidual.restype = int
+    _libcusolver.cusolverDnXsyevjGetResidual.argtypes = [ctypes.c_void_p,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_void_p]
+
+@_cusolver_version_req(9.0)
+def cusolverDnXsyevjGetResidual(handle, info):
+    residual = ctypes.c_double()
+    status = _libcusolver.cusolverDnXsyevjGetResidual(
+        handle, info, ctypes.byref(residual))
+    cusolverCheckStatus(status)
+    return residual.value
+
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnXsyevjGetSweeps.restype = int
+    _libcusolver.cusolverDnXsyevjGetSweeps.argtypes = [ctypes.c_void_p,
+                                                       ctypes.c_void_p,
+                                                       ctypes.c_void_p]
+
+@_cusolver_version_req(9.0)
+def cusolverDnXsyevjGetSweeps(handle, info):
+    executed_sweeps = ctypes.c_int()
+    status = _libcusolver.cusolverDnXsyevjGetSweeps(
+        handle, info, ctypes.byref(executed_sweeps))
+    cusolverCheckStatus(status)
+    return executed_sweeps.value
+
 
 # Dense solver functions:
 
@@ -1278,7 +1374,7 @@ def cusolverDnSorgqr_bufferSize(handle, m, n, k, a, lda, tau):
                                                       lda, int(tau), ctypes.byref(lwork))
     cusolverCheckStatus(status)
     return lwork.value
- 
+
 _libcusolver.cusolverDnSorgqr.restype = int
 _libcusolver.cusolverDnSorgqr.argtypes = [ctypes.c_void_p,
                                           ctypes.c_int,
@@ -1699,5 +1795,534 @@ def cusolverDnZheevd(handle, jobz, uplo, n, a, lda, w, workspace, lwork,
         int(workspace),
         lwork,
         int(devInfo)
+    )
+    cusolverCheckStatus(status)
+
+
+# DnSsyevj and DnDsyevj
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnSsyevj_bufferSize.restype = int
+    _libcusolver.cusolverDnSsyevj_bufferSize.argtypes = [ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_void_p]
+
+@_cusolver_version_req(9.0)
+def cusolverDnSsyevj_bufferSize(handle, jobz, uplo,
+                                n, a, lda, w, params):
+    lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnSsyevj_bufferSize(
+        handle,
+        _CUSOLVER_EIG_TYPE[jobz],
+        cublas._CUBLAS_FILL_MODE[uplo],
+        n,
+        int(a),
+        lda,
+        int(w),
+        ctypes.byref(lwork),
+        params
+    )
+    cusolverCheckStatus(status)
+    return lwork.value
+
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnSsyevj.restype = int
+    _libcusolver.cusolverDnSsyevj.argtypes = [ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p]
+
+@_cusolver_version_req(9.0)
+def cusolverDnSsyevj(handle, jobz, uplo,
+                     n, a, lda, w, work,
+                     lwork, params):
+    info = ctypes.c_int()
+    status = _libcusolver.cusolverDnSsyevj(
+        handle,
+        _CUSOLVER_EIG_TYPE[jobz],
+        cublas._CUBLAS_FILL_MODE[uplo],
+        n,
+        int(a),
+        lda,
+        int(w),
+        int(work),
+        lwork,
+        ctypes.byref(info),
+        params
+    )
+    cusolverCheckStatus(status)
+    return info
+
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnDsyevj_bufferSize.restype = int
+    _libcusolver.cusolverDnDsyevj_bufferSize.argtypes = [ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_void_p]
+
+@_cusolver_version_req(9.0)
+def cusolverDnDsyevj_bufferSize(handle, jobz, uplo,
+                                n, a, lda, w, params):
+    lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnDsyevj_bufferSize(
+        handle,
+        _CUSOLVER_EIG_MODE[jobz],
+        cublas._CUBLAS_FILL_MODE[uplo],
+        n,
+        int(a),
+        lda,
+        int(w),
+        ctypes.byref(lwork),
+        params
+    )
+    cusolverCheckStatus(status)
+    return lwork.value
+
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnDsyevj.restype = int
+    _libcusolver.cusolverDnDsyevj.argtypes = [ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p]
+
+@_cusolver_version_req(9.0)
+def cusolverDnDsyevj(handle, jobz, uplo,
+                     n, a, lda, w, work,
+                     lwork, info, params):
+    status = _libcusolver.cusolverDnDsyevj(
+        handle,
+        _CUSOLVER_EIG_MODE[jobz],
+        cublas._CUBLAS_FILL_MODE[uplo],
+        n,
+        int(a),
+        lda,
+        int(w),
+        int(work),
+        lwork,
+        int(info),
+        params
+    )
+    cusolverCheckStatus(status)
+
+# DnCheevj and DnZheevj
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnCheevj_bufferSize.restype = int
+    _libcusolver.cusolverDnCheevj_bufferSize.argtypes = [ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_void_p]
+
+@_cusolver_version_req(9.0)
+def cusolverDnCheevj_bufferSize(handle, jobz, uplo,
+                                n, a, lda, w, params):
+    lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnCheevj_bufferSize(
+        handle,
+        _CUSOLVER_EIG_MODE[jobz],
+        cublas._CUBLAS_FILL_MODE[uplo],
+        n,
+        int(a),
+        lda,
+        int(w),
+        ctypes.byref(lwork),
+        params
+    )
+    cusolverCheckStatus(status)
+    return lwork.value
+
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnCheevj.restype = int
+    _libcusolver.cusolverDnCheevj.argtypes = [ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p]
+
+@_cusolver_version_req(9.0)
+def cusolverDnCheevj(handle, jobz, uplo,
+                     n, a, lda, w, work,
+                     lwork, info, params):
+    status = _libcusolver.cusolverDnCheevj(
+        handle,
+        _CUSOLVER_EIG_MODE[jobz],
+        cublas._CUBLAS_FILL_MODE[uplo],
+        n,
+        int(a),
+        lda,
+        int(w),
+        int(work),
+        lwork,
+        int(info),
+        params
+    )
+    cusolverCheckStatus(status)
+
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnZheevj_bufferSize.restype = int
+    _libcusolver.cusolverDnZheevj_bufferSize.argtypes = [ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_void_p]
+
+@_cusolver_version_req(9.0)
+def cusolverDnZheevj_bufferSize(handle, jobz, uplo,
+                                n, a, lda, w, params):
+    lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnZheevj_bufferSize(
+        handle,
+        _CUSOLVER_EIG_MODE[jobz],
+        cublas._CUBLAS_FILL_MODE[uplo],
+        n,
+        int(a),
+        lda,
+        int(w),
+        ctypes.byref(lwork),
+        params
+    )
+    cusolverCheckStatus(status)
+    return lwork.value
+
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnZheevj.restype = int
+    _libcusolver.cusolverDnZheevj.argtypes = [ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p]
+
+@_cusolver_version_req(9.0)
+def cusolverDnZheevj(handle, jobz, uplo,
+                     n, a, lda, w, work,
+                     lwork, info, params):
+    status = _libcusolver.cusolverDnZheevj(
+        handle,
+        _CUSOLVER_EIG_MODE[jobz],
+        cublas._CUBLAS_FILL_MODE[uplo],
+        n,
+        int(a),
+        lda,
+        int(w),
+        int(work),
+        lwork,
+        int(info),
+        params
+    )
+    cusolverCheckStatus(status)
+
+# DnSsyevjBatched and DnDsyevjBatched
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnSsyevjBatched_bufferSize.restype = int
+    _libcusolver.cusolverDnSsyevjBatched_bufferSize.argtypes = [ctypes.c_void_p,
+                                                                ctypes.c_int,
+                                                                ctypes.c_int,
+                                                                ctypes.c_int,
+                                                                ctypes.c_void_p,
+                                                                ctypes.c_int,
+                                                                ctypes.c_void_p,
+                                                                ctypes.c_void_p,
+                                                                ctypes.c_void_p,
+                                                                ctypes.c_int]
+
+@_cusolver_version_req(9.0)
+def cusolverDnSsyevjBatched_bufferSize(handle, jobz, uplo,
+                                       n, a, lda, w, params, batchSize):
+    lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnSsyevjBatched_bufferSize(
+        handle,
+        _CUSOLVER_EIG_TYPE[jobz],
+        cublas._CUBLAS_FILL_MODE[uplo],
+        n,
+        int(a),
+        lda,
+        int(w),
+        ctypes.byref(lwork),
+        params,
+        batchSize
+    )
+    cusolverCheckStatus(status)
+    return lwork.value
+
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnSsyevjBatched.restype = int
+    _libcusolver.cusolverDnSsyevjBatched.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int]
+
+@_cusolver_version_req(9.0)
+def cusolverDnSsyevjBatched(handle, jobz, uplo,
+                             n, a, lda, w, work,
+                             lwork, params, batchSize):
+    info = ctypes.c_int()
+    status = _libcusolver.cusolverDnSsyevjBatched(
+        handle,
+        _CUSOLVER_EIG_TYPE[jobz],
+        cublas._CUBLAS_FILL_MODE[uplo],
+        n,
+        int(a),
+        lda,
+        int(w),
+        int(work),
+        lwork,
+        ctypes.byref(info),
+        params,
+        batchSize
+    )
+    cusolverCheckStatus(status)
+    return info
+
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnDsyevjBatched_bufferSize.restype = int
+    _libcusolver.cusolverDnDsyevjBatched_bufferSize.argtypes = [ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_int]
+
+@_cusolver_version_req(9.0)
+def cusolverDnDsyevjBatched_bufferSize(handle, jobz, uplo,
+                                n, a, lda, w, params, batchSize):
+    lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnDsyevjBatched_bufferSize(
+        handle,
+        _CUSOLVER_EIG_MODE[jobz],
+        cublas._CUBLAS_FILL_MODE[uplo],
+        n,
+        int(a),
+        lda,
+        int(w),
+        ctypes.byref(lwork),
+        params,
+        batchSize
+    )
+    cusolverCheckStatus(status)
+    return lwork.value
+
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnDsyevjBatched.restype = int
+    _libcusolver.cusolverDnDsyevjBatched.argtypes = [ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int]
+
+@_cusolver_version_req(9.0)
+def cusolverDnDsyevjBatched(handle, jobz, uplo,
+                     n, a, lda, w, work,
+                     lwork, info, params, batchSize):
+    status = _libcusolver.cusolverDnDsyevjBatched(
+        handle,
+        _CUSOLVER_EIG_MODE[jobz],
+        cublas._CUBLAS_FILL_MODE[uplo],
+        n,
+        int(a),
+        lda,
+        int(w),
+        int(work),
+        lwork,
+        int(info),
+        params,
+        batchSize
+    )
+    cusolverCheckStatus(status)
+
+# DnCheevj and DnZheevj
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnCheevjBatched_bufferSize.restype = int
+    _libcusolver.cusolverDnCheevjBatched_bufferSize.argtypes = [ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_int]
+
+@_cusolver_version_req(9.0)
+def cusolverDnCheevjBatched_bufferSize(handle, jobz, uplo,
+                                n, a, lda, w, params, batchSize):
+    lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnCheevjBatched_bufferSize(
+        handle,
+        _CUSOLVER_EIG_MODE[jobz],
+        cublas._CUBLAS_FILL_MODE[uplo],
+        n,
+        int(a),
+        lda,
+        int(w),
+        ctypes.byref(lwork),
+        params,
+        batchSize
+    )
+    cusolverCheckStatus(status)
+    return lwork.value
+
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnCheevjBatched.restype = int
+    _libcusolver.cusolverDnCheevjBatched.argtypes = [ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int]
+
+@_cusolver_version_req(9.0)
+def cusolverDnCheevjBatched(handle, jobz, uplo,
+                     n, a, lda, w, work,
+                     lwork, info, params, batchSize):
+    status = _libcusolver.cusolverDnCheevjBatched(
+        handle,
+        _CUSOLVER_EIG_MODE[jobz],
+        cublas._CUBLAS_FILL_MODE[uplo],
+        n,
+        int(a),
+        lda,
+        int(w),
+        int(work),
+        lwork,
+        int(info),
+        params,
+        batchSize
+    )
+    cusolverCheckStatus(status)
+
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnZheevjBatched_bufferSize.restype = int
+    _libcusolver.cusolverDnZheevjBatched_bufferSize.argtypes = [ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_int,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_void_p,
+                                                         ctypes.c_int]
+
+@_cusolver_version_req(9.0)
+def cusolverDnZheevjBatched_bufferSize(handle, jobz, uplo,
+                                n, a, lda, w, params, batchSize):
+    lwork = ctypes.c_int()
+    status = _libcusolver.cusolverDnZheevjBatched_bufferSize(
+        handle,
+        _CUSOLVER_EIG_MODE[jobz],
+        cublas._CUBLAS_FILL_MODE[uplo],
+        n,
+        int(a),
+        lda,
+        int(w),
+        ctypes.byref(lwork),
+        params,
+        batchSize
+    )
+    cusolverCheckStatus(status)
+    return lwork.value
+
+if cudart._cudart_version >= 9000:
+    _libcusolver.cusolverDnZheevjBatched.restype = int
+    _libcusolver.cusolverDnZheevjBatched.argtypes = [ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int]
+
+@_cusolver_version_req(9.0)
+def cusolverDnZheevjBatched(handle, jobz, uplo,
+                     n, a, lda, w, work,
+                     lwork, info, params, batchSize):
+    status = _libcusolver.cusolverDnZheevjBatched(
+        handle,
+        _CUSOLVER_EIG_MODE[jobz],
+        cublas._CUBLAS_FILL_MODE[uplo],
+        n,
+        int(a),
+        lda,
+        int(w),
+        int(work),
+        lwork,
+        int(info),
+        params,
+        batchSize
     )
     cusolverCheckStatus(status)
