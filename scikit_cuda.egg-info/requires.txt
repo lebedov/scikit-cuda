@@ -1,0 +1,12 @@
+mako >= 1.0.1
+numpy >= 1.2.0
+pycuda >= 2014.1
+
+[scipy]
+scipy >= 0.14.0
+
+[sphinx]
+sphinx >= 1.3
+
+[sphinx_rtd_theme]
+sphinx_rtd_theme >= 0.1.6
