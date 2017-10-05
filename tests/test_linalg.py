@@ -33,32 +33,39 @@ class test_linalg(TestCase):
 	### required for PCA tests ##### 
 	self.M = 1000
 	self.N = 100
-	self.test_pca = linalg.PCA(-1)
+	self.test_pca = linalg.PCA()
 	self.max_sdot = np.float32(0.001)
 	self.max_ddot = np.float64(0.000001)
 	self.K = 2
-	self.test_pca2 = linalg.PCA(self.K)
+	self.test_pca2 = linalg.PCA(n_components=self.K)
 	Xd_ = np.random.rand(self.M, self.N)
 	Xf_ = np.random.rand(self.M, self.N).astype(np.float32)
 
-	self.Xd = GPUArray((self,M, self.N), np.float64, order="F")
+	self.Xd = gpuarray.GPUArray((self.M, self.N), np.float64, order="F")
 	self.Xd.set(Xd_)
-	self.Xf = GPUArray((self,M, self.N), np.float32, order="F")
+	self.Xf = gpuarray.GPUArray((self.M, self.N), np.float32, order="F")
 	self.Xf.set(Xf_)
-	self.Td_all = GPUArray((self.M, self.N), np.float64, order="F")
-	self.Tf_2 = GPUArray((self.M, self.K), np.float32, order="F")
-	self.Tf_all = GPUArray((self.M, self.N), np.float32, order="F")
-	self.Td_2 = GPUArray((self.M, self.K), np.float64, order="F")
+	self.Td_all = gpuarray.GPUArray((self.M, self.N), np.float64, order="F")
+	self.Tf_2 = gpuarray.GPUArray((self.M, self.K), np.float32, order="F")
+	self.Tf_all = gpuarray.GPUArray((self.M, self.N), np.float32, order="F")
+	self.Td_2 = gpuarray.GPUArray((self.M, self.K), np.float64, order="F")
 
 
 
     def tearDown(self):
         linalg.shutdown()
 
+    def test_pca_ortho_double_all(self):
+	# test the orthogonality of the eigenvectors
+			
+	for i in range(self.N-1):
+		self.assertTrue(linalg.dot(self.Td_all[:,i], self.Td_all[:,i+1]) < self.max_ddot)
+
+
     def test_pca_type_and_shape_double_all(self):
 	# test that the shape is what we think it should be
 		
-	Td_all = self.test_pca.fit_transform(self.Xd, verbose=True)
+	Td_all = self.test_pca.fit_transform(self.Xd)
 
 	self.assertIsNotNone(Td_all)
 
@@ -68,16 +75,17 @@ class test_linalg(TestCase):
 
 	self.Td_all = Td_all
 
-    def test_pca_ortho_double_all(self):
+    def test_pca_ortho_all(self):
 	# test the orthogonality of the eigenvectors
 			
 	for i in range(self.N-1):
-		self.assertTrue(np.dot(self.Td_all[:,i], self.Td_all[:,i+1]) < self.max_ddot)
+		self.assertTrue(linalg.dot(self.Tf_all[:,i], self.Tf_all[:,i+1]) < self.max_sdot)
+
 
     def test_pca_type_and_shape_all(self):
 	# test that the shape is what we think it should be
 	
-	Tf_all = self.test_pca.fit_transform(self.Xf, verbose=True)
+	Tf_all = self.test_pca.fit_transform(self.Xf)
 
 	self.assertIsNotNone(Tf_all)
 
@@ -87,16 +95,16 @@ class test_linalg(TestCase):
 
 	self.Tf_all = Tf_all
 
-    def test_pca_ortho_all(self):
+    def test_pca_ortho_double(self):
 	# test the orthogonality of the eigenvectors
 			
-	for i in range(self.N-1):
-		self.assertTrue(np.dot(self.Tf_all[:,i], self.Tf_all[:,i+1]) < self.max_sdot)
+	self.assertTrue(linalg.dot(self.Td_all[:,0], self.Td_all[:,1]) < self.max_ddot)
+
 
     def test_pca_type_and_shape_double(self):
 	# test that the shape is what we think it should be
 	
-	Td_2 = self.test_pca2.fit_transform(self.Xd, verbose=True)
+	Td_2 = self.test_pca2.fit_transform(self.Xd)
 
 	self.assertIsNotNone(Td_2)
 
@@ -106,15 +114,17 @@ class test_linalg(TestCase):
 
 	self.Td_2 = Td_2
 
-    def test_pca_ortho_double(self):
+    def test_pca_ortho(self):
 	# test the orthogonality of the eigenvectors
-			
-	self.assertTrue(np.dot(self.Td_all[:,0], self.Td_all[:,1]) < self.max_ddot)
+
+	print "\n\n\n\n", linalg.dot(self.Tf_2[:,0], self.Tf_2[:,1]),"\n\n\n\n"
+	self.assertTrue(linalg.dot(self.Tf_2[:,0], self.Tf_2[:,1]) < self.max_sdot)
+
 
     def test_pca_type_and_shape(self):
 	# test that the shape is what we think it should be
 	
-	Tf_2 = self.test_pca2.fit_transform(self.Xf, verbose=True)
+	Tf_2 = self.test_pca2.fit_transform(self.Xf)
 
 	self.assertIsNotNone(Tf_2)
 
@@ -124,32 +134,28 @@ class test_linalg(TestCase):
 
 	self.Tf_2 = Tf_2
 
-    def test_pca_ortho(self):
-	# test the orthogonality of the eigenvectors
-			
-	self.assertTrue(np.dot(self.Tf_2[:,0], self.Tf_2[:,1]) < self.max_sdot)
-
-
 		
 
     def test_pca_f_contiguous_check(self):
+
 	
 	try:
-		X_trash = np.random.rand(self.M, self.M)
-		T_trash = self.test_pca2(X_trash.T)
+		self.test_pca2.fit_transform(self.Xf.transpose())
 		fail(msg="PCA F-contiguous array check failed") # should not reach this line. The prev line should fail and go to the except block
-	except:
+	except ValueError:
 		
 		pass
 
     def test_pca_arr_2d_check(self):
 
 	try:
-		X_trash = np.random.rand(self.M, self.Mi, 3)
-		T_trash = self.test_pca2(X_trash.T)
+		X_trash = np.random.rand(self.M, self.M, 3)
+		X_gpu_trash = gpuarray.GPUArray(X_trash.shape, np.float64, order="F")	
+		X_gpu_trash.set(X_trash)
+		self.test_pca2.fit_transform(X_gpu_trash)
 		fail(msg="PCA Array dimensions check failed") # should not reach this line. The prev line should fail and go to the except block
-	except:
-		
+	except ValueError:
+
 		pass
 		
 
@@ -159,15 +165,13 @@ class test_linalg(TestCase):
 
 	self.assertEqual(self.test_pca.get_n_components(), self.N+1)
 
-	X = np.random.rand(self.M, self.N).astype(np.float32)
-	T = self.test_pca.fit_transform(X, verbose=True)
+	T1 = self.test_pca.fit_transform(self.Xf)
 
-	self.assertEqual(self.test_pca.get_n_components(), self.N) # should have been reset internally once the algorithm saw K was bigger than N
+	self.assertEqual(T1.shape[1], self.N) # should have been reset internally once the algorithm saw K was bigger than N
 	
-	X2 = np.random.rand(self.N-2, self.N-1).astype(np.float32)
-	T = self.test_pca.fit_transform(X2, verbose=True)
+	T2 = self.test_pca.fit_transform(self.Xf[0:(self.N-1), 0:(self.N-2)].transpose())
 
-	self.assertEqual(self.test_pca.get_n_components(), self.N-2) # should have been reset internally once the algorithm saw K was bigger than N	
+	self.assertEqual(T2.shape[1], self.N-2) # should have been reset internally once the algorithm saw K was bigger than N	
 
 
     @skipUnless(linalg._has_cula, 'CULA required')
