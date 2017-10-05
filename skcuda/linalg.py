@@ -170,6 +170,8 @@ class PCA():
 
 		"""
 
+		if len(X_gpu.shape) != 2:
+			raise ValueError("Array must be 2D for PCA")
 		
 		if X_gpu.flags.c_contiguous:
 			raise ValueError("Array must be fortran-contiguous. Please instantiate with 'order=\"F\"' or use the transpose of a C-ordered array.")
