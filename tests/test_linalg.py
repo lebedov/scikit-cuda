@@ -605,13 +605,23 @@ class test_linalg(TestCase):
         assert_equal(np.diag(v), d_gpu.get())
 
     def test_diag_2d_wide_float32(self):
-        v = np.array(np.random.rand(32, 64), np.float32)
+        v = np.asarray(np.random.rand(32, 64), np.float32)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
+        v = np.asarray(np.random.rand(32, 64), np.float32, order="F")
         v_gpu = gpuarray.to_gpu(v)
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
 
     def test_diag_2d_tall_float32(self):
-        v = np.array(np.random.rand(64, 32), np.float32)
+        v = np.asarray(np.random.rand(64, 32), np.float32)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
+        v = np.asarray(np.random.rand(64, 32), np.float32, order="F")
         v_gpu = gpuarray.to_gpu(v)
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
@@ -623,13 +633,23 @@ class test_linalg(TestCase):
         assert_equal(np.diag(v), d_gpu.get())
 
     def test_diag_2d_wide_float64(self):
-        v = np.array(np.random.rand(32, 64), np.float64)
+        v = np.asarray(np.random.rand(32, 64), np.float64)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
+        v = np.asarray(np.random.rand(32, 64), np.float64, order="F")
         v_gpu = gpuarray.to_gpu(v)
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
 
     def test_diag_2d_tall_float64(self):
-        v = np.array(np.random.rand(64, 32), np.float64)
+        v = np.asarray(np.random.rand(64, 32), np.float64)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
+        v = np.asarray(np.random.rand(64, 32), np.float64, order="F")
         v_gpu = gpuarray.to_gpu(v)
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
@@ -641,13 +661,23 @@ class test_linalg(TestCase):
         assert_equal(np.diag(v), d_gpu.get())
 
     def test_diag_2d_wide_complex64(self):
-        v = np.array(np.random.rand(32, 64)*1j, np.complex64)
+        v = np.asarray(np.random.rand(32, 64)*1j, np.complex64)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
+        v = np.asarray(np.random.rand(32, 64)*1j, np.complex64, order="F")
         v_gpu = gpuarray.to_gpu(v)
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
 
     def test_diag_2d_tall_complex64(self):
-        v = np.array(np.random.rand(64, 32)*1j, np.complex64)
+        v = np.asarray(np.random.rand(64, 32)*1j, np.complex64)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
+        v = np.asarray(np.random.rand(64, 32)*1j, np.complex64, order="F")
         v_gpu = gpuarray.to_gpu(v)
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
@@ -659,13 +689,23 @@ class test_linalg(TestCase):
         assert_equal(np.diag(v), d_gpu.get())
 
     def test_diag_2d_wide_complex128(self):
-        v = np.array(np.random.rand(32, 64)*1j, np.complex128)
+        v = np.asarray(np.random.rand(32, 64)*1j, np.complex128)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
+        v = np.asarray(np.random.rand(32, 64)*1j, np.complex128, order="F")
         v_gpu = gpuarray.to_gpu(v)
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
 
     def test_diag_2d_tall_complex128(self):
-        v = np.array(np.random.rand(64, 32)*1j, np.complex128)
+        v = np.asarray(np.random.rand(64, 32)*1j, np.complex128)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
+        v = np.asarray(np.random.rand(64, 32)*1j, np.complex128, order="F")
         v_gpu = gpuarray.to_gpu(v)
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())

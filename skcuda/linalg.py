@@ -1312,7 +1312,7 @@ def diag(v_gpu):
             raise ValueError('unsupported input type')
 
         n = int(min(v_gpu.shape)) # workaround for bug #131
-        incx = v_gpu.shape[1]+1
+        incx = int(np.sum(v_gpu.strides)/v_gpu.dtype.itemsize)
 
         # Allocate the output array
         d_gpu = gpuarray.empty(n, v_gpu.dtype.type, allocator=alloc)
