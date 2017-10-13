@@ -151,6 +151,18 @@ class test_linalg(TestCase):
 	self.assertEqual(T2.shape[1], self.N-2) # should have been reset internally once the algorithm saw K was bigger than N	
 
 
+    def test_pca_type_error_check(self):
+
+	try:
+		X_trash = np.random.rand(self.M, self.M, 3).astype(np.int64)
+		X_gpu_trash = gpuarray.GPUArray(X_trash.shape, np.int64, order="F")	
+		X_gpu_trash.set(X_trash)
+		self.test_pca2.fit_transform(X_gpu_trash)
+		fail(msg="PCA Array data type check failed") # should not reach this line. The prev line should fail and go to the except block
+	except ValueError:
+		pass
+
+
     @skipUnless(linalg._has_cula, 'CULA required')
     def test_svd_ss_cula_float32(self):
         a = np.asarray(np.random.randn(9, 6), np.float32)
@@ -729,6 +741,11 @@ class test_linalg(TestCase):
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
 
+        v = np.asarray(np.random.rand(32, 64), np.float32, order="F")
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
     def test_diag_2d_tall_float32(self):
         v = np.array(np.random.rand(64, 32), np.float32)
         v_gpu = gpuarray.to_gpu(v)
@@ -743,12 +760,23 @@ class test_linalg(TestCase):
 
     def test_diag_2d_wide_float64(self):
         v = np.array(np.random.rand(32, 64), np.float64)
+
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
+        v = np.asarray(np.random.rand(32, 64), np.float64, order="F")
         v_gpu = gpuarray.to_gpu(v)
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
 
     def test_diag_2d_tall_float64(self):
         v = np.array(np.random.rand(64, 32), np.float64)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
+        v = np.asarray(np.random.rand(64, 32), np.float64, order="F")
         v_gpu = gpuarray.to_gpu(v)
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
@@ -765,8 +793,18 @@ class test_linalg(TestCase):
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
 
+        v = np.asarray(np.random.rand(32, 64)*1j, np.complex64, order="F")
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
     def test_diag_2d_tall_complex64(self):
         v = np.array(np.random.rand(64, 32)*1j, np.complex64)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
+        v = np.asarray(np.random.rand(64, 32)*1j, np.complex64, order="F")
         v_gpu = gpuarray.to_gpu(v)
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
@@ -783,8 +821,18 @@ class test_linalg(TestCase):
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
 
+        v = np.asarray(np.random.rand(32, 64)*1j, np.complex128, order="F")
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
     def test_diag_2d_tall_complex128(self):
-        v = np.array(np.random.rand(64, 32)*1j, np.complex128)
+        v = np.asarray(np.random.rand(64, 32)*1j, np.complex128)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
+        v = np.asarray(np.random.rand(64, 32)*1j, np.complex128, order="F")
         v_gpu = gpuarray.to_gpu(v)
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
@@ -1565,6 +1613,7 @@ def suite():
     s.addTest(test_linalg('test_pca_f_contiguous_check'))
     s.addTest(test_linalg('test_pca_arr_2d_check'))
     s.addTest(test_linalg('test_pca_k_bigger_than_array_dims_and_getset'))
+    s.addTest(test_linalg('test_pca_type_error_check'))
     s.addTest(test_linalg('test_svd_ss_cula_float32'))
     s.addTest(test_linalg('test_svd_ss_cula_complex64'))
     s.addTest(test_linalg('test_svd_so_cula_float32'))

@@ -29,6 +29,7 @@ Release 0.5.2 (under development)
 * CUSOLVER support for matrix inversion, QR decomposition (#198).
 * Prevent objdump output from changing due to environment language (fix by 
   Arnaud Bergeron).
+* Fix diag() support for column-major 2D array inputs (#219).
 
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------

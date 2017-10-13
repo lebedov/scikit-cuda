@@ -4,7 +4,7 @@ import pycuda.autoinit
 import pycuda.gpuarray as gpuarray
 import numpy as np
 import skcuda.linalg as linalg
-from skcuda.pca import PCA as cuPCA
+from skcuda.linalg import PCA as cuPCA
 import skcuda.misc as cumisc
  
 pca = cuPCA() # take all principal components

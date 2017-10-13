@@ -37,6 +37,7 @@ Special thanks are due to the following parties for their contributions:
   bindings.
 - `Lars Pastewka <https://github.com/pastewka>`_ - FFT tests and FFTW compatibility mode configuration.
 - `Luke Pfister <https://www.linkedin.com/pub/luke-pfister/11/70a/731>`_ - Bug fixes.
+- `Michael Rader <https://github.com/mrader1248>`_ - Bug fixes.
 - `Alex Rubinsteyn <https://github.com/iskandr>`_ - Support for CULA Dense Free R17.
 - `Xing Shi <https://github.com/shixing>`_ - Bug fixes.
 - `Steve Taylor <https://github.com/stevertaylor>`_ - Cholesky factorization/solve functions.
