@@ -1818,7 +1818,7 @@ def cusolverDnSsyevj_bufferSize(handle, jobz, uplo,
     lwork = ctypes.c_int()
     status = _libcusolver.cusolverDnSsyevj_bufferSize(
         handle,
-        _CUSOLVER_EIG_TYPE[jobz],
+        _CUSOLVER_EIG_MODE[jobz],
         cublas._CUBLAS_FILL_MODE[uplo],
         n,
         int(a),
@@ -1847,11 +1847,10 @@ if cudart._cudart_version >= 9000:
 @_cusolver_version_req(9.0)
 def cusolverDnSsyevj(handle, jobz, uplo,
                      n, a, lda, w, work,
-                     lwork, params):
-    info = ctypes.c_int()
+                     lwork, info, params):
     status = _libcusolver.cusolverDnSsyevj(
         handle,
-        _CUSOLVER_EIG_TYPE[jobz],
+        _CUSOLVER_EIG_MODE[jobz],
         cublas._CUBLAS_FILL_MODE[uplo],
         n,
         int(a),
@@ -1859,11 +1858,10 @@ def cusolverDnSsyevj(handle, jobz, uplo,
         int(w),
         int(work),
         lwork,
-        ctypes.byref(info),
+        int(info),
         params
     )
     cusolverCheckStatus(status)
-    return info
 
 if cudart._cudart_version >= 9000:
     _libcusolver.cusolverDnDsyevj_bufferSize.restype = int
