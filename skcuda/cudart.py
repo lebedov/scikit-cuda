@@ -8,7 +8,7 @@ import atexit, ctypes, platform, re, sys, warnings
 import numpy as np
 
 # Load library:
-_version_list = [8.0, 7.5, 7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
+_version_list = [9.0, 8.0, 7.5, 7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
 if 'linux' in sys.platform:
     _libcudart_libname_list = ['libcudart.so'] + \
                               ['libcudart.so.%s' % v for v in _version_list]
@@ -785,8 +785,33 @@ def cudaDriverGetVersion():
     cudaCheckStatus(status)
     return version.value
 
+# try:
+#     _cudart_version = cudaDriverGetVersion()
+# except:
+#     _cudart_version = 9999
+
+_libcudart.cudaRuntimeGetVersion.restype = int
+_libcudart.cudaRuntimeGetVersion.argtypes = [ctypes.POINTER(ctypes.c_int)]
+def cudaRuntimeGetVersion():
+    """
+    Get installed CUDA driver version.
+
+    Return the version of the installed CUDA driver as an integer. If
+    no driver is detected, 0 is returned.
+
+    Returns
+    -------
+    version : int
+        Driver version.
+    """
+
+    version = ctypes.c_int()
+    status = _libcudart.cudaRuntimeGetVersion(ctypes.byref(version))
+    cudaCheckStatus(status)
+    return version.value
+
 try:
-    _cudart_version = cudaDriverGetVersion()
+    _cudart_version = cudaRuntimeGetVersion()
 except:
     _cudart_version = 9999
 
