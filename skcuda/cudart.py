@@ -785,11 +785,6 @@ def cudaDriverGetVersion():
     cudaCheckStatus(status)
     return version.value
 
-# try:
-#     _cudart_version = cudaDriverGetVersion()
-# except:
-#     _cudart_version = 9999
-
 _libcudart.cudaRuntimeGetVersion.restype = int
 _libcudart.cudaRuntimeGetVersion.argtypes = [ctypes.POINTER(ctypes.c_int)]
 def cudaRuntimeGetVersion():
