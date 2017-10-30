@@ -1,4 +1,5 @@
 build
 .*.swp
 *.pyc
-*.egg-info
+scikit_cuda.egg-info
+dist
