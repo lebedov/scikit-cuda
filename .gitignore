@@ -3,3 +3,4 @@ build
 *.pyc
 scikit_cuda.egg-info
 dist
+docs/source/generated
