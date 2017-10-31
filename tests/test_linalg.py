@@ -650,7 +650,7 @@ class test_linalg(TestCase):
         # M < N
         a = np.array([[1, 2, 3, 4, 5, 6],
                       [7, 8, 9, 10, 11, 12]],
-                     np.float64)
+                      np.float64)
         a_gpu = gpuarray.to_gpu(a)
         at_gpu = linalg.hermitian(a_gpu)
         assert_equal(a.T, at_gpu.get())
@@ -664,7 +664,7 @@ class test_linalg(TestCase):
         # M < N
         a = np.array([[1j, 2j, 3j, 4j, 5j, 6j],
                       [7j, 8j, 9j, 10j, 11j, 12j]],
-                     np.complex128)
+                      np.complex128)
         a_gpu = gpuarray.to_gpu(a)
         at_gpu = linalg.hermitian(a_gpu)
         assert_equal(np.conj(a.T), at_gpu.get())
@@ -695,7 +695,12 @@ class test_linalg(TestCase):
         assert_equal(np.diag(v), d_gpu.get())
 
     def test_diag_2d_wide_float32(self):
-        v = np.array(np.random.rand(32, 64), np.float32)
+        v = np.asarray(np.random.rand(32, 64), np.float32)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
+        v = np.asarray(np.random.rand(32, 64), np.float32, order="F")
         v_gpu = gpuarray.to_gpu(v)
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
@@ -706,7 +711,12 @@ class test_linalg(TestCase):
         assert_equal(np.diag(v), d_gpu.get())
 
     def test_diag_2d_tall_float32(self):
-        v = np.array(np.random.rand(64, 32), np.float32)
+        v = np.asarray(np.random.rand(64, 32), np.float32)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
+        v = np.asarray(np.random.rand(64, 32), np.float32, order="F")
         v_gpu = gpuarray.to_gpu(v)
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
@@ -718,8 +728,7 @@ class test_linalg(TestCase):
         assert_equal(np.diag(v), d_gpu.get())
 
     def test_diag_2d_wide_float64(self):
-        v = np.array(np.random.rand(32, 64), np.float64)
-
+        v = np.asarray(np.random.rand(32, 64), np.float64)
         v_gpu = gpuarray.to_gpu(v)
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
@@ -730,7 +739,12 @@ class test_linalg(TestCase):
         assert_equal(np.diag(v), d_gpu.get())
 
     def test_diag_2d_tall_float64(self):
-        v = np.array(np.random.rand(64, 32), np.float64)
+        v = np.asarray(np.random.rand(64, 32), np.float64)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
+        v = np.asarray(np.random.rand(64, 32), np.float64, order="F")
         v_gpu = gpuarray.to_gpu(v)
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
@@ -747,7 +761,12 @@ class test_linalg(TestCase):
         assert_equal(np.diag(v), d_gpu.get())
 
     def test_diag_2d_wide_complex64(self):
-        v = np.array(np.random.rand(32, 64)*1j, np.complex64)
+        v = np.asarray(np.random.rand(32, 64)*1j, np.complex64)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
+        v = np.asarray(np.random.rand(32, 64)*1j, np.complex64, order="F")
         v_gpu = gpuarray.to_gpu(v)
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
@@ -758,7 +777,12 @@ class test_linalg(TestCase):
         assert_equal(np.diag(v), d_gpu.get())
 
     def test_diag_2d_tall_complex64(self):
-        v = np.array(np.random.rand(64, 32)*1j, np.complex64)
+        v = np.asarray(np.random.rand(64, 32)*1j, np.complex64)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
+        v = np.asarray(np.random.rand(64, 32)*1j, np.complex64, order="F")
         v_gpu = gpuarray.to_gpu(v)
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
@@ -775,7 +799,12 @@ class test_linalg(TestCase):
         assert_equal(np.diag(v), d_gpu.get())
 
     def test_diag_2d_wide_complex128(self):
-        v = np.array(np.random.rand(32, 64)*1j, np.complex128)
+        v = np.asarray(np.random.rand(32, 64)*1j, np.complex128)
+        v_gpu = gpuarray.to_gpu(v)
+        d_gpu = linalg.diag(v_gpu)
+        assert_equal(np.diag(v), d_gpu.get())
+
+        v = np.asarray(np.random.rand(32, 64)*1j, np.complex128, order="F")
         v_gpu = gpuarray.to_gpu(v)
         d_gpu = linalg.diag(v_gpu)
         assert_equal(np.diag(v), d_gpu.get())
