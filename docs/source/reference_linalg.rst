@@ -2,8 +2,8 @@
 
 .. currentmodule:: skcuda.linalg
 
-Linear Algebra Routines
-=======================
+Linear Algebra Routines and Classes
+===================================
 
 .. autosummary::
    :toctree: generated/
@@ -31,6 +31,7 @@ Linear Algebra Routines
    qr
    scale
    svd
+   PCA
    trace
    transpose
    tril

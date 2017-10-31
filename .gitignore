@@ -1,0 +1,6 @@
+build
+.*.swp
+*.pyc
+scikit_cuda.egg-info
+dist
+docs/source/generated
