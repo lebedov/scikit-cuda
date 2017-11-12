@@ -69,7 +69,10 @@ If you use scikit-cuda in a scholarly publication, please cite it as follows: ::
                         Jacob Frelinger and 
                         Tim Klein and
                         Bruce Merry and
+                        Nate Merill and
                         Lars Pastewka and
+                        S. Clarkson and
+                        Michael Rader and
                         Steve Taylor and
                         Arnaud Bergeron and
                         Nikul H. Ukani and
