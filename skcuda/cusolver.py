@@ -1165,6 +1165,7 @@ def cusolverDnZgesvd(handle, jobu, jobvt, m, n, a, lda, s, U,
 _libcusolver.cusolverDnSgeqrf_bufferSize.restype = int
 _libcusolver.cusolverDnSgeqrf_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_int,
+                                                     ctypes.c_int,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
                                                      ctypes.c_void_p]
@@ -1211,6 +1212,7 @@ def cusolverDnSgeqrf(handle, m, n, a, lda, tau, workspace, lwork, devInfo):
 
 _libcusolver.cusolverDnDgeqrf_bufferSize.restype = int
 _libcusolver.cusolverDnDgeqrf_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
                                                      ctypes.c_int,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
@@ -1259,6 +1261,7 @@ def cusolverDnDgeqrf(handle, m, n, a, lda, tau, workspace, lwork, devInfo):
 _libcusolver.cusolverDnCgeqrf_bufferSize.restype = int
 _libcusolver.cusolverDnCgeqrf_bufferSize.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_int,
+                                                     ctypes.c_int,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
                                                      ctypes.c_void_p]
@@ -1305,6 +1308,7 @@ def cusolverDnCgeqrf(handle, m, n, a, lda, tau, workspace, lwork, devInfo):
 
 _libcusolver.cusolverDnZgeqrf_bufferSize.restype = int
 _libcusolver.cusolverDnZgeqrf_bufferSize.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
                                                      ctypes.c_int,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
