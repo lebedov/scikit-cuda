@@ -50,10 +50,7 @@ from .misc import init, shutdown, add_matvec, div_matvec, mult_matvec
 # Get installation location of C headers:
 from . import install_headers
 
-
-
-class PCA():
-
+class PCA(object):
     """
     Principal Component Analysis with similar API to sklearn.decomposition.PCA
 
@@ -109,7 +106,6 @@ class PCA():
             self.h = handle
 
     def fit_transform(self, X_gpu):
-
         """
         Fit the Principal Component Analysis model, and return the dimension-reduced matrix.
 

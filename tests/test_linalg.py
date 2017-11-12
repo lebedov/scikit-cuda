@@ -26,9 +26,16 @@ dtype_to_rtol = {np.float32: 1e-5,
                  np.complex128: 1e-5}
 
 class test_linalg(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        linalg.init()
+ 
+    @classmethod
+    def tearDownClass(cls):
+        linalg.shutdown()
+
     def setUp(self):
         np.random.seed(0)
-        linalg.init()
 
         ### required for PCA tests ##### 
         self.M = 1000
@@ -45,10 +52,6 @@ class test_linalg(TestCase):
         self.Xd.set(Xd_)
         self.Xf = gpuarray.GPUArray((self.M, self.N), np.float32, order="F")
         self.Xf.set(Xf_)
-
-
-    def tearDown(self):
-        linalg.shutdown()
 
     def test_pca_ortho_type_and_shape_float64_all_comp(self):
         # test that the shape is what we think it should be
@@ -102,7 +105,6 @@ class test_linalg(TestCase):
         except ValueError:
             pass
 
-
     def test_pca_k_bigger_than_array_dims_and_getset(self):
         self.test_pca.set_n_components(self.N+1)
         self.assertEqual(self.test_pca.get_n_components(), self.N+1)
@@ -120,7 +122,6 @@ class test_linalg(TestCase):
             fail(msg="PCA Array data type check failed") # should not reach this line. The prev line should fail and go to the except block
         except ValueError:
             pass
-
 
     @skipUnless(linalg._has_cula, 'CULA required')
     def test_svd_ss_cula_float32(self):
@@ -1685,7 +1686,6 @@ def suite():
     s.addTest(test_linalg('test_vander_complex64'))
     s.addTest(test_linalg('test_dmd_float32'))
     s.addTest(test_linalg('test_dmd_complex64'))
-
 
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
         s.addTest(test_linalg('test_pca_ortho_type_and_shape_float64_all_comp'))
