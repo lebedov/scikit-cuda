@@ -20,8 +20,8 @@ dtype_to_atol = {np.float32: 1e-6,
                  np.complex64: 1e-6,
                  np.float64: 1e-8,
                  np.complex128: 1e-8}
-dtype_to_rtol = {np.float32: 1e-5,
-                 np.complex64: 1e-5,
+dtype_to_rtol = {np.float32: 5e-5,
+                 np.complex64: 5e-5,
                  np.float64: 1e-5,
                  np.complex128: 1e-5}
 
