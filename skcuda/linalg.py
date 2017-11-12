@@ -2843,11 +2843,11 @@ def eig(a_gpu, jobvl='N', jobvr='V', imag='F', lib='cula'):
             raise NotImplementedError('CUSOLVER supports only right eigenvectors')
 
         if jobvr == 'V':
-            jobz = cusolver._CUSOLVER_EIG_MODE['VECTOR']
+            jobz = cusolver._CUSOLVER_EIG_MODE['CUSOLVER_EIG_MODE_VECTOR']
             # Copy a_gpu, so we don't destroy it
             a_copy_gpu = a_gpu.copy()
         else:
-            jobz = cusolver._CUSOLVER_EIG_MODE['NOVECTOR']
+            jobz = cusolver._CUSOLVER_EIG_MODE['CUSOLVER_EIG_MODE_NOVECTOR']
             a_copy_gpu = a_gpu
 
         # Since we have the full matrix and assuming symmetry, fill mode
@@ -2870,7 +2870,7 @@ def eig(a_gpu, jobvl='N', jobvr='V', imag='F', lib='cula'):
              n, a_copy_gpu.gpudata, m, w_gpu.gpudata,
              Work.gpudata, Lwork, devInfo.gpudata)
 
-        if jobz == cusolver._CUSOLVER_EIG_MODE['VECTOR']:
+        if jobz == cusolver._CUSOLVER_EIG_MODE['CUSOLVER_EIG_MODE_VECTOR']:
             return a_copy_gpu, w_gpu
         else:
             return w_gpu
