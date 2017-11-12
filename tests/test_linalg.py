@@ -30,34 +30,34 @@ class test_linalg(TestCase):
         np.random.seed(0)
         linalg.init()
 
-	### required for PCA tests ##### 
-	self.M = 1000
-	self.N = 100
-	self.test_pca = linalg.PCA()
-	self.max_sdot = np.float32(0.005)
-	self.max_ddot = np.float64(0.000001)
-	self.K = 2
-	self.test_pca2 = linalg.PCA(n_components=self.K)
-	Xd_ = np.random.rand(self.M, self.N)
-	Xf_ = np.random.rand(self.M, self.N).astype(np.float32)
+        ### required for PCA tests ##### 
+        self.M = 1000
+        self.N = 100
+        self.test_pca = linalg.PCA()
+        self.max_sdot = np.float32(0.005)
+        self.max_ddot = np.float64(0.000001)
+        self.K = 2
+        self.test_pca2 = linalg.PCA(n_components=self.K)
+        Xd_ = np.random.rand(self.M, self.N)
+        Xf_ = np.random.rand(self.M, self.N).astype(np.float32)
 
-	self.Xd = gpuarray.GPUArray((self.M, self.N), np.float64, order="F")
-	self.Xd.set(Xd_)
-	self.Xf = gpuarray.GPUArray((self.M, self.N), np.float32, order="F")
-	self.Xf.set(Xf_)
+        self.Xd = gpuarray.GPUArray((self.M, self.N), np.float64, order="F")
+        self.Xd.set(Xd_)
+        self.Xf = gpuarray.GPUArray((self.M, self.N), np.float32, order="F")
+        self.Xf.set(Xf_)
 
 
     def tearDown(self):
         linalg.shutdown()
 
     def test_pca_ortho_type_and_shape_float64_all_comp(self):
-	# test that the shape is what we think it should be
-	Td_all = self.test_pca.fit_transform(self.Xd)
-	self.assertIsNotNone(Td_all)
-	self.assertEqual(Td_all.dtype, np.float64)
-	self.assertEqual(Td_all.shape, (self.M, self.N))
-	for i in range(self.N-1):
-	    self.assertTrue(linalg.dot(Td_all[:,i], Td_all[:,i+1]) < self.max_ddot)
+        # test that the shape is what we think it should be
+        Td_all = self.test_pca.fit_transform(self.Xd)
+        self.assertIsNotNone(Td_all)
+        self.assertEqual(Td_all.dtype, np.float64)
+        self.assertEqual(Td_all.shape, (self.M, self.N))
+        for i in range(self.N-1):
+            self.assertTrue(linalg.dot(Td_all[:,i], Td_all[:,i+1]) < self.max_ddot)
 
     def test_pca_ortho_type_and_shape_float32_all_comp(self):
         # test that the shape is what we think it should be
@@ -67,7 +67,7 @@ class test_linalg(TestCase):
         self.assertEqual(Tf_all.shape, (self.M, self.N))
         self.Tf_all = Tf_all
         for i in range(self.N-1):
-	    self.assertTrue(linalg.dot(Tf_all[:,i], Tf_all[:,i+1]) < self.max_sdot)
+            self.assertTrue(linalg.dot(Tf_all[:,i], Tf_all[:,i+1]) < self.max_sdot)
 
     def test_pca_ortho_type_and_shape_float64(self):
         # test that the shape is what we think it should be
@@ -101,7 +101,7 @@ class test_linalg(TestCase):
             fail(msg="PCA Array dimensions check failed") # should not reach this line. The prev line should fail and go to the except block
         except ValueError:
             pass
-		
+
 
     def test_pca_k_bigger_than_array_dims_and_getset(self):
         self.test_pca.set_n_components(self.N+1)
@@ -114,7 +114,7 @@ class test_linalg(TestCase):
     def test_pca_type_error_check(self):
         try:
             X_trash = np.random.rand(self.M, self.M, 3).astype(np.int64)
-            X_gpu_trash = gpuarray.GPUArray(X_trash.shape, np.int64, order="F")	
+            X_gpu_trash = gpuarray.GPUArray(X_trash.shape, np.int64, order="F")
             X_gpu_trash.set(X_trash)
             self.test_pca2.fit_transform(X_gpu_trash)
             fail(msg="PCA Array data type check failed") # should not reach this line. The prev line should fail and go to the except block
@@ -1688,10 +1688,9 @@ def suite():
 
 
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
-    
-    	s.addTest(test_linalg('test_pca_ortho_type_and_shape_float64_all_comp'))
-    	s.addTest(test_linalg('test_pca_ortho_type_and_shape_float64'))
- 	s.addTest(test_linalg('test_svd_ss_cula_float64'))
+        s.addTest(test_linalg('test_pca_ortho_type_and_shape_float64_all_comp'))
+        s.addTest(test_linalg('test_pca_ortho_type_and_shape_float64'))
+        s.addTest(test_linalg('test_svd_ss_cula_float64'))
         s.addTest(test_linalg('test_svd_ss_cula_complex128'))
         s.addTest(test_linalg('test_svd_so_cula_float64'))
         s.addTest(test_linalg('test_svd_so_cula_complex128'))
