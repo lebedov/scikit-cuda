@@ -194,14 +194,14 @@ class PCA():
         # mean centering data
         U_gpu = gpuarray.zeros((n,1), np.float32, order="F")
         U_gpu = misc.sum(R_gpu,axis=1) # nx1 sum the columns of R
-        for i in xrange(p):
+        for i in range(p):
             cuAxpy(self.h, n, -1.0/p, U_gpu.gpudata, 1, R_gpu[:,i].gpudata, 1)
 
         # calculate principal components
-        for k in xrange(n_components):
+        for k in range(n_components):
             mu = 0.0
             cuCopy(self.h, n, R_gpu[:,k].gpudata, 1, T_gpu[:,k].gpudata, 1)
-            for j in xrange(self.max_iter):
+            for j in range(self.max_iter):
                 cuGemv(self.h, 't', n, p, 1.0, R_gpu.gpudata, n, T_gpu[:,k].gpudata, 1, 0.0, P_gpu[:,k].gpudata, 1)
                 if k > 0:
                     cuGemv(self.h,'t', p, k, 1.0, P_gpu.gpudata, p, P_gpu[:,k].gpudata, 1, 0.0, U_gpu.gpudata, 1)  
@@ -225,7 +225,7 @@ class PCA():
         # end for k
 
         # last step is to multiply each component vector by the corresponding eigenvalue
-        for k in xrange(n_components):
+        for k in range(n_components):
             cuScal(self.h, n, Lambda[k], T_gpu[:,k].gpudata, 1) 
 
         # free gpu memory
