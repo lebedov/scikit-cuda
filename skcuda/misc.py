@@ -24,6 +24,9 @@ import numpy as np
 from . import cuda
 from . import cublas
 
+import sys
+if sys.version_info < (3,):
+    range = xrange
 
 try:
     from . import cula
@@ -133,7 +136,7 @@ def done_context(ctx):
         Context from which to detach.
     """
 
-    for i in xrange(len(atexit._exithandlers)):
+    for i in range(len(atexit._exithandlers)):
         if atexit._exithandlers[i][0] == ctx.pop:
             del atexit._exithandlers[i]
             break
