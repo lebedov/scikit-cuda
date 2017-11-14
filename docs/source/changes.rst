@@ -31,6 +31,8 @@ Release 0.5.2 (under development)
   Arnaud Bergeron).
 * Fix diag() support for column-major 2D array inputs (#219).
 * Use absolute path for skcuda header includes (enh. by S. Clarkson).
+* Fix QR issues by reverting fix for #131 and raising PyCUDA version requirement 
+  (fix by S. Clarkson).
 
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------

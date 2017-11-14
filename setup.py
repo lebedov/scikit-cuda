@@ -37,7 +37,7 @@ on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if not on_rtd:
     install_requires = ['mako >= 1.0.1',
                         'numpy >= 1.2.0',
-                        'pycuda >= 2014.1']
+                        'pycuda >= 2016.1']
     tests_require = ['nose >= 0.11',
                      'scipy >= 0.14.0'],
     extras_require = dict(scipy = ['scipy >= 0.14.0'],
