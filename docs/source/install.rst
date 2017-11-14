@@ -30,7 +30,7 @@ installed:
 * `Setuptools <http://pythonhosted.org/setuptools>`_ 0.6c10 or later.
 * `Mako <http://www.makotemplates.org/>`_ 1.0.1 or later.
 * `NumPy <http://www.numpy.org>`_ 1.2.0 or later.
-* `PyCUDA <http://mathema.tician.de/software/pycuda>`_ 2014.1 or later (some
+* `PyCUDA <http://mathema.tician.de/software/pycuda>`_ 2016.1 or later (some
   parts of ``scikit-cuda`` might not work properly with earlier versions).
 * `NVIDIA CUDA Toolkit <http://www.nvidia.com/object/cuda_home_new.html>`_ 5.0 
   or later.
