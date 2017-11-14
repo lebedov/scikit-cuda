@@ -1001,8 +1001,8 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
     if handle is None:
         handle = misc._global_cublas_handle
 
-    x_shape = tuple(int(i) for i in x_gpu.shape) # workaround for bug #131
-    y_shape = tuple(int(i) for i in y_gpu.shape)
+    x_shape = x_gpu.shape
+    y_shape = y_gpu.shape
 
     # When one argument is a vector and the other a matrix, increase the number
     # of dimensions of the vector to 2 so that they can be multiplied using
@@ -1301,7 +1301,7 @@ def _transpose(a_gpu, conj=False, handle=None):
         transa = 'c'
     else:
         transa = 't'
-    M, N = np.array(a_gpu.shape, int) # workaround for bug #131
+    M, N = a_gpu.shape
     at_gpu = gpuarray.empty((N, M), a_gpu.dtype)
     func(handle, transa, 't', M, N,
          1.0, a_gpu.gpudata, N, 0.0, a_gpu.gpudata, N,
@@ -1522,7 +1522,7 @@ def diag(v_gpu):
         else:
             raise ValueError('unsupported input type')
 
-        n = int(min(v_gpu.shape)) # workaround for bug #131
+        n = min(v_gpu.shape)
         incx = int(np.sum(v_gpu.strides)/v_gpu.dtype.itemsize)
 
         # Allocate the output array
@@ -1811,9 +1811,7 @@ def tril(a_gpu, overwrite=False, handle=None):
     block_dim, grid_dim = misc.select_block_grid_sizes(dev, a_gpu.shape)
     tril = _get_tril_kernel(use_double, use_complex, cols=N)
     if not overwrite:
-        # workaround for bug #131
-        a_orig_gpu = gpuarray.empty(tuple(int(i) for i in a_gpu.shape),
-                                    a_gpu.dtype, allocator=alloc)
+        a_orig_gpu = gpuarray.empty(a_gpu.shape, a_gpu.dtype, allocator=alloc)
         copy_func(handle, a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
 
     tril(a_gpu, np.uint32(a_gpu.size),
@@ -1939,7 +1937,7 @@ def triu(a_gpu, k=0, overwrite=False, handle=None):
     else:
         raise ValueError('unrecognized type')
 
-    N = int(a_gpu.shape[0])
+    N = a_gpu.shape[0]
 
     # Get block/grid sizes:
     dev = misc.get_current_device()
@@ -2019,9 +2017,7 @@ def multiply(x_gpu, y_gpu, overwrite=False):
         return y_gpu
     else:
         result_type = np.result_type(x_gpu.dtype, y_gpu.dtype)
-        # workaround for bug #131
-        z_gpu = gpuarray.empty(tuple(int(i) for i in x_gpu.shape),
-                               result_type, allocator=alloc)
+        z_gpu = gpuarray.empty(x_gpu.shape, result_type, allocator=alloc)
         func = \
                el.ElementwiseKernel("{x_ctype} *x, {y_ctype} *y, {z_type} *z".format(x_ctype=x_ctype,
                                                                                      y_ctype=y_ctype,
@@ -2181,7 +2177,7 @@ def inv(a_gpu, overwrite=False, ipiv_gpu=None, lib='cula'):
     if len(a_gpu.shape) != 2 or a_gpu.shape[0] != a_gpu.shape[1]:
         raise ValueError('expected square matrix')
 
-    n = int(a_gpu.shape[0]) # workaround for bug #131
+    n = a_gpu.shape[0]
     if ipiv_gpu is None:
         alloc = misc._global_cublas_allocator
         ipiv_gpu = gpuarray.empty((n, 1), np.int32, allocator=alloc)
@@ -2363,7 +2359,7 @@ def det(a_gpu, overwrite=False, workspace_gpu=None, ipiv_gpu=None, handle=None, 
         else:
             raise ValueError('unsupported input type')
 
-        n = int(a_gpu.shape[0]) # workaround for bug #131
+        n = a_gpu.shape[0]
         alloc = misc._global_cublas_allocator
         if ipiv_gpu is None:
             ipiv_gpu = gpuarray.empty((n, 1), np.int32, allocator=alloc)
@@ -2400,7 +2396,7 @@ def det(a_gpu, overwrite=False, workspace_gpu=None, ipiv_gpu=None, handle=None, 
 
         out = a_gpu if overwrite else a_gpu.copy()
 
-        n = int(a_gpu.shape[0]) # workaround for bug #131
+        n = a_gpu.shape[0]
         alloc = misc._global_cublas_allocator
         Lwork = bufsize(cusolverHandle, n, n, int(out.gpudata), n)
         if workspace_gpu is None:
@@ -2586,7 +2582,7 @@ def qr(a_gpu, mode='reduced', handle=None, lib='cula'):
         raise ValueError('invalid library specified')
 
     # CUDA assumes that arrays are stored in column-major order
-    m, n = np.array(a_gpu.shape, int)
+    m, n = a_gpu.shape
 
     if m<n and mode != 'r':
         raise ValueError('if m < n only the mode "r" is supported')
@@ -2792,7 +2788,7 @@ def eig(a_gpu, jobvl='N', jobvr='V', imag='F', lib='cula'):
         raise ValueError('invalid library specified')
 
     # CUDA assumes that arrays are stored in column-major order
-    n, m = np.array(a_gpu.shape, int)
+    n, m = a_gpu.shape
 
     #Check input
     if(m!=n): raise ValueError('matrix is not square!')
@@ -2974,8 +2970,8 @@ def vander(a_gpu, n=None, handle=None):
      else:
          raise ValueError('unrecognized type')
 
-     m = int(a_gpu.shape[0])
-     if n == None: n = int(m)
+     m = a_gpu.shape[0]
+     if n == None: n = m
 
      vander_gpu = gpuarray.empty((m, n), data_type, order='F', allocator=alloc)
      vander_gpu[ : , 0 ] = vander_gpu[ : , 0 ] * 0  + 1
@@ -3197,7 +3193,7 @@ def dmd(a_gpu, k=None, modes='exact', return_amplitudes=False, return_vandermond
             raise ValueError('double precision not supported')
 
     #CUDA assumes that arrays are stored in column-major order
-    m, n = np.array(a_gpu.shape, int)
+    m, n = a_gpu.shape
     nx = n-1
     #Set k
     if k == None : k = nx

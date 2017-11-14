@@ -8,7 +8,7 @@ Note: this module does not explicitly depend on PyCUDA.
 
 import ctypes
 
-from cublas import cublasCheckStatus, _libcublas, _CUBLAS_OP
+from .cublas import cublasCheckStatus, _libcublas, _CUBLAS_OP
 from . import cuda
 
 CUBLASXT_FLOAT = 0
