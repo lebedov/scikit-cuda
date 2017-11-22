@@ -1577,7 +1577,7 @@ class test_linalg(TestCase):
     @skipUnless(linalg._has_cula, 'CULA required')
     def test_dmd_complex64(self):
         m, n = 9, 7
-        a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)) + 1j*np.fliplr(np.vander(np.random.rand(m), n)),
+        a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)) + 1j*np.fliplr(np.vander(np.random.rand(m)+1, n)),
                      np.complex64, order='F')
         a_gpu = gpuarray.to_gpu(a)
         f_gpu, b_gpu, v_gpu, omega = linalg.dmd(a_gpu, modes='standard', return_amplitudes=True, return_vandermonde=True)
@@ -1586,7 +1586,7 @@ class test_linalg(TestCase):
     @skipUnless(linalg._has_cula, 'CULA required')
     def test_dmd_complex128(self):
         m, n = 9, 7
-        a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)) + 1j*np.fliplr(np.vander(np.random.rand(m), n)),
+        a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)) + 1j*np.fliplr(np.vander(np.random.rand(m)+1, n)),
                      np.complex128, order='F')
         a_gpu = gpuarray.to_gpu(a)
         f_gpu, b_gpu, v_gpu, omega = linalg.dmd(a_gpu, modes='standard', return_amplitudes=True, return_vandermonde=True)
