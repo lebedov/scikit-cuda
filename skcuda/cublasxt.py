@@ -81,14 +81,14 @@ def cublasXtDeviceSelect(handle, nbDevices, deviceId):
 
 _libcublas.cublasXtSetBlockDim.restype = int
 _libcublas.cublasXtSetBlockDim.argtypes = [_types.handle,
-                                           ctypes.c_int]
+                                           ctypes.c_void_p]
 def cublasXtSetBlockDim(handle, blockDim):
     status = _libcublas.cublasXtSetBlockDim(handle, blockDim)
     cublasCheckStatus(status)
 
 _libcublas.cublasXtGetBlockDim.restype = int
 _libcublas.cublasXtGetBlockDim.argtypes = [_types.handle,
-                                           ctypes.c_int]
+                                           ctypes.c_void_p]
 def cublasXtGetBlockDim(handle):
     blockDim = ctypes.c_void_p()
     status = _libcublas.cublasXtSetBlockDim(handle, ctypes.byref(blockDim))
