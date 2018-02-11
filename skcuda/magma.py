@@ -1121,8 +1121,11 @@ _libmagma.magma_queue_create_internal.argtypes = [c_int_type,
                                                   ctypes.c_char_p,
                                                   ctypes.c_char_p,
                                                   c_int_type]
-def magma_queue_create(device, queue_ptr):
-    return _libmagma.magma_queue_create_internal.restype(device, queue_ptr, '', '', 0)
+def magma_queue_create(device):
+    queue_ptr = ctypes.c_void_p()
+    status = _libmagma.magma_queue_create_internal(device, ctypes.byref(queue_ptr), '', '', 0)
+    magmaCheckStatus(status)
+    return queue_ptr
 
 _libmagma.magma_queue_destroy_internal.restype = int
 _libmagma.magma_queue_destroy_internal.argtypes = [ctypes.c_void_p,
@@ -1130,7 +1133,8 @@ _libmagma.magma_queue_destroy_internal.argtypes = [ctypes.c_void_p,
                                                    ctypes.c_char_p,
                                                    c_int_type]
 def magma_queue_destroy(queue_ptr):
-    return _libmagma.magma_queue_destroy_internal.restype(queue_ptr, '', '', 0)
+    status = _libmagma.magma_queue_destroy_internal(queue_ptr, '', '', 0)
+    magmaCheckStatus(status)
 
 _libmagma.magma_queue_sync_internal.restype = int
 _libmagma.magma_queue_sync_internal.argtypes = [ctypes.c_void_p,
@@ -1138,7 +1142,8 @@ _libmagma.magma_queue_sync_internal.argtypes = [ctypes.c_void_p,
                                                 ctypes.c_char_p,
                                                 c_int_type]
 def magma_queue_sync(queue_ptr):
-    return _libmagma.magma_queue_sync_internal.restype(queue_ptr, '', '', 0)
+    status = _libmagma.magma_queue_sync_internal(queue_ptr, '', '', 0)
+    magmaCheckStatus(status)
 
 # Buffer size algorithms
 
