@@ -1442,13 +1442,32 @@ _libmagma.magma_sgeqrf.argtypes = [c_int_type,
                                    c_int_type,
                                    ctypes.c_void_p]
 def magma_sgeqrf(m, n, A, lda, tau, work, lwork):
-
     """
     QR factorization.
     """
 
     info = c_int_type()
     status = _libmagma.magma_sgeqrf(m, n, int(A), lda,
+                                    int(tau), int(work),
+                                    lwork, ctypes.byref(info))
+    magmaCheckStatus(status)
+
+_libmagma.magma_dgeqrf.restype = int
+_libmagma.magma_dgeqrf.argtypes = [c_int_type,
+                                   c_int_type,
+                                   ctypes.c_void_p,
+                                   c_int_type,
+                                   ctypes.c_void_p,
+                                   ctypes.c_void_p,
+                                   c_int_type,
+                                   ctypes.c_void_p]
+def magma_dgeqrf(m, n, A, lda, tau, work, lwork):
+    """
+    QR factorization.
+    """
+
+    info = c_int_type()
+    status = _libmagma.magma_dgeqrf(m, n, int(A), lda,
                                     int(tau), int(work),
                                     lwork, ctypes.byref(info))
     magmaCheckStatus(status)
@@ -1463,9 +1482,8 @@ _libmagma.magma_cgeqrf.argtypes = [c_int_type,
                                    c_int_type,
                                    ctypes.c_void_p]
 def magma_cgeqrf(m, n, A, lda, tau, work, lwork):
-    
     """
-        QR factorization.
+    QR factorization.
     """
     
     info = c_int_type()
@@ -1483,10 +1501,9 @@ _libmagma.magma_zgeqrf.argtypes = [c_int_type,
                                    ctypes.c_void_p,
                                    c_int_type,
                                    ctypes.c_void_p]
-def magma_zgeqrf(m, n, A, lda, tau, work, lwork):
-    
+def magma_zgeqrf(m, n, A, lda, tau, work, lwork):  
     """
-        QR factorization.
+    QR factorization.
     """
     
     info = c_int_type()
@@ -1506,7 +1523,6 @@ _libmagma.magma_sgeqrf_ooc.argtypes = [c_int_type,
                                        c_int_type,
                                        ctypes.c_void_p]
 def magma_sgeqrf_ooc(m, n, A, lda, tau, work, lwork):
-
     """
     QR factorization (ooc).
     """
@@ -1527,11 +1543,10 @@ _libmagma.magma_dgeqrf_ooc.argtypes = [c_int_type,
                                        c_int_type,
                                        ctypes.c_void_p]
 def magma_dgeqrf_ooc(m, n, A, lda, tau, work, lwork):
-    
     """
-        QR factorization (ooc).
+    QR factorization (ooc).
     """
-    
+
     info = c_int_type()
     status = _libmagma.magma_dgeqrf_ooc(m, n, int(A), lda,
                                         int(tau), int(work),
@@ -1548,11 +1563,10 @@ _libmagma.magma_cgeqrf_ooc.argtypes = [c_int_type,
                                        c_int_type,
                                        ctypes.c_void_p]
 def magma_cgeqrf_ooc(m, n, A, lda, tau, work, lwork):
-    
     """
-        QR factorization (ooc).
+    QR factorization (ooc).
     """
-    
+
     info = c_int_type()
     status = _libmagma.magma_cgeqrf_ooc(m, n, int(A), lda,
                                         int(tau), int(work),
@@ -1569,11 +1583,10 @@ _libmagma.magma_zgeqrf_ooc.argtypes = [c_int_type,
                                        c_int_type,
                                        ctypes.c_void_p]
 def magma_zgeqrf_ooc(m, n, A, lda, tau, work, lwork):
-    
     """
-        QR factorization (ooc).
+    QR factorization (ooc).
     """
-    
+
     info = c_int_type()
     status = _libmagma.magma_zgeqrf_ooc(m, n, int(A), lda,
                                         int(tau), int(work),
@@ -1591,9 +1604,9 @@ _libmagma.magma_sgeqrf_gpu.argtypes = [c_int_type,
                                        ctypes.c_void_p]
 def magma_sgeqrf_gpu(m, n, A, ldda, tau, dT):
     """
-        QR factorization (gpu interface,
-                          upper triangular R is inverted).
+    QR factorization (gpu interface, upper triangular R is inverted).
     """
+
     info = c_int_type()
     status = _libmagma.magma_sgeqrf_gpu(m, n, int(A), ldda,
                                         int(tau), int(dT),
@@ -1610,9 +1623,9 @@ _libmagma.magma_dgeqrf_gpu.argtypes = [c_int_type,
                                        ctypes.c_void_p]
 def magma_dgeqrf_gpu(m, n, A, ldda, tau, dT):
     """
-        QR factorization (gpu interface,
-        upper triangular R is inverted).
+    QR factorization (gpu interface, upper triangular R is inverted).
     """
+
     info = c_int_type()
     status = _libmagma.magma_dgeqrf_gpu(m, n, int(A), ldda,
                                         int(tau), int(dT),
@@ -1629,9 +1642,9 @@ _libmagma.magma_cgeqrf_gpu.argtypes = [c_int_type,
                                        ctypes.c_void_p]
 def magma_cgeqrf_gpu(m, n, A, ldda, tau, dT):
     """
-        QR factorization (gpu interface,
-                          upper triangular R is inverted).
+    QR factorization (gpu interface,upper triangular R is inverted).
     """
+
     info = c_int_type()
     status = _libmagma.magma_cgeqrf_gpu(m, n, int(A), ldda,
                                         int(tau), int(dT),
@@ -1648,9 +1661,9 @@ _libmagma.magma_zgeqrf_gpu.argtypes = [c_int_type,
                                        ctypes.c_void_p]
 def magma_zgeqrf_gpu(m, n, A, ldda, tau, dT):
     """
-        QR factorization (gpu interface,
-                          upper triangular R is inverted).
+    QR factorization (gpu interface, upper triangular R is inverted).
     """
+
     info = c_int_type()
     status = _libmagma.magma_zgeqrf_gpu(m, n, int(A), ldda,
                                         int(tau), int(dT),
