@@ -80,6 +80,7 @@ If you use scikit-cuda in a scholarly publication, please cite it as follows: ::
                         Bruce Merry and
                         Nate Merill and
                         Lars Pastewka and
+                        Li Yong Liu and
                         S. Clarkson and
                         Michael Rader and
                         Steve Taylor and

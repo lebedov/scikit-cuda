@@ -36,7 +36,9 @@ Special thanks are due to the following parties for their contributions:
 - `Teodor Mihai Moldovan <https://github.com/teodor-moldovan>`_ - CUBLAS 5 
   bindings.
 - `Lars Pastewka <https://github.com/pastewka>`_ - FFT tests and FFTW compatibility mode configuration.
-- `Luke Pfister <https://www.linkedin.com/pub/luke-pfister/11/70a/731>`_ - Bug fixes.
+- `Li Yong Liu <http://laoniu85.github.io>`_ - CUBLAS batch wrappers.
+- `Luke Pfister <https://www.linkedin.com/pub/luke-pfister/11/70a/731>`_ - Bug 
+  fixes.
 - `Michael Rader <https://github.com/mrader1248>`_ - Bug fixes.
 - `Nate Merrill <https://github.com/nmerrill67>`_ - PCA module.
 - `Alex Rubinsteyn <https://github.com/iskandr>`_ - Support for CULA Dense Free R17.

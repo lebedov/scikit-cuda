@@ -33,7 +33,8 @@ Release 0.5.2 (under development)
 * Use absolute path for skcuda header includes (enh. by S. Clarkson).
 * Fix QR issues by reverting fix for #131 and raising PyCUDA version requirement 
   (fix by S. Clarkson).
-
+* More batch CUBLAS wrappers (enh. by Li Yong Liu)
+  
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------
 * More CUSOLVER wrappers.
