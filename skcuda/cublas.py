@@ -5739,7 +5739,7 @@ def cublasDtrsmBatched(handle, side, uplo, trans, diag, m, n, alpha,
     cublasCheckStatus(status)
 
 
-# SgetrfBatched, DgetrfBatched
+# SgetrfBatched, DgetrfBatched,CgetrfBatched, ZgetrfBatched
 if _cublas_version >= 5000:
     _libcublas.cublasSgetrfBatched.restype = int
     _libcublas.cublasSgetrfBatched.argtypes = [_types.handle,
@@ -5774,7 +5774,7 @@ if _cublas_version >= 5000:
                                                ctypes.c_void_p,
                                                ctypes.c_int]
 @_cublas_version_req(5.0)
-def cublasDgetrfBatched(handle, n, A, lda, P, info, batchSize):
+def cublasCgetrfBatched(handle, n, A, lda, P, info, batchSize):
     """
     This function performs the LU factorization of an array of n x n matrices.
 
@@ -5788,7 +5788,32 @@ def cublasDgetrfBatched(handle, n, A, lda, P, info, batchSize):
                                             int(info), batchSize)
     cublasCheckStatus(status)
 
-# SgetriBatched, Dgetribatched
+
+if _cublas_version >= 5000:
+    _libcublas.cublasCgetrfBatched.restype = int
+    _libcublas.cublasCgetrfBatched.argtypes = [_types.handle,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int]
+@_cublas_version_req(5.0)
+def cublasZgetrfBatched(handle, n, A, lda, P, info, batchSize):
+    """
+    This function performs the LU factorization of an array of n x n matrices.
+
+    References
+    ----------
+    `cublas<t>getrfBatched <http://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-getrfbatched>`_
+    """
+
+    status = _libcublas.cublasZgetrfBatched(handle, n,
+                                            int(A), lda, int(P),
+                                            int(info), batchSize)
+    cublasCheckStatus(status)
+
+# SgetriBatched, Dgetribatched, CgetriBatched, Zgetribatched
 if _cublas_version >= 5050:
     _libcublas.cublasSgetriBatched.restype = int
     _libcublas.cublasSgetriBatched.argtypes = [_types.handle,
@@ -5849,7 +5874,42 @@ def cublasDgetriBatched(handle, n, A, lda, P, C, ldc, info, batchSize):
                                             int(A), lda, int(P),
                                             int(C), ldc, int(info),
                                             batchSize)
+@_cublas_version_req(5.5)
+def cublasCgetriBatched(handle, n, A, lda, P, C, ldc, info, batchSize):
+    """
+    This function performs the inversion of an array of n x n matrices.
 
+    Notes
+    -----
+    The matrices must be factorized first using cublasCgetrfBatched.
+
+    References
+    ----------
+    `cublas<t>getriBatched <http://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-getribatched>`_    
+    """
+
+    status = _libcublas.cublasCgetriBatched(handle, n,
+                                            int(A), lda, int(P),
+                                            int(C), ldc, int(info),
+                                            batchSize)
+@_cublas_version_req(5.5)
+def cublasZgetriBatched(handle, n, A, lda, P, C, ldc, info, batchSize):
+    """
+    This function performs the inversion of an array of n x n matrices.
+
+    Notes
+    -----
+    The matrices must be factorized first using cublasDgetrfBatched.
+
+    References
+    ----------
+    `cublas<t>getriBatched <http://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-getribatched>`_    
+    """
+
+    status = _libcublas.cublasZgetriBatched(handle, n,
+                                            int(A), lda, int(P),
+                                            int(C), ldc, int(info),
+                                            batchSize)                                            
 if _cublas_version >= 5000:
     _libcublas.cublasSdgmm.restype = \
     _libcublas.cublasDdgmm.restype = \
