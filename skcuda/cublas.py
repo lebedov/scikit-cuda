@@ -5774,10 +5774,10 @@ if _cublas_version >= 5000:
                                                ctypes.c_void_p,
                                                ctypes.c_int]
 @_cublas_version_req(5.0)
-def cublasCgetrfBatched(handle, n, A, lda, P, info, batchSize):
+def cublasDgetrfBatched(handle, n, A, lda, P, info, batchSize):
     """
     This function performs the LU factorization of an array of n x n matrices.
-
+  
     References
     ----------
     `cublas<t>getrfBatched <http://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-getrfbatched>`_
@@ -5788,10 +5788,34 @@ def cublasCgetrfBatched(handle, n, A, lda, P, info, batchSize):
                                             int(info), batchSize)
     cublasCheckStatus(status)
 
-
 if _cublas_version >= 5000:
     _libcublas.cublasCgetrfBatched.restype = int
     _libcublas.cublasCgetrfBatched.argtypes = [_types.handle,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int]
+@_cublas_version_req(5.0)
+def cublasCgetrfBatched(handle, n, A, lda, P, info, batchSize):
+    """
+    This function performs the LU factorization of an array of n x n matrices.
+
+    References
+    ----------
+    `cublas<t>getrfBatched <http://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-getrfbatched>`_
+    """
+
+    status = _libcublas.cublasCgetrfBatched(handle, n,
+                                            int(A), lda, int(P),
+                                            int(info), batchSize)
+    cublasCheckStatus(status)
+
+
+if _cublas_version >= 5000:
+    _libcublas.cublasZgetrfBatched.restype = int
+    _libcublas.cublasZgetrfBatched.argtypes = [_types.handle,
                                                ctypes.c_int,
                                                ctypes.c_void_p,
                                                ctypes.c_int,
