@@ -11,7 +11,7 @@ import skcuda.cusolver as solver
 
 h = solver.cusolverDnCreate()
 x = np.asarray([[1.80, 2.88, 2.05, -0.89],
-                [5.25, -2.95, -0.95, -3.80], 
+                [5.25, -2.95, -0.95, -3.80],
                 [1.58, -2.69, -2.90, -1.04],
                 [-1.11, -0.66, -0.59, 0.80]]).astype(np.float32)
 
@@ -36,5 +36,7 @@ status = solver.cusolverDnSgesvd(h, 'A', 'A', m, n, x_gpu.gpudata, m, s_gpu.gpud
 
 # Confirm that solution is correct by ensuring that the original matrix can be
 # obtained from the decomposition:
-print 'correct solution: ', np.allclose(x, np.dot(vh_gpu.get(), np.dot(np.diag(s_gpu.get()), u_gpu.get())), 1e-4)
+print('correct solution: %r' %
+       np.allclose(x, np.dot(vh_gpu.get(), np.dot(np.diag(s_gpu.get()),
+           u_gpu.get())), 1e-4))
 solver.cusolverDnDestroy(h)

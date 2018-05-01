@@ -26,4 +26,4 @@ for t in demo_types:
     v = np.array([1, 2, 3, 4, 5, 6], t)
     v_gpu = gpuarray.to_gpu(v)
     d_gpu = culinalg.diag(v_gpu)
-    print('Success status: ', np.all(d_gpu.get() == np.diag(v)))
+    print('Success status: %r' % np.all(d_gpu.get() == np.diag(v)))

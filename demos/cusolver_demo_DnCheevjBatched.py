@@ -52,9 +52,9 @@ solver.cusolverDnCheevjBatched(handle, 'CUSOLVER_EIG_MODE_VECTOR',
 # Print info
 tmp = info.get()
 if any(tmp):
-    print "the following job did not converge:", np.nonzero(tmp)[0]
+    print("the following job did not converge: %r", np.nonzero(tmp)[0])
 else:
-    print "all jobs converged"
+    print("all jobs converged")
 
 # Destroy handle
 solver.cusolverDnDestroySyevjInfo(params)
@@ -62,9 +62,9 @@ solver.cusolverDnDestroy(handle)
 
 Q = x_gpu.get()
 W = w_gpu.get()
-print 'maximum error in A * Q - Q * Lambda is:'
+print('maximum error in A * Q - Q * Lambda is:')
 for i in range(batchSize):
     q = Q[i*n:(i+1)*n,:].T.copy()
     x = A[i*n:(i+1)*n,:].copy()
     w = W[i, :].copy()
-    print '{}th matrix'.format(i), np.abs(np.dot(x, q) - np.dot(q, np.diag(w))).max()
+    print('{}th matrix %r'.format(i) % np.abs(np.dot(x, q) - np.dot(q, np.diag(w))).max())

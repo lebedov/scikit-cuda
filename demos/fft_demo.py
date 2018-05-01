@@ -27,7 +27,7 @@ y_gpu = gpuarray.empty_like(x_gpu)
 plan_inverse = cu_fft.Plan(x_gpu.shape, np.complex64, np.float32)
 cu_fft.ifft(xf_gpu, y_gpu, plan_inverse, True)
 
-print('Success status: ', np.allclose(y, y_gpu.get(), atol=1e-6))
+print('Success status: %r' % np.allclose(y, y_gpu.get(), atol=1e-6))
 
 print('Testing in-place fft..')
 x = np.asarray(np.random.rand(N) + 1j * np.random.rand(N), np.complex64)
@@ -38,4 +38,4 @@ cu_fft.fft(x_gpu, x_gpu, plan)
 
 cu_fft.ifft(x_gpu, x_gpu, plan, True)
 
-print('Success status: ', np.allclose(x, x_gpu.get(), atol=1e-6))
+print('Success status: %r' % np.allclose(x, x_gpu.get(), atol=1e-6))

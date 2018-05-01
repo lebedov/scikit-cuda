@@ -160,35 +160,49 @@ def magma_init():
     if v >= (1, 5, 0):
         for c in [b'n', b'N', b'y', b'Y']:
             _bool_conversion.update({c: _libmagma.magma_bool_const(c)})
+            _bool_conversion.update({c.decode(): _libmagma.magma_bool_const(c)})
         for c in [b'r', b'R', b'c', b'C']:
             _order_conversion.update({c: _libmagma.magma_order_const(c)})
+            _order_conversion.update({c.decode(): _libmagma.magma_order_const(c)})
         for c in [b'O', b'o', b'1', b'2', b'F', b'f', b'E', b'e', b'I', b'i',b'M',b'm']:
             _norm_conversion.update({c: _libmagma.magma_norm_const(c)})
+            _norm_conversion.update({c.decode(): _libmagma.magma_norm_const(c)})
         for c in [b'U', b'u', b'S', b's', b'N', b'n']:
             _dist_conversion.update({c: _libmagma.magma_dist_const(c)})
+            _dist_conversion.update({c.decode(): _libmagma.magma_dist_const(c)})
         for c in [b'H', b'h', b'S', b's', b'N', b'n', b'P', b'p']:
             _sym_conversion.update({c: _libmagma.magma_sym_const(c)})
+            _sym_conversion.update({c.decode(): _libmagma.magma_sym_const(c)})
         for c in [b'N', b'n', b'U', b'U', b'L', b'l', b'C', b'c', b'R', b'r',b'B',b'b', b'Q', b'q', b'Z', b'z']:
             _pack_conversion.update({c: _libmagma.magma_pack_const(c)})
+            _pack_conversion.update({c.decode(): _libmagma.magma_pack_const(c)})
         for c in [b'N', b'n', b'V', b'v', b'I', b'i', b'A', b'a', b'S', b's',b'O',b'o']:
             _vec_conversion.update({c: _libmagma.magma_vec_const(c)})
+            _vec_conversion.update({c.decode(): _libmagma.magma_vec_const(c)})
         for c in [ b'V', b'v', b'I', b'i', b'A', b'a']:
             _range_conversion.update({c: _libmagma.magma_range_const(c)})
+            _range_conversion.update({c.decode(): _libmagma.magma_range_const(c)})
         for c in [b'q', b'Q', b'p', b'P']:
             _vect_conversion.update({c: _libmagma.magma_vect_const(c)})
+            _vect_conversion.update({c.decode(): _libmagma.magma_vect_const(c)})
         for c in [b'f', b'F', b'B', b'b']:
             _direct_conversion.update({c: _libmagma.magma_direct_const(c)})
+            _direct_conversion.update({c.decode(): _libmagma.magma_direct_const(c)})
         for c in [b'c', b'C', b'r', b'R']:
             _storev_conversion.update({c: _libmagma.magma_storev_const(c)})
-        
+            _storev_conversion.update({c.decode(): _libmagma.magma_storev_const(c)})
         for c in [b'l', b'L', b'u', b'U']:
             _uplo_conversion.update({c: _libmagma.magma_uplo_const(c)})
+            _uplo_conversion.update({c.decode(): _libmagma.magma_uplo_const(c)})
         for c in [b'l', b'L', b'r', b'R', b'b', b'B']:
             _side_conversion.update({c: _libmagma.magma_side_const(c)})
+            _side_conversion.update({c.decode(): _libmagma.magma_side_const(c)})
         for c in [b'n', b'N', b't', b'T', b'c', b'C']:
             _trans_conversion.update({c: _libmagma.magma_trans_const(c)})
+            _trans_conversion.update({c.decode(): _libmagma.magma_trans_const(c)})
         for c in [b'N', b'n', b'U', b'u']:
             _diag_conversion.update({c: _libmagma.magma_diag_const(c)})
+            _diag_conversion.update({c.decode(): _libmagma.magma_diag_const(c)})
     else:
         for c in ['l', 'L', 'u', 'U']:
             _uplo_conversion.update({c: c})

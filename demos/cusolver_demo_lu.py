@@ -13,7 +13,7 @@ import skcuda.cusolver as solver
 
 h = solver.cusolverDnCreate()
 x = np.asarray([[1.80, 2.88, 2.05, -0.89],
-                [5.25, -2.95, -0.95, -3.80], 
+                [5.25, -2.95, -0.95, -3.80],
                 [1.58, -2.69, -2.90, -1.04],
                 [-1.11, -0.66, -0.59, 0.80]]).astype(np.float32)
 
@@ -42,8 +42,8 @@ else:
 p, l, u = sp.linalg.lu(x)
 
 # Only check values in lower triangle starting from first off-diagonal:
-print 'lower triangular matrix is correct: ', \
-    np.allclose(np.tril(l, -1), l_cuda)
-print 'upper triangular matrix is correct: ', \
-    np.allclose(np.triu(u), u_cuda)
+print('lower triangular matrix is correct: %r' %
+    np.allclose(np.tril(l, -1), l_cuda))
+print('upper triangular matrix is correct: %r' %
+    np.allclose(np.triu(u), u_cuda))
 solver.cusolverDnDestroy(h)

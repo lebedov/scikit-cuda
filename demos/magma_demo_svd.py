@@ -12,7 +12,7 @@ import skcuda.magma as magma
 
 magma.magma_init()
 x = np.asarray([[1.80, 2.88, 2.05, -0.89],
-                [5.25, -2.95, -0.95, -3.80], 
+                [5.25, -2.95, -0.95, -3.80],
                 [1.58, -2.69, -2.90, -1.04],
                 [-1.11, -0.66, -0.59, 0.80]]).astype(np.float32)
 x_orig = x.copy()
@@ -37,5 +37,6 @@ status = magma.magma_sgesvd('A', 'A', m, n, x.ctypes.data, m, s.ctypes.data,
 
 # Confirm that solution is correct by ensuring that the original matrix can be
 # obtained from the decomposition:
-print 'correct solution: ', np.allclose(x_orig, np.dot(vh, np.dot(np.diag(s), u)), 1e-4)
+print('correct solution: %r' %
+      np.allclose(x_orig, np.dot(vh, np.dot(np.diag(s), u)), 1e-4))
 magma.magma_finalize()

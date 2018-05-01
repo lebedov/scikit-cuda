@@ -75,4 +75,4 @@ func(x_gpu.gpudata, np.uint32(x_gpu.size),
 x_np = x.copy()
 x_np[:, 0] = 100
 
-print('Success status: ', np.allclose(x_np, x_gpu.get()))
+print('Success status: %r' % np.allclose(x_np, x_gpu.get()))

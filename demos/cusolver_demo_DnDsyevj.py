@@ -40,8 +40,8 @@ solver.cusolverDnDsyevj(handle, 'CUSOLVER_EIG_MODE_VECTOR',
                         lwork, info.gpudata, params)
 
 # Print info
-print solver.cusolverDnXsyevjGetSweeps(handle, params)
-print solver.cusolverDnXsyevjGetResidual(handle, params)
+print(solver.cusolverDnXsyevjGetSweeps(handle, params))
+print(solver.cusolverDnXsyevjGetResidual(handle, params))
 
 # Destroy handle
 solver.cusolverDnDestroySyevjInfo(params)
@@ -49,4 +49,5 @@ solver.cusolverDnDestroy(handle)
 
 # Check error
 Q = x_gpu.get().T
-print 'maximum error in A * Q - Q * Lambda is:', np.abs(np.dot(x, Q) - np.dot(Q, np.diag(w.get()))).max()
+print('maximum error in A * Q - Q * Lambda is: %r' %
+       np.abs(np.dot(x, Q) - np.dot(Q, np.diag(w.get()))).max())
