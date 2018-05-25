@@ -15,7 +15,7 @@ from .cufft import CUFFT_COMPATIBILITY_NATIVE, \
      CUFFT_COMPATIBILITY_FFTW_PADDING, \
      CUFFT_COMPATIBILITY_FFTW_ASYMMETRIC, \
      CUFFT_COMPATIBILITY_FFTW_ALL
-
+from . import cudart
 from . import misc
 
 class Plan:
@@ -38,7 +38,7 @@ class Plan:
         Stream with which to associate the plan. If no stream is specified,
         the default stream is used.
     mode : int
-        FFTW compatibility mode.
+        FFTW compatibility mode. Ignored in CUDA 9.1 and later.
     inembed : numpy.array with dtype=numpy.int32
         number of elements in each dimension of the input array
     istride : int
@@ -114,8 +114,11 @@ class Plan:
             raise ValueError('invalid transform size')
         n = np.asarray(self.shape, np.int32)
         self.handle = cufft.cufftCreate()
+
         # Set FFTW compatibility mode:
-        cufft.cufftSetCompatibilityMode(self.handle, mode)
+        if cudart._cudart_version <= 9000:
+            cufft.cufftSetCompatibilityMode(self.handle, mode)
+
         # Set auto-allocate mode
         cufft.cufftSetAutoAllocation(self.handle, auto_allocate)
         self.worksize = cufft.cufftMakePlanMany(
