@@ -113,6 +113,19 @@ def cufftCheckStatus(status):
             raise cufftError
 
 
+_libcufft.cufftGetVersion.restype = int
+_libcufft.cufftGetVersion.argtypes = [ctypes.c_void_p]
+
+def cufftGetVersion():
+    """
+    Get CUFFT version.
+    """
+
+    version = ctypes.c_int()
+    result = _libcufft.cufftGetVersion(ctypes.byref(version))
+    cufftCheckStatus(result)
+    return version.value
+
 # Data transformation types:
 CUFFT_R2C = 0x2a
 CUFFT_C2R = 0x2c
