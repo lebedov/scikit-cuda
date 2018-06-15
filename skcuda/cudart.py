@@ -789,15 +789,15 @@ _libcudart.cudaRuntimeGetVersion.restype = int
 _libcudart.cudaRuntimeGetVersion.argtypes = [ctypes.POINTER(ctypes.c_int)]
 def cudaRuntimeGetVersion():
     """
-    Get installed CUDA driver version.
+    Get installed CUDA runtime version.
 
-    Return the version of the installed CUDA driver as an integer. If
+    Return the version of the installed CUDA runtime as an integer. If
     no driver is detected, 0 is returned.
 
     Returns
     -------
     version : int
-        Driver version.
+        Runtime version.
     """
 
     version = ctypes.c_int()
