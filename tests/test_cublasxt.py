@@ -13,16 +13,21 @@ import skcuda.cublasxt as cublasxt
 import skcuda.misc as misc
 
 class test_cublasxt(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        np.random.seed(0)
+        cls.handle = cublasxt.cublasXtCreate()
+        cls.nbDevices = 1
+        cls.deviceId = np.array([0], np.int32)
+        cublasxt.cublasXtDeviceSelect(cls.handle, cls.nbDevices,
+                                      cls.deviceId)
+
+    @classmethod
+    def tearDownClass(cls):
+        cublasxt.cublasXtDestroy(cls.handle)
+
     def setUp(self):
         np.random.seed(0)
-        self.handle = cublasxt.cublasXtCreate()
-        self.nbDevices = 1
-        self.deviceId = np.array([0], np.int32)
-        cublasxt.cublasXtDeviceSelect(self.handle, self.nbDevices,
-                                      self.deviceId)
-
-    def tearDown(self):
-        cublasxt.cublasXtDestroy(self.handle)
 
     def test_cublasXtSgemm(self):
         a = np.random.rand(4, 4).astype(np.float32)

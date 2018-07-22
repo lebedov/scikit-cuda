@@ -25,12 +25,16 @@ def bptrs(a):
                 dtype=cublas.ctypes.c_void_p)
 
 class test_cublas(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.cublas_handle = cublas.cublasCreate()
+
+    @classmethod
+    def tearDownClass(cls):
+        cublas.cublasDestroy(cls.cublas_handle)
+
     def setUp(self):
         np.random.seed(23)    # For reproducible tests.
-        self.cublas_handle = cublas.cublasCreate()
-
-    def tearDown(self):
-        cublas.cublasDestroy(self.cublas_handle)
 
     # ISAMAX, IDAMAX, ICAMAX, IZAMAX
     def test_cublasIsamax(self):
