@@ -2769,15 +2769,17 @@ def eig(a_gpu, jobvl='N', jobvr='V', imag='F', lib='cula'):
 
         cusolverHandle = misc._global_cusolver_handle
 
-        # FIXME: Seems like CUSOLVER only handles symmetric matrices,
+        # FIXME: Seems like CUSOLVER only handles symmetric or Hermitian matrices,
         # look into cusolverDn<t>sygvd
         if data_type == np.complex64:
-            raise NotImplementedError('Complex eigen decomposition not implemented for CUSOLVER')
+            func = cusolver.cusolverDnCheevd
+            bufsize = cusolver.cusolverDnCheevd_bufferSize
         elif data_type == np.float32:
             func = cusolver.cusolverDnSsyevd
             bufsize = cusolver.cusolverDnSsyevd_bufferSize
         elif data_type == np.complex128:
-            raise NotImplementedError('Complex eigen decomposition not implemented for CUSOLVER')
+            func = cusolver.cusolverDnZheevd
+            bufsize = cusolver.cusolverDnZheevd_bufferSize
         elif data_type == np.float64:
             real_type = np.float64
             func = cusolver.cusolverDnDsyevd
@@ -2801,9 +2803,8 @@ def eig(a_gpu, jobvl='N', jobvr='V', imag='F', lib='cula'):
         raise ValueError('jobvr has to  be "N" or "V" ')
     if imag not in ['T', 'F'] :
         raise ValueError('imag has to  be "T" or "F" ')
-
-    w_gpu = gpuarray.empty(m, data_type, order="F", allocator=alloc)
     if lib == 'cula':
+        w_gpu = gpuarray.empty(m, data_type, order="F", allocator=alloc)
         # Allocate vl, vr, and w:
         vl_gpu = gpuarray.empty((m,m), data_type, order="F", allocator=alloc)
         vr_gpu = gpuarray.empty((m,m), data_type, order="F", allocator=alloc)
@@ -2831,6 +2832,11 @@ def eig(a_gpu, jobvl='N', jobvr='V', imag='F', lib='cula'):
         elif jobvl == 'N' and jobvr == 'V':
             return vr_gpu, w_gpu
     elif lib == 'cusolver':
+        if data_type in (np.float32,np.complex64):
+            eigv_data_type = np.float32
+        elif data_type in ( np.float64, np.complex128):
+            eigv_data_type = np.float64
+        w_gpu = gpuarray.empty(m, eigv_data_type, order="F", allocator=alloc)
         if jobvl == 'V':
             raise NotImplementedError('CUSOLVER supports only right eigenvectors')
 
