@@ -1524,6 +1524,20 @@ class test_linalg(TestCase):
                             rtol=dtype_to_rtol[np.float64],
                             atol=dtype_to_atol[np.float64])
 
+    def test_eig_cusolver_complex64(self):
+        a = np.asarray(np.random.rand(9, 9), np.complex64, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        w_gpu = linalg.eig(a_gpu, 'N', 'N', lib='cusolver')
+        assert_allclose(np.trace(a), sum(w_gpu.get()), atol=1e-4)
+
+    def test_eig_cusolver_complex128(self):
+        a = np.asarray(np.random.rand(9, 9), np.complex128, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        w_gpu = linalg.eig(a_gpu, 'N', 'N', lib='cusolver')
+        assert_allclose(np.trace(a), sum(w_gpu.get()),
+                            rtol=dtype_to_rtol[np.float64],
+                            atol=dtype_to_atol[np.float64])
+
     def test_vander_float32(self):
         a = np.array(np.random.uniform(1,2,5), np.float32, order='F')
         a_gpu = gpuarray.to_gpu(a)
