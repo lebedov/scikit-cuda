@@ -32,6 +32,10 @@ if 'linux' in sys.platform:
         ctypes.CDLL('libgomp.so.1', mode=ctypes.RTLD_GLOBAL)
     except:
         pass
+    try:
+        ctypes.CDLL('libgomp.so', mode=ctypes.RTLD_GLOBAL)
+    except:
+        pass
 elif sys.platform == 'darwin':
     _libcusolver_libname_list = ['libcusolver.dylib']
 elif sys.platform == 'win32':
