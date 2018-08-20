@@ -160,35 +160,49 @@ def magma_init():
     if v >= (1, 5, 0):
         for c in [b'n', b'N', b'y', b'Y']:
             _bool_conversion.update({c: _libmagma.magma_bool_const(c)})
+            _bool_conversion.update({c.decode(): _libmagma.magma_bool_const(c)})
         for c in [b'r', b'R', b'c', b'C']:
             _order_conversion.update({c: _libmagma.magma_order_const(c)})
+            _order_conversion.update({c.decode(): _libmagma.magma_order_const(c)})
         for c in [b'O', b'o', b'1', b'2', b'F', b'f', b'E', b'e', b'I', b'i',b'M',b'm']:
             _norm_conversion.update({c: _libmagma.magma_norm_const(c)})
+            _norm_conversion.update({c.decode(): _libmagma.magma_norm_const(c)})
         for c in [b'U', b'u', b'S', b's', b'N', b'n']:
             _dist_conversion.update({c: _libmagma.magma_dist_const(c)})
+            _dist_conversion.update({c.decode(): _libmagma.magma_dist_const(c)})
         for c in [b'H', b'h', b'S', b's', b'N', b'n', b'P', b'p']:
             _sym_conversion.update({c: _libmagma.magma_sym_const(c)})
+            _sym_conversion.update({c.decode(): _libmagma.magma_sym_const(c)})
         for c in [b'N', b'n', b'U', b'U', b'L', b'l', b'C', b'c', b'R', b'r',b'B',b'b', b'Q', b'q', b'Z', b'z']:
             _pack_conversion.update({c: _libmagma.magma_pack_const(c)})
+            _pack_conversion.update({c.decode(): _libmagma.magma_pack_const(c)})
         for c in [b'N', b'n', b'V', b'v', b'I', b'i', b'A', b'a', b'S', b's',b'O',b'o']:
             _vec_conversion.update({c: _libmagma.magma_vec_const(c)})
+            _vec_conversion.update({c.decode(): _libmagma.magma_vec_const(c)})
         for c in [ b'V', b'v', b'I', b'i', b'A', b'a']:
             _range_conversion.update({c: _libmagma.magma_range_const(c)})
+            _range_conversion.update({c.decode(): _libmagma.magma_range_const(c)})
         for c in [b'q', b'Q', b'p', b'P']:
             _vect_conversion.update({c: _libmagma.magma_vect_const(c)})
+            _vect_conversion.update({c.decode(): _libmagma.magma_vect_const(c)})
         for c in [b'f', b'F', b'B', b'b']:
             _direct_conversion.update({c: _libmagma.magma_direct_const(c)})
+            _direct_conversion.update({c.decode(): _libmagma.magma_direct_const(c)})
         for c in [b'c', b'C', b'r', b'R']:
             _storev_conversion.update({c: _libmagma.magma_storev_const(c)})
-        
+            _storev_conversion.update({c.decode(): _libmagma.magma_storev_const(c)})
         for c in [b'l', b'L', b'u', b'U']:
             _uplo_conversion.update({c: _libmagma.magma_uplo_const(c)})
+            _uplo_conversion.update({c.decode(): _libmagma.magma_uplo_const(c)})
         for c in [b'l', b'L', b'r', b'R', b'b', b'B']:
             _side_conversion.update({c: _libmagma.magma_side_const(c)})
+            _side_conversion.update({c.decode(): _libmagma.magma_side_const(c)})
         for c in [b'n', b'N', b't', b'T', b'c', b'C']:
             _trans_conversion.update({c: _libmagma.magma_trans_const(c)})
+            _trans_conversion.update({c.decode(): _libmagma.magma_trans_const(c)})
         for c in [b'N', b'n', b'U', b'u']:
             _diag_conversion.update({c: _libmagma.magma_diag_const(c)})
+            _diag_conversion.update({c.decode(): _libmagma.magma_diag_const(c)})
     else:
         for c in ['l', 'L', 'u', 'U']:
             _uplo_conversion.update({c: c})
@@ -1121,8 +1135,11 @@ _libmagma.magma_queue_create_internal.argtypes = [c_int_type,
                                                   ctypes.c_char_p,
                                                   ctypes.c_char_p,
                                                   c_int_type]
-def magma_queue_create(device, queue_ptr):
-    return _libmagma.magma_queue_create_internal.restype(device, queue_ptr, '', '', 0)
+def magma_queue_create(device):
+    queue_ptr = ctypes.c_void_p()
+    status = _libmagma.magma_queue_create_internal(device, ctypes.byref(queue_ptr), '', '', 0)
+    magmaCheckStatus(status)
+    return queue_ptr
 
 _libmagma.magma_queue_destroy_internal.restype = int
 _libmagma.magma_queue_destroy_internal.argtypes = [ctypes.c_void_p,
@@ -1130,7 +1147,8 @@ _libmagma.magma_queue_destroy_internal.argtypes = [ctypes.c_void_p,
                                                    ctypes.c_char_p,
                                                    c_int_type]
 def magma_queue_destroy(queue_ptr):
-    return _libmagma.magma_queue_destroy_internal.restype(queue_ptr, '', '', 0)
+    status = _libmagma.magma_queue_destroy_internal(queue_ptr, '', '', 0)
+    magmaCheckStatus(status)
 
 _libmagma.magma_queue_sync_internal.restype = int
 _libmagma.magma_queue_sync_internal.argtypes = [ctypes.c_void_p,
@@ -1138,7 +1156,8 @@ _libmagma.magma_queue_sync_internal.argtypes = [ctypes.c_void_p,
                                                 ctypes.c_char_p,
                                                 c_int_type]
 def magma_queue_sync(queue_ptr):
-    return _libmagma.magma_queue_sync_internal.restype(queue_ptr, '', '', 0)
+    status = _libmagma.magma_queue_sync_internal(queue_ptr, '', '', 0)
+    magmaCheckStatus(status)
 
 # Buffer size algorithms
 
@@ -1437,13 +1456,32 @@ _libmagma.magma_sgeqrf.argtypes = [c_int_type,
                                    c_int_type,
                                    ctypes.c_void_p]
 def magma_sgeqrf(m, n, A, lda, tau, work, lwork):
-
     """
     QR factorization.
     """
 
     info = c_int_type()
     status = _libmagma.magma_sgeqrf(m, n, int(A), lda,
+                                    int(tau), int(work),
+                                    lwork, ctypes.byref(info))
+    magmaCheckStatus(status)
+
+_libmagma.magma_dgeqrf.restype = int
+_libmagma.magma_dgeqrf.argtypes = [c_int_type,
+                                   c_int_type,
+                                   ctypes.c_void_p,
+                                   c_int_type,
+                                   ctypes.c_void_p,
+                                   ctypes.c_void_p,
+                                   c_int_type,
+                                   ctypes.c_void_p]
+def magma_dgeqrf(m, n, A, lda, tau, work, lwork):
+    """
+    QR factorization.
+    """
+
+    info = c_int_type()
+    status = _libmagma.magma_dgeqrf(m, n, int(A), lda,
                                     int(tau), int(work),
                                     lwork, ctypes.byref(info))
     magmaCheckStatus(status)
@@ -1458,9 +1496,8 @@ _libmagma.magma_cgeqrf.argtypes = [c_int_type,
                                    c_int_type,
                                    ctypes.c_void_p]
 def magma_cgeqrf(m, n, A, lda, tau, work, lwork):
-    
     """
-        QR factorization.
+    QR factorization.
     """
     
     info = c_int_type()
@@ -1478,10 +1515,9 @@ _libmagma.magma_zgeqrf.argtypes = [c_int_type,
                                    ctypes.c_void_p,
                                    c_int_type,
                                    ctypes.c_void_p]
-def magma_zgeqrf(m, n, A, lda, tau, work, lwork):
-    
+def magma_zgeqrf(m, n, A, lda, tau, work, lwork):  
     """
-        QR factorization.
+    QR factorization.
     """
     
     info = c_int_type()
@@ -1501,7 +1537,6 @@ _libmagma.magma_sgeqrf_ooc.argtypes = [c_int_type,
                                        c_int_type,
                                        ctypes.c_void_p]
 def magma_sgeqrf_ooc(m, n, A, lda, tau, work, lwork):
-
     """
     QR factorization (ooc).
     """
@@ -1522,11 +1557,10 @@ _libmagma.magma_dgeqrf_ooc.argtypes = [c_int_type,
                                        c_int_type,
                                        ctypes.c_void_p]
 def magma_dgeqrf_ooc(m, n, A, lda, tau, work, lwork):
-    
     """
-        QR factorization (ooc).
+    QR factorization (ooc).
     """
-    
+
     info = c_int_type()
     status = _libmagma.magma_dgeqrf_ooc(m, n, int(A), lda,
                                         int(tau), int(work),
@@ -1543,11 +1577,10 @@ _libmagma.magma_cgeqrf_ooc.argtypes = [c_int_type,
                                        c_int_type,
                                        ctypes.c_void_p]
 def magma_cgeqrf_ooc(m, n, A, lda, tau, work, lwork):
-    
     """
-        QR factorization (ooc).
+    QR factorization (ooc).
     """
-    
+
     info = c_int_type()
     status = _libmagma.magma_cgeqrf_ooc(m, n, int(A), lda,
                                         int(tau), int(work),
@@ -1564,11 +1597,10 @@ _libmagma.magma_zgeqrf_ooc.argtypes = [c_int_type,
                                        c_int_type,
                                        ctypes.c_void_p]
 def magma_zgeqrf_ooc(m, n, A, lda, tau, work, lwork):
-    
     """
-        QR factorization (ooc).
+    QR factorization (ooc).
     """
-    
+
     info = c_int_type()
     status = _libmagma.magma_zgeqrf_ooc(m, n, int(A), lda,
                                         int(tau), int(work),
@@ -1577,18 +1609,18 @@ def magma_zgeqrf_ooc(m, n, A, lda, tau, work, lwork):
 
 # SGEQRF_GPU, DGEQRF_GPU, CGEQRF_GPU, ZGEQRF_GPU
 _libmagma.magma_sgeqrf_gpu.restype = int
-_libmagma.magma_sgeqrf_gpu.argtype = [c_int_type,
-                                      c_int_type,
-                                      ctypes.c_void_p,
-                                      c_int_type,
-                                      ctypes.c_void_p,
-                                      ctypes.c_void_p,
-                                      ctypes.c_void_p]
+_libmagma.magma_sgeqrf_gpu.argtypes = [c_int_type,
+                                       c_int_type,
+                                       ctypes.c_void_p,
+                                       c_int_type,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p]
 def magma_sgeqrf_gpu(m, n, A, ldda, tau, dT):
     """
-        QR factorization (gpu interface,
-                          upper triangular R is inverted).
+    QR factorization (gpu interface, upper triangular R is inverted).
     """
+
     info = c_int_type()
     status = _libmagma.magma_sgeqrf_gpu(m, n, int(A), ldda,
                                         int(tau), int(dT),
@@ -1596,18 +1628,18 @@ def magma_sgeqrf_gpu(m, n, A, ldda, tau, dT):
     magmaCheckStatus(status)
 
 _libmagma.magma_dgeqrf_gpu.restype = int
-_libmagma.magma_dgeqrf_gpu.argtype = [c_int_type,
-                                      c_int_type,
-                                      ctypes.c_void_p,
-                                      c_int_type,
-                                      ctypes.c_void_p,
-                                      ctypes.c_void_p,
-                                      ctypes.c_void_p]
+_libmagma.magma_dgeqrf_gpu.argtypes = [c_int_type,
+                                       c_int_type,
+                                       ctypes.c_void_p,
+                                       c_int_type,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p]
 def magma_dgeqrf_gpu(m, n, A, ldda, tau, dT):
     """
-        QR factorization (gpu interface,
-        upper triangular R is inverted).
+    QR factorization (gpu interface, upper triangular R is inverted).
     """
+
     info = c_int_type()
     status = _libmagma.magma_dgeqrf_gpu(m, n, int(A), ldda,
                                         int(tau), int(dT),
@@ -1615,18 +1647,18 @@ def magma_dgeqrf_gpu(m, n, A, ldda, tau, dT):
     magmaCheckStatus(status)
 
 _libmagma.magma_cgeqrf_gpu.restype = int
-_libmagma.magma_cgeqrf_gpu.argtype = [c_int_type,
-                                      c_int_type,
-                                      ctypes.c_void_p,
-                                      c_int_type,
-                                      ctypes.c_void_p,
-                                      ctypes.c_void_p,
-                                      ctypes.c_void_p]
+_libmagma.magma_cgeqrf_gpu.argtypes = [c_int_type,
+                                       c_int_type,
+                                       ctypes.c_void_p,
+                                       c_int_type,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p]
 def magma_cgeqrf_gpu(m, n, A, ldda, tau, dT):
     """
-        QR factorization (gpu interface,
-                          upper triangular R is inverted).
+    QR factorization (gpu interface,upper triangular R is inverted).
     """
+
     info = c_int_type()
     status = _libmagma.magma_cgeqrf_gpu(m, n, int(A), ldda,
                                         int(tau), int(dT),
@@ -1634,18 +1666,18 @@ def magma_cgeqrf_gpu(m, n, A, ldda, tau, dT):
     magmaCheckStatus(status)
 
 _libmagma.magma_zgeqrf_gpu.restype = int
-_libmagma.magma_zgeqrf_gpu.argtype = [c_int_type,
-                                      c_int_type,
-                                      ctypes.c_void_p,
-                                      c_int_type,
-                                      ctypes.c_void_p,
-                                      ctypes.c_void_p,
-                                      ctypes.c_void_p]
+_libmagma.magma_zgeqrf_gpu.argtypes = [c_int_type,
+                                       c_int_type,
+                                       ctypes.c_void_p,
+                                       c_int_type,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p,
+                                       ctypes.c_void_p]
 def magma_zgeqrf_gpu(m, n, A, ldda, tau, dT):
     """
-        QR factorization (gpu interface,
-                          upper triangular R is inverted).
+    QR factorization (gpu interface, upper triangular R is inverted).
     """
+
     info = c_int_type()
     status = _libmagma.magma_zgeqrf_gpu(m, n, int(A), ldda,
                                         int(tau), int(dT),
@@ -1654,12 +1686,12 @@ def magma_zgeqrf_gpu(m, n, A, ldda, tau, dT):
 
 # SGEQRF2_GPU, DGEQRF2_GPU, CGEQRF2_GPU, ZGEQRF2_GPU
 _libmagma.magma_sgeqrf2_gpu.restype = int
-_libmagma.magma_sgeqrf2_gpu.argtype = [c_int_type,
-                                       c_int_type,
-                                       ctypes.c_void_p,
-                                       c_int_type,
-                                       ctypes.c_void_p,
-                                       ctypes.c_void_p]
+_libmagma.magma_sgeqrf2_gpu.argtypes = [c_int_type,
+                                        c_int_type,
+                                        ctypes.c_void_p,
+                                        c_int_type,
+                                        ctypes.c_void_p,
+                                        ctypes.c_void_p]
 def magma_sgeqrf2_gpu(m, n, A, ldda, tau):
     """
         QR factorization (gpu interface,
@@ -1672,12 +1704,12 @@ def magma_sgeqrf2_gpu(m, n, A, ldda, tau):
     magmaCheckStatus(status)
 
 _libmagma.magma_dgeqrf2_gpu.restype = int
-_libmagma.magma_dgeqrf2_gpu.argtype = [c_int_type,
-                                       c_int_type,
-                                       ctypes.c_void_p,
-                                       c_int_type,
-                                       ctypes.c_void_p,
-                                       ctypes.c_void_p]
+_libmagma.magma_dgeqrf2_gpu.argtypes = [c_int_type,
+                                        c_int_type,
+                                        ctypes.c_void_p,
+                                        c_int_type,
+                                        ctypes.c_void_p,
+                                        ctypes.c_void_p]
 def magma_dgeqrf2_gpu(m, n, A, ldda, tau):
     """
         QR factorization (gpu interface,
@@ -1690,12 +1722,12 @@ def magma_dgeqrf2_gpu(m, n, A, ldda, tau):
     magmaCheckStatus(status)
 
 _libmagma.magma_cgeqrf2_gpu.restype = int
-_libmagma.magma_cgeqrf2_gpu.argtype = [c_int_type,
-                                       c_int_type,
-                                       ctypes.c_void_p,
-                                       c_int_type,
-                                       ctypes.c_void_p,
-                                       ctypes.c_void_p]
+_libmagma.magma_cgeqrf2_gpu.argtypes = [c_int_type,
+                                        c_int_type,
+                                        ctypes.c_void_p,
+                                        c_int_type,
+                                        ctypes.c_void_p,
+                                        ctypes.c_void_p]
 def magma_cgeqrf2_gpu(m, n, A, ldda, tau):
     """
         QR factorization (gpu interface,
@@ -1708,12 +1740,12 @@ def magma_cgeqrf2_gpu(m, n, A, ldda, tau):
     magmaCheckStatus(status)
 
 _libmagma.magma_zgeqrf2_gpu.restype = int
-_libmagma.magma_zgeqrf2_gpu.argtype = [c_int_type,
-                                       c_int_type,
-                                       ctypes.c_void_p,
-                                       c_int_type,
-                                       ctypes.c_void_p,
-                                       ctypes.c_void_p]
+_libmagma.magma_zgeqrf2_gpu.argtypes = [c_int_type,
+                                        c_int_type,
+                                        ctypes.c_void_p,
+                                        c_int_type,
+                                        ctypes.c_void_p,
+                                        ctypes.c_void_p]
 def magma_zgeqrf2_gpu(m, n, A, ldda, tau):
     """
         QR factorization (gpu, LAPACK-complaint arguments).
@@ -1726,13 +1758,13 @@ def magma_zgeqrf2_gpu(m, n, A, ldda, tau):
 
 # SGEQRF3_GPU, DGEQRF3_GPU, CGEQRF3_GPU, ZGEQRF3_GPU
 _libmagma.magma_sgeqrf3_gpu.restype = int
-_libmagma.magma_sgeqrf3_gpu.argtype = [c_int_type,
-                                       c_int_type,
-                                       ctypes.c_void_p,
-                                       c_int_type,
-                                       ctypes.c_void_p,
-                                       ctypes.c_void_p,
-                                       ctypes.c_void_p]
+_libmagma.magma_sgeqrf3_gpu.argtypes = [c_int_type,
+                                        c_int_type,
+                                        ctypes.c_void_p,
+                                        c_int_type,
+                                        ctypes.c_void_p,
+                                        ctypes.c_void_p,
+                                        ctypes.c_void_p]
 def magma_sgeqrf3_gpu(m, n, A, ldda, tau, dT):
     """
         QR factorization (gpu interface).
@@ -1744,13 +1776,13 @@ def magma_sgeqrf3_gpu(m, n, A, ldda, tau, dT):
     magmaCheckStatus(status)
 
 _libmagma.magma_dgeqrf3_gpu.restype = int
-_libmagma.magma_dgeqrf3_gpu.argtype = [c_int_type,
-                                       c_int_type,
-                                       ctypes.c_void_p,
-                                       c_int_type,
-                                       ctypes.c_void_p,
-                                       ctypes.c_void_p,
-                                       ctypes.c_void_p]
+_libmagma.magma_dgeqrf3_gpu.argtypes = [c_int_type,
+                                        c_int_type,
+                                        ctypes.c_void_p,
+                                        c_int_type,
+                                        ctypes.c_void_p,
+                                        ctypes.c_void_p,
+                                        ctypes.c_void_p]
 def magma_dgeqrf3_gpu(m, n, A, ldda, tau, dT):
     """
         QR factorization (gpu interface).
@@ -1762,13 +1794,13 @@ def magma_dgeqrf3_gpu(m, n, A, ldda, tau, dT):
     magmaCheckStatus(status)
 
 _libmagma.magma_cgeqrf3_gpu.restype = int
-_libmagma.magma_cgeqrf3_gpu.argtype = [c_int_type,
-                                       c_int_type,
-                                       ctypes.c_void_p,
-                                       c_int_type,
-                                       ctypes.c_void_p,
-                                       ctypes.c_void_p,
-                                       ctypes.c_void_p]
+_libmagma.magma_cgeqrf3_gpu.argtypes = [c_int_type,
+                                        c_int_type,
+                                        ctypes.c_void_p,
+                                        c_int_type,
+                                        ctypes.c_void_p,
+                                        ctypes.c_void_p,
+                                        ctypes.c_void_p]
 def magma_cgeqrf3_gpu(m, n, A, ldda, tau, dT):
     """
         QR factorization (gpu interface).
@@ -1780,13 +1812,13 @@ def magma_cgeqrf3_gpu(m, n, A, ldda, tau, dT):
     magmaCheckStatus(status)
 
 _libmagma.magma_zgeqrf3_gpu.restype = int
-_libmagma.magma_zgeqrf3_gpu.argtype = [c_int_type,
-                                       c_int_type,
-                                       ctypes.c_void_p,
-                                       c_int_type,
-                                       ctypes.c_void_p,
-                                       ctypes.c_void_p,
-                                       ctypes.c_void_p]
+_libmagma.magma_zgeqrf3_gpu.argtypes = [c_int_type,
+                                        c_int_type,
+                                        ctypes.c_void_p,
+                                        c_int_type,
+                                        ctypes.c_void_p,
+                                        ctypes.c_void_p,
+                                        ctypes.c_void_p]
 def magma_zgeqrf3_gpu(m, n, A, ldda, tau, dT):
     """
         QR factorization (gpu interface).

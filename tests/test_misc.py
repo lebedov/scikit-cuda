@@ -25,10 +25,16 @@ dtype_to_rtol = {np.int32: 1e-5,
                  np.complex128: 1e-5}
 
 class test_misc(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        misc.init()
+
+    @classmethod
+    def tearDownClass(cls):
+        misc.shutdown()
 
     def setUp(self):
         np.random.seed(0)
-        misc.init()
 
     def test_maxabs_float32(self):
         x = np.array([-1, 2, -3], np.float32)

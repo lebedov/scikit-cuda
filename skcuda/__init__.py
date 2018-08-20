@@ -11,5 +11,4 @@ from .version import __version__
 
 # Location of headers:
 import os
-install_headers = \
-    __file__.replace(os.path.basename(__file__), '') + 'include'
+install_headers = os.path.join(os.path.abspath(os.path.dirname(__file__)), 'include')

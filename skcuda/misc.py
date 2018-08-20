@@ -24,6 +24,9 @@ import numpy as np
 from . import cuda
 from . import cublas
 
+import sys
+if sys.version_info < (3,):
+    range = xrange
 
 try:
     from . import cula
@@ -133,7 +136,7 @@ def done_context(ctx):
         Context from which to detach.
     """
 
-    for i in xrange(len(atexit._exithandlers)):
+    for i in range(len(atexit._exithandlers)):
         if atexit._exithandlers[i][0] == ctx.pop:
             del atexit._exithandlers[i]
             break
@@ -402,7 +405,8 @@ def zeros(shape, dtype, order='C', allocator=drv.mem_alloc):
     """
 
     out = gpuarray.GPUArray(shape, dtype, allocator, order=order)
-    out.fill(0)
+    z = np.zeros((), dtype)
+    out.fill(z)
     return out
 
 def zeros_like(a):
@@ -424,7 +428,8 @@ def zeros_like(a):
 
     out = gpuarray.GPUArray(a.shape, a.dtype, drv.mem_alloc,
                             strides=a.strides)
-    out.fill(0)
+    z = np.zeros((), a.dtype)
+    out.fill(z)
     return out
 
 def ones(shape, dtype, order='C', allocator=drv.mem_alloc):
@@ -450,7 +455,8 @@ def ones(shape, dtype, order='C', allocator=drv.mem_alloc):
     """
 
     out = gpuarray.GPUArray(shape, dtype, allocator, order=order)
-    out.fill(1)
+    o = np.ones((), dtype)
+    out.fill(o)
     return out
 
 def ones_like(a):
@@ -471,7 +477,8 @@ def ones_like(a):
 
     out = gpuarray.GPUArray(a.shape, a.dtype,
                             a.allocator, strides=a.strides)
-    out.fill(1)
+    o = np.ones((), a.dtype)
+    out.fill(o)
     return out
 
 def inf(shape, dtype, order='C', allocator=drv.mem_alloc):
@@ -497,7 +504,8 @@ def inf(shape, dtype, order='C', allocator=drv.mem_alloc):
     """
 
     out = gpuarray.GPUArray(shape, dtype, allocator, order=order)
-    out.fill(np.inf)
+    i = np.array(np.inf, dtype)
+    out.fill(i)
     return out
 
 def maxabs(x_gpu):

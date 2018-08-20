@@ -18,7 +18,7 @@ import numpy as np
 import cuda
 
 # Load library:
-_version_list = [8.0, 7.5, 7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
+_version_list = [9.2, 9.1, 9.0, 8.0, 7.5, 7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
 if 'linux' in sys.platform:
     _libcusparse_libname_list = ['libcusparse.so'] + \
                                 ['libcusparse.so.%s' % v for v in _version_list]

@@ -29,7 +29,7 @@ for t in demo_types:
     a_gpu = gpuarray.to_gpu(a)
     a_inv_gpu = culinalg.pinv(a_gpu)
 
-    print('Success status: ', np.allclose(np.linalg.pinv(a), a_inv_gpu.get(),
+    print('Success status: %r' % np.allclose(np.linalg.pinv(a), a_inv_gpu.get(),
                                           atol=1e-2))
-    print('Maximum error: ', np.max(np.abs(np.linalg.pinv(a) - a_inv_gpu.get())))
+    print('Maximum error: %r' % np.max(np.abs(np.linalg.pinv(a) - a_inv_gpu.get())))
     print('')

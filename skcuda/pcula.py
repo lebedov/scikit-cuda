@@ -7,8 +7,8 @@ Python interface to multi-GPU CULA toolkit functions.
 import ctypes
 import sys
 
-import cuda
-from cula import culaCheckStatus
+from . import cuda
+from .cula import culaCheckStatus
 
 if 'linux' in sys.platform:
     _libpcula_libname_list = ['libcula_scalapack.so']

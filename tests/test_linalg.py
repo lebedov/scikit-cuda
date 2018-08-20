@@ -20,44 +20,47 @@ dtype_to_atol = {np.float32: 1e-6,
                  np.complex64: 1e-6,
                  np.float64: 1e-8,
                  np.complex128: 1e-8}
-dtype_to_rtol = {np.float32: 1e-5,
-                 np.complex64: 1e-5,
+dtype_to_rtol = {np.float32: 5e-5,
+                 np.complex64: 5e-5,
                  np.float64: 1e-5,
                  np.complex128: 1e-5}
 
 class test_linalg(TestCase):
-    def setUp(self):
-        np.random.seed(0)
+    @classmethod
+    def setUpClass(cls):
         linalg.init()
-
-	### required for PCA tests ##### 
-	self.M = 1000
-	self.N = 100
-	self.test_pca = linalg.PCA()
-	self.max_sdot = np.float32(0.005)
-	self.max_ddot = np.float64(0.000001)
-	self.K = 2
-	self.test_pca2 = linalg.PCA(n_components=self.K)
-	Xd_ = np.random.rand(self.M, self.N)
-	Xf_ = np.random.rand(self.M, self.N).astype(np.float32)
-
-	self.Xd = gpuarray.GPUArray((self.M, self.N), np.float64, order="F")
-	self.Xd.set(Xd_)
-	self.Xf = gpuarray.GPUArray((self.M, self.N), np.float32, order="F")
-	self.Xf.set(Xf_)
-
-
-    def tearDown(self):
+ 
+    @classmethod
+    def tearDownClass(cls):
         linalg.shutdown()
 
+    def setUp(self):
+        np.random.seed(0)
+
+        ### required for PCA tests ##### 
+        self.M = 1000
+        self.N = 100
+        self.test_pca = linalg.PCA()
+        self.max_sdot = np.float32(0.005)
+        self.max_ddot = np.float64(0.000001)
+        self.K = 2
+        self.test_pca2 = linalg.PCA(n_components=self.K)
+        Xd_ = np.random.rand(self.M, self.N)
+        Xf_ = np.random.rand(self.M, self.N).astype(np.float32)
+
+        self.Xd = gpuarray.GPUArray((self.M, self.N), np.float64, order="F")
+        self.Xd.set(Xd_)
+        self.Xf = gpuarray.GPUArray((self.M, self.N), np.float32, order="F")
+        self.Xf.set(Xf_)
+
     def test_pca_ortho_type_and_shape_float64_all_comp(self):
-	# test that the shape is what we think it should be
-	Td_all = self.test_pca.fit_transform(self.Xd)
-	self.assertIsNotNone(Td_all)
-	self.assertEqual(Td_all.dtype, np.float64)
-	self.assertEqual(Td_all.shape, (self.M, self.N))
-	for i in range(self.N-1):
-	    self.assertTrue(linalg.dot(Td_all[:,i], Td_all[:,i+1]) < self.max_ddot)
+        # test that the shape is what we think it should be
+        Td_all = self.test_pca.fit_transform(self.Xd)
+        self.assertIsNotNone(Td_all)
+        self.assertEqual(Td_all.dtype, np.float64)
+        self.assertEqual(Td_all.shape, (self.M, self.N))
+        for i in range(self.N-1):
+            self.assertTrue(linalg.dot(Td_all[:,i], Td_all[:,i+1]) < self.max_ddot)
 
     def test_pca_ortho_type_and_shape_float32_all_comp(self):
         # test that the shape is what we think it should be
@@ -67,7 +70,7 @@ class test_linalg(TestCase):
         self.assertEqual(Tf_all.shape, (self.M, self.N))
         self.Tf_all = Tf_all
         for i in range(self.N-1):
-	    self.assertTrue(linalg.dot(Tf_all[:,i], Tf_all[:,i+1]) < self.max_sdot)
+            self.assertTrue(linalg.dot(Tf_all[:,i], Tf_all[:,i+1]) < self.max_sdot)
 
     def test_pca_ortho_type_and_shape_float64(self):
         # test that the shape is what we think it should be
@@ -101,7 +104,6 @@ class test_linalg(TestCase):
             fail(msg="PCA Array dimensions check failed") # should not reach this line. The prev line should fail and go to the except block
         except ValueError:
             pass
-		
 
     def test_pca_k_bigger_than_array_dims_and_getset(self):
         self.test_pca.set_n_components(self.N+1)
@@ -114,13 +116,12 @@ class test_linalg(TestCase):
     def test_pca_type_error_check(self):
         try:
             X_trash = np.random.rand(self.M, self.M, 3).astype(np.int64)
-            X_gpu_trash = gpuarray.GPUArray(X_trash.shape, np.int64, order="F")	
+            X_gpu_trash = gpuarray.GPUArray(X_trash.shape, np.int64, order="F")
             X_gpu_trash.set(X_trash)
             self.test_pca2.fit_transform(X_gpu_trash)
             fail(msg="PCA Array data type check failed") # should not reach this line. The prev line should fail and go to the except block
         except ValueError:
             pass
-
 
     @skipUnless(linalg._has_cula, 'CULA required')
     def test_svd_ss_cula_float32(self):
@@ -1523,6 +1524,20 @@ class test_linalg(TestCase):
                             rtol=dtype_to_rtol[np.float64],
                             atol=dtype_to_atol[np.float64])
 
+    def test_eig_cusolver_complex64(self):
+        a = np.asarray(np.random.rand(9, 9), np.complex64, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        w_gpu = linalg.eig(a_gpu, 'N', 'N', lib='cusolver')
+        assert_allclose(np.trace(a), sum(w_gpu.get()), atol=1e-4)
+
+    def test_eig_cusolver_complex128(self):
+        a = np.asarray(np.random.rand(9, 9), np.complex128, order='F')
+        a_gpu = gpuarray.to_gpu(a)
+        w_gpu = linalg.eig(a_gpu, 'N', 'N', lib='cusolver')
+        assert_allclose(np.trace(a), sum(w_gpu.get()),
+                            rtol=dtype_to_rtol[np.float64],
+                            atol=dtype_to_atol[np.float64])
+
     def test_vander_float32(self):
         a = np.array(np.random.uniform(1,2,5), np.float32, order='F')
         a_gpu = gpuarray.to_gpu(a)
@@ -1576,7 +1591,7 @@ class test_linalg(TestCase):
     @skipUnless(linalg._has_cula, 'CULA required')
     def test_dmd_complex64(self):
         m, n = 9, 7
-        a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)) + 1j*np.fliplr(np.vander(np.random.rand(m), n)),
+        a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)) + 1j*np.fliplr(np.vander(np.random.rand(m)+1, n)),
                      np.complex64, order='F')
         a_gpu = gpuarray.to_gpu(a)
         f_gpu, b_gpu, v_gpu, omega = linalg.dmd(a_gpu, modes='standard', return_amplitudes=True, return_vandermonde=True)
@@ -1585,7 +1600,7 @@ class test_linalg(TestCase):
     @skipUnless(linalg._has_cula, 'CULA required')
     def test_dmd_complex128(self):
         m, n = 9, 7
-        a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)) + 1j*np.fliplr(np.vander(np.random.rand(m), n)),
+        a = np.array(np.fliplr(np.vander(np.random.rand(m)+1, n)) + 1j*np.fliplr(np.vander(np.random.rand(m)+1, n)),
                      np.complex128, order='F')
         a_gpu = gpuarray.to_gpu(a)
         f_gpu, b_gpu, v_gpu, omega = linalg.dmd(a_gpu, modes='standard', return_amplitudes=True, return_vandermonde=True)
@@ -1686,12 +1701,10 @@ def suite():
     s.addTest(test_linalg('test_dmd_float32'))
     s.addTest(test_linalg('test_dmd_complex64'))
 
-
     if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
-    
-    	s.addTest(test_linalg('test_pca_ortho_type_and_shape_float64_all_comp'))
-    	s.addTest(test_linalg('test_pca_ortho_type_and_shape_float64'))
- 	s.addTest(test_linalg('test_svd_ss_cula_float64'))
+        s.addTest(test_linalg('test_pca_ortho_type_and_shape_float64_all_comp'))
+        s.addTest(test_linalg('test_pca_ortho_type_and_shape_float64'))
+        s.addTest(test_linalg('test_svd_ss_cula_float64'))
         s.addTest(test_linalg('test_svd_ss_cula_complex128'))
         s.addTest(test_linalg('test_svd_so_cula_float64'))
         s.addTest(test_linalg('test_svd_so_cula_complex128'))

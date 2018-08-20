@@ -10,7 +10,7 @@ import ctypes
 import sys
 
 # Load library:
-_version_list = [8.0, 7.5, 7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
+_version_list = [9.2, 9.1, 9.0, 8.0, 7.5, 7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
 if 'linux' in sys.platform:
     _libcufft_libname_list = ['libcufft.so'] + \
                              ['libcufft.so.%s' % v for v in _version_list]
@@ -112,6 +112,19 @@ def cufftCheckStatus(status):
         except KeyError:
             raise cufftError
 
+
+_libcufft.cufftGetVersion.restype = int
+_libcufft.cufftGetVersion.argtypes = [ctypes.c_void_p]
+
+def cufftGetVersion():
+    """
+    Get CUFFT version.
+    """
+
+    version = ctypes.c_int()
+    result = _libcufft.cufftGetVersion(ctypes.byref(version))
+    cufftCheckStatus(result)
+    return version.value
 
 # Data transformation types:
 CUFFT_R2C = 0x2a

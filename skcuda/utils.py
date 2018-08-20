@@ -37,10 +37,10 @@ except ImportError:
 
         Notes
         -----
-        This function uses the `objdump` system command on linux and
-        'otool' on Mac OS X (darwin).
-
+        This function uses the `objdump` system command on Linux and
+        'otool' on MacOS (Darwin).
         """
+
         if sys.platform == 'darwin':
             cmds = ['otool', '-L', filename]
         else:
@@ -128,8 +128,8 @@ def find_lib_path(name):
     """
     Find full path of a shared library.
 
-    Searches for the full path of a shared library. On MacOSX and Posix
-    operating systems, this function checks the directories listed in 
+    Searches for the full path of a shared library. On Posix operating systems 
+    other than MacOS, this function checks the directories listed in 
     LD_LIBRARY_PATH (if any) and in the ld.so cache. 
 
     Parameter
@@ -152,7 +152,7 @@ def find_lib_path(name):
     if sys.platform == 'win32':
         return ctypes.util.find_library(name)
 
-    # OSX has no ldconfig:
+    # MacOS has no ldconfig:
     if sys.platform == 'darwin':
         from ctypes.macholib.dyld import dyld_find as _dyld_find
         possible = ['lib%s.dylib' % name,

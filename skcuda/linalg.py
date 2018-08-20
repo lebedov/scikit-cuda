@@ -50,35 +50,29 @@ from .misc import init, shutdown, add_matvec, div_matvec, mult_matvec
 # Get installation location of C headers:
 from . import install_headers
 
-
-
-class PCA():
-
+class PCA(object):
     """
-    Principal Component Analysis with similar API to sklearn.decomposition.PCA 
+    Principal Component Analysis with similar API to sklearn.decomposition.PCA
 
     The algorithm implemented here was first implemented with cuda in [Andrecut, 2008]. 
     It performs nonlinear dimensionality reduction for a data matrix, mapping the data
-    to a lower dimensional space of K. 
-    Read more in the reference. 
+    to a lower dimensional space of K. See references for more information.
 
     Parameters
     ----------
     n_components: int, default=None
-  	The number of principal component column vectors to compute in the output 
-	matrix.
+       The number of principal component column vectors to compute in the output 
+       matrix.
 
-    epsilon: float, default=1e-7	
-	The maximum error tolerance for eigen value approximation.
+    epsilon: float, default=1e-7
+       The maximum error tolerance for eigen value approximation.
 
     max_iter: int, default=10000
-	The maximum number of iterations in approximating each eigenvalue  
+       The maximum number of iterations in approximating each eigenvalue.
 
     Notes
     -----
     If n_components is None, then for a NxP data matrix `K = min(N, P)`. Otherwise, `K = min(n_components, N, P)`
-
-
 
     References
     ----------
@@ -87,7 +81,6 @@ class PCA():
 
     Examples
     --------
-
     >>> import pycuda.autoinit
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
@@ -99,21 +92,20 @@ class PCA():
     >>> X_gpu.set(X) # copy data to gpu
     >>> T_gpu = pca.fit_transform(X_gpu) # calculate the principal components
     >>> linalg.dot(T_gpu[:,0], T_gpu[:,1]) # show that the resulting eigenvectors are orthogonal
-    0.0 
+    0.0
     """
-	
+
     def __init__(self, n_components=None, handle=None, epsilon=1e-7, max_iter=10000):
         self.n_components = n_components
         self.epsilon = epsilon
-        self.max_iter = max_iter	
-        misc.init()	
+        self.max_iter = max_iter
+        misc.init()
         if handle is None:
             self.h = misc._global_cublas_handle # create a handle to initialize cublas
-        else:	
+        else:
             self.h = handle
-			
-    def fit_transform(self, X_gpu):
 
+    def fit_transform(self, X_gpu):
         """
         Fit the Principal Component Analysis model, and return the dimension-reduced matrix.
 
@@ -124,10 +116,10 @@ class PCA():
         ----------
         R_gpu: pycuda.gpuarray.GPUArray
             NxP (N = number of samples, P = number of variables) data matrix that needs 
-	    to be reduced. R_gpu can be of type numpy.float32 or numpy.float64.
-	    Note that if R_gpu is not instantiated with the kwarg 'order="F"', 
-	    specifying a fortran-contiguous (row-major) array structure,
-	    fit_transform will throw an error.	
+            to be reduced. R_gpu can be of type numpy.float32 or numpy.float64.
+            Note that if R_gpu is not instantiated with the kwarg 'order="F"', 
+            specifying a fortran-contiguous (row-major) array structure,
+            fit_transform will throw an error.	
 
         Returns
         -------
@@ -137,7 +129,6 @@ class PCA():
         References
         ----------
         `[Andrecut, 2008] <https://arxiv.org/pdf/0811.1081.pdf>`_
-	
 
         Notes
         -----
@@ -145,7 +136,6 @@ class PCA():
 
         Examples
         --------
-	
         >>> import pycuda.autoinit
         >>> import pycuda.gpuarray as gpuarray
         >>> import numpy as np
@@ -162,7 +152,7 @@ class PCA():
 
         if len(X_gpu.shape) != 2:
             raise ValueError("Array must be 2D for PCA")
-	
+
         if X_gpu.flags.c_contiguous:
             raise ValueError("Array must be fortran-contiguous. Please instantiate with 'order=\"F\"' or use the transpose of a C-ordered array.")
 
@@ -171,7 +161,7 @@ class PCA():
         p = R_gpu.shape[1] # num features
         # choose either single or double precision cublas functions
         if R_gpu.dtype == 'float32':
-            inpt_dtype = np.float32			
+            inpt_dtype = np.float32
             cuAxpy = cublas.cublasSaxpy
             cuCopy = cublas.cublasScopy
             cuGemv = cublas.cublasSgemv
@@ -191,7 +181,7 @@ class PCA():
 
         n_components = self.n_components
         if n_components == None or n_components > n or n_components > p:
-            n_components = min(n, p)	
+            n_components = min(n, p)
 
         Lambda = np.zeros((n_components,1), inpt_dtype, order="F") # kx1
         P_gpu = gpuarray.zeros((p, n_components), inpt_dtype, order="F") # pxk
@@ -200,14 +190,14 @@ class PCA():
         # mean centering data
         U_gpu = gpuarray.zeros((n,1), np.float32, order="F")
         U_gpu = misc.sum(R_gpu,axis=1) # nx1 sum the columns of R
-        for i in xrange(p):
-            cuAxpy(self.h, n, -1.0/p, U_gpu.gpudata, 1, R_gpu[:,i].gpudata, 1) 	
+        for i in range(p):
+            cuAxpy(self.h, n, -1.0/p, U_gpu.gpudata, 1, R_gpu[:,i].gpudata, 1)
 
         # calculate principal components
-        for k in xrange(n_components):
+        for k in range(n_components):
             mu = 0.0
             cuCopy(self.h, n, R_gpu[:,k].gpudata, 1, T_gpu[:,k].gpudata, 1)
-            for j in xrange(self.max_iter):
+            for j in range(self.max_iter):
                 cuGemv(self.h, 't', n, p, 1.0, R_gpu.gpudata, n, T_gpu[:,k].gpudata, 1, 0.0, P_gpu[:,k].gpudata, 1)
                 if k > 0:
                     cuGemv(self.h,'t', p, k, 1.0, P_gpu.gpudata, p, P_gpu[:,k].gpudata, 1, 0.0, U_gpu.gpudata, 1)  
@@ -231,7 +221,7 @@ class PCA():
         # end for k
 
         # last step is to multiply each component vector by the corresponding eigenvalue
-        for k in xrange(n_components):
+        for k in range(n_components):
             cuScal(self.h, n, Lambda[k], T_gpu[:,k].gpudata, 1) 
 
         # free gpu memory
@@ -247,16 +237,16 @@ class PCA():
 
         Parameters
         ----------
-	
+
         n_components: int
             The new number of principal components to return in fit_transform. 
-	    Must be None or greater than 0
-	"""
+            Must be None or greater than 0
+        """
 
         if n_components > 0 or n_components == None:
             self.n_components = n_components
-	else:
-	    raise ValueError("n_components can only be greater than 0 or None")
+        else:
+            raise ValueError("n_components can only be greater than 0 or None")
 
     def get_n_components(self):
         """
@@ -266,11 +256,10 @@ class PCA():
         Returns
         -------
         n_components: int
-  	The current value of self.n_components
+            The current value of self.n_components
         """
+
         return self.n_components
-
-
 
 def svd(a_gpu, jobu='A', jobvt='A', lib='cula'):
     """
@@ -1012,8 +1001,8 @@ def dot(x_gpu, y_gpu, transa='N', transb='N', handle=None, out=None):
     if handle is None:
         handle = misc._global_cublas_handle
 
-    x_shape = tuple(int(i) for i in x_gpu.shape) # workaround for bug #131
-    y_shape = tuple(int(i) for i in y_gpu.shape)
+    x_shape = x_gpu.shape
+    y_shape = y_gpu.shape
 
     # When one argument is a vector and the other a matrix, increase the number
     # of dimensions of the vector to 2 so that they can be multiplied using
@@ -1312,7 +1301,7 @@ def _transpose(a_gpu, conj=False, handle=None):
         transa = 'c'
     else:
         transa = 't'
-    M, N = np.array(a_gpu.shape, int) # workaround for bug #131
+    M, N = a_gpu.shape
     at_gpu = gpuarray.empty((N, M), a_gpu.dtype)
     func(handle, transa, 't', M, N,
          1.0, a_gpu.gpudata, N, 0.0, a_gpu.gpudata, N,
@@ -1533,7 +1522,7 @@ def diag(v_gpu):
         else:
             raise ValueError('unsupported input type')
 
-        n = int(min(v_gpu.shape)) # workaround for bug #131
+        n = min(v_gpu.shape)
         incx = int(np.sum(v_gpu.strides)/v_gpu.dtype.itemsize)
 
         # Allocate the output array
@@ -1822,9 +1811,7 @@ def tril(a_gpu, overwrite=False, handle=None):
     block_dim, grid_dim = misc.select_block_grid_sizes(dev, a_gpu.shape)
     tril = _get_tril_kernel(use_double, use_complex, cols=N)
     if not overwrite:
-        # workaround for bug #131
-        a_orig_gpu = gpuarray.empty(tuple(int(i) for i in a_gpu.shape),
-                                    a_gpu.dtype, allocator=alloc)
+        a_orig_gpu = gpuarray.empty(a_gpu.shape, a_gpu.dtype, allocator=alloc)
         copy_func(handle, a_gpu.size, int(a_gpu.gpudata), 1, int(a_orig_gpu.gpudata), 1)
 
     tril(a_gpu, np.uint32(a_gpu.size),
@@ -1950,7 +1937,7 @@ def triu(a_gpu, k=0, overwrite=False, handle=None):
     else:
         raise ValueError('unrecognized type')
 
-    N = int(a_gpu.shape[0])
+    N = a_gpu.shape[0]
 
     # Get block/grid sizes:
     dev = misc.get_current_device()
@@ -2030,9 +2017,7 @@ def multiply(x_gpu, y_gpu, overwrite=False):
         return y_gpu
     else:
         result_type = np.result_type(x_gpu.dtype, y_gpu.dtype)
-        # workaround for bug #131
-        z_gpu = gpuarray.empty(tuple(int(i) for i in x_gpu.shape),
-                               result_type, allocator=alloc)
+        z_gpu = gpuarray.empty(x_gpu.shape, result_type, allocator=alloc)
         func = \
                el.ElementwiseKernel("{x_ctype} *x, {y_ctype} *y, {z_type} *z".format(x_ctype=x_ctype,
                                                                                      y_ctype=y_ctype,
@@ -2192,7 +2177,7 @@ def inv(a_gpu, overwrite=False, ipiv_gpu=None, lib='cula'):
     if len(a_gpu.shape) != 2 or a_gpu.shape[0] != a_gpu.shape[1]:
         raise ValueError('expected square matrix')
 
-    n = int(a_gpu.shape[0]) # workaround for bug #131
+    n = a_gpu.shape[0]
     if ipiv_gpu is None:
         alloc = misc._global_cublas_allocator
         ipiv_gpu = gpuarray.empty((n, 1), np.int32, allocator=alloc)
@@ -2374,7 +2359,7 @@ def det(a_gpu, overwrite=False, workspace_gpu=None, ipiv_gpu=None, handle=None, 
         else:
             raise ValueError('unsupported input type')
 
-        n = int(a_gpu.shape[0]) # workaround for bug #131
+        n = a_gpu.shape[0]
         alloc = misc._global_cublas_allocator
         if ipiv_gpu is None:
             ipiv_gpu = gpuarray.empty((n, 1), np.int32, allocator=alloc)
@@ -2411,7 +2396,7 @@ def det(a_gpu, overwrite=False, workspace_gpu=None, ipiv_gpu=None, handle=None, 
 
         out = a_gpu if overwrite else a_gpu.copy()
 
-        n = int(a_gpu.shape[0]) # workaround for bug #131
+        n = a_gpu.shape[0]
         alloc = misc._global_cublas_allocator
         Lwork = bufsize(cusolverHandle, n, n, int(out.gpudata), n)
         if workspace_gpu is None:
@@ -2597,7 +2582,7 @@ def qr(a_gpu, mode='reduced', handle=None, lib='cula'):
         raise ValueError('invalid library specified')
 
     # CUDA assumes that arrays are stored in column-major order
-    m, n = np.array(a_gpu.shape, int)
+    m, n = a_gpu.shape
 
     if m<n and mode != 'r':
         raise ValueError('if m < n only the mode "r" is supported')
@@ -2784,15 +2769,17 @@ def eig(a_gpu, jobvl='N', jobvr='V', imag='F', lib='cula'):
 
         cusolverHandle = misc._global_cusolver_handle
 
-        # FIXME: Seems like CUSOLVER only handles symmetric matrices,
+        # FIXME: Seems like CUSOLVER only handles symmetric or Hermitian matrices,
         # look into cusolverDn<t>sygvd
         if data_type == np.complex64:
-            raise NotImplementedError('Complex eigen decomposition not implemented for CUSOLVER')
+            func = cusolver.cusolverDnCheevd
+            bufsize = cusolver.cusolverDnCheevd_bufferSize
         elif data_type == np.float32:
             func = cusolver.cusolverDnSsyevd
             bufsize = cusolver.cusolverDnSsyevd_bufferSize
         elif data_type == np.complex128:
-            raise NotImplementedError('Complex eigen decomposition not implemented for CUSOLVER')
+            func = cusolver.cusolverDnZheevd
+            bufsize = cusolver.cusolverDnZheevd_bufferSize
         elif data_type == np.float64:
             real_type = np.float64
             func = cusolver.cusolverDnDsyevd
@@ -2803,7 +2790,7 @@ def eig(a_gpu, jobvl='N', jobvr='V', imag='F', lib='cula'):
         raise ValueError('invalid library specified')
 
     # CUDA assumes that arrays are stored in column-major order
-    n, m = np.array(a_gpu.shape, int)
+    n, m = a_gpu.shape
 
     #Check input
     if(m!=n): raise ValueError('matrix is not square!')
@@ -2816,9 +2803,8 @@ def eig(a_gpu, jobvl='N', jobvr='V', imag='F', lib='cula'):
         raise ValueError('jobvr has to  be "N" or "V" ')
     if imag not in ['T', 'F'] :
         raise ValueError('imag has to  be "T" or "F" ')
-
-    w_gpu = gpuarray.empty(m, data_type, order="F", allocator=alloc)
     if lib == 'cula':
+        w_gpu = gpuarray.empty(m, data_type, order="F", allocator=alloc)
         # Allocate vl, vr, and w:
         vl_gpu = gpuarray.empty((m,m), data_type, order="F", allocator=alloc)
         vr_gpu = gpuarray.empty((m,m), data_type, order="F", allocator=alloc)
@@ -2846,15 +2832,20 @@ def eig(a_gpu, jobvl='N', jobvr='V', imag='F', lib='cula'):
         elif jobvl == 'N' and jobvr == 'V':
             return vr_gpu, w_gpu
     elif lib == 'cusolver':
+        if data_type in (np.float32,np.complex64):
+            eigv_data_type = np.float32
+        elif data_type in ( np.float64, np.complex128):
+            eigv_data_type = np.float64
+        w_gpu = gpuarray.empty(m, eigv_data_type, order="F", allocator=alloc)
         if jobvl == 'V':
             raise NotImplementedError('CUSOLVER supports only right eigenvectors')
 
         if jobvr == 'V':
-            jobz = cusolver._CUSOLVER_EIG_MODE['VECTOR']
+            jobz = cusolver._CUSOLVER_EIG_MODE['CUSOLVER_EIG_MODE_VECTOR']
             # Copy a_gpu, so we don't destroy it
             a_copy_gpu = a_gpu.copy()
         else:
-            jobz = cusolver._CUSOLVER_EIG_MODE['NOVECTOR']
+            jobz = cusolver._CUSOLVER_EIG_MODE['CUSOLVER_EIG_MODE_NOVECTOR']
             a_copy_gpu = a_gpu
 
         # Since we have the full matrix and assuming symmetry, fill mode
@@ -2877,7 +2868,7 @@ def eig(a_gpu, jobvl='N', jobvr='V', imag='F', lib='cula'):
              n, a_copy_gpu.gpudata, m, w_gpu.gpudata,
              Work.gpudata, Lwork, devInfo.gpudata)
 
-        if jobz == cusolver._CUSOLVER_EIG_MODE['VECTOR']:
+        if jobz == cusolver._CUSOLVER_EIG_MODE['CUSOLVER_EIG_MODE_VECTOR']:
             return a_copy_gpu, w_gpu
         else:
             return w_gpu
@@ -2985,8 +2976,8 @@ def vander(a_gpu, n=None, handle=None):
      else:
          raise ValueError('unrecognized type')
 
-     m = int(a_gpu.shape[0])
-     if n == None: n = int(m)
+     m = a_gpu.shape[0]
+     if n == None: n = m
 
      vander_gpu = gpuarray.empty((m, n), data_type, order='F', allocator=alloc)
      vander_gpu[ : , 0 ] = vander_gpu[ : , 0 ] * 0  + 1
@@ -3208,7 +3199,7 @@ def dmd(a_gpu, k=None, modes='exact', return_amplitudes=False, return_vandermond
             raise ValueError('double precision not supported')
 
     #CUDA assumes that arrays are stored in column-major order
-    m, n = np.array(a_gpu.shape, int)
+    m, n = a_gpu.shape
     nx = n-1
     #Set k
     if k == None : k = nx

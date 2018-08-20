@@ -43,6 +43,15 @@ Development
 The latest source code can be obtained from
 `<https://github.com/lebedov/scikit-cuda>`_.
 
+When submitting bug reports or questions via the `issue tracker 
+<https://github.com/lebedov/scikit-cuda/issues>`_, please include the following 
+information:
+
+- Python version.
+- OS platform.
+- CUDA and PyCUDA version.
+- Version or git revision of scikit-cuda.
+
 Citing
 ------
 If you use scikit-cuda in a scholarly publication, please cite it as follows: ::
@@ -69,7 +78,11 @@ If you use scikit-cuda in a scholarly publication, please cite it as follows: ::
                         Jacob Frelinger and 
                         Tim Klein and
                         Bruce Merry and
+                        Nate Merill and
                         Lars Pastewka and
+                        Li Yong Liu and
+                        S. Clarkson and
+                        Michael Rader and
                         Steve Taylor and
                         Arnaud Bergeron and
                         Nikul H. Ukani and
