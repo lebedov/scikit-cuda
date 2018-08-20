@@ -85,7 +85,7 @@ class PCA(object):
     >>> import pycuda.gpuarray as gpuarray
     >>> import numpy as np
     >>> import skcuda.linalg as linalg
-    >>> from skcuda.pca import PCA as cuPCA 
+    >>> from skcuda.linalg import PCA as cuPCA 
     >>> pca = cuPCA(n_components=4) # map the data to 4 dimensions
     >>> X = np.random.rand(1000,100) # 1000 samples of 100-dimensional data vectors
     >>> X_gpu = gpuarray.GPUArray((1000,100), np.float64, order="F") # note that order="F" or a transpose is necessary. fit_transform requires row-major matrices, and column-major is the default
@@ -140,7 +140,7 @@ class PCA(object):
         >>> import pycuda.gpuarray as gpuarray
         >>> import numpy as np
         >>> import skcuda.linalg as linalg
-        >>> from skcuda.pca import PCA as cuPCA 
+        >>> from skcuda.linalg import PCA as cuPCA 
         >>> pca = cuPCA(n_components=4) # map the data to 4 dimensions
         >>> X = np.random.rand(1000,100) # 1000 samples of 100-dimensional data vectors
         >>> X_gpu = gpuarray.GPUArray((1000,100), np.float64, order="F") # note that order="F" or a transpose is necessary. fit_transform requires row-major matrices, and column-major is the default
