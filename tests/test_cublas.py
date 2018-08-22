@@ -6,9 +6,12 @@ Unit tests for skcuda.cublas
 
 from unittest import main, makeSuite, TestCase, TestSuite
 
-import pycuda.autoinit
+import pycuda.driver
 import pycuda.gpuarray as gpuarray
+from pycuda.tools import clear_context_caches, make_default_context
 import numpy as np
+
+pycuda.driver.init()
 
 _SEPS = np.finfo(np.float32).eps
 _DEPS = np.finfo(np.float64).eps
@@ -27,11 +30,14 @@ def bptrs(a):
 class test_cublas(TestCase):
     @classmethod
     def setUpClass(cls):
+        cls.ctx = make_default_context()
         cls.cublas_handle = cublas.cublasCreate()
 
     @classmethod
     def tearDownClass(cls):
         cublas.cublasDestroy(cls.cublas_handle)
+        cls.ctx.pop()
+        clear_context_caches()
 
     def setUp(self):
         np.random.seed(23)    # For reproducible tests.
@@ -672,6 +678,10 @@ class test_cublas(TestCase):
 
 
 def suite():
+    context = make_default_context()
+    device = context.get_device()
+    context.pop()
+
     s = TestSuite()
     s.addTest(test_cublas('test_cublasIsamax'))
     s.addTest(test_cublas('test_cublasIcamax'))

@@ -7,11 +7,14 @@ Unit tests for scikits.cuda.misc
 import numbers
 from unittest import main, TestCase, TestSuite
 
-import pycuda.autoinit
+import pycuda.driver
 import pycuda.gpuarray as gpuarray
+from pycuda.tools import clear_context_caches, make_default_context
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal, assert_raises
 import skcuda.misc as misc
+
+pycuda.driver.init()
 
 dtype_to_atol = {np.int32: 1e-6,
                  np.float32: 1e-6,
@@ -27,11 +30,14 @@ dtype_to_rtol = {np.int32: 1e-5,
 class test_misc(TestCase):
     @classmethod
     def setUpClass(cls):
+        cls.ctx = make_default_context()
         misc.init()
 
     @classmethod
     def tearDownClass(cls):
         misc.shutdown()
+        cls.ctx.pop()
+        clear_context_caches()
 
     def setUp(self):
         np.random.seed(0)
@@ -52,7 +58,6 @@ class test_misc(TestCase):
                         rtol=dtype_to_rtol[np.float64],
                         atol=dtype_to_atol[np.float64])
 
-
     def test_maxabs_complex64(self):
         x = np.array([-1j, 2, -3j], np.complex64)
         x_gpu = gpuarray.to_gpu(x)
@@ -60,7 +65,6 @@ class test_misc(TestCase):
         assert_allclose(m_gpu.get(), np.max(np.abs(x)),
                         rtol=dtype_to_rtol[np.complex64],
                         atol=dtype_to_atol[np.complex64])
-
 
     def test_maxabs_complex128(self):
         x = np.array([-1j, 2, -3j], np.complex128)
@@ -70,7 +74,6 @@ class test_misc(TestCase):
                         rtol=dtype_to_rtol[np.complex128],
                         atol=dtype_to_atol[np.complex128])
 
-
     def test_cumsum_float32(self):
         x = np.array([1, 4, 3, 2, 8], np.float32)
         x_gpu = gpuarray.to_gpu(x)
@@ -78,7 +81,6 @@ class test_misc(TestCase):
         assert_allclose(c_gpu.get(), np.cumsum(x),
                         rtol=dtype_to_rtol[np.float32],
                         atol=dtype_to_atol[np.float32])
-
 
     def test_cumsum_float64(self):
         x = np.array([1, 4, 3, 2, 8], np.float64)
@@ -88,7 +90,6 @@ class test_misc(TestCase):
                         rtol=dtype_to_rtol[np.float64],
                         atol=dtype_to_atol[np.float64])
 
-
     def test_cumsum_complex64(self):
         x = np.array([1, 4j, 3, 2j, 8], np.complex64)
         x_gpu = gpuarray.to_gpu(x)
@@ -97,7 +98,6 @@ class test_misc(TestCase):
                         rtol=dtype_to_rtol[np.complex64],
                         atol=dtype_to_atol[np.complex64])
 
-
     def test_cumsum_complex128(self):
         x = np.array([1, 4j, 3, 2j, 8], np.complex128)
         x_gpu = gpuarray.to_gpu(x)
@@ -105,7 +105,6 @@ class test_misc(TestCase):
         assert_allclose(c_gpu.get(), np.cumsum(x),
                         rtol=dtype_to_rtol[np.complex128],
                         atol=dtype_to_atol[np.complex128])
-
 
     def test_diff_float32(self):
         x = np.array([1.3, 2.7, 4.9, 5.1], np.float32)
@@ -685,6 +684,10 @@ class test_misc(TestCase):
         self._impl_test_argminmax(np.float64)
 
 def suite():
+    context = make_default_context()
+    device = context.get_device()
+    context.pop()
+
     s = TestSuite()
     s.addTest(test_misc('test_maxabs_float32'))
     s.addTest(test_misc('test_maxabs_complex64'))
@@ -711,14 +714,14 @@ def suite():
     s.addTest(test_misc('test_std_complex64'))
     s.addTest(test_misc('test_minmax_float32'))
     s.addTest(test_misc('test_argminmax_float32'))
-    if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
+    if misc.get_compute_capability(device) >= 1.3:
         s.addTest(test_misc('test_maxabs_float64'))
         s.addTest(test_misc('test_maxabs_complex128'))
         s.addTest(test_misc('test_cumsum_float64'))
         s.addTest(test_misc('test_cumsum_complex128'))
         s.addTest(test_misc('test_diff_float64'))
         s.addTest(test_misc('test_diff_complex128'))
-        s.addTest(test_misc('test_get_by_index_float32'))
+        s.addTest(test_misc('test_get_by_index_float64'))
         s.addTest(test_misc('test_set_by_index_dest_float64'))
         s.addTest(test_misc('test_set_by_index_src_float64'))
         s.addTest(test_misc('test_sum_float64'))
