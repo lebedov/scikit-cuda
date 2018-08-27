@@ -1442,7 +1442,7 @@ class test_linalg(TestCase):
         self._impl_test_det(np.complex128, 'cusolver')
 
     def _impl_test_qr_reduced(self, dtype, lib):
-        if np.issubdtype(dtype, np.complex):
+        if np.issubdtype(dtype, np.complexfloating):
             a = np.asarray(np.random.randn(9, 6) + 1j*np.random.randn(9, 6), dtype, order='F')
         else:
             a = np.asarray(np.random.randn(5, 3), dtype, order='F')
