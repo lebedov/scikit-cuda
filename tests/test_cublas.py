@@ -711,7 +711,7 @@ def suite():
     s.addTest(test_cublas('test_cublasCgemmBatched'))
     s.addTest(test_cublas('test_cublasStrsmBatched'))
     s.addTest(test_cublas('test_cublasSgetrfBatched'))
-    if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
+    if misc.get_compute_capability(device) >= 1.3:
         s.addTest(test_cublas('test_cublasIdamax'))
         s.addTest(test_cublas('test_cublasIzamax'))
         s.addTest(test_cublas('test_cublasIdamin'))
