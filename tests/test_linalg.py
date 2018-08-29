@@ -6,15 +6,17 @@ Unit tests for skcuda.linalg
 
 from unittest import main, makeSuite, skipUnless, TestCase, TestSuite
 
-import pycuda.autoinit
+import pycuda.driver
 import pycuda.gpuarray as gpuarray
+from pycuda.tools import clear_context_caches, make_default_context
 import numpy as np
 
 from numpy.testing import assert_equal, assert_allclose, assert_raises
 
 import skcuda.linalg as linalg
 import skcuda.misc as misc
-from pycuda import autoinit, gpuarray
+
+pycuda.driver.init()
 
 dtype_to_atol = {np.float32: 1e-6,
                  np.complex64: 1e-6,
@@ -28,11 +30,14 @@ dtype_to_rtol = {np.float32: 5e-5,
 class test_linalg(TestCase):
     @classmethod
     def setUpClass(cls):
+        cls.ctx = make_default_context()
         linalg.init()
  
     @classmethod
     def tearDownClass(cls):
         linalg.shutdown()
+        cls.ctx.pop()
+        clear_context_caches()
 
     def setUp(self):
         np.random.seed(0)
@@ -1609,8 +1614,11 @@ class test_linalg(TestCase):
                             atol=dtype_to_atol[np.complex128])
 
 def suite():
-    s = TestSuite()
+    context = make_default_context()
+    device = context.get_device()
+    context.pop()
 
+    s = TestSuite()
     s.addTest(test_linalg('test_pca_ortho_type_and_shape_float32_all_comp'))
     s.addTest(test_linalg('test_pca_ortho_type_and_shape_float32'))
     s.addTest(test_linalg('test_pca_f_contiguous_check'))
@@ -1701,7 +1709,7 @@ def suite():
     s.addTest(test_linalg('test_dmd_float32'))
     s.addTest(test_linalg('test_dmd_complex64'))
 
-    if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
+    if misc.get_compute_capability(device) >= 1.3:
         s.addTest(test_linalg('test_pca_ortho_type_and_shape_float64_all_comp'))
         s.addTest(test_linalg('test_pca_ortho_type_and_shape_float64'))
         s.addTest(test_linalg('test_svd_ss_cula_float64'))

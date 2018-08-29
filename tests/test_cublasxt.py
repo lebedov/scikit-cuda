@@ -8,14 +8,19 @@ from unittest import main, makeSuite, TestCase, TestSuite
 
 import numpy as np
 
-import pycuda.autoinit
+import pycuda.driver
+from pycuda.tools import clear_context_caches, make_default_context
+
 import skcuda.cublasxt as cublasxt
 import skcuda.misc as misc
+
+pycuda.driver.init()
 
 class test_cublasxt(TestCase):
     @classmethod
     def setUpClass(cls):
         np.random.seed(0)
+        cls.ctx = make_default_context()
         cls.handle = cublasxt.cublasXtCreate()
         cls.nbDevices = 1
         cls.deviceId = np.array([0], np.int32)
@@ -25,6 +30,8 @@ class test_cublasxt(TestCase):
     @classmethod
     def tearDownClass(cls):
         cublasxt.cublasXtDestroy(cls.handle)
+        cls.ctx.pop()
+        clear_context_caches()
 
     def setUp(self):
         np.random.seed(0)
@@ -77,10 +84,14 @@ class test_cublasxt(TestCase):
         np.allclose(np.dot(b.T, a.T).T, c)
 
 def suite():
+    context = make_default_context()
+    device = context.get_device()
+    context.pop()
+
     s = TestSuite()
     s.addTest(test_cublasxt('test_cublasXtSgemm'))
     s.addTest(test_cublasxt('test_cublasXtCgemm'))
-    if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
+    if misc.get_compute_capability(device) >= 1.3:
         s.addTest(test_cublasxt('test_cublasXtDgemm'))
         s.addTest(test_cublasxt('test_cublasXtZgemm'))
     return s
