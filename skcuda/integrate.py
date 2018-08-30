@@ -109,6 +109,145 @@ def trapz(x_gpu, dx=1.0, handle=None):
     return float_type(dx)*result
 
 
+def gen_simps_mult(N, dtype, even='avg'):
+    """
+    Generate multiplication array for composite Simpson's rule.
+
+    Generates an array whose dot product with some array of equal
+    length is equivalent to the definite integral of the latter
+    computed using composite Simpson's rule.
+
+    If there are an even number of samples, N, then there are an odd 
+    number of intervals (N-1), but Simpson's rule requires an even number 
+    of intervals. The parameter 'even' controls how this is handled.
+
+    Parameters
+    ----------
+    N : int
+        Length of array.
+    dtype : float type
+        Floating point type to use when generating the array.
+    even : str {'avg', 'first', 'last'}, optional
+        'avg' : Average two results:1) use the first N-2 intervals with
+                  a trapezoidal rule on the last interval and 2) use the last
+                  N-2 intervals with a trapezoidal rule on the first interval.
+        'first' : Use Simpson's rule for the first N-2 intervals with
+                a trapezoidal rule on the last interval.
+        'last' : Use Simpson's rule for the last N-2 intervals with a
+               trapezoidal rule on the first interval.
+
+    Returns
+    -------
+    result : pycuda.gpuarray.GPUArray
+        Generated array.
+    """
+
+    if dtype not in [np.float32, np.float64, np.complex64,
+                     np.complex128]:
+        raise ValueError('unrecognized type')
+
+    ctype = tools.dtype_to_ctype(dtype)
+    x_gpu = gpuarray.zeros(N, dtype)
+
+    if N % 2:
+        func = elementwise.ElementwiseKernel("{ctype} *x".format(ctype=ctype),
+                                             "x[i] = (i%2 == 0) ? ((i != 0 && i != {M}) ? 2. : 1.) : 4.".format(M=N-1))
+        x_gpu.fill(1.)
+        func(x_gpu)
+        return x_gpu/3.
+    else:
+        if even not in ['avg', 'last', 'first']:
+            raise ValueError("Parameter 'even' must be "
+                             "'avg', 'last', or 'first'.")
+        basic_simps = gen_simps_mult(N-1, dtype)
+        
+        if even in ['avg', 'first']:
+            x_gpu[:-1] += basic_simps
+            x_gpu[-2:] += 0.5 # trapz on last interval
+        if even in ['avg', 'last']:
+            x_gpu[1:] += basic_simps
+            x_gpu[:2] += 0.5 # trapz on first interval
+        if even == 'avg':
+            x_gpu /= 2.
+        return x_gpu
+
+def simps(x_gpu, dx=1.0, even='avg', handle=None):
+    """
+    Implementation of composite Simpson's rule similar to 
+    scipy.integrate.simps.
+
+    Integrate x_gpu with spacing dx using composite Simpson's rule.
+    If there are an even number of samples, N, then there are an odd 
+    number of intervals (N-1), but Simpson's rule requires an even number 
+    of intervals. The parameter 'even' controls how this is handled.
+
+    Parameters
+    ----------
+    x_gpu : pycuda.gpuarray.GPUArray
+        Input array to integrate.
+    dx : scalar
+        Spacing.
+    even : str {'avg', 'first', 'last'}, optional
+        'avg' : Average two results:1) use the first N-2 intervals with
+                  a trapezoidal rule on the last interval and 2) use the last
+                  N-2 intervals with a trapezoidal rule on the first interval.
+        'first' : Use Simpson's rule for the first N-2 intervals with
+                a trapezoidal rule on the last interval.
+        'last' : Use Simpson's rule for the last N-2 intervals with a
+               trapezoidal rule on the first interval.
+    handle : int
+        CUBLAS context. If no context is specified, the default handle from
+        `skcuda.misc._global_cublas_handle` is used.
+
+    Returns
+    -------
+    result : float
+        Definite integral as approximated by the composite Simpson's rule.
+
+    Examples
+    --------
+    >>> import pycuda.autoinit
+    >>> import pycuda.gpuarray
+    >>> import numpy as np
+    >>> import integrate
+    >>> integrate.init()
+    >>> x_gpu = gpuarray.arange(0,10,dtype=np.float64)
+    >>> integrate.simps(x_gpu)
+    40.5
+    >>> x_gpu**=3
+    >>> integrate.simps(x_gpu)
+    1642.5
+    >>> integrate.simps(x_gpu, even='first')
+    1644.5
+    """
+
+    if handle is None:
+        handle = misc._global_cublas_handle
+
+    if len(x_gpu.shape) > 1:
+        raise ValueError('input array must be 1D')
+    if np.iscomplex(dx):
+        raise ValueError('dx must be real')
+
+    float_type = x_gpu.dtype.type
+    if float_type == np.complex64:
+        cublas_func = cublas.cublasCdotu
+    elif float_type == np.float32:
+        cublas_func = cublas.cublasSdot
+    elif float_type == np.complex128:
+        cublas_func = cublas.cublasZdotu
+    elif float_type == np.float64:
+        cublas_func = cublas.cublasDdot
+    else:
+        raise ValueError('unsupported input type')
+
+    simps_mult_gpu = gen_simps_mult(x_gpu.size, float_type, even)
+    result = cublas_func(handle, x_gpu.size, x_gpu.gpudata, 1,
+                         simps_mult_gpu.gpudata, 1)
+
+    return float_type(dx)*result
+
+
 @context_dependent_memoize
 def _get_trapz2d_mult_kernel(use_double, use_complex):
     template = Template("""
