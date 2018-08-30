@@ -9,5 +9,6 @@ Integration Routines
    :toctree: generated/
    :nosignatures:
 
+   simps
    trapz
    trapz2d

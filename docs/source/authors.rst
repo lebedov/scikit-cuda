@@ -50,6 +50,7 @@ Special thanks are due to the following parties for their contributions:
 - `S. Clarkson <https://github.com/sclarkson>`_ - Bug fixes.
 - `Stefan van der Walt <https://github.com/stefanv>`_ - Bug fixes.
 - `Feng Wang <https://github.com/cnwangfeng>`_ - Bug reports.
+- `Alexander Weyman <https://github.com/AlexanderWeyman>`_ - Simpson's Rule.
 - `Evgeniy Zheltonozhskiy <https://github.com/randl>`_ Complex Hermitian support 
   eigenvalue decomposition.
 - `Yiyin Zhou <https://github.com/yiyin>`_ - Patches, bug reports, and function 

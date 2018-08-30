@@ -34,6 +34,7 @@ Release 0.5.2 (under development)
 * Fix QR issues by reverting fix for #131 and raising PyCUDA version requirement 
   (fix by S. Clarkson).
 * More batch CUBLAS wrappers (enh. by Li Yong Liu)
+* Numerical integration with Simpson's Rule (enh. by Alexander Weyman)
   
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------
