@@ -163,9 +163,11 @@ def cusolverCheckStatus(status):
 
     if status != 0:
         try:
-            raise CUSOLVER_EXCEPTIONS[status]
+            e = CUSOLVER_EXCEPTIONS[status]
         except KeyError:
             raise CUSOLVER_ERROR
+        else:
+            raise e
 
 class _cusolver_version_req(object):
     """
@@ -179,7 +181,7 @@ class _cusolver_version_req(object):
             major = str(v)
             minor = '0'
         else:
-            major, minor = re.search('(\d+)\.(\d+)', self.vs).groups()
+            major, minor = re.search(r'(\d+)\.(\d+)', self.vs).groups()
         self.vi = major.ljust(2, '0')+minor.ljust(2, '0')
 
     def __call__(self,f):

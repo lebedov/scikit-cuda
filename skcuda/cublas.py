@@ -167,14 +167,15 @@ def cublasCheckStatus(status):
     See Also
     --------
     cublasExceptions
-
     """
 
     if status != 0:
         try:
-            raise cublasExceptions[status]
+            e = cublasExceptions[status]
         except KeyError:
             raise cublasError
+        else:
+            raise e
 
 # Helper functions:
 _libcublas.cublasCreate_v2.restype = int
@@ -274,7 +275,7 @@ def _get_cublas_version():
 
     cublas_path = utils.find_lib_path('cublas')
     try:
-        major, minor = re.search('[\D\.]+\.+(\d+)\.(\d+)',
+        major, minor = re.search(r'[\D\.]+\.+(\d+)\.(\d+)',
                                  utils.get_soname(cublas_path)).groups()
     except:
 
@@ -301,7 +302,7 @@ class _cublas_version_req(object):
             major = str(v)
             minor = '0'
         else:
-            major, minor = re.search('(\d+)\.(\d+)', self.vs).groups()
+            major, minor = re.search(r'(\d+)\.(\d+)', self.vs).groups()
         self.vi = major.ljust(2, '0')+minor.ljust(2, '0')
 
     def __call__(self,f):

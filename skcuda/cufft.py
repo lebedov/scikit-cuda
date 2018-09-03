@@ -108,10 +108,11 @@ def cufftCheckStatus(status):
 
     if status != 0:
         try:
-            raise cufftExceptions[status]
+            e = cufftExceptions[status]
         except KeyError:
             raise cufftError
-
+        else:
+            raise e
 
 _libcufft.cufftGetVersion.restype = int
 _libcufft.cufftGetVersion.argtypes = [ctypes.c_void_p]

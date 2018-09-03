@@ -553,14 +553,15 @@ def cudaCheckStatus(status):
     See Also
     --------
     cudaExceptions
-
     """
 
     if status != 0:
         try:
-            raise cudaExceptions[status]
+            e = cudaExceptions[status]
         except KeyError:
             raise cudaError('unknown CUDA error %s' % status)
+        else:
+            raise e
 
 # Memory allocation functions (adapted from pystream):
 _libcudart.cudaMalloc.restype = int
@@ -822,7 +823,7 @@ class _cudart_version_req(object):
             major = str(v)
             minor = '0'
         else:
-            major, minor = re.search('(\d+)\.(\d+)', self.vs).groups()
+            major, minor = re.search(r'(\d+)\.(\d+)', self.vs).groups()
         self.vi = int(major.ljust(2, '0')+minor.ljust(2, '0'))
 
     def __call__(self,f):
