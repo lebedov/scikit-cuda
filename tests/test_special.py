@@ -7,7 +7,7 @@ Unit tests for skcuda.special
 
 from unittest import main, makeSuite, TestCase, TestSuite
 
-import pycuda.driver
+import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
 from pycuda.tools import clear_context_caches, make_default_context
 import numpy as np
@@ -16,6 +16,8 @@ import scipy.special
 import skcuda.linalg as linalg
 import skcuda.misc as misc
 import skcuda.special as special
+
+drv.init()
 
 class test_special(TestCase):
     @classmethod

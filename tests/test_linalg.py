@@ -6,7 +6,7 @@ Unit tests for skcuda.linalg
 
 from unittest import main, makeSuite, skipUnless, TestCase, TestSuite
 
-import pycuda.driver
+import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
 from pycuda.tools import clear_context_caches, make_default_context
 import numpy as np
@@ -16,7 +16,7 @@ from numpy.testing import assert_equal, assert_allclose, assert_raises
 import skcuda.linalg as linalg
 import skcuda.misc as misc
 
-pycuda.driver.init()
+drv.init()
 
 dtype_to_atol = {np.float32: 1e-6,
                  np.complex64: 1e-6,
@@ -57,7 +57,7 @@ class test_linalg(TestCase):
         self.Xd.set(Xd_)
         self.Xf = gpuarray.GPUArray((self.M, self.N), np.float32, order="F")
         self.Xf.set(Xf_)
-
+        
     def test_pca_ortho_type_and_shape_float64_all_comp(self):
         # test that the shape is what we think it should be
         Td_all = self.test_pca.fit_transform(self.Xd)

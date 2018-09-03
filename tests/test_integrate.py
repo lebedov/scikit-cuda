@@ -4,7 +4,7 @@ Unit tests for skcuda.integrate
 
 from unittest import main, TestCase, TestSuite
 
-import pycuda.driver
+import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
 from pycuda.tools import clear_context_caches, make_default_context
 import numpy as np
@@ -12,19 +12,22 @@ import skcuda.misc as misc
 import skcuda.integrate as integrate
 import scipy.integrate
 
+drv.init()
+
 class test_integrate(TestCase):
     @classmethod
     def setUpClass(cls):
         cls.ctx = make_default_context()
+        integrate.init()
 
     @classmethod
     def tearDownClass(cls):
+        integrate.shutdown()
         cls.ctx.pop()
         clear_context_caches()
 
     def setUp(self):
         np.random.seed(0)
-        integrate.init()
 
     def test_trapz_float32(self):
         x = np.asarray(np.random.rand(10), np.float32)

@@ -25,6 +25,9 @@ class test_rlinalg(TestCase):
         linalg.init()
         rlinalg.init()
 
+    def tearDown(self):
+        linalg.shutdown()
+
     @skipUnless(linalg._has_cula, 'CULA required')
     def test_rsvd_float32(self):
         m, n = 5, 4

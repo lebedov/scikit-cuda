@@ -7,14 +7,14 @@ Unit tests for scikits.cuda.misc
 import numbers
 from unittest import main, TestCase, TestSuite
 
-import pycuda.driver
+import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
 from pycuda.tools import clear_context_caches, make_default_context
 import numpy as np
 from numpy.testing import assert_allclose, assert_equal, assert_raises
 import skcuda.misc as misc
 
-pycuda.driver.init()
+drv.init()
 
 dtype_to_atol = {np.int32: 1e-6,
                  np.float32: 1e-6,

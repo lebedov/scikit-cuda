@@ -8,13 +8,13 @@ from unittest import main, makeSuite, TestCase, TestSuite
 
 import numpy as np
 
-import pycuda.driver
+import pycuda.driver as drv
 from pycuda.tools import clear_context_caches, make_default_context
 
 import skcuda.cublasxt as cublasxt
 import skcuda.misc as misc
 
-pycuda.driver.init()
+drv.init()
 
 class test_cublasxt(TestCase):
     @classmethod

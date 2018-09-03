@@ -6,12 +6,12 @@ Unit tests for skcuda.cublas
 
 from unittest import main, makeSuite, TestCase, TestSuite
 
-import pycuda.driver
+import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
 from pycuda.tools import clear_context_caches, make_default_context
 import numpy as np
 
-pycuda.driver.init()
+drv.init()
 
 _SEPS = np.finfo(np.float32).eps
 _DEPS = np.finfo(np.float64).eps

@@ -8,7 +8,7 @@ from __future__ import division
 
 from unittest import main, makeSuite, TestCase, TestSuite
 
-import pycuda.driver
+import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
 from pycuda.tools import clear_context_caches, make_default_context
 import pycuda.gpuarray as gpuarray
@@ -16,6 +16,8 @@ import numpy as np
 
 import skcuda.fft as fft
 import skcuda.misc as misc
+
+drv.init()
 
 atol_float32 = 1e-6
 atol_float64 = 1e-8
@@ -213,8 +215,8 @@ class test_fft(TestCase):
         y_gpu = gpuarray.to_gpu(y)
         xf_gpu = gpuarray.empty(self.N//2+1, np.complex64)
         yf_gpu = gpuarray.empty(self.N//2+1, np.complex64)
-        stream0 = pycuda.driver.Stream()
-        stream1 = pycuda.driver.Stream()
+        stream0 = drv.Stream()
+        stream1 = drv.Stream()
         plan1 = fft.Plan(x.shape, np.float32, np.complex64, stream=stream0)
         plan2 = fft.Plan(y.shape, np.float32, np.complex64, stream=stream1)
         fft.fft(x_gpu, xf_gpu, plan1)

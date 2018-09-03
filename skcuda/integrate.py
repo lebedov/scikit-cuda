@@ -12,7 +12,7 @@ import pycuda.gpuarray as gpuarray
 import pycuda.tools as tools
 import numpy as np
 
-from .misc import init
+from .misc import init, shutdown
 
 from . import cublas
 from . import misc
