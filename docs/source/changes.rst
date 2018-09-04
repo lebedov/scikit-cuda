@@ -35,7 +35,11 @@ Release 0.5.2 (under development)
   (fix by S. Clarkson).
 * More batch CUBLAS wrappers (enh. by Li Yong Liu)
 * Numerical integration with Simpson's Rule (enh. by Alexander Weyman)
-  
+* Make CUSOLVER default backend for functions that can use either CULA or
+  CUSOLVER.
+* Fix CUDA errors that only occur when unit tests are run en masse with nose or
+  setuptools (#257).
+
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------
 * More CUSOLVER wrappers.
