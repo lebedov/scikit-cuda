@@ -38,7 +38,7 @@ class Plan:
         Stream with which to associate the plan. If no stream is specified,
         the default stream is used.
     mode : int
-        FFTW compatibility mode. Ignored in CUDA 9.1 and later.
+        FFTW compatibility mode. Ignored in CUDA 9.2 and later.
     inembed : numpy.array with dtype=numpy.int32
         number of elements in each dimension of the input array
     istride : int
@@ -116,7 +116,7 @@ class Plan:
         self.handle = cufft.cufftCreate()
 
         # Set FFTW compatibility mode:
-        if cudart._cudart_version <= 9000:
+        if cufft._cufft_version <= 9010:
             cufft.cufftSetCompatibilityMode(self.handle, mode)
 
         # Set auto-allocate mode
