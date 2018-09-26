@@ -5838,7 +5838,124 @@ def cublasZgetrfBatched(handle, n, A, lda, P, info, batchSize):
                                             int(info), batchSize)
     cublasCheckStatus(status)
 
-# SgetriBatched, Dgetribatched, CgetriBatched, Zgetribatched
+# SgetrsBatched, DgetrsBatched, CgetrsBatched, ZgetrsBatched
+if _cublas_version >= 5000:
+    _libcublas.cublasSgetrsBatched.restype = int
+    _libcublas.cublasSgetrsBatched.argtypes = [_types.handle,
+                                               ctypes.c_int,
+                                               ctypes.c_int,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int]
+@_cublas_version_req(5.0)
+def cublasSgetrsBatched(handle, trans, n, nrhs, Aarray, lda, devIpiv, Barray,
+                        ldb, info, batchSize):
+    """
+    This function solves an array of LU factored linear systems.
+
+    References
+    ----------
+    `cublas<t>getrsBatched <https://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-getrsbatched>`_
+    """
+
+    status = _libcublas.cublasSgetrsBatched(handle, _CUBLAS_OP[trans], n, nrhs,
+                                            int(Aarray), lda, int(devIpiv),
+                                            int(Barray), ldb, int(info), batchSize)
+    cublasCheckStatus(status)
+
+if _cublas_version >= 5000:
+    _libcublas.cublasDgetrsBatched.restype = int
+    _libcublas.cublasDgetrsBatched.argtypes = [_types.handle,
+                                               ctypes.c_int,
+                                               ctypes.c_int,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int]
+@_cublas_version_req(5.0)
+def cublasDgetrsBatched(handle, trans, n, nrhs, Aarray, lda, devIpiv, Barray,
+                        ldb, info, batchSize):
+    """
+    This function solves an array of LU factored linear systems.
+
+    References
+    ----------
+    `cublas<t>getrsBatched <https://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-getrsbatched>`_
+    """
+
+    status = _libcublas.cublasDgetrsBatched(handle, _CUBLAS_OP[trans], n, nrhs,
+                                            int(Aarray), lda, int(devIpiv),
+                                            int(Barray), ldb, int(info), batchSize)
+    cublasCheckStatus(status)
+
+if _cublas_version >= 5000:
+    _libcublas.cublasCgetrsBatched.restype = int
+    _libcublas.cublasCgetrsBatched.argtypes = [_types.handle,
+                                               ctypes.c_int,
+                                               ctypes.c_int,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int]
+@_cublas_version_req(5.0)
+def cublasCgetrsBatched(handle, trans, n, nrhs, Aarray, lda, devIpiv, Barray,
+                        ldb, info, batchSize):
+    """
+    This function solves an array of LU factored linear systems.
+
+    References
+    ----------
+    `cublas<t>getrsBatched <https://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-getrsbatched>`_
+    """
+
+    status = _libcublas.cublasCgetrsBatched(handle, _CUBLAS_OP[trans], n, nrhs,
+                                            int(Aarray), lda, int(devIpiv),
+                                            int(Barray), ldb, int(info), batchSize)
+    cublasCheckStatus(status)
+
+if _cublas_version >= 5000:
+    _libcublas.cublasZgetrsBatched.restype = int
+    _libcublas.cublasZgetrsBatched.argtypes = [_types.handle,
+                                               ctypes.c_int,
+                                               ctypes.c_int,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int,
+                                               ctypes.c_void_p,
+                                               ctypes.c_int]
+@_cublas_version_req(5.0)
+def cublasZgetrsBatched(handle, trans, n, nrhs, Aarray, lda, devIpiv, Barray,
+                        ldb, info, batchSize):
+    """
+    This function solves an array of LU factored linear systems.
+
+    References
+    ----------
+    `cublas<t>getrsBatched <https://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-getrsbatched>`_
+    """
+
+    status = _libcublas.cublasZgetrsBatched(handle, _CUBLAS_OP[trans], n, nrhs,
+                                            int(Aarray), lda, int(devIpiv),
+                                            int(Barray), ldb, int(info), batchSize)
+    cublasCheckStatus(status)
+                        
+# SgetriBatched, DgetriBatched, CgetriBatched, ZgetriBatched
 if _cublas_version >= 5050:
     _libcublas.cublasSgetriBatched.restype = int
     _libcublas.cublasSgetriBatched.argtypes = [_types.handle,
