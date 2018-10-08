@@ -5865,7 +5865,7 @@ def cublasSgetrsBatched(handle, trans, n, nrhs, Aarray, lda, devIpiv, Barray,
 
     status = _libcublas.cublasSgetrsBatched(handle, _CUBLAS_OP[trans], n, nrhs,
                                             int(Aarray), lda, int(devIpiv),
-                                            int(Barray), ldb, int(info), batchSize)
+                                            int(Barray), ldb, info, batchSize)
     cublasCheckStatus(status)
 
 if _cublas_version >= 5000:
@@ -5894,7 +5894,7 @@ def cublasDgetrsBatched(handle, trans, n, nrhs, Aarray, lda, devIpiv, Barray,
 
     status = _libcublas.cublasDgetrsBatched(handle, _CUBLAS_OP[trans], n, nrhs,
                                             int(Aarray), lda, int(devIpiv),
-                                            int(Barray), ldb, int(info), batchSize)
+                                            int(Barray), ldb, info, batchSize)
     cublasCheckStatus(status)
 
 if _cublas_version >= 5000:
@@ -5923,7 +5923,7 @@ def cublasCgetrsBatched(handle, trans, n, nrhs, Aarray, lda, devIpiv, Barray,
 
     status = _libcublas.cublasCgetrsBatched(handle, _CUBLAS_OP[trans], n, nrhs,
                                             int(Aarray), lda, int(devIpiv),
-                                            int(Barray), ldb, int(info), batchSize)
+                                            int(Barray), ldb, info, batchSize)
     cublasCheckStatus(status)
 
 if _cublas_version >= 5000:
@@ -5952,9 +5952,9 @@ def cublasZgetrsBatched(handle, trans, n, nrhs, Aarray, lda, devIpiv, Barray,
 
     status = _libcublas.cublasZgetrsBatched(handle, _CUBLAS_OP[trans], n, nrhs,
                                             int(Aarray), lda, int(devIpiv),
-                                            int(Barray), ldb, int(info), batchSize)
+                                            int(Barray), ldb, info, batchSize)
     cublasCheckStatus(status)
-                        
+
 # SgetriBatched, DgetriBatched, CgetriBatched, ZgetriBatched
 if _cublas_version >= 5050:
     _libcublas.cublasSgetriBatched.restype = int
