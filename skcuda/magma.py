@@ -2609,8 +2609,50 @@ def magma_zgetrf_m(ngpu,m, n, A, lda, ipiv):
 
 # SGEEV, DGEEV, CGEEV, ZGEEV
 _libmagma.magma_sgeev.restype = int
-_libmagma.magma_sgeev.argtypes = [ctypes.c_char,
-                                  ctypes.c_char,
+_libmagma.magma_sgeev.argtypes = [c_int_type,
+                                  c_int_type,
+                                  c_int_type,
+                                  ctypes.c_void_p,
+                                  c_int_type,
+                                  ctypes.c_void_p,
+                                  ctypes.c_void_p,
+                                  ctypes.c_void_p,
+                                  c_int_type,
+                                  ctypes.c_void_p,
+                                  c_int_type,
+                                  ctypes.c_void_p,
+                                  c_int_type]
+def magma_sgeev(jobvl, jobvr, n, a, lda, wr, wi,
+                vl, ldvl, vr, ldvr, work, lwork):
+    """
+    Compute eigenvalues and eigenvectors.
+    """
+    jobvl = _vec_conversion[jobvl]
+    jobvr = _vec_conversion[jobvr]
+    info = c_int_type()
+    status = _libmagma.magma_sgeev(jobvl, jobvr, n, int(a), lda, int(wr), int(wi),
+                                   int(vl), ldvl, int(vr), ldvr,
+                                   int(work), lwork, ctypes.byref(info))
+    magmaCheckStatus(status)
+
+_libmagma.magma_dgeev.restype = int
+_libmagma.magma_dgeev.argtypes = _libmagma.magma_sgeev.argtypes
+def magma_dgeev(jobvl, jobvr, n, a, lda, wr, wi,
+                vl, ldvl, vr, ldvr, work, lwork):
+    """
+    Compute eigenvalues and eigenvectors.
+    """
+    jobvl = _vec_conversion[jobvl]
+    jobvr = _vec_conversion[jobvr]
+    info = c_int_type()
+    status = _libmagma.magma_dgeev(jobvl, jobvr, n, int(a), lda, int(wr), int(wi),
+                                   int(vl), ldvl, int(vr), ldvr,
+                                   int(work), lwork, ctypes.byref(info))
+    magmaCheckStatus(status)
+
+_libmagma.magma_cgeev.restype = int
+_libmagma.magma_cgeev.argtypes = [c_int_type,
+                                  c_int_type,
                                   c_int_type,
                                   ctypes.c_void_p,
                                   c_int_type,
@@ -2623,55 +2665,31 @@ _libmagma.magma_sgeev.argtypes = [ctypes.c_char,
                                   c_int_type,
                                   ctypes.c_void_p,
                                   ctypes.c_void_p]
-def magma_sgeev(jobvl, jobvr, n, a, lda,
-                w, vl, ldvl, vr, ldvr, work, lwork, rwork):
-    """
-    Compute eigenvalues and eigenvectors.
-    """
-
-    c_int_type()
-    status = _libmagma.magma_sgeev(jobvl, jobvr, n, int(a), lda,
-                                   int(w), int(vl), ldvl, int(vr), ldvr,
-                                   int(work), lwork, int(rwork), ctypes.byref(info))
-    magmaCheckStatus(status)
-
-_libmagma.magma_dgeev.restype = int
-_libmagma.magma_dgeev.argtypes = _libmagma.magma_sgeev.argtypes
-def magma_dgeev(jobvl, jobvr, n, a, lda,
-                w, vl, ldvl, vr, ldvr, work, lwork, rwork):
-    """
-    Compute eigenvalues and eigenvectors.
-    """
-
-    c_int_type()
-    status = _libmagma.magma_dgeev(jobvl, jobvr, n, int(a), lda,
-                                   int(w), int(vl), ldvl, int(vr), ldvr,
-                                   int(work), lwork, int(rwork), ctypes.byref(info))
-    magmaCheckStatus(status)
-
-_libmagma.magma_cgeev.restype = int
-_libmagma.magma_cgeev.argtypes = _libmagma.magma_sgeev.argtypes
 def magma_cgeev(jobvl, jobvr, n, a, lda,
                 w, vl, ldvl, vr, ldvr, work, lwork, rwork):
     """
     Compute eigenvalues and eigenvectors.
     """
 
-    c_int_type()
+    jobvl = _vec_conversion[jobvl]
+    jobvr = _vec_conversion[jobvr]
+    info = c_int_type()
     status = _libmagma.magma_cgeev(jobvl, jobvr, n, int(a), lda,
                                    int(w), int(vl), ldvl, int(vr), ldvr,
                                    int(work), lwork, int(rwork), ctypes.byref(info))
     magmaCheckStatus(status)
 
 _libmagma.magma_zgeev.restype = int
-_libmagma.magma_zgeev.argtypes = _libmagma.magma_sgeev.argtypes
+_libmagma.magma_zgeev.argtypes = _libmagma.magma_cgeev.argtypes
 def magma_zgeev(jobvl, jobvr, n, a, lda,
                 w, vl, ldvl, vr, ldvr, work, lwork, rwork):
     """
     Compute eigenvalues and eigenvectors.
     """
 
-    c_int_type()
+    jobvl = _vec_conversion[jobvl]
+    jobvr = _vec_conversion[jobvr]
+    info = c_int_type()
     status = _libmagma.magma_zgeev(jobvl, jobvr, n, int(a), lda,
                                    int(w), int(vl), ldvl, int(vr), ldvr,
                                    int(work), lwork, int(rwork), ctypes.byref(info))
@@ -2688,7 +2706,9 @@ def magma_sgeev_m(jobvl, jobvr, n, a, lda,
     Multi-GPU, data on host
     """
 
-    c_int_type()
+    jobvl = _vec_conversion[jobvl]
+    jobvr = _vec_conversion[jobvr]
+    info = c_int_type()
     status = _libmagma.magma_sgeev_m(jobvl, jobvr, n, int(a), lda,
                                      int(w), int(vl), ldvl, int(vr), ldvr,
                                      int(work), lwork, int(rwork), ctypes.byref(info))
@@ -2702,7 +2722,9 @@ def magma_dgeev_m(jobvl, jobvr, n, a, lda,
     Compute eigenvalues and eigenvectors.
     """
 
-    c_int_type()
+    jobvl = _vec_conversion[jobvl]
+    jobvr = _vec_conversion[jobvr]
+    info = c_int_type()
     status = _libmagma.magma_dgeev_m(jobvl, jobvr, n, int(a), lda,
                                      int(w), int(vl), ldvl, int(vr), ldvr,
                                      int(work), lwork, int(rwork), ctypes.byref(info))
@@ -2716,7 +2738,9 @@ def magma_cgeev_m(jobvl, jobvr, n, a, lda,
     Compute eigenvalues and eigenvectors.
     """
 
-    c_int_type()
+    jobvl = _vec_conversion[jobvl]
+    jobvr = _vec_conversion[jobvr]
+    info = c_int_type()
     status = _libmagma.magma_cgeev_m(jobvl, jobvr, n, int(a), lda,
                                      int(w), int(vl), ldvl, int(vr), ldvr,
                                      int(work), lwork, int(rwork), ctypes.byref(info))
@@ -2730,7 +2754,9 @@ def magma_zgeev_m(jobvl, jobvr, n, a, lda,
     Compute eigenvalues and eigenvectors.
     """
 
-    c_int_type()
+    jobvl = _vec_conversion[jobvl]
+    jobvr = _vec_conversion[jobvr]
+    info = c_int_type()
     status = _libmagma.magma_zgeev_m(jobvl, jobvr, n, int(a), lda,
                                      int(w), int(vl), ldvl, int(vr), ldvr,
                                      int(work), lwork, int(rwork), ctypes.byref(info))
