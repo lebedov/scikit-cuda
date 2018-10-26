@@ -51,7 +51,9 @@ Special thanks are due to the following parties for their contributions:
 - `Stefan van der Walt <https://github.com/stefanv>`_ - Bug fixes.
 - `Feng Wang <https://github.com/cnwangfeng>`_ - Bug reports.
 - `Alexander Weyman <https://github.com/AlexanderWeyman>`_ - Simpson's Rule.
-- `Evgeniy Zheltonozhskiy <https://github.com/randl>`_ Complex Hermitian support 
-  eigenvalue decomposition.
+- `Evgeniy Zheltonozhskiy <https://github.com/randl>`_ - Complex Hermitian 
+  support eigenvalue decomposition.
+- `Wing-Kit Lee <https://github.com/wingkitlee>`_ - Fixes for MAGMA eigenvalue 
+  decomp wrappers.
 - `Yiyin Zhou <https://github.com/yiyin>`_ - Patches, bug reports, and function 
   wrappers 

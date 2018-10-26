@@ -39,6 +39,7 @@ Release 0.5.2 (under development)
   CUSOLVER.
 * Fix CUDA errors that only occur when unit tests are run en masse with nose or
   setuptools (#257).
+* Fix MAGMA eigenvalue decomposition wrappers (#265, fix by Wing-Kit Lee).
 
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------

@@ -87,6 +87,7 @@ If you use scikit-cuda in a scholarly publication, please cite it as follows: ::
                         Arnaud Bergeron and
                         Nikul H. Ukani and
                         Feng Wang and
+                        Wing-Kit Lee and
                         Yiyin Zhou},
         title        = {scikit-cuda 0.5.1: a {Python} interface to {GPU}-powered libraries},
         month        = December,
