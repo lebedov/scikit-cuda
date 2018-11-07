@@ -55,7 +55,7 @@ Citing
 If you use scikit-cuda in a scholarly publication, please cite it as follows: ::
 
     @misc{givon_scikit-cuda_2018,
-        author       = {Lev E. Givon and
+              author = {Lev E. Givon and
                         Thomas Unterthiner and
                         N. Benjamin Erichson and
                         David Wei Chiang and
