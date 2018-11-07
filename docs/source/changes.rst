@@ -3,8 +3,8 @@
 Change Log
 ==========
 
-Release 0.5.2 (under development)
----------------------------------
+Release 0.5.2 (November 6, 2018)
+--------------------------------
 * Prevent exceptions when CULA Dense free is present (#146).
 * Fix Python 3 issues with CUSOLVER wrapper functions (#145)
 * Add support for using either CUSOLVER or CULA for computing SVD.
