@@ -3,6 +3,10 @@
 Change Log
 ==========
 
+Release 0.5.3 (Under Development)
+---------------------------------
+* Add support for CUDA 10.
+
 Release 0.5.2 (November 6, 2018)
 --------------------------------
 * Prevent exceptions when CULA Dense free is present (#146).
