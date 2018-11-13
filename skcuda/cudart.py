@@ -809,7 +809,7 @@ def cudaRuntimeGetVersion():
 try:
     _cudart_version = cudaRuntimeGetVersion()
 except:
-    _cudart_version = 9999
+    _cudart_version = 99999
 
 class _cudart_version_req(object):
     """
@@ -824,7 +824,7 @@ class _cudart_version_req(object):
             minor = '0'
         else:
             major, minor = re.search(r'(\d+)\.(\d+)', self.vs).groups()
-        self.vi = int(major.ljust(2, '0')+minor.ljust(2, '0'))
+        self.vi = int(major.ljust(len(major)+1, '0')+minor.ljust(2, '0'))
 
     def __call__(self,f):
         def f_new(*args,**kwargs):

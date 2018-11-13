@@ -182,7 +182,7 @@ class _cusolver_version_req(object):
             minor = '0'
         else:
             major, minor = re.search(r'(\d+)\.(\d+)', self.vs).groups()
-        self.vi = major.ljust(2, '0')+minor.ljust(2, '0')
+        self.vi = major.ljust(len(major)+1, '0')+minor.ljust(2, '0')
 
     def __call__(self,f):
         def f_new(*args,**kwargs):

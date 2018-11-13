@@ -286,7 +286,7 @@ def _get_cublas_version():
         cublasDestroy(h)
         return str(version)
     else:
-        return major.ljust(2, '0')+minor.ljust(2, '0')
+        return major.ljust(len(major)+1, '0')+minor.ljust(2, '0')
 
 _cublas_version = int(_get_cublas_version())
 
@@ -303,7 +303,7 @@ class _cublas_version_req(object):
             minor = '0'
         else:
             major, minor = re.search(r'(\d+)\.(\d+)', self.vs).groups()
-        self.vi = major.ljust(2, '0')+minor.ljust(2, '0')
+        self.vi = major.ljust(len(major)+1, '0')+minor.ljust(2, '0')
 
     def __call__(self,f):
         def f_new(*args,**kwargs):
