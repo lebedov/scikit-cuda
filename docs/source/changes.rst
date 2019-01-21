@@ -6,6 +6,7 @@ Change Log
 Release 0.5.3 (Under Development)
 ---------------------------------
 * Add support for CUDA 10.
+* Add MAGMA GELS wrappers (#271).
 
 Release 0.5.2 (November 6, 2018)
 --------------------------------
