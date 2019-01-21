@@ -3394,6 +3394,132 @@ def magma_zgetrf_gpu(n, m, A, lda, ipiv):
                                    int(ipiv), ctypes.byref(info))
     magmaCheckStatus(status)
 
+# SGELS, CGELS, DGELS, ZGELS
+_libmagma.magma_sgels.restype = int
+_libmagma.magma_sgels.argtypes = [c_int_type,
+                                  c_int_type,
+                                  c_int_type,
+                                  c_int_type,
+                                  ctypes.c_void_p,
+                                  c_int_type,
+                                  ctypes.c_void_p,
+                                  c_int_type,
+                                  ctypes.c_void_p,
+                                  c_int_type,
+                                  ctypes.c_void_p]
+def magma_sgels(trans, m, n, nrhs, A, lda, B, ldb, hwork, lwork):
+    """
+    Solve overdetermined least squares problem using QR factorization.
+    """
+    info = c_int_type()
+    trans = _trans_conversion[trans]
+    status = _libmagma.magma_sgels(trans, m, n, nrhs, int(A), lda,
+                                   int(B), ldb, int(hwork), lwork,
+                                   ctypes.byref(info))
+    magmaCheckStatus(status)
+
+_libmagma.magma_cgels.restype = int
+_libmagma.magma_cgels.argtypes = _libmagma.magma_sgels.argtypes
+def magma_cgels(trans, m, n, nrhs, A, lda, B, ldb, hwork, lwork):
+    """
+    Solve overdetermined least squares problem using QR factorization.
+    """
+    info = c_int_type()
+    trans = _trans_conversion[trans]
+    status = _libmagma.magma_cgels(trans, m, n, nrhs, int(A), lda,
+                                   int(B), ldb, int(hwork), lwork,
+                                   ctypes.byref(info))
+    magmaCheckStatus(status)
+
+_libmagma.magma_dgels.restype = int
+_libmagma.magma_dgels.argtypes = _libmagma.magma_sgels.argtypes
+def magma_dgels(trans, m, n, nrhs, A, lda, B, ldb, hwork, lwork):
+    """
+    Solve overdetermined least squares problem using QR factorization.
+    """
+    info = c_int_type()
+    trans = _trans_conversion[trans]
+    status = _libmagma.magma_dgels(trans, m, n, nrhs, int(A), lda,
+                                   int(B), ldb, int(hwork), lwork,
+                                   ctypes.byref(info))
+    magmaCheckStatus(status)
+
+_libmagma.magma_zgels.restype = int
+_libmagma.magma_zgels.argtypes = _libmagma.magma_sgels.argtypes
+def magma_zgels(trans, m, n, nrhs, A, lda, B, ldb, hwork, lwork):
+    """
+    Solve overdetermined least squares problem using QR factorization.
+    """
+    info = c_int_type()
+    trans = _trans_conversion[trans]
+    status = _libmagma.magma_zgels(trans, m, n, nrhs, int(A), lda,
+                                   int(B), ldb, int(hwork), lwork,
+                                   ctypes.byref(info))
+    magmaCheckStatus(status)
+
+# SGELS_GPU, CGELS_GPU, DGELS_GPU, ZGELS_GPU
+_libmagma.magma_sgels_gpu.restype = int
+_libmagma.magma_sgels_gpu.argtypes = [c_int_type,
+                                      c_int_type,
+                                      c_int_type,
+                                      c_int_type,
+                                      ctypes.c_void_p,
+                                      c_int_type,
+                                      ctypes.c_void_p,
+                                      c_int_type,
+                                      ctypes.c_void_p,
+                                      c_int_type,
+                                      ctypes.c_void_p]
+def magma_sgels_gpu(trans, m, n, nrhs, A, lda, B, ldb, hwork, lwork):
+    """
+    Solve overdetermined least squares problem using QR factorization.
+    """
+    info = c_int_type()
+    trans = _trans_conversion[trans]
+    status = _libmagma.magma_sgels_gpu(trans, m, n, nrhs, int(A), lda,
+                                       int(B), ldb, int(hwork), lwork,
+                                       ctypes.byref(info))
+    magmaCheckStatus(status)
+
+_libmagma.magma_cgels_gpu.restype = int
+_libmagma.magma_cgels_gpu.argtypes = _libmagma.magma_sgels_gpu.argtypes
+def magma_cgels_gpu(trans, m, n, nrhs, A, lda, B, ldb, hwork, lwork):
+    """
+    Solve overdetermined least squares problem using QR factorization.
+    """
+    info = c_int_type()
+    trans = _trans_conversion[trans]
+    status = _libmagma.magma_cgels_gpu(trans, m, n, nrhs, int(A), lda,
+                                       int(B), ldb, int(hwork), lwork,
+                                       ctypes.byref(info))
+    magmaCheckStatus(status)
+
+_libmagma.magma_dgels_gpu.restype = int
+_libmagma.magma_dgels_gpu.argtypes = _libmagma.magma_sgels_gpu.argtypes
+def magma_dgels_gpu(trans, m, n, nrhs, A, lda, B, ldb, hwork, lwork):
+    """
+    Solve overdetermined least squares problem using QR factorization.
+    """
+    info = c_int_type()
+    trans = _trans_conversion[trans]
+    status = _libmagma.magma_dgels_gpu(trans, m, n, nrhs, int(A), lda,
+                                       int(B), ldb, int(hwork), lwork,
+                                       ctypes.byref(info))
+    magmaCheckStatus(status)
+
+_libmagma.magma_zgels_gpu.restype = int
+_libmagma.magma_zgels_gpu.argtypes = _libmagma.magma_sgels_gpu.argtypes
+def magma_zgels_gpu(trans, m, n, nrhs, A, lda, B, ldb, hwork, lwork):
+    """
+    Solve overdetermined least squares problem using QR factorization.
+    """
+    info = c_int_type()
+    trans = _trans_conversion[trans]
+    status = _libmagma.magma_zgels_gpu(trans, m, n, nrhs, int(A), lda,
+                                       int(B), ldb, int(hwork), lwork,
+                                       ctypes.byref(info))
+    magmaCheckStatus(status)
+
 # SSYEVD, DSYEVD
 _libmagma.magma_ssyevd_gpu.restype = int
 _libmagma.magma_ssyevd_gpu.argtypes = [c_int_type,
