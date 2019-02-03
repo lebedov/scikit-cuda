@@ -261,7 +261,7 @@ class PCA(object):
 
         return self.n_components
 
-def svd(a_gpu, jobu='A', jobvt='A', lib='cula'):
+def svd(a_gpu, jobu='A', jobvt='A', lib='cusolver'):
     """
     Singular Value Decomposition.
 
@@ -482,7 +482,7 @@ def svd(a_gpu, jobu='A', jobvt='A', lib='cula'):
     else:
         return s_gpu
 
-def cho_factor(a_gpu, uplo='L', lib='cula'):
+def cho_factor(a_gpu, uplo='L', lib='cusolver'):
     """
     Cholesky factorization.
 
@@ -602,7 +602,7 @@ def cho_factor(a_gpu, uplo='L', lib='cula'):
 
     # In-place operation. No return matrix. Result is stored in the input matrix.
 
-def cholesky(a_gpu, uplo='L', lib='cula'):
+def cholesky(a_gpu, uplo='L', lib='cusolver'):
     """
     Cholesky factorization.
 
@@ -671,7 +671,7 @@ def cholesky(a_gpu, uplo='L', lib='cula'):
          block=block_dim,
          grid=grid_dim)
 
-def cho_solve(a_gpu, b_gpu, uplo='L', lib='cula'):
+def cho_solve(a_gpu, b_gpu, uplo='L', lib='cusolver'):
     """
     Cholesky solver.
 
@@ -1599,7 +1599,7 @@ def eye(N, dtype=np.float32):
     func(e_gpu, slice=slice(0, N*N, N+1))
     return e_gpu
 
-def pinv(a_gpu, rcond=1e-15, lib='cula'):
+def pinv(a_gpu, rcond=1e-15, lib='cusolver'):
     """
     Moore-Penrose pseudoinverse.
 
@@ -2137,7 +2137,7 @@ def scale(alpha, x_gpu, alpha_real=False, handle=None):
     else:
         raise ValueError('unsupported input type')
 
-def inv(a_gpu, overwrite=False, ipiv_gpu=None, lib='cula'):
+def inv(a_gpu, overwrite=False, ipiv_gpu=None, lib='cusolver'):
     """
     Compute the inverse of a matrix.
 
@@ -2309,7 +2309,7 @@ def _get_det_kernel(dtype):
     return ReductionKernel(dtype, "1.0", "a*b",
                            "(ipiv[i] != i+1) ? -x[i*xn+i] : x[i*xn+i]", args)
 
-def det(a_gpu, overwrite=False, workspace_gpu=None, ipiv_gpu=None, handle=None, lib='cula'):
+def det(a_gpu, overwrite=False, workspace_gpu=None, ipiv_gpu=None, handle=None, lib='cusolver'):
     """
     Compute the determinant of a square matrix.
 
@@ -2419,7 +2419,7 @@ def det(a_gpu, overwrite=False, workspace_gpu=None, ipiv_gpu=None, handle=None, 
     else:
         raise ValueError('invalid library specified')
 
-def qr(a_gpu, mode='reduced', handle=None, lib='cula'):
+def qr(a_gpu, mode='reduced', handle=None, lib='cusolver'):
     """
     QR Decomposition.
 
@@ -2643,7 +2643,7 @@ def qr(a_gpu, mode='reduced', handle=None, lib='cula'):
     if mode == 'economic':
         return q_gpu
 
-def eig(a_gpu, jobvl='N', jobvr='V', imag='F', lib='cula'):
+def eig(a_gpu, jobvl='N', jobvr='V', imag='F', lib='cusolver'):
     """
     Eigendecomposition of a matrix.
 

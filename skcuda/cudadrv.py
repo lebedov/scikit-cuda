@@ -283,15 +283,15 @@ def cuCheckStatus(status):
     See Also
     --------
     CUDA_EXCEPTIONS
-
     """
 
     if status != 0:
         try:
-            raise CUDA_EXCEPTIONS[status]
+            e = CUDA_EXCEPTIONS[status]
         except KeyError:
             raise CUDA_ERROR
-
+        else:
+            raise e
 
 CU_POINTER_ATTRIBUTE_CONTEXT = 1
 CU_POINTER_ATTRIBUTE_MEMORY_TYPE = 2

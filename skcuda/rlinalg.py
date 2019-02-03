@@ -132,7 +132,7 @@ def rsvd(a_gpu, k=None, p=0, q=0, method="standard", handle=None):
     >>> from skcuda import linalg, rlinalg
     >>> linalg.init()
     >>> rlinalg.init()
-    
+
     >>> #Randomized SVD decomposition of the square matrix `a` with single precision.
     >>> #Note: There is no gain to use rsvd if k > int(n/1.5)
     >>> a = np.array(np.random.randn(5, 5), np.float32, order='F')
@@ -140,7 +140,7 @@ def rsvd(a_gpu, k=None, p=0, q=0, method="standard", handle=None):
     >>> U, s, Vt = rlinalg.rsvd(a_gpu, k=5, method='standard')
     >>> np.allclose(a, np.dot(U.get(), np.dot(np.diag(s.get()), Vt.get())), 1e-4)
     True
-    
+
     >>> #Low-rank SVD decomposition with target rank k=2
     >>> a = np.array(np.random.randn(5, 5), np.float32, order='F')
     >>> a_gpu = gpuarray.to_gpu(a)  
@@ -244,47 +244,47 @@ def rsvd(a_gpu, k=None, p=0, q=0, method="standard", handle=None):
     #Dot product Y = A * O    
     cublas_func_gemm(handle, 'n', 'n', m, k, n, alpha, 
                          a_gpu.gpudata, m, O_gpu.gpudata, n, 
-                         beta, Y_gpu.gpudata, m  )  
-      
+                         beta, Y_gpu.gpudata, m  )
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #Orthogonalize Y using economic QR decomposition: Y=QR
     #If q > 0 perfrom q subspace iterations
     #Note: economic QR just returns Q, and destroys Y_gpu
-     
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~  
     if q > 0:
-        Z_gpu = gpuarray.empty((n,k), data_type, order="F", allocator=alloc)    
+        Z_gpu = gpuarray.empty((n,k), data_type, order="F", allocator=alloc)
 
         for i in np.arange(1, q+1 ):
             if( (2*i-2)%q == 0 ):
-                Y_gpu = linalg.qr(Y_gpu, 'economic')
-            
-            cublas_func_gemm(handle, TRANS_type, 'n', n, k, m, alpha, 
-                         a_gpu.gpudata, m, Y_gpu.gpudata, m, 
+                Y_gpu = linalg.qr(Y_gpu, 'economic', lib='cula')
+
+            cublas_func_gemm(handle, TRANS_type, 'n', n, k, m, alpha,
+                         a_gpu.gpudata, m, Y_gpu.gpudata, m,
                          beta, Z_gpu.gpudata, n  )
 
             if( (2*i-1)%q == 0 ):
-                Z_gpu = linalg.qr(Z_gpu, 'economic')
-       
-            cublas_func_gemm(handle, 'n', 'n', m, k, n, alpha, 
-                         a_gpu.gpudata, m, Z_gpu.gpudata, n, 
+                Z_gpu = linalg.qr(Z_gpu, 'economic', lib='cula')
+
+            cublas_func_gemm(handle, 'n', 'n', m, k, n, alpha,
+                         a_gpu.gpudata, m, Z_gpu.gpudata, n,
                          beta, Y_gpu.gpudata, m  )
-                         
+
         #End for
      #End if   
-    
-    Q_gpu = linalg.qr(Y_gpu, 'economic')
-    
+
+    Q_gpu = linalg.qr(Y_gpu, 'economic', lib='cula')
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #Project the data matrix a into a lower dimensional subspace
     #B = Q.T * A 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
     #Allocate B    
-    B_gpu = gpuarray.empty((k,n), data_type, order="F", allocator=alloc)    
-    cublas_func_gemm(handle, TRANS_type, 'n', k, n, m, alpha, 
-                         Q_gpu.gpudata, m, a_gpu.gpudata, m, 
+    B_gpu = gpuarray.empty((k,n), data_type, order="F", allocator=alloc)
+    cublas_func_gemm(handle, TRANS_type, 'n', k, n, m, alpha,
+                         Q_gpu.gpudata, m, a_gpu.gpudata, m,
                          beta, B_gpu.gpudata, k  )
-    
+
     if method == 'standard':
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         #Singular Value Decomposition
@@ -296,11 +296,11 @@ def rsvd(a_gpu, k=None, p=0, q=0, method="standard", handle=None):
         s_gpu = gpuarray.empty(k, real_type, order="F", allocator=alloc)
         U_gpu = gpuarray.empty((k,k), data_type, order="F", allocator=alloc)
         Vt_gpu = gpuarray.empty((k,n), data_type, order="F", allocator=alloc)
-        
+
         #Economic SVD
-        cula_func_gesvd('S', 'S', k, n, int(B_gpu.gpudata), k, int(s_gpu.gpudata), 
+        cula_func_gesvd('S', 'S', k, n, int(B_gpu.gpudata), k, int(s_gpu.gpudata),
                         int(U_gpu.gpudata), k, int(Vt_gpu.gpudata), k)
-    
+
         #Compute right singular vectors as U = Q * U"
         cublas_func_gemm(handle, 'n', 'n', m, k, k, alpha, 
                          Q_gpu.gpudata, m, U_gpu.gpudata, k, 
@@ -308,23 +308,22 @@ def rsvd(a_gpu, k=None, p=0, q=0, method="standard", handle=None):
         U_gpu =  Q_gpu   #Set pointer            
 
         # Free internal CULA memory:
-        cula.culaFreeBuffers()      
-         
+        cula.culaFreeBuffers()
+
         #Return
         return U_gpu[ : , 0:kt ], s_gpu[ 0:kt ], Vt_gpu[ 0:kt , : ]
-    
-        
+
     elif method == 'fast':
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         #Orthogonalize B.T using reduced QR decomposition: B.T = Q" * R"
         #Note: reduced QR returns Q and R, and destroys B_gpu
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                
-        if isreal==True: 
+        if isreal==True:
             B_gpu = transpose(B_gpu) #transpose B
         else:
             B_gpu = hermitian(B_gpu) #transpose B
-        
-        Qstar_gpu, Rstar_gpu = linalg.qr(B_gpu, 'reduced')
+
+        Qstar_gpu, Rstar_gpu = linalg.qr(B_gpu, 'reduced', lib='cula')
 
         #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         #Singular Value Decomposition of R"
@@ -336,35 +335,33 @@ def rsvd(a_gpu, k=None, p=0, q=0, method="standard", handle=None):
         s_gpu = gpuarray.empty(k, real_type, order="F", allocator=alloc)
         Ustar_gpu = gpuarray.empty((k,k), data_type, order="F", allocator=alloc)
         Vtstar_gpu = gpuarray.empty((k,k), data_type, order="F", allocator=alloc)
-        
+
         #Economic SVD
-        cula_func_gesvd('A', 'A', k, k, int(Rstar_gpu.gpudata), k, int(s_gpu.gpudata), 
+        cula_func_gesvd('A', 'A', k, k, int(Rstar_gpu.gpudata), k, int(s_gpu.gpudata),
                         int(Ustar_gpu.gpudata), k, int(Vtstar_gpu.gpudata), k)
-    
-   
+
+
         #Compute right singular vectors as U = Q * Vt.T"
-        cublas_func_gemm(handle, 'n', TRANS_type, m, k, k, alpha, 
-                         Q_gpu.gpudata, m, Vtstar_gpu.gpudata, k, 
+        cublas_func_gemm(handle, 'n', TRANS_type, m, k, k, alpha,
+                         Q_gpu.gpudata, m, Vtstar_gpu.gpudata, k,
                          beta, Q_gpu.gpudata, m  )
         U_gpu =  Q_gpu   #Set pointer  
 
         #Compute left singular vectors as Vt = U".T * Q".T  
         Vt_gpu = gpuarray.empty((k,n), data_type, order="F", allocator=alloc)
 
-        cublas_func_gemm(handle, TRANS_type, TRANS_type, k, n, k, alpha, 
-                         Ustar_gpu.gpudata, k, Qstar_gpu.gpudata, n, 
+        cublas_func_gemm(handle, TRANS_type, TRANS_type, k, n, k, alpha,
+                         Ustar_gpu.gpudata, k, Qstar_gpu.gpudata, n,
                          beta, Vt_gpu.gpudata, k  )
-    
-       
+
+
 
         # Free internal CULA memory:
-        cula.culaFreeBuffers()      
-         
+        cula.culaFreeBuffers()
+
         #Return
-        return U_gpu[ : , 0:kt ], s_gpu[ 0:kt ], Vt_gpu[ 0:kt , : ]    
+        return U_gpu[ : , 0:kt ], s_gpu[ 0:kt ], Vt_gpu[ 0:kt , : ]
     #End if
-
-
 
 def rdmd(a_gpu, k=None, p=5, q=1, modes='exact', method_rsvd='standard', return_amplitudes=False, return_vandermonde=False, handle=None):
     """
@@ -424,8 +421,8 @@ def rdmd(a_gpu, k=None, p=5, q=1, modes='exact', method_rsvd='standard', return_
     ----------
     N. B. Erichson and C. Donovan.
     "Randomized Low-Rank Dynamic Mode Decomposition for Motion Detection"
-    Under Review.    
-    
+    Under Review.
+
     N. Halko, P. Martinsson, and J. Tropp.
     "Finding structure with randomness: probabilistic
     algorithms for constructing approximate matrix
@@ -435,7 +432,7 @@ def rdmd(a_gpu, k=None, p=5, q=1, modes='exact', method_rsvd='standard', return_
     J. H. Tu, et al.
     "On dynamic mode decomposition: theory and applications."
     arXiv preprint arXiv:1312.0041 (2013).
-    
+
     Examples
     --------
     >>> #Numpy
@@ -599,19 +596,19 @@ def rdmd(a_gpu, k=None, p=5, q=1, modes='exact', method_rsvd='standard', return_
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
     U_gpu, s_gpu, Vh_gpu = rsvd(X_gpu, k=k, p=p, q=q, 
                                 method=method_rsvd, handle=handle)
-    
-    
+
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #Solve the LS problem to find estimate for M using the pseudo-inverse    
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
     #real: M = U.T * Y * Vt.T * S**-1
     #complex: M = U.H * Y * Vt.H * S**-1
     #Let G = Y * Vt.H * S**-1, hence M = M * G
-    
+
     #Allocate G and M  
-    G_gpu = gpuarray.empty((m,k), data_type, order="F", allocator=alloc)    
-    M_gpu = gpuarray.empty((k,k), data_type, order="F", allocator=alloc)     
-    
+    G_gpu = gpuarray.empty((m,k), data_type, order="F", allocator=alloc)
+    M_gpu = gpuarray.empty((k,k), data_type, order="F", allocator=alloc)
+
     #i) s = s **-1 (inverse)
     if data_type == np.complex64 or data_type == np.complex128:
         s_gpu = 1/s_gpu
@@ -619,68 +616,63 @@ def rdmd(a_gpu, k=None, p=5, q=1, modes='exact', method_rsvd='standard', return_
     else:
         s_gpu = 1.0/s_gpu
 
-    
     #ii) real/complex: scale Vs =  Vt* x diag(s**-1) 
-    Vs_gpu = gpuarray.empty((nx,k), data_type, order="F", allocator=alloc) 
+    Vs_gpu = gpuarray.empty((nx,k), data_type, order="F", allocator=alloc)
     lda = max(1, Vh_gpu.strides[1] // Vh_gpu.dtype.itemsize)
-    ldb = max(1, Vs_gpu.strides[1] // Vs_gpu.dtype.itemsize)     
+    ldb = max(1, Vs_gpu.strides[1] // Vs_gpu.dtype.itemsize)
     transpose_func(handle, TRANS_type, TRANS_type, nx, k,
                    alpha, int(Vh_gpu.gpudata), lda, beta, int(Vh_gpu.gpudata), lda,
-                   int(Vs_gpu.gpudata), ldb)    
-    
-    
-    
-    cublas_func_dgmm(handle, 'r', nx, k, int(Vs_gpu.gpudata), nx, 
+                   int(Vs_gpu.gpudata), ldb)
+
+    cublas_func_dgmm(handle, 'r', nx, k, int(Vs_gpu.gpudata), nx,
                      int(s_gpu.gpudata), 1 , int(Vs_gpu.gpudata), nx)
-   
 
     #iii) real: G = Y * Vs , complex: G = Y x Vs
-    cublas_func_gemm(handle, 'n', 'n', m, k, nx, alpha, 
-                     int(Y_gpu.gpudata), m, int(Vs_gpu.gpudata), nx, 
-                        beta, int(G_gpu.gpudata), m )      
-   
-    
+    cublas_func_gemm(handle, 'n', 'n', m, k, nx, alpha,
+                     int(Y_gpu.gpudata), m, int(Vs_gpu.gpudata), nx,
+                        beta, int(G_gpu.gpudata), m )
+
     #iv) real/complex: M = U* x G 
-    cublas_func_gemm(handle, TRANS_type, 'n', k, k, m, alpha, 
-                     int(U_gpu.gpudata), m, int(G_gpu.gpudata), m, 
-                    beta, int(M_gpu.gpudata), k )     
+    cublas_func_gemm(handle, TRANS_type, 'n', k, k, m, alpha,
+                     int(U_gpu.gpudata), m, int(G_gpu.gpudata), m,
+                    beta, int(M_gpu.gpudata), k )
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #Eigen Decomposition
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #Note: If a_gpu is real the imag part is omitted
-    Vr_gpu, w_gpu = linalg.eig(M_gpu, 'N', 'V', 'F')
+    Vr_gpu, w_gpu = linalg.eig(M_gpu, 'N', 'V', 'F', lib='cula')
     omega = cumath.log(w_gpu)
-    
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
     #Compute DMD Modes 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
-    F_gpu = gpuarray.empty((m,k), data_type, order="F", allocator=alloc)    
+    F_gpu = gpuarray.empty((m,k), data_type, order="F", allocator=alloc)
     modes = modes.lower()
     if modes == 'exact': #Compute (exact) DMD modes: F = Y * V * S**-1 * W = G * W
-        cublas_func_gemm(handle, 'n', 'n', m, k, k, alpha, 
-                         G_gpu.gpudata, m, Vr_gpu.gpudata, k, 
-                         beta, G_gpu.gpudata, m  )     
+        cublas_func_gemm(handle, 'n', 'n', m, k, k, alpha,
+                         G_gpu.gpudata, m, Vr_gpu.gpudata, k,
+                         beta, G_gpu.gpudata, m  )
         F_gpu_temp = G_gpu
-    
+
     elif modes == 'standard': #Compute (standard) DMD modes: F = U * W
-        cublas_func_gemm(handle, 'n', 'n', m, k, k, 
-                         alpha, U_gpu.gpudata, m, Vr_gpu.gpudata, k, 
-                         beta, U_gpu.gpudata, m  )     
+        cublas_func_gemm(handle, 'n', 'n', m, k, k,
+                         alpha, U_gpu.gpudata, m, Vr_gpu.gpudata, k,
+                         beta, U_gpu.gpudata, m  )
         F_gpu_temp = U_gpu
-    else: 
+    else:
         raise ValueError('Type of modes is not supported, choose "exact" or "standard".')
-    
+
     #Copy is required, because gels destroys input    
-    copy_func(handle, F_gpu_temp.size, int(F_gpu_temp.gpudata), 
+    copy_func(handle, F_gpu_temp.size, int(F_gpu_temp.gpudata),
               1, int(F_gpu.gpudata), 1)
 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #Compute amplitueds b using least-squares: Fb=x1
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    if return_amplitudes==True:    
+    if return_amplitudes==True:
         #x1_gpu = a_gpu[:,0].copy() 
-        x1_gpu = gpuarray.empty(m, data_type, order="F", allocator=alloc) 
+        x1_gpu = gpuarray.empty(m, data_type, order="F", allocator=alloc)
         copy_func(handle, x1_gpu.size, int(a_gpu[:,0].gpudata), 1, int(x1_gpu.gpudata), 1)
         cula_func_gels( 'N', m, k, int(1) , F_gpu_temp.gpudata, m, x1_gpu.gpudata, m)
         b_gpu = x1_gpu
@@ -1024,25 +1016,25 @@ def cdmd(a_gpu, k=None, c=None,  modes='exact', return_amplitudes=False, return_
     #Eigen Decomposition
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     #Note: If a_gpu is real the imag part is omitted
-    Vr_gpu, w_gpu = linalg.eig(M_gpu, 'N', 'V', 'F')
+    Vr_gpu, w_gpu = linalg.eig(M_gpu, 'N', 'V', 'F', lib='cula')
 
     omega = cumath.log(w_gpu)
-    
+
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
     #Compute DMD Modes 
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~    
-    F_gpu = gpuarray.empty((m,k), data_type, order="F", allocator=alloc)    
+    F_gpu = gpuarray.empty((m,k), data_type, order="F", allocator=alloc)
     modes = modes.lower()
     if modes == 'exact': #Compute (exact) DMD modes: F = Y * V * S**-1 * W = G * W
-        
-        cublas_func_gemm(handle, 'n' , 'n', nx, k, k, alpha, 
-                     int(Vs_gpu.gpudata), nx, int(Vr_gpu.gpudata), k, 
-                        beta, int(Vs_gpu.gpudata), nx ) 
-        
-        cublas_func_gemm(handle, 'n', 'n', m, k, nx, alpha, 
-                         Yorig_gpu.gpudata, m, Vs_gpu.gpudata, nx, 
-                         beta, F_gpu.gpudata, m  )     
-    
+
+        cublas_func_gemm(handle, 'n' , 'n', nx, k, k, alpha,
+                     int(Vs_gpu.gpudata), nx, int(Vr_gpu.gpudata), k,
+                        beta, int(Vs_gpu.gpudata), nx )
+
+        cublas_func_gemm(handle, 'n', 'n', m, k, nx, alpha,
+                         Yorig_gpu.gpudata, m, Vs_gpu.gpudata, nx,
+                         beta, F_gpu.gpudata, m  )
+
     else: 
         raise ValueError('Type of modes is not supported, choose "exact" or "standard".')
     

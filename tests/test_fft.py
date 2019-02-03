@@ -8,18 +8,30 @@ from __future__ import division
 
 from unittest import main, makeSuite, TestCase, TestSuite
 
-import pycuda.autoinit
 import pycuda.driver as drv
+import pycuda.gpuarray as gpuarray
+from pycuda.tools import clear_context_caches, make_default_context
 import pycuda.gpuarray as gpuarray
 import numpy as np
 
 import skcuda.fft as fft
 import skcuda.misc as misc
 
+drv.init()
+
 atol_float32 = 1e-6
 atol_float64 = 1e-8
 
 class test_fft(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.ctx = make_default_context()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.ctx.pop()
+        clear_context_caches()
+
     def setUp(self):
         np.random.seed(0) # for reproducible tests
         self.N = 8
@@ -224,6 +236,10 @@ class test_fft(TestCase):
         assert np.allclose(xf, xf_gpu.get(), atol=atol_float32)
 
 def suite():
+    context = make_default_context()
+    device = context.get_device()
+    context.pop()
+
     s = TestSuite()
     s.addTest(test_fft('test_fft_float32_to_complex64_1d'))
     s.addTest(test_fft('test_fft_float32_to_complex64_2d'))
@@ -235,7 +251,7 @@ def suite():
     s.addTest(test_fft('test_batch_ifft_complex64_to_float32_2d'))
     s.addTest(test_fft('test_multiple_streams'))
     s.addTest(test_fft('test_work_area'))
-    if misc.get_compute_capability(pycuda.autoinit.device) >= 1.3:
+    if misc.get_compute_capability(device) >= 1.3:
         s.addTest(test_fft('test_fft_float64_to_complex128_1d'))
         s.addTest(test_fft('test_fft_float64_to_complex128_2d'))
         s.addTest(test_fft('test_batch_fft_float64_to_complex128_1d'))

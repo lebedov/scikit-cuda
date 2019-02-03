@@ -7,10 +7,12 @@ Note: this module does not explicitly depend on PyCUDA.
 """
 
 import ctypes
+import operator
+import re
 import sys
 
 # Load library:
-_version_list = [9.2, 9.1, 9.0, 8.0, 7.5, 7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
+_version_list = [10.0, 9.2, 9.1, 9.0, 8.0, 7.5, 7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
 if 'linux' in sys.platform:
     _libcufft_libname_list = ['libcufft.so'] + \
                              ['libcufft.so.%s' % v for v in _version_list]
@@ -96,7 +98,6 @@ cufftExceptions = {
     0x9: cufftUnalignedData
     }
 
-
 class _types:
     """Some alias types."""
     plan = ctypes.c_int
@@ -108,10 +109,11 @@ def cufftCheckStatus(status):
 
     if status != 0:
         try:
-            raise cufftExceptions[status]
+            e = cufftExceptions[status]
         except KeyError:
             raise cufftError
-
+        else:
+            raise e
 
 _libcufft.cufftGetVersion.restype = int
 _libcufft.cufftGetVersion.argtypes = [ctypes.c_void_p]
@@ -125,6 +127,47 @@ def cufftGetVersion():
     result = _libcufft.cufftGetVersion(ctypes.byref(version))
     cufftCheckStatus(result)
     return version.value
+
+_cufft_version = int(cufftGetVersion())
+
+class _cufft_version_req(object):
+    """
+    Decorator to replace function with a placeholder that raises an exception
+    if a specified condition on the installed CUFFT version `v` is not satisfied.
+    """
+
+    def __init__(self, v, op):
+        self.op_str = op
+        if op == '>':
+            self.op = operator.gt
+        elif op == '>=':
+            self.op = operator.ge
+        elif op == '==':
+            self.op = operator.eq
+        elif op == '<':
+            self.op = operator.lt
+        elif op == '<=':
+            self.op = operator.le
+        else:
+            raise ValueError('unrecognized comparison operator')
+        self.vs = str(v)
+        if isinstance(v, int):
+            self.vi = str(v)
+            if len(self.vi) != 4:
+                raise ValueError('integer version number must be 4 digits')
+        else:
+            major, minor = re.search(r'(\d+)\.(\d+)', self.vs).groups()
+            self.vi = major.ljust(len(major)+1, '0')+minor.ljust(2, '0')
+
+    def __call__(self,f):
+        def f_new(*args,**kwargs):
+            raise NotImplementedError('CUFFT '+self.op_str+' '+self.vs+' required')
+        f_new.__doc__ = f.__doc__
+
+        if self.op(_cufft_version, int(self.vi)):
+            return f
+        else:
+            return f_new
 
 # Data transformation types:
 CUFFT_R2C = 0x2a
@@ -250,9 +293,11 @@ def cufftDestroy(plan):
     status = _libcufft.cufftDestroy(plan)
     cufftCheckStatus(status)
 
-_libcufft.cufftSetCompatibilityMode.restype = int
-_libcufft.cufftSetCompatibilityMode.argtypes = [_types.plan,
-                                                ctypes.c_int]
+if _cufft_version <= 9010:
+    _libcufft.cufftSetCompatibilityMode.restype = int
+    _libcufft.cufftSetCompatibilityMode.argtypes = [_types.plan,
+                                                    ctypes.c_int]
+@_cufft_version_req(9.1, '<=')
 def cufftSetCompatibilityMode(plan, mode):
     """
     Set FFTW compatibility mode.

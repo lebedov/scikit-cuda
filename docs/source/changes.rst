@@ -3,8 +3,13 @@
 Change Log
 ==========
 
-Release 0.5.2 (under development)
+Release 0.5.3 (Under Development)
 ---------------------------------
+* Add support for CUDA 10.
+* Add MAGMA GELS wrappers (#271).
+
+Release 0.5.2 (November 6, 2018)
+--------------------------------
 * Prevent exceptions when CULA Dense free is present (#146).
 * Fix Python 3 issues with CUSOLVER wrapper functions (#145)
 * Add support for using either CUSOLVER or CULA for computing SVD.
@@ -34,7 +39,13 @@ Release 0.5.2 (under development)
 * Fix QR issues by reverting fix for #131 and raising PyCUDA version requirement 
   (fix by S. Clarkson).
 * More batch CUBLAS wrappers (enh. by Li Yong Liu)
-  
+* Numerical integration with Simpson's Rule (enh. by Alexander Weyman)
+* Make CUSOLVER default backend for functions that can use either CULA or
+  CUSOLVER.
+* Fix CUDA errors that only occur when unit tests are run en masse with nose or
+  setuptools (#257).
+* Fix MAGMA eigenvalue decomposition wrappers (#265, fix by Wing-Kit Lee).
+
 Release 0.5.1 - (October 30, 2015)
 ----------------------------------
 * More CUSOLVER wrappers.

@@ -24,8 +24,9 @@ List the following info:
 * OS platform (including distro if you are on Linux)
 * Python version
 * CUDA version + how you installed it
+* PyCUDA version (including GitHub revision if you have installed it from there)
 * scikit-cuda version (including GitHub revision if you have installed it from
-  there
+  there)
 
 -->
 

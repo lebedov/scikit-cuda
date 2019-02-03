@@ -8,7 +8,7 @@ import atexit, ctypes, platform, re, sys, warnings
 import numpy as np
 
 # Load library:
-_version_list = [9.2, 9.1, 9.0, 8.0, 7.5, 7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
+_version_list = [10.0, 9.2, 9.1, 9.0, 8.0, 7.5, 7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
 if 'linux' in sys.platform:
     _libcudart_libname_list = ['libcudart.so'] + \
                               ['libcudart.so.%s' % v for v in _version_list]
@@ -553,14 +553,15 @@ def cudaCheckStatus(status):
     See Also
     --------
     cudaExceptions
-
     """
 
     if status != 0:
         try:
-            raise cudaExceptions[status]
+            e = cudaExceptions[status]
         except KeyError:
             raise cudaError('unknown CUDA error %s' % status)
+        else:
+            raise e
 
 # Memory allocation functions (adapted from pystream):
 _libcudart.cudaMalloc.restype = int
@@ -808,7 +809,7 @@ def cudaRuntimeGetVersion():
 try:
     _cudart_version = cudaRuntimeGetVersion()
 except:
-    _cudart_version = 9999
+    _cudart_version = 99999
 
 class _cudart_version_req(object):
     """
@@ -822,8 +823,8 @@ class _cudart_version_req(object):
             major = str(v)
             minor = '0'
         else:
-            major, minor = re.search('(\d+)\.(\d+)', self.vs).groups()
-        self.vi = int(major.ljust(2, '0')+minor.ljust(2, '0'))
+            major, minor = re.search(r'(\d+)\.(\d+)', self.vs).groups()
+        self.vi = int(major.ljust(len(major)+1, '0')+minor.ljust(2, '0'))
 
     def __call__(self,f):
         def f_new(*args,**kwargs):
