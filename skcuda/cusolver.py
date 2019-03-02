@@ -22,7 +22,7 @@ from . import cuda
 from . import cublas
 
 # Load library:
-_version_list = [9.2, 9.1, 9.0, 8.0, 7.5, 7.0]
+_version_list = [10.0, 9.2, 9.1, 9.0, 8.0, 7.5, 7.0]
 if 'linux' in sys.platform:
     _libcusolver_libname_list = ['libcusolver.so'] + \
                                 ['libcusolver.so.%s' % v for v in _version_list]
@@ -182,7 +182,7 @@ class _cusolver_version_req(object):
             minor = '0'
         else:
             major, minor = re.search(r'(\d+)\.(\d+)', self.vs).groups()
-        self.vi = major.ljust(2, '0')+minor.ljust(2, '0')
+        self.vi = major.ljust(len(major)+1, '0')+minor.ljust(2, '0')
 
     def __call__(self,f):
         def f_new(*args,**kwargs):

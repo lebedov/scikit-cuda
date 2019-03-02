@@ -2,7 +2,7 @@
 
 License
 =======
-Copyright (c) 2009-2017, Lev E. Givon.
+Copyright (c) 2009-2019, Lev E. Givon.
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without

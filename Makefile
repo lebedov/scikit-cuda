@@ -9,6 +9,9 @@ VERSION = $(shell $(PYTHON) -c 'import setup; print setup.VERSION')
 package:
 	$(PYTHON) setup.py sdist --formats=gztar bdist_wheel
 
+upload: | package
+		twine upload dist/*
+
 build:
 	$(PYTHON) setup.py build
 

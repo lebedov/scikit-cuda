@@ -12,7 +12,7 @@ import re
 import sys
 
 # Load library:
-_version_list = [9.2, 9.1, 9.0, 8.0, 7.5, 7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
+_version_list = [10.0, 9.2, 9.1, 9.0, 8.0, 7.5, 7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
 if 'linux' in sys.platform:
     _libcufft_libname_list = ['libcufft.so'] + \
                              ['libcufft.so.%s' % v for v in _version_list]
@@ -138,7 +138,7 @@ class _cufft_version_req(object):
 
     def __init__(self, v, op):
         self.op_str = op
-        if op == '>':            
+        if op == '>':
             self.op = operator.gt
         elif op == '>=':
             self.op = operator.ge
@@ -157,7 +157,7 @@ class _cufft_version_req(object):
                 raise ValueError('integer version number must be 4 digits')
         else:
             major, minor = re.search(r'(\d+)\.(\d+)', self.vs).groups()
-            self.vi = major.ljust(2, '0')+minor.ljust(2, '0')
+            self.vi = major.ljust(len(major)+1, '0')+minor.ljust(2, '0')
 
     def __call__(self,f):
         def f_new(*args,**kwargs):
