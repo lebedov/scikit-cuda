@@ -1160,7 +1160,6 @@ def magma_queue_sync(queue_ptr):
     magmaCheckStatus(status)
 
 # Buffer size algorithms
-
 def _magma_gesvd_buffersize(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt,
                             func, dtype):
     work = np.zeros(1, dtype)
@@ -1184,6 +1183,29 @@ def magma_cgesvd_buffersize(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
 def magma_zgesvd_buffersize(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
     return _magma_gesvd_buffersize(jobu, jobvt, m, n, a, lda, s, u, ldu, vt,
                                    ldvt, magma_zgesvd, np.float64)
+
+def _magma_gels_buffersize(trans, m, n, nrhs, a, lda, b, ldb, func, dtype):
+    work = np.zeros(1, dtype)
+    func(trans, m, n, nrhs,
+         int(a), lda, int(b), ldb, 
+         int(work.ctypes.data), -1)
+    return int(work[0])
+
+def magma_sgels_buffersize(trans, m, n, nrhs, a, lda, b, ldb):
+    return _magma_gels_buffersize(trans, m, n, nrhs, a, lda, b, ldb,
+                                  magma_sgels, np.float32)
+
+def magma_dgels_buffersize(trans, m, n, nrhs, a, lda, b, ldb):
+    return _magma_gels_buffersize(trans, m, n, nrhs, a, lda, b, ldb,
+                                  magma_sgels, np.float64)
+
+def magma_cgels_buffersize(trans, m, n, nrhs, a, lda, b, ldb):
+    return _magma_gels_buffersize(trans, m, n, nrhs, a, lda, b, ldb,
+                                  magma_sgels, np.float32)
+
+def magma_zgels_buffersize(trans, m, n, nrhs, a, lda, b, ldb):
+    return _magma_gels_buffersize(trans, m, n, nrhs, a, lda, b, ldb,
+                                  magma_sgels, np.float64)
 
 # LAPACK routines
 
