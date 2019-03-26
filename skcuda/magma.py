@@ -1197,15 +1197,15 @@ def magma_sgels_buffersize(trans, m, n, nrhs, a, lda, b, ldb):
 
 def magma_dgels_buffersize(trans, m, n, nrhs, a, lda, b, ldb):
     return _magma_gels_buffersize(trans, m, n, nrhs, a, lda, b, ldb,
-                                  magma_sgels, np.float64)
+                                  magma_dgels, np.float64)
 
 def magma_cgels_buffersize(trans, m, n, nrhs, a, lda, b, ldb):
     return _magma_gels_buffersize(trans, m, n, nrhs, a, lda, b, ldb,
-                                  magma_sgels, np.float32)
+                                  magma_cgels, np.float32)
 
 def magma_zgels_buffersize(trans, m, n, nrhs, a, lda, b, ldb):
     return _magma_gels_buffersize(trans, m, n, nrhs, a, lda, b, ldb,
-                                  magma_sgels, np.float64)
+                                  magma_zgels, np.float64)
 
 # LAPACK routines
 
