@@ -38,40 +38,40 @@ class test_special(TestCase):
         x_gpu = gpuarray.to_gpu(x)
         (si_gpu, ci_gpu) = special.sici(x_gpu)
         (si, ci) = scipy.special.sici(x)
-        assert np.allclose(si, si_gpu.get())
-        assert np.allclose(ci, ci_gpu.get())
+        np.testing.assert_allclose(si, si_gpu.get(), atol=1e-7)
+        np.testing.assert_allclose(ci, ci_gpu.get(), atol=1e-7)
 
     def test_sici_float64(self):
         x = np.array([[1, 2], [3, 4]], np.float64)
         x_gpu = gpuarray.to_gpu(x)
         (si_gpu, ci_gpu) = special.sici(x_gpu)
         (si, ci) = scipy.special.sici(x)
-        assert np.allclose(si, si_gpu.get())
-        assert np.allclose(ci, ci_gpu.get())
+        np.testing.assert_allclose(si, si_gpu.get())
+        np.testing.assert_allclose(ci, ci_gpu.get())
 
     def test_exp1_complex64(self):
         z = np.asarray(np.random.rand(4, 4) + 1j*np.random.rand(4, 4), np.complex64)
         z_gpu = gpuarray.to_gpu(z)
         e_gpu = special.exp1(z_gpu)
-        assert np.allclose(sp.special.exp1(z), e_gpu.get())   
+        np.testing.assert_allclose(sp.special.exp1(z), e_gpu.get())
 
     def test_exp1_complex128(self):
         z = np.asarray(np.random.rand(4, 4) + 1j*np.random.rand(4, 4), np.complex128)
         z_gpu = gpuarray.to_gpu(z)
         e_gpu = special.exp1(z_gpu)
-        assert np.allclose(sp.special.exp1(z), e_gpu.get())   
+        np.testing.assert_allclose(sp.special.exp1(z), e_gpu.get())
 
     def test_expi_complex64(self):
         z = np.asarray(np.random.rand(4, 4) + 1j*np.random.rand(4, 4), np.complex64)
         z_gpu = gpuarray.to_gpu(z)
         e_gpu = special.expi(z_gpu)
-        assert np.allclose(sp.special.expi(z), e_gpu.get())   
+        np.testing.assert_allclose(sp.special.expi(z), e_gpu.get())
 
     def test_expi_complex128(self):
         z = np.asarray(np.random.rand(4, 4) + 1j*np.random.rand(4, 4), np.complex128)
         z_gpu = gpuarray.to_gpu(z)
         e_gpu = special.expi(z_gpu)
-        assert np.allclose(sp.special.expi(z), e_gpu.get())   
+        np.testing.assert_allclose(sp.special.expi(z), e_gpu.get())
 
 def suite():
     context = make_default_context()
