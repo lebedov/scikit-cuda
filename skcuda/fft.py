@@ -7,6 +7,7 @@ PyCUDA-based FFT functions.
 import pycuda.driver as drv
 import pycuda.gpuarray as gpuarray
 import pycuda.elementwise as el
+from pycuda.tools import context_dependent_memoize
 import pycuda.tools as tools
 import numpy as np
 
@@ -148,23 +149,12 @@ class Plan:
         except:
             pass
 
-def _scale_inplace(a, x_gpu):
-    """
-    Scale an array by a specified value in-place.
-    """
-
-    # Cache the kernel to avoid invoking the compiler if the
-    # specified scale factor and array type have already been encountered:
-    try:
-        func = _scale_inplace.cache[(a, x_gpu.dtype)]
-    except KeyError:
-        ctype = tools.dtype_to_ctype(x_gpu.dtype)
-        func = el.ElementwiseKernel(
-            "{ctype} a, {ctype} *x".format(ctype=ctype),
-            "x[i] /= a")
-        _scale_inplace.cache[(a, x_gpu.dtype)] = func
-    func(x_gpu.dtype.type(a), x_gpu)
-_scale_inplace.cache = {}
+@context_dependent_memoize
+def _get_scale_kernel(dtype):
+    ctype = tools.dtype_to_ctype(dtype)
+    return el.ElementwiseKernel(
+        "{ctype} scale, {ctype} *x".format(ctype=ctype),
+        "x[i] /= scale")
 
 def _fft(x_gpu, y_gpu, plan, direction, scale=None):
     """
@@ -189,7 +179,6 @@ def _fft(x_gpu, y_gpu, plan, direction, scale=None):
     Notes
     -----
     This function should not be called directly.
-
     """
 
     if (x_gpu.gpudata == y_gpu.gpudata) and \
@@ -214,8 +203,9 @@ def _fft(x_gpu, y_gpu, plan, direction, scale=None):
                       int(y_gpu.gpudata))
 
     # Scale the result by dividing it by the number of elements:
-    if scale != None:
-        _scale_inplace(scale, y_gpu)
+    if scale is not None:
+        func = _get_scale_kernel(y_gpu.dtype)
+        func(y_gpu.dtype.type(scale), y_gpu)
 
 def fft(x_gpu, y_gpu, plan, scale=False):
     """
@@ -261,13 +251,12 @@ def fft(x_gpu, y_gpu, plan, scale=False):
     -----
     For real to complex transformations, this function computes
     N/2+1 non-redundant coefficients of a length-N input signal.
-
     """
 
     if scale == True:
-        return _fft(x_gpu, y_gpu, plan, cufft.CUFFT_FORWARD, x_gpu.size/plan.batch)
+        _fft(x_gpu, y_gpu, plan, cufft.CUFFT_FORWARD, x_gpu.size/plan.batch)
     else:
-        return _fft(x_gpu, y_gpu, plan, cufft.CUFFT_FORWARD)
+        _fft(x_gpu, y_gpu, plan, cufft.CUFFT_FORWARD)
 
 def ifft(x_gpu, y_gpu, plan, scale=False):
     """
@@ -309,13 +298,12 @@ def ifft(x_gpu, y_gpu, plan, scale=False):
     For complex to real transformations, this function assumes the
     input contains N/2+1 non-redundant FFT coefficents of a signal of
     length N.
-
     """
 
     if scale == True:
-        return _fft(x_gpu, y_gpu, plan, cufft.CUFFT_INVERSE, y_gpu.size/plan.batch)
+        _fft(x_gpu, y_gpu, plan, cufft.CUFFT_INVERSE, y_gpu.size/plan.batch)
     else:
-        return _fft(x_gpu, y_gpu, plan, cufft.CUFFT_INVERSE)
+        _fft(x_gpu, y_gpu, plan, cufft.CUFFT_INVERSE)
 
 if __name__ == "__main__":
     import doctest
