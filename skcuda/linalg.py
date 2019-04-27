@@ -1392,6 +1392,13 @@ def hermitian(a_gpu, handle=None):
 
     return _transpose(a_gpu, True, handle)
 
+@context_dependent_memoize
+def _get_conj_kernel(dtype):
+    ctype = tools.dtype_to_ctype(dtype)
+    return el.ElementwiseKernel(
+                "{ctype} *x, {ctype} *y".format(ctype=ctype),
+                "y[i] = conj(x[i])")
+
 def conj(x_gpu, overwrite=False):
     """
     Complex conjugate.
@@ -1432,14 +1439,7 @@ def conj(x_gpu, overwrite=False):
     if x_gpu.dtype in [np.float32, np.float64]:
         return x_gpu
 
-    try:
-        func = conj.cache[x_gpu.dtype]
-    except KeyError:
-        ctype = tools.dtype_to_ctype(x_gpu.dtype)
-        func = el.ElementwiseKernel(
-                "{ctype} *x, {ctype} *y".format(ctype=ctype),
-                "y[i] = conj(x[i])")
-        conj.cache[x_gpu.dtype] = func
+    func = _get_conj_kernel(x_gpu.dtype)
     if overwrite:
         func(x_gpu, x_gpu)
         return x_gpu
@@ -1447,7 +1447,6 @@ def conj(x_gpu, overwrite=False):
         y_gpu = gpuarray.empty_like(x_gpu)
         func(x_gpu, y_gpu)
         return y_gpu
-conj.cache = {}
 
 @context_dependent_memoize
 def _get_diag_kernel(dtype):
