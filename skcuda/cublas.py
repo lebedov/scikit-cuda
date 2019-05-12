@@ -32,10 +32,10 @@ elif sys.platform == 'darwin':
 elif sys.platform == 'win32':
     if sys.maxsize > 2**32:
         _libcublas_libname_list = ['cublas.dll'] + \
-                                  ['cublas64_%s.dll' % int(10*v) for v in _version_list]
+                ['cublas64_%s.dll' % (int(v) if v >= 10 else int(10*v)) for v in _version_list]
     else:
         _libcublas_libname_list = ['cublas.dll'] + \
-                                  ['cublas32_%s.dll' % int(10*v) for v in _version_list]
+                ['cublas32_%s.dll' % (int(v) if v >= 10 else int(10*v)) for v in _version_list]
 else:
     raise RuntimeError('unsupported platform')
 
