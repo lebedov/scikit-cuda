@@ -27,10 +27,10 @@ elif sys.platform == 'darwin':
 elif sys.platform == 'win32':
     if platform.machine().endswith('64'):
         _libcusparse_libname_list = ['cusparse.dll'] + \
-                                    ['cusparse64_%s.dll' % int(10*v) for v in _version_list]
+            ['cusparse64_%s.dll' % (int(v) if v >= 10 else int(10*v))for v in _version_list]
     else:
         _libcusparse_libname_list = ['cusparse.dll'] + \
-                                    ['cusparse32_%s.dll' % int(10*v) for v in _version_list]
+            ['cusparse32_%s.dll' % (int(v) if v >= 10 else int(10*v))for v in _version_list]
 else:
     raise RuntimeError('unsupported platform')
 

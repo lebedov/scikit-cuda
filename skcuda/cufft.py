@@ -21,10 +21,10 @@ elif sys.platform == 'darwin':
 elif sys.platform == 'win32':
     if sys.maxsize > 2**32:
         _libcufft_libname_list = ['cufft.dll'] + \
-                                 ['cufft64_%s.dll' % int(10*v) for v in _version_list]
+            ['cufft64_%s.dll' % (int(v) if v >= 10 else int(10*v)) for v in _version_list]
     else:
         _libcufft_libname_list = ['cufft.dll'] + \
-                                 ['cufft32_%s.dll' % int(10*v) for v in _version_list]
+            ['cufft32_%s.dll' % (int(v) if v >= 10 else int(10*v)) for v in _version_list]
 
 else:
     raise RuntimeError('unsupported platform')

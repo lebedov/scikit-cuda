@@ -41,10 +41,10 @@ elif sys.platform == 'darwin':
 elif sys.platform == 'win32':
     if sys.maxsize > 2**32:
         _libcusolver_libname_list = ['cusolver.dll'] + \
-                                    ['cusolver64_%s.dll' % int(10*v) for v in _version_list]
+            ['cusolver64_%s.dll' % (int(v) if v >= 10 else int(10*v)) for v in _version_list]
     else:
         _libcusolver_libname_list = ['cusolver.dll'] + \
-                                    ['cusolver32_%s.dll' % int(10*v) for v in _version_list]
+            ['cusolver32_%s.dll' % (int(v) if v >= 10 else int(10*v)) for v in _version_list]
 else:
     raise RuntimeError('unsupported platform')
 
