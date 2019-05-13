@@ -250,7 +250,7 @@ def cutensorPermutation(handle, alpha, A, descA, modeA,
                         typeCompute, stream):
     status = _libcutensor.cutensorPermutation(handle,
                                               alpha, int(A), descA, modeA,
-                                              beta, int(B), descB, modeB,
+                                              int(B), descB, modeB,
                                               typeCompute, stream)
     cutensorCheckStatus(status)
  
