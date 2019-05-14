@@ -12,6 +12,8 @@ import pycuda.gpuarray as gpuarray
 from pycuda.tools import clear_context_caches, make_default_context
 import numpy as np
 
+from numpy.testing import assert_array_equal
+
 import skcuda.cutensor as cutensor
 
 drv.init()
@@ -105,8 +107,8 @@ class test_cutensor(TestCase):
                 elementsB *= ((extent[mode]+vectorWidthB-1)//vectorWidthB)*vectorWidthB
             else:
                 elementsB *= extent[mode]
-        A = np.arange(1, elementsA+1)
-        B = np.tile(-1, elementsB)
+        A = np.arange(1, elementsA+1, dtype=np.float32)
+        B = np.tile(-1, elementsB).astype(np.float32)
         A_gpu = gpuarray.to_gpu(A)
         B_gpu = gpuarray.to_gpu(B)
         handle = cutensor.cutensorCreate()
@@ -118,6 +120,8 @@ class test_cutensor(TestCase):
                                      B_gpu.gpudata, ctypes.c_void_p(descB),
                                      ctypes.c_void_p(modeB.ctypes.data),
                                      typeCompute, 0)
+        assert_array_equal(B_gpu.get(),
+                           np.array([1, 3, 2, 4, 5, 0, 6, 0], np.float32))
         cutensor.cutensorDestroy(handle)
         cutensor.cutensorDestroyTensorDescriptor(descB)
         cutensor.cutensorDestroyTensorDescriptor(descA)
