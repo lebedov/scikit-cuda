@@ -23,19 +23,20 @@ from . import cuda
 from . import utils
 
 # Load library:
-_version_list = [10.1, 10.0, 9.2, 9.1, 9.0, 8.0, 7.5, 7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
+_linux_version_list = [10.1, 10.0, 9.2, 9.1, 9.0, 8.0, 7.5, 7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
+_win32_version_list = [10, 100, 92, 91, 90, 80, 75, 70, 65, 60, 55, 50, 40]
 if 'linux' in sys.platform:
     _libcublas_libname_list = ['libcublas.so'] + \
-                              ['libcublas.so.%s' % v for v in _version_list]
+                              ['libcublas.so.%s' % v for v in _linux_version_list]
 elif sys.platform == 'darwin':
     _libcublas_libname_list = ['libcublas.dylib']
 elif sys.platform == 'win32':
     if sys.maxsize > 2**32:
         _libcublas_libname_list = ['cublas.dll'] + \
-            ['cublas64_%s.dll' % (int(v) if v >= 10 else int(10*v)) for v in _version_list]
+            ['cublas64_%s.dll' % v for v in _win32_version_list]
     else:
         _libcublas_libname_list = ['cublas.dll'] + \
-            ['cublas32_%s.dll' % (int(v) if v >= 10 else int(10*v)) for v in _version_list]
+            ['cublas32_%s.dll' % v for v in _win32_version_list]
 else:
     raise RuntimeError('unsupported platform')
 
