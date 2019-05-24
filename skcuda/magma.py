@@ -49,10 +49,10 @@ def magma_strerror(error):
 
 class MagmaError(Exception):
     def __init__(self, status, info=None):
-	self._status = status
-	self._info = info
-	errstr = "%s (Code: %d)" % (magma_strerror(status), status)
-	super(MagmaError,self).__init__(errstr)
+        self._status = status
+        self._info = info
+        errstr = "%s (Code: %d)" % (magma_strerror(status), status)
+        super(MagmaError,self).__init__(errstr)
 
 
 def magmaCheckStatus(status):
