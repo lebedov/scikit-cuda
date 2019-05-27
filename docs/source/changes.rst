@@ -3,8 +3,8 @@
 Change Log
 ==========
 
-Release 0.5.3 (Under Development)
----------------------------------
+Release 0.5.3 (May 26, 2019)
+----------------------------
 * Add support for CUDA 10.*.
 * Add MAGMA GELS wrappers (#271).
 * Add context-dependent memoization to skcuda.fft and other modules (#273).
