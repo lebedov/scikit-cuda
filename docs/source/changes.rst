@@ -3,6 +3,10 @@
 Change Log
 ==========
 
+Release 0.5.4 (Under Development)
+---------------------------------
+* Add wrappers for matrix-matrix multiplication of batches of matrices (#278).
+
 Release 0.5.3 (May 26, 2019)
 ----------------------------
 * Add support for CUDA 10.*.

@@ -6160,7 +6160,129 @@ def cublasZdgmm(handle, side, m, n, A, lda, x, incx, C, ldc):
                                     int(A), lda, int(x), incx, int(C), ldc)
     cublasCheckStatus(status)
 
+if _cublas_version >= 8000:
+    _libcublas.cublasSgemmStridedBatched.restype = \
+    _libcublas.cublasDgemmStridedBatched.restype = \
+    _libcublas.cublasCgemmStridedBatched.restype = \
+    _libcublas.cublasZgemmStridedBatched.restype = int
 
+    _libcublas.cublasSgemmStridedBatched.argtypes = \
+    _libcublas.cublasDgemmStridedBatched.argtypes = \
+    _libcublas.cublasCgemmStridedBatched.argtypes = \
+    _libcublas.cublasCgemmStridedBatched.argtypes = [ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_void_p,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int,
+                                                     ctypes.c_int]
+@_cublas_version_req(8.0)
+def cublasSgemmStridedBatched(handle, transa, transb, m, n, k, alpha,
+                              A, lda, strideA, B, ldb, strideB, beta,
+                              C, ldc, strideC, batchCount):
+    """
+    Matrix-matrix multiplication of a batch of matrices.
+
+    References
+    ----------
+    `cublas<t>gemmStridedBatched <https://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gemmstridedbatched>`_    
+    """
+
+    status = _libcublas.cublasSgemmStridedBatched(handle,
+                                                  _CUBLAS_OP[transa],
+                                                  _CUBLAS_OP[transb],
+                                                  m, n, k,
+                                                  ctypes.byref(ctypes.c_float(alpha)),
+                                                  int(A), lda, strideA,
+                                                  int(B), ldb, strideB,
+                                                  ctypes.byref(ctypes.c_float(beta)),
+                                                  int(C), ldc, strideC, batchCount)
+    cublasCheckStatus(status)
+
+@_cublas_version_req(8.0)
+def cublasDgemmStridedBatched(handle, transa, transb, m, n, k, alpha,
+                              A, lda, strideA, B, ldb, strideB, beta,
+                              C, ldc, strideC, batchCount):
+    """
+    Matrix-matrix multiplication of a batch of matrices.
+
+    References
+    ----------
+    `cublas<t>gemmStridedBatched <https://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gemmstridedbatched>`_    
+    """
+
+    status = _libcublas.cublasDgemmStridedBatched(handle,
+                                                  _CUBLAS_OP[transa],
+                                                  _CUBLAS_OP[transb],
+                                                  m, n, k,
+                                                  ctypes.byref(ctypes.c_double(alpha)),
+                                                  int(A), lda, strideA,
+                                                  int(B), ldb, strideB,
+                                                  ctypes.byref(ctypes.c_double(beta)),
+                                                  int(C), ldc, strideC, batchCount)
+    cublasCheckStatus(status)
+
+@_cublas_version_req(8.0)
+def cublasDgemmCtridedBatched(handle, transa, transb, m, n, k, alpha,
+                              A, lda, strideA, B, ldb, strideB, beta,
+                              C, ldc, strideC, batchCount):
+    """
+    Matrix-matrix multiplication of a batch of matrices.
+
+    References
+    ----------
+    `cublas<t>gemmStridedBatched <https://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gemmstridedbatched>`_    
+    """
+
+    status = _libcublas.cublasCgemmStridedBatched(handle,
+                                                  _CUBLAS_OP[transa],
+                                                  _CUBLAS_OP[transb],
+                                                  m, n, k,
+                                                  ctypes.byref(cuda.cuFloatComplex(alpha.real,
+                                                                                   alpha.imag)),
+                                                  int(A), lda, strideA,
+                                                  int(B), ldb, strideB,
+                                                  ctypes.byref(cuda.cuFloatComplex(beta.real,
+                                                                                   beta.imag)),
+                                                  int(C), ldc, strideC, batchCount)
+    cublasCheckStatus(status)
+
+@_cublas_version_req(8.0)
+def cublasDgemmZtridedBatched(handle, transa, transb, m, n, k, alpha,
+                              A, lda, strideA, B, ldb, strideB, beta,
+                              C, ldc, strideC, batchCount):
+    """
+    Matrix-matrix multiplication of a batch of matrices.
+
+    References
+    ----------
+    `cublas<t>gemmStridedBatched <https://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gemmstridedbatched>`_    
+    """
+
+    status = _libcublas.cublasZgemmStridedBatched(handle,
+                                                  _CUBLAS_OP[transa],
+                                                  _CUBLAS_OP[transb],
+                                                  m, n, k,
+                                                  ctypes.byref(cuda.cuDoubleComplex(alpha.real,
+                                                                                    alpha.imag)),
+                                                  int(A), lda, strideA,
+                                                  int(B), ldb, strideB,
+                                                  ctypes.byref(cuda.cuDoubleComplex(beta.real,
+                                                                                    beta.imag)),
+                                                  int(C), ldc, strideC, batchCount)
+    cublasCheckStatus(status)
+                                                  
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
