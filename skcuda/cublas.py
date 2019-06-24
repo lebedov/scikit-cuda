@@ -6169,7 +6169,7 @@ if _cublas_version >= 8000:
     _libcublas.cublasSgemmStridedBatched.argtypes = \
     _libcublas.cublasDgemmStridedBatched.argtypes = \
     _libcublas.cublasCgemmStridedBatched.argtypes = \
-    _libcublas.cublasCgemmStridedBatched.argtypes = [ctypes.c_void_p,
+    _libcublas.cublasZgemmStridedBatched.argtypes = [ctypes.c_void_p,
                                                      ctypes.c_int,
                                                      ctypes.c_int,
                                                      ctypes.c_int,
@@ -6219,7 +6219,7 @@ def cublasDgemmStridedBatched(handle, transa, transb, m, n, k, alpha,
 
     References
     ----------
-    `cublas<t>gemmStridedBatched <https://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gemmstridedbatched>`_    
+    `cublas<t>gemmStridedBatched <https://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gemmstridedbatched>`_
     """
 
     status = _libcublas.cublasDgemmStridedBatched(handle,
@@ -6234,7 +6234,7 @@ def cublasDgemmStridedBatched(handle, transa, transb, m, n, k, alpha,
     cublasCheckStatus(status)
 
 @_cublas_version_req(8.0)
-def cublasDgemmCtridedBatched(handle, transa, transb, m, n, k, alpha,
+def cublasCgemmStridedBatched(handle, transa, transb, m, n, k, alpha,
                               A, lda, strideA, B, ldb, strideB, beta,
                               C, ldc, strideC, batchCount):
     """
@@ -6259,7 +6259,7 @@ def cublasDgemmCtridedBatched(handle, transa, transb, m, n, k, alpha,
     cublasCheckStatus(status)
 
 @_cublas_version_req(8.0)
-def cublasDgemmZtridedBatched(handle, transa, transb, m, n, k, alpha,
+def cublasZgemmStridedBatched(handle, transa, transb, m, n, k, alpha,
                               A, lda, strideA, B, ldb, strideB, beta,
                               C, ldc, strideC, batchCount):
     """
@@ -6267,7 +6267,7 @@ def cublasDgemmZtridedBatched(handle, transa, transb, m, n, k, alpha,
 
     References
     ----------
-    `cublas<t>gemmStridedBatched <https://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gemmstridedbatched>`_    
+    `cublas<t>gemmStridedBatched <https://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gemmstridedbatched>`_
     """
 
     status = _libcublas.cublasZgemmStridedBatched(handle,
@@ -6282,7 +6282,7 @@ def cublasDgemmZtridedBatched(handle, transa, transb, m, n, k, alpha,
                                                                                     beta.imag)),
                                                   int(C), ldc, strideC, batchCount)
     cublasCheckStatus(status)
-                                                  
+
 if __name__ == "__main__":
     import doctest
     doctest.testmod()
