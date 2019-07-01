@@ -5755,7 +5755,7 @@ if _cublas_version >= 5000:
 def cublasSgetrfBatched(handle, n, A, lda, P, info, batchSize):
     """
     This function performs the LU factorization of an array of n x n matrices.
-  
+
     References
     ----------
     `cublas<t>getrfBatched <http://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-getrfbatched>`_
@@ -5779,7 +5779,7 @@ if _cublas_version >= 5000:
 def cublasDgetrfBatched(handle, n, A, lda, P, info, batchSize):
     """
     This function performs the LU factorization of an array of n x n matrices.
-  
+
     References
     ----------
     `cublas<t>getrfBatched <http://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-getrfbatched>`_
@@ -6178,14 +6178,14 @@ if _cublas_version >= 8000:
                                                      ctypes.c_void_p,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
-                                                     ctypes.c_int,
+                                                     ctypes.c_longlong,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
-                                                     ctypes.c_int,
+                                                     ctypes.c_longlong,
                                                      ctypes.c_void_p,
                                                      ctypes.c_void_p,
                                                      ctypes.c_int,
-                                                     ctypes.c_int,
+                                                     ctypes.c_longlong,
                                                      ctypes.c_int]
 @_cublas_version_req(8.0)
 def cublasSgemmStridedBatched(handle, transa, transb, m, n, k, alpha,
@@ -6196,7 +6196,7 @@ def cublasSgemmStridedBatched(handle, transa, transb, m, n, k, alpha,
 
     References
     ----------
-    `cublas<t>gemmStridedBatched <https://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gemmstridedbatched>`_    
+    `cublas<t>gemmStridedBatched <https://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gemmstridedbatched>`_
     """
 
     status = _libcublas.cublasSgemmStridedBatched(handle,
@@ -6242,7 +6242,7 @@ def cublasCgemmStridedBatched(handle, transa, transb, m, n, k, alpha,
 
     References
     ----------
-    `cublas<t>gemmStridedBatched <https://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gemmstridedbatched>`_    
+    `cublas<t>gemmStridedBatched <https://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gemmstridedbatched>`_
     """
 
     status = _libcublas.cublasCgemmStridedBatched(handle,
