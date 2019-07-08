@@ -290,7 +290,6 @@ def _get_cublas_version():
         return major.ljust(len(major)+1, '0')+minor.ljust(2, '0')
 
 _cublas_version = int(_get_cublas_version())
-
 class _cublas_version_req(object):
     """
     Decorator to replace function with a placeholder that raises an exception
@@ -365,26 +364,46 @@ def cublasGetStream(handle):
     cublasCheckStatus(status)
     return id.value
 
-try:
-    _libcublas.cublasGetCurrentCtx.restype = int
-except AttributeError:
-    def cublasGetCurrentCtx():
-        raise NotImplementedError(
-            'cublasGetCurrentCtx() not found; CULA CUBLAS library probably\n'
-            'precedes NVIDIA CUBLAS library in library search path')
-else:
-    def cublasGetCurrentCtx():
-        return _libcublas.cublasGetCurrentCtx()
-cublasGetCurrentCtx.__doc__ = """
-    Get current CUBLAS context.
+_libcublas.cublasGetPointerMode_v2.restype = int
+_libcublas.cublasGetPointerMode_v2.argtypes = [_types.handle,
+                                               ctypes.c_void_p]
+def cublasGetPointerMode(handle):
+    """
+    Get CUBLAS pointer mode.
 
-    Returns the current context used by CUBLAS.
+    Parameters
+    ----------
+    handle : int
+        CUBLAS context.
 
     Returns
     -------
+    mode : int
+        Pointer mode.
+    """
+
+    mode = ctypes.c_int()
+    status = _libcublas.cublasGetPointerMode_v2(handle, ctypes.byref(mode))
+    cublasCheckStatus(status)
+    return mode.value
+
+_libcublas.cublasSetPointerMode_v2.restype = int
+_libcublas.cublasSetPointerMode_v2.argtypes = [_types.handle,
+                                               ctypes.c_int]
+def cublasSetPointerMode(handle, mode):
+    """
+    Set CUBLAS pointer mode.
+
+    Parameters
+    ----------
     handle : int
         CUBLAS context.
-"""
+    mode : int
+        Pointer mode.
+    """
+
+    status = _libcublas.cublasSetPointerMode_v2(handle, mode)
+    cublasCheckStatus(status)
 
 ### BLAS Level 1 Functions ###
 

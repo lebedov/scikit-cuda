@@ -14,9 +14,10 @@ Helper Routines
    cublasCheckStatus
    cublasCreate
    cublasDestroy
-   cublasGetCurrentCtx
+   cublasGetPointerMode
    cublasGetStream
    cublasGetVersion
+   cublasSetPointerMode
    cublasSetStream
    
 Wrapper Routines
