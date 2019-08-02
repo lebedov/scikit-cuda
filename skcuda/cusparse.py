@@ -18,7 +18,7 @@ import numpy as np
 import cuda
 
 # Load library:
-_version_list = [10.0, 9.2, 9.1, 9.0, 8.0, 7.5, 7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
+_version_list = [10.1, 10.0, 9.2, 9.1, 9.0, 8.0, 7.5, 7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
 if 'linux' in sys.platform:
     _libcusparse_libname_list = ['libcusparse.so'] + \
                                 ['libcusparse.so.%s' % v for v in _version_list]
@@ -27,10 +27,10 @@ elif sys.platform == 'darwin':
 elif sys.platform == 'win32':
     if platform.machine().endswith('64'):
         _libcusparse_libname_list = ['cusparse.dll'] + \
-                                    ['cusparse64_%s.dll' % int(10*v) for v in _version_list]
+            ['cusparse64_%s.dll' % (int(v) if v >= 10 else int(10*v))for v in _version_list]
     else:
         _libcusparse_libname_list = ['cusparse.dll'] + \
-                                    ['cusparse32_%s.dll' % int(10*v) for v in _version_list]
+            ['cusparse32_%s.dll' % (int(v) if v >= 10 else int(10*v))for v in _version_list]
 else:
     raise RuntimeError('unsupported platform')
 

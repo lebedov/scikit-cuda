@@ -12,9 +12,9 @@ interfaces to select functions in the `CULA Dense Toolkit <http://www.culatools.
 Both low-level wrapper functions similar to their C counterparts and high-level
 functions comparable to those in `NumPy and Scipy <http://www.scipy.org>`_ are provided.
 
-.. image:: https://zenodo.org/badge/doi/10.5281/zenodo.1479820.svg
-    :target: http://dx.doi.org/10.5281/zenodo.1479820
-    :alt: 0.5.2
+.. image:: https://zenodo.org/badge/doi/10.5281/zenodo.3229433.svg
+    :target: http://dx.doi.org/10.5281/zenodo.3229433
+    :alt: 0.5.3
 .. image:: https://img.shields.io/pypi/v/scikit-cuda.svg
     :target: https://pypi.python.org/pypi/scikit-cuda
     :alt: Latest Version
@@ -54,7 +54,7 @@ Citing
 ------
 If you use scikit-cuda in a scholarly publication, please cite it as follows: ::
 
-    @misc{givon_scikit-cuda_2018,
+    @misc{givon_scikit-cuda_2019,
               author = {Lev E. Givon and
                         Thomas Unterthiner and
                         N. Benjamin Erichson and
@@ -87,12 +87,12 @@ If you use scikit-cuda in a scholarly publication, please cite it as follows: ::
                         Feng Wang and
                         Wing-Kit Lee and
                         Yiyin Zhou},
-        title        = {scikit-cuda 0.5.2: a {Python} interface to {GPU}-powered libraries},
-        month        = November,
-        year         = 2018,
-        doi          = {10.5281/zenodo.1479820},
-        url          = {http://dx.doi.org/10.5281/zenodo.1479820},
-        note         = {\url{http://dx.doi.org/10.5281/zenodo.1479820}}
+        title        = {scikit-cuda 0.5.3: a {Python} interface to {GPU}-powered libraries},
+        month        = May,
+        year         = 2019,
+        doi          = {10.5281/zenodo.3229433},
+        url          = {http://dx.doi.org/10.5281/zenodo.3229433},
+        note         = {\url{http://dx.doi.org/10.5281/zenodo.3229433}}
     }
 
 Authors & Acknowledgments

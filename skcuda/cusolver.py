@@ -22,10 +22,11 @@ from . import cuda
 from . import cublas
 
 # Load library:
-_version_list = [10.0, 9.2, 9.1, 9.0, 8.0, 7.5, 7.0]
+_linux_version_list = [10.1, 10.0, 9.2, 9.1, 9.0, 8.0, 7.5, 7.0]
+_win32_version_list = [10, 100, 92, 91, 90, 80, 75, 70]
 if 'linux' in sys.platform:
     _libcusolver_libname_list = ['libcusolver.so'] + \
-                                ['libcusolver.so.%s' % v for v in _version_list]
+                                ['libcusolver.so.%s' % v for v in _linux_version_list]
 
     # Fix for GOMP weirdness with CUDA 8.0 on Fedora (#171):
     try:
@@ -41,10 +42,10 @@ elif sys.platform == 'darwin':
 elif sys.platform == 'win32':
     if sys.maxsize > 2**32:
         _libcusolver_libname_list = ['cusolver.dll'] + \
-                                    ['cusolver64_%s.dll' % int(10*v) for v in _version_list]
+            ['cusolver64_%s.dll' % v for v in _win32_version_list]
     else:
         _libcusolver_libname_list = ['cusolver.dll'] + \
-                                    ['cusolver32_%s.dll' % int(10*v) for v in _version_list]
+            ['cusolver32_%s.dll' % v for v in _win32_version_list]
 else:
     raise RuntimeError('unsupported platform')
 

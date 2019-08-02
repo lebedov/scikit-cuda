@@ -9,7 +9,7 @@ from setuptools import find_packages
 from setuptools import setup
 
 NAME =               'scikit-cuda'
-VERSION =            '0.5.3'
+VERSION =            '0.5.4'
 AUTHOR =             'Lev E. Givon'
 AUTHOR_EMAIL =       'lev@columbia.edu'
 URL =                'https://github.com/lebedov/scikit-cuda/'

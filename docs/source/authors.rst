@@ -27,7 +27,7 @@ Special thanks are due to the following parties for their contributions:
 - Tim Klein - Additional MAGMA wrappers.
 - `Joseph Martinot-Lagarde <https://github.com/Nodd>`_ - Python 3 compatibility 
   improvements.
-- `Eric Larson <https://github.com/Eric89GXL>`_ - Various enhancements.
+- `Eric Larson <https://github.com/larsoner>`_ - Various enhancements.
 - `Gregory R. Lee <https://github.com/grlee77>`_ - Enhanced FFT plan creation.
 - `Bryant Menn <https://github.com/bmenn>`_ - CUSOLVER support for symmetric 
   eigenvalue decomposition.

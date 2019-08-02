@@ -3,11 +3,17 @@
 Change Log
 ==========
 
-Release 0.5.3 (Under Development)
+Release 0.5.4 (Under Development)
 ---------------------------------
-* Add support for CUDA 10.
-* Add MAGMA GELS wrappers (#271).
+* Add wrappers for matrix-matrix multiplication of batches of matrices (#278).
 
+Release 0.5.3 (May 26, 2019)
+----------------------------
+* Add support for CUDA 10.*.
+* Add MAGMA GELS wrappers (#271).
+* Add context-dependent memoization to skcuda.fft and other modules (#273).
+* Fix issues finding CUDA libraries on Windows.
+  
 Release 0.5.2 (November 6, 2018)
 --------------------------------
 * Prevent exceptions when CULA Dense free is present (#146).

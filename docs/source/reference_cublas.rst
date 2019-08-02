@@ -14,9 +14,10 @@ Helper Routines
    cublasCheckStatus
    cublasCreate
    cublasDestroy
-   cublasGetCurrentCtx
+   cublasGetPointerMode
    cublasGetStream
    cublasGetVersion
+   cublasSetPointerMode
    cublasSetStream
    
 Wrapper Routines
@@ -229,7 +230,9 @@ Single-Precision BLAS-like Extension Routines
    cublasSdgmm
    cublasSgeam
    cublasSgemmBatched
+   cublasSgemmStridedBatched
    cublasCgemmBatched
+   cublasCgemmStridedBatched
    cublasStrsmBatched
    cublasSgetrfBatched
    cublasCdgmm
@@ -244,7 +247,9 @@ Double-Precision BLAS-like Extension Routines
    cublasDdgmm
    cublasDgeam
    cublasDgemmBatched
+   cublasDgemmStridedBatched
    cublasZgemmBatched
+   cublasZgemmStridedBatched
    cublasDtrsmBatched
    cublasDgetrfBatched
    cublasZdgmm
