@@ -46,8 +46,8 @@ class test_linalg(TestCase):
         self.M = 1000
         self.N = 100
         self.test_pca = linalg.PCA()
-        self.max_sdot = np.float32(0.005)
-        self.max_ddot = np.float64(0.000001)
+        self.max_sdot = np.float32(1e-3)
+        self.max_ddot = np.float64(1e-8)
         self.K = 2
         self.test_pca2 = linalg.PCA(n_components=self.K)
         Xd_ = np.random.rand(self.M, self.N)
@@ -96,7 +96,9 @@ class test_linalg(TestCase):
     def test_pca_f_contiguous_check(self):
         try:
             self.test_pca2.fit_transform(self.Xf.transpose())
-            fail(msg="PCA F-contiguous array check failed") # should not reach this line. The prev line should fail and go to the except block
+
+            # should not reach this line. The prev line should fail and go to the except block
+            fail(msg="PCA F-contiguous array check failed")
         except ValueError:
             pass
 
@@ -106,7 +108,9 @@ class test_linalg(TestCase):
             X_gpu_trash = gpuarray.GPUArray(X_trash.shape, np.float32, order="F")	
             X_gpu_trash.set(X_trash)
             self.test_pca2.fit_transform(X_gpu_trash)
-            fail(msg="PCA Array dimensions check failed") # should not reach this line. The prev line should fail and go to the except block
+            
+            # should not reach this line. The prev line should fail and go to the except block
+            fail(msg="PCA Array dimensions check failed") 
         except ValueError:
             pass
 
@@ -114,9 +118,13 @@ class test_linalg(TestCase):
         self.test_pca.set_n_components(self.N+1)
         self.assertEqual(self.test_pca.get_n_components(), self.N+1)
         T1 = self.test_pca.fit_transform(self.Xf)
-        self.assertEqual(T1.shape[1], self.N) # should have been reset internally once the algorithm saw K was bigger than N
+        
+        # should have been reset internally once the algorithm saw K was bigger than N
+        self.assertEqual(T1.shape[1], self.N)  
         T2 = self.test_pca.fit_transform(self.Xf[0:(self.N-1), 0:(self.N-2)].transpose())
-        self.assertEqual(T2.shape[1], self.N-2) # should have been reset internally once the algorithm saw K was bigger than N	
+
+        # should have been reset internally once the algorithm saw K was bigger than N	
+        self.assertEqual(T2.shape[1], self.N-2) 
 
     def test_pca_type_error_check(self):
         try:
@@ -124,7 +132,9 @@ class test_linalg(TestCase):
             X_gpu_trash = gpuarray.GPUArray(X_trash.shape, np.int64, order="F")
             X_gpu_trash.set(X_trash)
             self.test_pca2.fit_transform(X_gpu_trash)
-            fail(msg="PCA Array data type check failed") # should not reach this line. The prev line should fail and go to the except block
+
+            # should not reach this line. The prev line should fail and go to the except block
+            fail(msg="PCA Array data type check failed")         
         except ValueError:
             pass
 
