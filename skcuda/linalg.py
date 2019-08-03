@@ -55,8 +55,8 @@ class PCA(object):
     Principal Component Analysis with similar API to sklearn.decomposition.PCA
 
     The algorithm implemented here was first implemented with cuda in [Andrecut, 2008]. 
-    It performs nonlinear dimensionality reduction for a data matrix, mapping the data
-    to a lower dimensional space of K. See references for more information.
+    It performs a linear dimensionality reduction for a data matrix, mapping the data
+    to a lower dimensional space of dimension `n_components`. See references for more information.
 
     Parameters
     ----------
@@ -72,7 +72,8 @@ class PCA(object):
 
     Notes
     -----
-    If n_components is None, then for a NxP data matrix `K = min(N, P)`. Otherwise, `K = min(n_components, N, P)`
+    If `n_components` is `None`, then for a data matrix of shape `[N P]` `n_components = min(N, P)`.
+    Otherwise, `n_components = min(n_components, N, P)`
 
     References
     ----------
@@ -88,11 +89,15 @@ class PCA(object):
     >>> from skcuda.linalg import PCA as cuPCA 
     >>> pca = cuPCA(n_components=4) # map the data to 4 dimensions
     >>> X = np.random.rand(1000,100) # 1000 samples of 100-dimensional data vectors
-    >>> X_gpu = gpuarray.GPUArray((1000,100), np.float64, order="F") # note that order="F" or a transpose is necessary. fit_transform requires row-major matrices, and column-major is the default
-    >>> X_gpu.set(X) # copy data to gpu
+    >>> X_gpu = gpuarray.to_gpu(X) # copy data to gpu
     >>> T_gpu = pca.fit_transform(X_gpu) # calculate the principal components
-    >>> linalg.dot(T_gpu[:,0], T_gpu[:,1]) # show that the resulting eigenvectors are orthogonal
-    0.0
+    >>> linalg.dot(T_gpu[:,0].copy(), T_gpu[:,1].copy()) # show that the resulting eigenvectors are orthogonal (dot should be close to 0)
+    -2.220446049250313e-16
+    >>> 
+    >>> X_gpu_trans = gpuarray.to_gpu(X.T.copy()) # use transposed_input 
+    >>> T_gpu_trans = pca.fit_transform(X_gpu_trans, transposed_input=True)
+    >>> linalg.dot(T_gpu_trans[0,:], T_gpu_trans[1,:]) # No need to copy since rows are contiguous
+    -2.220446049250313e-16
     """
 
     def __init__(self, n_components=None, handle=None, epsilon=1e-7, max_iter=10000):
@@ -105,26 +110,29 @@ class PCA(object):
         else:
             self.h = handle
 
-    def fit_transform(self, X_gpu):
+    def fit_transform(self, X_gpu, transposed_input=False):
         """
         Fit the Principal Component Analysis model, and return the dimension-reduced matrix.
 
-        Compute the first K principal components of R_gpu using the
+        Compute the first `n_components` principal components of `X_gpu` using the
         Gram-Schmidt orthogonalization algorithm provided by [Andrecut, 2008].
 
         Parameters
         ----------
-        R_gpu: pycuda.gpuarray.GPUArray
-            NxP (N = number of samples, P = number of variables) data matrix that needs 
-            to be reduced. R_gpu can be of type numpy.float32 or numpy.float64.
-            Note that if R_gpu is not instantiated with the kwarg 'order="F"', 
-            specifying a fortran-contiguous (row-major) array structure,
-            fit_transform will throw an error.	
+        X_gpu: pycuda.gpuarray.GPUArray
+            C-ordered data matrix of shape `[N P]` (N = number of samples, P = number of variables)
+            that needs to be reduced. X_gpu can be of type `numpy.float32` or `numpy.float64`.
+        
+        transposed_input: bool
+            If set to `True`, then `X_gpu` must be shaped as `[P N]` and still be C-ordered.
+            The benefit of this is to avoid copying the underlying data to column-major
+            order in order to interface with cublas. This will result in a small speedup.
 
         Returns
         -------
         T_gpu: pycuda.gpuarray.GPUArray
-            `NxK` matrix of the first K principal components of R_gpu. 
+            `[N n_components]` matrix of the first `n_components` principal components of `X_gpu`. 
+            If `transposed_input` is `True`, then `T_gpu` will be of shape `[n_components N]`.
 
         References
         ----------
@@ -132,7 +140,8 @@ class PCA(object):
 
         Notes
         -----
-        If n_components was not set, then `K = min(N, P)`. Otherwise, `K = min(n_components, N, P)`
+        If n_components was not set, then `n_components = min(N, P)`. 
+        Otherwise, `n_components = min(n_components, N, P)`
 
         Examples
         --------
@@ -143,24 +152,30 @@ class PCA(object):
         >>> from skcuda.linalg import PCA as cuPCA 
         >>> pca = cuPCA(n_components=4) # map the data to 4 dimensions
         >>> X = np.random.rand(1000,100) # 1000 samples of 100-dimensional data vectors
-        >>> X_gpu = gpuarray.GPUArray((1000,100), np.float64, order="F") # note that order="F" or a transpose is necessary. fit_transform requires row-major matrices, and column-major is the default
-        >>> X_gpu.set(X) # copy data to gpu
+        >>> X_gpu = gpuarray.to_gpu(X) # copy data to gpu
         >>> T_gpu = pca.fit_transform(X_gpu) # calculate the principal components
-        >>> linalg.dot(T_gpu[:,0], T_gpu[:,1]) # show that the resulting eigenvectors are orthogonal
-        0.0
+        >>> linalg.dot(T_gpu[:,0].copy(), T_gpu[:,1].copy()) # show that the resulting eigenvectors are orthogonal (dot should be close to 0)
+        -2.220446049250313e-16
+        >>> 
+        >>> X_gpu_trans = gpuarray.to_gpu(X.T.copy()) # use transposed_input 
+        >>> T_gpu_trans = pca.fit_transform(X_gpu_trans, transposed_input=True)
+        >>> linalg.dot(T_gpu_trans[0,:], T_gpu_trans[1,:]) # No need to copy since rows are contiguous
+        -2.220446049250313e-16
         """
-
         if len(X_gpu.shape) != 2:
             raise ValueError("Array must be 2D for PCA")
+        if X_gpu.flags.f_contiguous:
+            raise ValueError("Array must be c_contiguous. Please do NOT instantiate with "
+                             "'order=\"F\"'")
+        if transposed_input:
+            n = X_gpu.shape[1] # num samples
+            p = X_gpu.shape[0] # num features
+        else:
+            n = X_gpu.shape[0] # num samples
+            p = X_gpu.shape[1] # num features
 
-        if X_gpu.flags.c_contiguous:
-            raise ValueError("Array must be fortran-contiguous. Please instantiate with 'order=\"F\"' or use the transpose of a C-ordered array.")
-
-        R_gpu = X_gpu.copy() # copy X, because it will be altered internally otherwise
-        n = R_gpu.shape[0] # num samples
-        p = R_gpu.shape[1] # num features
         # choose either single or double precision cublas functions
-        if R_gpu.dtype == 'float32':
+        if X_gpu.dtype == 'float32':
             inpt_dtype = np.float32
             cuAxpy = cublas.cublasSaxpy
             cuCopy = cublas.cublasScopy
@@ -168,7 +183,7 @@ class PCA(object):
             cuNrm2 = cublas.cublasSnrm2
             cuScal = cublas.cublasSscal
             cuGer = cublas.cublasSger
-        elif R_gpu.dtype == 'float64':
+        elif X_gpu.dtype == 'float64':
             inpt_dtype = np.float64
             cuAxpy = cublas.cublasDaxpy
             cuCopy = cublas.cublasDcopy
@@ -177,66 +192,80 @@ class PCA(object):
             cuScal = cublas.cublasDscal
             cuGer = cublas.cublasDger
         else:
-            raise TypeError("Array must be of type numpy.float32 or numpy.float64, not '" + R_gpu.dtype + "'") 
+            raise TypeError("Array must be of type numpy.float32 or numpy.float64, not '" +
+                    str(X_gpu.dtype) + "'") 
 
         n_components = self.n_components
-        if n_components == None or n_components > n or n_components > p:
+        if n_components is None or n_components > n or n_components > p:
             n_components = min(n, p)
-
-        Lambda = np.zeros((n_components,1), inpt_dtype, order="F") # kx1
-        P_gpu = gpuarray.zeros((p, n_components), inpt_dtype, order="F") # pxk
-        T_gpu = gpuarray.zeros((n, n_components), inpt_dtype, order="F") # nxk
+        if transposed_input:
+            # simply copy the underlying data
+            R_gpu = X_gpu.copy()
+        else:
+            # Copy the transpose of X_gpu to R_gpu to interface with cublas
+            # without the need for array striding (slows down alot)
+            # Note that X_gpu.T.copy() does not perform this same operation on the data
+            R_gpu = gpuarray.empty((p,n), inpt_dtype)
+            for i in range(p):
+                cuCopy(self.h, n, X_gpu[:,i].gpudata, p, R_gpu[i,:].gpudata, 1)
+            
+        Lambda = np.zeros((n_components,1), inpt_dtype) # kx1
+        P_gpu = gpuarray.zeros((n_components, p), inpt_dtype) # pxk^T
+        T_gpu = gpuarray.zeros((n_components, n), inpt_dtype) # nxk^T
 
         # mean centering data
         U_gpu = gpuarray.zeros((n,1), np.float32, order="F")
-        U_gpu = misc.sum(R_gpu,axis=1) # nx1 sum the columns of R
         for i in range(p):
-            cuAxpy(self.h, n, -1.0/p, U_gpu.gpudata, 1, R_gpu[:,i].gpudata, 1)
+            cuAxpy(self.h, n, 1.0, R_gpu[i,:].gpudata, 1, U_gpu.gpudata, 1)
+        for i in range(p):
+            cuAxpy(self.h, n, -1.0/p, U_gpu.gpudata, 1, R_gpu[i,:].gpudata, 1)
 
         # calculate principal components
         for k in range(n_components):
             mu = 0.0
-            cuCopy(self.h, n, R_gpu[:,k].gpudata, 1, T_gpu[:,k].gpudata, 1)
+            cuCopy(self.h, n, R_gpu[k,:].gpudata, 1, T_gpu[k,:].gpudata, 1)
             for j in range(self.max_iter):
-                cuGemv(self.h, 't', n, p, 1.0, R_gpu.gpudata, n, T_gpu[:,k].gpudata, 
-                        1, 0.0, P_gpu[:,k].gpudata, 1)
+                cuGemv(self.h, 't', n, p, 1.0, R_gpu.gpudata, n, T_gpu[k,:].gpudata, 
+                        1, 0.0, P_gpu[k,:].gpudata, 1)
                 if k > 0:
-                    cuGemv(self.h,'t', p, k, 1.0, P_gpu.gpudata, p, P_gpu[:,k].gpudata,
+                    cuGemv(self.h,'t', p, k, 1.0, P_gpu.gpudata, p, P_gpu[k,:].gpudata,
                             1, 0.0, U_gpu.gpudata, 1)  
                     cuGemv (self.h, 'n', p, k, -1.0, P_gpu.gpudata, p, U_gpu.gpudata, 
-                            1, 1.0, P_gpu[:,k].gpudata, 1)
+                            1, 1.0, P_gpu[k,:].gpudata, 1)
 
-                l2 = cuNrm2(self.h, p, P_gpu[:,k].gpudata, 1)
-                cuScal(self.h, p, 1.0/l2, P_gpu[:,k].gpudata, 1)
-                cuGemv(self.h, 'n', n, p, 1.0, R_gpu.gpudata, n, P_gpu[:,k].gpudata, 
-                        1, 0.0, T_gpu[:,k].gpudata, 1)
+                l2 = cuNrm2(self.h, p, P_gpu[k,:].gpudata, 1)
+                cuScal(self.h, p, 1.0/l2, P_gpu[k,:].gpudata, 1)
+                cuGemv(self.h, 'n', n, p, 1.0, R_gpu.gpudata, n, P_gpu[k,:].gpudata, 
+                        1, 0.0, T_gpu[k,:].gpudata, 1)
                 if k > 0:
-                    cuGemv(self.h, 't', n, k, 1.0, T_gpu.gpudata, n, T_gpu[:,k].gpudata, 
+                    cuGemv(self.h, 't', n, k, 1.0, T_gpu.gpudata, n, T_gpu[k,:].gpudata, 
                             1, 0.0, U_gpu.gpudata, 1)
                     cuGemv(self.h, 'n', n, k, -1.0, T_gpu.gpudata, n, U_gpu.gpudata,
-                            1, 1.0, T_gpu[:,k].gpudata, 1)
+                            1, 1.0, T_gpu[k,:].gpudata, 1)
 
-                Lambda[k] = cuNrm2(self.h, n, T_gpu[:,k].gpudata, 1)
-                cuScal(self.h, n, 1.0/Lambda[k], T_gpu[:,k].gpudata, 1)
+                Lambda[k] = cuNrm2(self.h, n, T_gpu[k,:].gpudata, 1)
+                cuScal(self.h, n, 1.0/Lambda[k], T_gpu[k,:].gpudata, 1)
                 if abs(Lambda[k] - mu) < self.epsilon*Lambda[k]:
                     break
 
                 mu = Lambda[k]
             # end for j
-            cuGer(self.h, n, p, (0.0-Lambda[k]), T_gpu[:,k].gpudata, 1, P_gpu[:,k].gpudata,
+            cuGer(self.h, n, p, -Lambda[k], T_gpu[k,:].gpudata, 1, P_gpu[k,:].gpudata,
                     1, R_gpu.gpudata, n)
         # end for k
 
         # last step is to multiply each component vector by the corresponding eigenvalue
         for k in range(n_components):
-            cuScal(self.h, n, Lambda[k], T_gpu[:,k].gpudata, 1) 
+            cuScal(self.h, n, Lambda[k], T_gpu[k,:].gpudata, 1) 
 
-        # free gpu memory
-        P_gpu.gpudata.free()
-        U_gpu.gpudata.free()
-        R_gpu.gpudata.free()
-
-        return T_gpu # return the gpu array of principal component scores
+        if transposed_input:
+            return T_gpu
+        else:
+            # Tranpose T_gpu to C ordering like the input
+            T_gpu_c = gpuarray.empty((n,n_components), inpt_dtype)
+            for i in range(n_components):
+                cuCopy(self.h, n, T_gpu[i,:].gpudata, 1, T_gpu_c[:,i].gpudata, n_components)
+            return T_gpu_c # return the gpu array of principal component scores
 
 
     def set_n_components(self, n_components):

@@ -46,17 +46,17 @@ class test_linalg(TestCase):
         self.M = 1000
         self.N = 100
         self.test_pca = linalg.PCA()
-        self.max_sdot = np.float32(1e-3)
+        self.max_sdot = np.float32(1e-4)
         self.max_ddot = np.float64(1e-8)
         self.K = 2
         self.test_pca2 = linalg.PCA(n_components=self.K)
         Xd_ = np.random.rand(self.M, self.N)
         Xf_ = np.random.rand(self.M, self.N).astype(np.float32)
 
-        self.Xd = gpuarray.GPUArray((self.M, self.N), np.float64, order="F")
-        self.Xd.set(Xd_)
-        self.Xf = gpuarray.GPUArray((self.M, self.N), np.float32, order="F")
-        self.Xf.set(Xf_)
+        self.Xd = gpuarray.to_gpu(Xd_)
+        self.Xf = gpuarray.to_gpu(Xf_)
+        self.XdT = gpuarray.to_gpu(Xd_.T.copy())
+        self.XfT = gpuarray.to_gpu(Xf_.T.copy())
         
     def test_pca_ortho_type_and_shape_float64_all_comp(self):
         # test that the shape is what we think it should be
@@ -65,7 +65,7 @@ class test_linalg(TestCase):
         self.assertEqual(Td_all.dtype, np.float64)
         self.assertEqual(Td_all.shape, (self.M, self.N))
         for i in range(self.N-1):
-            self.assertTrue(linalg.dot(Td_all[:,i], Td_all[:,i+1]) < self.max_ddot)
+            self.assertTrue(linalg.dot(Td_all[:,i].copy(), Td_all[:,i+1].copy()) < self.max_ddot)
 
     def test_pca_ortho_type_and_shape_float32_all_comp(self):
         # test that the shape is what we think it should be
@@ -75,7 +75,7 @@ class test_linalg(TestCase):
         self.assertEqual(Tf_all.shape, (self.M, self.N))
         self.Tf_all = Tf_all
         for i in range(self.N-1):
-            self.assertTrue(linalg.dot(Tf_all[:,i], Tf_all[:,i+1]) < self.max_sdot)
+            self.assertTrue(linalg.dot(Tf_all[:,i].copy(), Tf_all[:,i+1].copy()) < self.max_sdot)
 
     def test_pca_ortho_type_and_shape_float64(self):
         # test that the shape is what we think it should be
@@ -83,7 +83,7 @@ class test_linalg(TestCase):
         self.assertIsNotNone(Td_2)
         self.assertEqual(Td_2.dtype, np.float64)
         self.assertEqual(Td_2.shape, (self.M, self.K))
-        self.assertTrue(linalg.dot(Td_2[:,0], Td_2[:,1]) < self.max_ddot)
+        self.assertTrue(linalg.dot(Td_2[:,0].copy(), Td_2[:,1].copy()) < self.max_ddot)
 
     def test_pca_ortho_type_and_shape_float32(self):
         # test that the shape is what we think it should be	
@@ -91,7 +91,42 @@ class test_linalg(TestCase):
         self.assertIsNotNone(Tf_2)
         self.assertEqual(Tf_2.dtype, np.float32)
         self.assertEqual(Tf_2.shape, (self.M, self.K))
-        self.assertTrue(linalg.dot(Tf_2[:,0], Tf_2[:,1]) < self.max_sdot) 
+        self.assertTrue(linalg.dot(Tf_2[:,0].copy(), Tf_2[:,1].copy()) < self.max_sdot) 
+
+    def test_pca_trans_ortho_type_and_shape_float64_all_comp(self):
+        # test that the shape is what we think it should be
+        Td_all = self.test_pca.fit_transform(self.XdT, True)
+        self.assertIsNotNone(Td_all)
+        self.assertEqual(Td_all.dtype, np.float64)
+        self.assertEqual(Td_all.shape, (self.N, self.M))
+        for i in range(self.N-1):
+            self.assertTrue(linalg.dot(Td_all[i,:].copy(), Td_all[i+1,:].copy()) < self.max_ddot)
+
+    def test_pca_trans_ortho_type_and_shape_float32_all_comp(self):
+        # test that the shape is what we think it should be
+        Tf_all = self.test_pca.fit_transform(self.XfT, True)
+        self.assertIsNotNone(Tf_all)
+        self.assertEqual(Tf_all.dtype, np.float32)
+        self.assertEqual(Tf_all.shape, (self.N, self.M))
+        self.Tf_all = Tf_all
+        for i in range(self.N-1):
+            self.assertTrue(linalg.dot(Tf_all[i,:].copy(), Tf_all[i+1,:].copy()) < self.max_sdot)
+
+    def test_pca_trans_ortho_type_and_shape_float64(self):
+        # test that the shape is what we think it should be
+        Td_2 = self.test_pca2.fit_transform(self.XdT, True)
+        self.assertIsNotNone(Td_2)
+        self.assertEqual(Td_2.dtype, np.float64)
+        self.assertEqual(Td_2.shape, (self.K, self.M))
+        self.assertTrue(linalg.dot(Td_2[0,:].copy(), Td_2[1,:].copy()) < self.max_ddot)
+
+    def test_pca_trans_ortho_type_and_shape_float32(self):
+        # test that the shape is what we think it should be	
+        Tf_2 = self.test_pca2.fit_transform(self.XfT, True)
+        self.assertIsNotNone(Tf_2)
+        self.assertEqual(Tf_2.dtype, np.float32)
+        self.assertEqual(Tf_2.shape, (self.K, self.M))
+        self.assertTrue(linalg.dot(Tf_2[0,:], Tf_2[1,:]) < self.max_sdot) 
 
     def test_pca_f_contiguous_check(self):
         try:
@@ -105,8 +140,7 @@ class test_linalg(TestCase):
     def test_pca_arr_2d_check(self):
         try:
             X_trash = np.random.rand(self.M, self.M, 3).astype(np.float32)
-            X_gpu_trash = gpuarray.GPUArray(X_trash.shape, np.float32, order="F")	
-            X_gpu_trash.set(X_trash)
+            X_gpu_trash = gpuarray.to_gpu(X_trash)	
             self.test_pca2.fit_transform(X_gpu_trash)
             
             # should not reach this line. The prev line should fail and go to the except block
@@ -121,21 +155,16 @@ class test_linalg(TestCase):
         
         # should have been reset internally once the algorithm saw K was bigger than N
         self.assertEqual(T1.shape[1], self.N)  
-        T2 = self.test_pca.fit_transform(self.Xf[0:(self.N-1), 0:(self.N-2)].transpose())
-
-        # should have been reset internally once the algorithm saw K was bigger than N	
-        self.assertEqual(T2.shape[1], self.N-2) 
 
     def test_pca_type_error_check(self):
         try:
-            X_trash = np.random.rand(self.M, self.M, 3).astype(np.int64)
-            X_gpu_trash = gpuarray.GPUArray(X_trash.shape, np.int64, order="F")
-            X_gpu_trash.set(X_trash)
+            X_trash = np.random.rand(self.M, self.M).astype(np.int64)
+            X_gpu_trash = gpuarray.to_gpu(X_trash)
             self.test_pca2.fit_transform(X_gpu_trash)
 
             # should not reach this line. The prev line should fail and go to the except block
             fail(msg="PCA Array data type check failed")         
-        except ValueError:
+        except TypeError:
             pass
 
     @skipUnless(linalg._has_cula, 'CULA required')
@@ -1636,6 +1665,8 @@ def suite():
     s = TestSuite()
     s.addTest(test_linalg('test_pca_ortho_type_and_shape_float32_all_comp'))
     s.addTest(test_linalg('test_pca_ortho_type_and_shape_float32'))
+    s.addTest(test_linalg('test_pca_trans_ortho_type_and_shape_float32_all_comp'))
+    s.addTest(test_linalg('test_pca_trans_ortho_type_and_shape_float32'))
     s.addTest(test_linalg('test_pca_f_contiguous_check'))
     s.addTest(test_linalg('test_pca_arr_2d_check'))
     s.addTest(test_linalg('test_pca_k_bigger_than_array_dims_and_getset'))
@@ -1727,8 +1758,8 @@ def suite():
     s.addTest(test_linalg('test_dmd_complex64'))
 
     if misc.get_compute_capability(device) >= 1.3:
-        s.addTest(test_linalg('test_pca_ortho_type_and_shape_float64_all_comp'))
-        s.addTest(test_linalg('test_pca_ortho_type_and_shape_float64'))
+        s.addTest(test_linalg('test_pca_trans_ortho_type_and_shape_float64_all_comp'))
+        s.addTest(test_linalg('test_pca_trans_ortho_type_and_shape_float64'))
         s.addTest(test_linalg('test_svd_ss_cula_float64'))
         s.addTest(test_linalg('test_svd_ss_cula_complex128'))
         s.addTest(test_linalg('test_svd_so_cula_float64'))
