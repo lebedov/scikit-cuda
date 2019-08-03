@@ -198,17 +198,23 @@ class PCA(object):
             mu = 0.0
             cuCopy(self.h, n, R_gpu[:,k].gpudata, 1, T_gpu[:,k].gpudata, 1)
             for j in range(self.max_iter):
-                cuGemv(self.h, 't', n, p, 1.0, R_gpu.gpudata, n, T_gpu[:,k].gpudata, 1, 0.0, P_gpu[:,k].gpudata, 1)
+                cuGemv(self.h, 't', n, p, 1.0, R_gpu.gpudata, n, T_gpu[:,k].gpudata, 
+                        1, 0.0, P_gpu[:,k].gpudata, 1)
                 if k > 0:
-                    cuGemv(self.h,'t', p, k, 1.0, P_gpu.gpudata, p, P_gpu[:,k].gpudata, 1, 0.0, U_gpu.gpudata, 1)  
-                    cuGemv (self.h, 'n', p, k, -1.0, P_gpu.gpudata, p, U_gpu.gpudata, 1, 1.0, P_gpu[:,k].gpudata, 1)
+                    cuGemv(self.h,'t', p, k, 1.0, P_gpu.gpudata, p, P_gpu[:,k].gpudata,
+                            1, 0.0, U_gpu.gpudata, 1)  
+                    cuGemv (self.h, 'n', p, k, -1.0, P_gpu.gpudata, p, U_gpu.gpudata, 
+                            1, 1.0, P_gpu[:,k].gpudata, 1)
 
                 l2 = cuNrm2(self.h, p, P_gpu[:,k].gpudata, 1)
                 cuScal(self.h, p, 1.0/l2, P_gpu[:,k].gpudata, 1)
-                cuGemv(self.h, 'n', n, p, 1.0, R_gpu.gpudata, n, P_gpu[:,k].gpudata, 1, 0.0, T_gpu[:,k].gpudata, 1)
+                cuGemv(self.h, 'n', n, p, 1.0, R_gpu.gpudata, n, P_gpu[:,k].gpudata, 
+                        1, 0.0, T_gpu[:,k].gpudata, 1)
                 if k > 0:
-                    cuGemv(self.h, 't', n, k, 1.0, T_gpu.gpudata, n, T_gpu[:,k].gpudata, 1, 0.0, U_gpu.gpudata, 1)
-                    cuGemv(self.h, 'n', n, k, -1.0, T_gpu.gpudata, n, U_gpu.gpudata, 1, 1.0, T_gpu[:,k].gpudata, 1)
+                    cuGemv(self.h, 't', n, k, 1.0, T_gpu.gpudata, n, T_gpu[:,k].gpudata, 
+                            1, 0.0, U_gpu.gpudata, 1)
+                    cuGemv(self.h, 'n', n, k, -1.0, T_gpu.gpudata, n, U_gpu.gpudata,
+                            1, 1.0, T_gpu[:,k].gpudata, 1)
 
                 Lambda[k] = cuNrm2(self.h, n, T_gpu[:,k].gpudata, 1)
                 cuScal(self.h, n, 1.0/Lambda[k], T_gpu[:,k].gpudata, 1)
@@ -217,7 +223,8 @@ class PCA(object):
 
                 mu = Lambda[k]
             # end for j
-        cuGer(self.h, n, p, (0.0-Lambda[k]), T_gpu[:,k].gpudata, 1, P_gpu[:,k].gpudata, 1, R_gpu.gpudata, n)
+            cuGer(self.h, n, p, (0.0-Lambda[k]), T_gpu[:,k].gpudata, 1, P_gpu[:,k].gpudata,
+                    1, R_gpu.gpudata, n)
         # end for k
 
         # last step is to multiply each component vector by the corresponding eigenvalue
@@ -227,6 +234,7 @@ class PCA(object):
         # free gpu memory
         P_gpu.gpudata.free()
         U_gpu.gpudata.free()
+        R_gpu.gpudata.free()
 
         return T_gpu # return the gpu array of principal component scores
 
