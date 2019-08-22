@@ -38,6 +38,8 @@ if not on_rtd:
     install_requires = ['mako >= 1.0.1',
                         'numpy >= 1.2.0',
                         'pycuda >= 2016.1']
+    if sys.platform == 'win32':
+        install_requires += 'pywin32'
     tests_require = ['nose >= 0.11',
                      'scipy >= 0.14.0'],
     extras_require = dict(scipy = ['scipy >= 0.14.0'],

@@ -124,7 +124,21 @@ else:
         # No SONAME found:
         return ''
 
-def find_lib_path(name):
+def readlink(filename):
+    """
+    Recursively find symlink target.
+    """
+
+    if os.path.islink(filename): 
+        target = os.readlink(filename) 
+        dirname = os.path.dirname(filename) 
+        if dirname:
+            target = os.path.join(dirname, target) 
+        return readlink(target)
+    else:
+        return filename
+
+def find_lib_path(name): 
     """
     Find full path of a shared library.
 

@@ -8,16 +8,18 @@ Note: this module does not explicitly depend on PyCUDA.
 
 from __future__ import absolute_import
 
-import re
-import os
-import sys
-import warnings
+import atexit
 import ctypes
 import ctypes.util
-import atexit
-import numpy as np
-
+import os
+import re
 from string import Template
+import sys
+import warnings
+
+import numpy as np
+if sys.platform == 'win32':
+    import win32api
 
 from . import cuda
 from . import utils
@@ -255,32 +257,46 @@ def cublasGetVersion(handle):
 
 def _get_cublas_version():
     """
-    Get and save CUBLAS version using the CUBLAS library's SONAME.
+    Get and save CUBLAS version.
 
-    This function tries to avoid calling cublasGetVersion because creating a 
-    CUBLAS context can subtly affect the performance of subsequent 
-    CUDA operations in certain circumstances. 
+    This function tries to avoid calling `cublasGetVersion` by first attempting
+    to extract the CUBLAS version embedded in the file and then attempting to
+    extract it from the file name because creating a CUBLAS context can subtly
+    affect the performance of subsequent CUDA operations in certain
+    circumstances.
 
     Results
     -------
     version : str
-        Zeros are appended to match format of version returned 
+        Zeros are appended to match format of version returned
         by cublasGetVersion() (e.g., '6050' corresponds to version 6.5).
 
     Notes
     -----
-    Since the version number does not appear to be obtainable from the 
-    MacOSX CUBLAS library, this function must call cublasGetVersion() on
-    MacOSX (but raises a warning to let the user know).
-    """
+    Since the version number does not appear to be obtainable from the
+    MacOSX CUBLAS library, this function must call `cublasGetVersion` on
+    MacOSX (but raises a warning to let the user know)."""
 
-    cublas_path = utils.find_lib_path('cublas')
+    cublas_path = utils.readlink(utils.find_lib_path('cublas'))
     try:
-        major, minor = re.search(r'[\D\.]+\.+(\d+)\.(\d+)',
-                                 utils.get_soname(cublas_path)).groups()
+        # First try to retrieve version number directly embedded in library file:
+        if sys.platform == 'win32':
+            info = win32api.GetFileVersionInfo(cublas_path, '\\')
+            return str(win32api.LOWORD(info['FileVersionLS']))
+        else:
+            major, minor = re.search(r'[\D\.]+\.+(\d+)\.(\d+)',
+                                    utils.get_soname(cublas_path)).groups()
     except:
 
+        # Next, try extracting the version from the file name:
         # Create a temporary context to run cublasGetVersion():
+        try:
+            major, minor = re.search(r'[\D\.]+\.+(\d+)\.(\d+)',
+                                    os.path.basename(cublas_path)).groups()
+        except:
+            pass
+        else:
+            return major.ljust(len(major)+1, '0')+minor.ljust(2, '0')
         warnings.warn('creating CUBLAS context to get version number')
         h = cublasCreate()
         version = cublasGetVersion(h)
