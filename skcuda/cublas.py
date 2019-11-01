@@ -6101,6 +6101,83 @@ def cublasZgetriBatched(handle, n, A, lda, P, C, ldc, info, batchSize):
                                             batchSize)
     cublasCheckStatus(status)
 
+# SgelsBatched, DgelsBatched, CgelsBatched, ZgelsBatched
+if _cublas_version >= 5000:
+    _libcublas.cublasSgelsBatched.restype = \
+    _libcublas.cublasDgelsBatched.restype = \
+    _libcublas.cublasCgelsBatched.restype = \
+    _libcublas.cublasZgelsBatched.restype = int
+    _libcublas.cublasSgelsBatched.argtypes = \
+    _libcublas.cublasDgelsBatched.argtypes = \
+    _libcublas.cublasCgelsBatched.argtypes = \
+    _libcublas.cublasZgelsBatched.argtypes = [_types.handle,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int,
+                                              ctypes.c_void_p,
+                                              ctypes.c_void_p,
+                                              ctypes.c_int]
+@_cublas_version(5.0)
+def cublasSgelsBatched(handle, trans, m, n, nrhs, Aarray, lda, Carray, ldc, info, devInfoArray, batchSize):
+    """
+    This function finds the least squares solution of a batch of overdetermined systems.
+
+    References
+    ----------
+    `cublas<t>gelsBatched <http://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gelsbatched>`_
+    """
+
+    status = _libcublas.cublasSgelsBatched(handle, _CUBLAS_OP[trans], m, n, nrhs, int(Aarray), lda,
+                                           int(Carray), ldc, info, int(devInfoArray), batchSize)
+    cublasCheckStatus(status)
+
+@_cublas_version(5.0)
+def cublasDgelsBatched(handle, trans, m, n, nrhs, Aarray, lda, Carray, ldc, info, devInfoArray, batchSize):
+    """
+    This function finds the least squares solution of a batch of overdetermined systems.
+
+    References
+    ----------
+    `cublas<t>gelsBatched <http://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gelsbatched>`_
+    """
+
+    status = _libcublas.cublasDgelsBatched(handle, _CUBLAS_OP[trans], m, n, nrhs, int(Aarray), lda,
+                                           int(Carray), ldc, info, int(devInfoArray), batchSize)
+    cublasCheckStatus(status)
+
+@_cublas_version(5.0)
+def cublasCgelsBatched(handle, trans, m, n, nrhs, Aarray, lda, Carray, ldc, info, devInfoArray, batchSize):
+    """
+    This function finds the least squares solution of a batch of overdetermined systems.
+
+    References
+    ----------
+    `cublas<t>gelsBatched <http://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gelsbatched>`_
+    """
+
+    status = _libcublas.cublasCgelsBatched(handle, _CUBLAS_OP[trans], m, n, nrhs, int(Aarray), lda,
+                                           int(Carray), ldc, info, int(devInfoArray), batchSize)
+    cublasCheckStatus(status)
+
+@_cublas_version(5.0)
+def cublasZgelsBatched(handle, trans, m, n, nrhs, Aarray, lda, Carray, ldc, info, devInfoArray, batchSize):
+    """
+    This function finds the least squares solution of a batch of overdetermined systems.
+
+    References
+    ----------
+    `cublas<t>gelsBatched <http://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-gelsbatched>`_
+    """
+
+    status = _libcublas.cublasZgelsBatched(handle, _CUBLAS_OP[trans], m, n, nrhs, int(Aarray), lda,
+                                           int(Carray), ldc, info, int(devInfoArray), batchSize)
+    cublasCheckStatus(status)
+
 if _cublas_version >= 5000:
     _libcublas.cublasSdgmm.restype = \
     _libcublas.cublasDdgmm.restype = \
