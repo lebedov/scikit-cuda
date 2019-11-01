@@ -6122,7 +6122,7 @@ if _cublas_version >= 5000:
                                               ctypes.c_void_p,
                                               ctypes.c_void_p,
                                               ctypes.c_int]
-@_cublas_version(5.0)
+@_cublas_version_req(5.0)
 def cublasSgelsBatched(handle, trans, m, n, nrhs, Aarray, lda, Carray, ldc, info, devInfoArray, batchSize):
     """
     This function finds the least squares solution of a batch of overdetermined systems.
@@ -6136,7 +6136,7 @@ def cublasSgelsBatched(handle, trans, m, n, nrhs, Aarray, lda, Carray, ldc, info
                                            int(Carray), ldc, info, int(devInfoArray), batchSize)
     cublasCheckStatus(status)
 
-@_cublas_version(5.0)
+@_cublas_version_req(5.0)
 def cublasDgelsBatched(handle, trans, m, n, nrhs, Aarray, lda, Carray, ldc, info, devInfoArray, batchSize):
     """
     This function finds the least squares solution of a batch of overdetermined systems.
@@ -6150,7 +6150,7 @@ def cublasDgelsBatched(handle, trans, m, n, nrhs, Aarray, lda, Carray, ldc, info
                                            int(Carray), ldc, info, int(devInfoArray), batchSize)
     cublasCheckStatus(status)
 
-@_cublas_version(5.0)
+@_cublas_version_req(5.0)
 def cublasCgelsBatched(handle, trans, m, n, nrhs, Aarray, lda, Carray, ldc, info, devInfoArray, batchSize):
     """
     This function finds the least squares solution of a batch of overdetermined systems.
@@ -6164,7 +6164,7 @@ def cublasCgelsBatched(handle, trans, m, n, nrhs, Aarray, lda, Carray, ldc, info
                                            int(Carray), ldc, info, int(devInfoArray), batchSize)
     cublasCheckStatus(status)
 
-@_cublas_version(5.0)
+@_cublas_version_req(5.0)
 def cublasZgelsBatched(handle, trans, m, n, nrhs, Aarray, lda, Carray, ldc, info, devInfoArray, batchSize):
     """
     This function finds the least squares solution of a batch of overdetermined systems.
