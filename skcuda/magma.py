@@ -48,11 +48,11 @@ def magma_strerror(error):
     return _libmagma.magma_strerror(error)
 
 class MagmaError(Exception):
-	def __init__(self, status, info=None):
-		self._status = status
-		self._info = info
-		errstr = "%s (Code: %d)" % (magma_strerror(status), status)
-		super(MagmaError,self).__init__(errstr)
+    def __init__(self, status, info=None):
+        self._status = status
+        self._info = info
+        errstr = "%s (Code: %d)" % (magma_strerror(status), status)
+        super(MagmaError,self).__init__(errstr)
 
 
 def magmaCheckStatus(status):
@@ -1129,35 +1129,83 @@ _libmagma.magma_get_dsytrd_nb.argtypes = [c_int_type]
 def magma_get_dsytrd_nb(m):
     return _libmagma.magma_get_dsytrd_nb(m)
 
-_libmagma.magma_queue_create_internal.restype = int
+_libmagma.magma_queue_create_internal.restype = None
 _libmagma.magma_queue_create_internal.argtypes = [c_int_type,
                                                   ctypes.c_void_p,
                                                   ctypes.c_char_p,
                                                   ctypes.c_char_p,
                                                   c_int_type]
 def magma_queue_create(device):
+    """
+    Create MAGMA queue.
+    """
+
     queue_ptr = ctypes.c_void_p()
-    status = _libmagma.magma_queue_create_internal(device, ctypes.byref(queue_ptr), '', '', 0)
-    magmaCheckStatus(status)
+    _libmagma.magma_queue_create_internal(device, ctypes.byref(queue_ptr), '', '', 0)
     return queue_ptr
 
-_libmagma.magma_queue_destroy_internal.restype = int
+_libmagma.magma_queue_destroy_internal.restype = None
 _libmagma.magma_queue_destroy_internal.argtypes = [ctypes.c_void_p,
                                                    ctypes.c_char_p,
                                                    ctypes.c_char_p,
                                                    c_int_type]
 def magma_queue_destroy(queue_ptr):
-    status = _libmagma.magma_queue_destroy_internal(queue_ptr, '', '', 0)
-    magmaCheckStatus(status)
+    """
+    Destroy MAGMA queue.
+    """
 
-_libmagma.magma_queue_sync_internal.restype = int
+    _libmagma.magma_queue_destroy_internal(queue_ptr, '', '', 0)
+
+_libmagma.magma_queue_sync_internal.restype = None
 _libmagma.magma_queue_sync_internal.argtypes = [ctypes.c_void_p,
                                                 ctypes.c_char_p,
                                                 ctypes.c_char_p,
                                                 c_int_type]
 def magma_queue_sync(queue_ptr):
-    status = _libmagma.magma_queue_sync_internal(queue_ptr, '', '', 0)
-    magmaCheckStatus(status)
+    """
+    Synchronize MAGMA queue.
+    """
+
+    _libmagma.magma_queue_sync_internal(queue_ptr, '', '', 0)
+
+_libmagma.magma_queue_get_device.restype = int
+_libmagma.magma_queue_get_device.argtypes = [ctypes.c_int]
+def magma_queue_get_device(queue):
+    """
+    Get device associated with MAGMA queue.
+    """
+
+    return _libmagma.magma_queue_get_device(queue)
+
+_libmagma.magma_queue_get_cuda_stream.restype = int
+_libmagma.magma_queue_get_cuda_stream.argtypes = [ctypes.c_int]
+def magma_queue_get_cuda_stream(queue):
+    """
+    Get CUDA stream associated with MAGMA queue.
+    """
+
+    return _libmagma.magma_queue_get_cuda_stream(queue)
+
+_libmagma.magma_queue_create_from_cuda_internal.restype = None
+_libmagma.magma_queue_create_from_cuda_internal.argtypes = [ctypes.c_int,
+                                                            ctypes.c_int,
+                                                            ctypes.c_int,
+                                                            ctypes.c_int,
+                                                            ctypes.c_void_p,
+                                                            ctypes.c_char_p,
+                                                            ctypes.c_char_p,
+                                                            ctypes.c_int]
+def magma_queue_create_from_cuda(device, cuda_stream, cublas_handle,
+                                 cusparse_handle):
+    """
+    Create MAGMA queue given CUDA stream.
+    """
+
+    queue_ptr = ctypes.c_void_p()
+    _libmagma.magma_queue_create_from_cuda_internal(device, cuda_stream,
+                                                    cublas_handle,
+                                                    cusparse_handle, ctypes.byref(queue_ptr),
+                                                    '', '', 0)
 
 # Buffer size algorithms
 def _magma_gesvd_buffersize(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt,
