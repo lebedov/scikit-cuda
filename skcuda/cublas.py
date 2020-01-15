@@ -5304,7 +5304,7 @@ _GEAM_doc = Template(
     B : ctypes.c_void_p
         Pointer to second matrix operand (`B`).
     ldb : int
-        Leading dimension of `A`.
+        Leading dimension of `B`.
     C : ctypes.c_void_p
         Pointer to result matrix (`C`).
     ldc : int
