@@ -1,5 +1,9 @@
 """
 Unit tests for skcuda.magma
+
+Contains following tests:
+General eigensolvers: magma_[s,d,c,z]geev
+Real symmetric eigensolvers: magma_[s,d]syevd[,x][,_m,_gpu]
 """
 from unittest import (
     main,
@@ -272,7 +276,7 @@ class test_magma(TestCase):
                         atol=DTYPE_TO_ATOL[dtype])
 
     def test_symmetric_eig_float32(self):
-        """Testing eigensolvers: magma_ssyevd[x][_gpu,_m]
+        """Testing eigensolvers: magma_ssyevd[,x][,_gpu,_m]
         """
         self._test_syev(700, 's', data_gpu=False, ngpu=1, expert=False)    #
         self._test_syev(700, 's', data_gpu=False, ngpu=-1, expert=False)   # _m
@@ -283,7 +287,7 @@ class test_magma(TestCase):
         self._test_syev(700, 's', data_gpu=True, ngpu=1, expert=True)    # _gpu
 
     def test_symmetric_eig_float64(self):
-        """Testing eigensolvers: magma_dsyevd[x][_gpu,_m]
+        """Testing eigensolvers: magma_dsyevd[,x][,_gpu,_m]
         """
         self._test_syev(700, 'd', data_gpu=False, ngpu=1, expert=False)    #
         self._test_syev(700, 'd', data_gpu=False, ngpu=-1, expert=False)   # _m
