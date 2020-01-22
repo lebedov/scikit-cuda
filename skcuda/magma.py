@@ -3573,6 +3573,45 @@ def magma_zgels_gpu(trans, m, n, nrhs, A, lda, B, ldb, hwork, lwork):
     magmaCheckStatus(status)
 
 # SSYEVD, DSYEVD
+_libmagma.magma_ssyevd.restype = int
+_libmagma.magma_ssyevd.argtypes = [ c_int_type,
+                                    c_int_type,
+                                    c_int_type,
+                                    ctypes.c_void_p,
+                                    c_int_type,
+                                    ctypes.c_void_p,
+                                    ctypes.c_void_p,
+                                    c_int_type,
+                                    ctypes.c_void_p,
+                                    c_int_type,
+                                    ctypes.c_void_p]
+def magma_ssyevd(jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork):
+    """
+    Compute eigenvalues of real symmetric matrix.
+    Single-GPU, data on host
+    """
+    jobz = _vec_conversion[jobz]
+    uplo = _uplo_conversion[uplo]
+    info = c_int_type()
+    status = _libmagma.magma_ssyevd(jobz, uplo, n, int(A), lda, int(w), int(work),
+                                      lwork, int(iwork), liwork, ctypes.byref(info))
+    magmaCheckStatus(status)
+
+_libmagma.magma_dsyevd.restype = int
+_libmagma.magma_dsyevd.argtypes = _libmagma.magma_ssyevd.argtypes
+def magma_dsyevd(jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork):
+    """
+    Compute eigenvalues of real symmetric matrix.
+    Single-GPU, data on host
+    """
+    jobz = _vec_conversion[jobz]
+    uplo = _uplo_conversion[uplo]
+    info = c_int_type()
+    status = _libmagma.magma_dsyevd(jobz, uplo, n, int(A), lda, int(w), int(work),
+                                      lwork, int(iwork), liwork, ctypes.byref(info))
+    magmaCheckStatus(status)
+
+# SSYEVD_GPU, DSYEVD_GPU
 _libmagma.magma_ssyevd_gpu.restype = int
 _libmagma.magma_ssyevd_gpu.argtypes = [c_int_type,
                                        c_int_type,
@@ -3591,8 +3630,9 @@ def magma_ssyevd_gpu(jobz, uplo, n, dA, ldda, w, wA, ldwa, work, lwork, iwork,
                      liwork):
     """
     Compute eigenvalues of real symmetric matrix.
+    Single-GPU, data on device.
     """
-
+    jobz = _vec_conversion[jobz]
     uplo = _uplo_conversion[uplo]
     info = c_int_type()
     status = _libmagma.magma_ssyevd_gpu(jobz, uplo, n, int(dA), ldda,
@@ -3600,27 +3640,14 @@ def magma_ssyevd_gpu(jobz, uplo, n, dA, ldda, w, wA, ldwa, work, lwork, iwork,
                                         lwork, int(iwork), liwork, ctypes.byref(info))
     magmaCheckStatus(status)
 
-
 _libmagma.magma_dsyevd_gpu.restype = int
-_libmagma.magma_dsyevd_gpu.argtypes = [c_int_type,
-                                       c_int_type,
-                                       c_int_type,
-                                       ctypes.c_void_p,
-                                       c_int_type,
-                                       ctypes.c_void_p,
-                                       ctypes.c_void_p,
-                                       c_int_type,
-                                       ctypes.c_void_p,
-                                       c_int_type,
-                                       ctypes.c_void_p,
-                                       c_int_type,
-                                       ctypes.c_void_p]
+_libmagma.magma_dsyevd_gpu.argtypes = _libmagma.magma_ssyevd_gpu.argtypes
 def magma_dsyevd_gpu(jobz, uplo, n, dA, ldda, w, wA, ldwa, work, lwork, iwork,
                      liwork):
     """
     Compute eigenvalues of real symmetric matrix.
+    Single-GPU, data on device.
     """
-
     jobz = _vec_conversion[jobz]
     uplo = _uplo_conversion[uplo]
     info = c_int_type()
@@ -3628,7 +3655,6 @@ def magma_dsyevd_gpu(jobz, uplo, n, dA, ldda, w, wA, ldwa, work, lwork, iwork,
                                         int(w), int(wA), ldwa, int(work),
                                         lwork, int(iwork), liwork, ctypes.byref(info))
     magmaCheckStatus(status)
-
 
 # SSYEVD_M, DSYEVD_M, CHEEVD_M, ZHEEVD_M
 _libmagma.magma_ssyevd_m.restype = int
@@ -3649,7 +3675,7 @@ def magma_ssyevd_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork):
     Compute eigenvalues of real symmetric matrix.
     Multi-GPU, data on host
     """
-
+    jobz = _vec_conversion[jobz]
     uplo = _uplo_conversion[uplo]
     info = c_int_type()
     status = _libmagma.magma_ssyevd_m(ngpu, jobz, uplo, n, int(A), lda,
@@ -3658,13 +3684,13 @@ def magma_ssyevd_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork):
     magmaCheckStatus(status)
 
 _libmagma.magma_dsyevd_m.restype = int
-_libmagma.magma_dsyevd_m.argtypes = _libmagma.magma_dsyevd_m.argtypes
+_libmagma.magma_dsyevd_m.argtypes = _libmagma.magma_ssyevd_m.argtypes
 def magma_dsyevd_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork, iwork, liwork):
     """
     Compute eigenvalues of real symmetric matrix.
     Multi-GPU, data on host
     """
-
+    jobz = _vec_conversion[jobz]
     uplo = _uplo_conversion[uplo]
     info = c_int_type()
     status = _libmagma.magma_dsyevd_m(ngpu, jobz, uplo, n, int(A), lda,
@@ -3693,7 +3719,7 @@ def magma_cheevd_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork,
     Compute eigenvalues of complex hermitian matrix.
     Multi-GPU, data on host
     """
-
+    jobz = _vec_conversion[jobz]
     uplo = _uplo_conversion[uplo]
     info = c_int_type()
     status = _libmagma.magma_cheevd_m(ngpu, jobz, uplo, n, int(A), lda,
@@ -3709,7 +3735,7 @@ def magma_zheevd_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork,
     Compute eigenvalues of complex hermitian matrix.
     Multi-GPU, data on host
     """
-
+    jobz = _vec_conversion[jobz]
     uplo = _uplo_conversion[uplo]
     info = c_int_type()
     status = _libmagma.magma_zheevd_m(ngpu, jobz, uplo, n, int(A), lda,
@@ -3717,8 +3743,7 @@ def magma_zheevd_m(ngpu, jobz, uplo, n, A, lda, w, work, lwork,
                                       lrwork, int(iwork), liwork, ctypes.byref(info))
     magmaCheckStatus(status)
 
-# SSYEVDX
-# TO BE TESTED
+# SSYEVDX, DSYEVDX
 _libmagma.magma_ssyevdx.restype = int
 _libmagma.magma_ssyevdx.argtypes = [ c_int_type,     # jobz
                                      c_int_type,     # rnge
@@ -3742,30 +3767,46 @@ def magma_ssyevdx(jobz, rnge, uplo, n, A, lda,
                     w, work, lwork, iwork, liwork):
     """
     Compute eigenvalues of real symmetric matrix.
-    Multi-GPU, data on host
+    Multi-GPU, data on host, expert mode
     """
 
     # _XXX_conversion[] returns integer according to magma_types.h
     jobz = _vec_conversion[jobz] 
     rnge = _range_conversion[rnge]
     uplo = _uplo_conversion[uplo]
-    
-    mfound = c_int_type()
     info = c_int_type()
     status = _libmagma.magma_ssyevdx(jobz, rnge, uplo, n, int(A), lda,
-                                        vl, vu, il, iu, ctypes.byref(mfound), 
+                                        vl, vu, il, iu, int(m),
                                         int(w), int(work), lwork, int(iwork), liwork, 
                                         ctypes.byref(info))
-    m = mfound
+    magmaCheckStatus(status)
+
+_libmagma.magma_dsyevdx.restype = int
+_libmagma.magma_dsyevdx.argtypes = _libmagma.magma_ssyevdx.argtypes
+def magma_dsyevdx(jobz, rnge, uplo, n, A, lda,
+                    vl, vu, il, iu, m,
+                    w, work, lwork, iwork, liwork):
+    """
+    Compute eigenvalues of real symmetric matrix.
+    Multi-GPU, data on host, expert mode
+    """
+    # _XXX_conversion[] returns integer according to magma_types.h
+    jobz = _vec_conversion[jobz] 
+    rnge = _range_conversion[rnge]
+    uplo = _uplo_conversion[uplo]
+    info = c_int_type()
+    status = _libmagma.magma_dsyevdx(jobz, rnge, uplo, n, int(A), lda,
+                                        vl, vu, il, iu, int(m), 
+                                        int(w), int(work), lwork, int(iwork), liwork, 
+                                        ctypes.byref(info))
     magmaCheckStatus(status)
 
 # SSYEVDX_M, DSYEVDX_M, CHEEVDX_M, ZHEEVDX_M
-# TO BE TESTED
 _libmagma.magma_ssyevdx_m.restype = int
-_libmagma.magma_ssyevdx_m.argtypes = [c_int_type,        # ngpu
-                                     c_int_type,     # jobz
-                                     c_int_type,     # rnge
-                                     c_int_type,     # uplo
+_libmagma.magma_ssyevdx_m.argtypes = [c_int_type,       # ngpu
+                                     c_int_type,        # jobz
+                                     c_int_type,        # rnge
+                                     c_int_type,        # uplo
                                      c_int_type,        # n
                                      ctypes.c_void_p,   # A
                                      c_int_type,        # lda
@@ -3785,23 +3826,19 @@ def magma_ssyevdx_m(ngpu, jobz, rnge, uplo, n, A, lda,
                     w, work, lwork, iwork, liwork):
     """
     Compute eigenvalues of real symmetric matrix.
-    Multi-GPU, data on host
+    Multi-GPU, data on host, expert mode
 
     source: ssyedx_m.cpp
     """
-
     # _XXX_conversion[] returns integer according to magma_types.h
     jobz = _vec_conversion[jobz] 
     rnge = _range_conversion[rnge]
     uplo = _uplo_conversion[uplo]
-    
-    mfound = c_int_type() # output
     info = c_int_type()
     status = _libmagma.magma_ssyevdx_m(ngpu, jobz, rnge, uplo, n, int(A), lda,
-                                        vl, vu, il, iu, ctypes.byref(mfound), 
+                                        vl, vu, il, iu, int(m),
                                         int(w), int(work), lwork, int(iwork), liwork, 
                                         ctypes.byref(info))
-    m = mfound
     magmaCheckStatus(status)
 
 _libmagma.magma_dsyevdx_m.restype = int
@@ -3811,25 +3848,86 @@ def magma_dsyevdx_m(ngpu, jobz, rnge, uplo, n, A, lda,
                     w, work, lwork, iwork, liwork):
     """
     Compute eigenvalues of real symmetric matrix.
-    Multi-GPU, data on host
+    Multi-GPU, data on host, expert mode
 
     source: dsyedx_m.cpp
     """
-
     # _XXX_conversion[] returns integer according to magma_types.h
     jobz = _vec_conversion[jobz] 
     rnge = _range_conversion[rnge]
     uplo = _uplo_conversion[uplo]
-    
-    mfound = c_int_type() # output
     info = c_int_type()
     status = _libmagma.magma_dsyevdx_m(ngpu, jobz, rnge, uplo, n, int(A), lda,
-                                        vl, vu, il, iu, ctypes.byref(mfound), 
+                                        vl, vu, il, iu, int(m),
                                         int(w), int(work), lwork, int(iwork), liwork, 
                                         ctypes.byref(info))
-    m = mfound
     magmaCheckStatus(status)
 
+# SSYEVDX_GPU, DSYEVDX_GPU
+_libmagma.magma_ssyevdx_gpu.restype = int
+_libmagma.magma_ssyevdx_gpu.argtypes = [c_int_type,     # jobz
+                                        c_int_type,     # range
+                                        c_int_type,     # uplo
+                                        c_int_type,     # n
+                                        ctypes.c_void_p,# dA
+                                        c_int_type,     # lddA
+                                        ctypes.c_float, # vl
+                                        ctypes.c_float, # vu
+                                        c_int_type,     # il
+                                        c_int_type,     # iu
+                                        ctypes.c_void_p,# m
+                                        ctypes.c_void_p,# w
+                                        ctypes.c_void_p,# wa
+                                        c_int_type,     # ldwa
+                                        ctypes.c_void_p,# work
+                                        c_int_type,     # lwork
+                                        ctypes.c_void_p,# iwork
+                                        c_int_type,     # liwork
+                                        ctypes.c_void_p]# info
+def magma_ssyevdx_gpu(jobz, rnge, uplo, n, A, lda,
+                    vl, vu, il, iu, m,
+                    w, wa, ldwa, 
+                    work, lwork, iwork, liwork):
+    """
+    Compute eigenvalues of real symmetric matrix.
+    Single-GPU, data on device, expert mode
+
+    source: dsyedx_m.cpp
+    """
+    # _XXX_conversion[] returns integer according to magma_types.h
+    jobz = _vec_conversion[jobz] 
+    rnge = _range_conversion[rnge]
+    uplo = _uplo_conversion[uplo]
+    info = c_int_type()
+    status = _libmagma.magma_ssyevdx_gpu(jobz, rnge, uplo, n, int(A), lda,
+                                        vl, vu, il, iu, int(m),
+                                        int(w), int(wa), ldwa,
+                                        int(work), lwork, int(iwork), liwork, 
+                                        ctypes.byref(info))
+    magmaCheckStatus(status)
+
+_libmagma.magma_dsyevdx_gpu.restype = int
+_libmagma.magma_dsyevdx_gpu.argtypes = _libmagma.magma_ssyevdx_gpu.argtypes
+def magma_dsyevdx_gpu(jobz, rnge, uplo, n, A, lda,
+                    vl, vu, il, iu, m,
+                    w, wa, ldwa, 
+                    work, lwork, iwork, liwork):
+    """
+    Compute eigenvalues of real symmetric matrix.
+    Single-GPU, data on device, expert mode
+
+    source: dsyedx_m.cpp
+    """
+    jobz = _vec_conversion[jobz] 
+    rnge = _range_conversion[rnge]
+    uplo = _uplo_conversion[uplo]
+    info = c_int_type()
+    status = _libmagma.magma_dsyevdx_gpu(jobz, rnge, uplo, n, int(A), lda,
+                                        vl, vu, il, iu, int(m),
+                                        int(w), int(wa), ldwa,
+                                        int(work), lwork, int(iwork), liwork, 
+                                        ctypes.byref(info))
+    magmaCheckStatus(status)
 
 # SYMMETRIZE
 _libmagma.magmablas_ssymmetrize.restype = int
