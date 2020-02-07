@@ -323,7 +323,7 @@ def svd(a_gpu, jobu='A', jobvt='A', lib='cusolver'):
         allocating a new matrix.
         If 'N', don't return `vh`.
     lib : str
-        Library to use. May be either 'cula' or 'cusolver'.
+        Library to use. May be either 'cula' or 'cusolver' (default).
 
     Returns
     -------
@@ -534,7 +534,7 @@ def cho_factor(a_gpu, uplo='L', lib='cusolver'):
     uplo : {'U', 'L'}
         Use upper or lower (default) triangle of 'a_gpu'
     lib : str
-        Library to use. May be either 'cula' or 'cusolver'.
+        Library to use. May be either 'cula' or 'cusolver' (default).
 
     Notes
     -----
@@ -654,7 +654,7 @@ def cholesky(a_gpu, uplo='L', lib='cusolver'):
     uplo : {'U', 'L'}
         Use upper or lower (default) triangle of 'a_gpu'
     lib : str
-        Library to use. May be either 'cula' or 'cusolver'.
+        Library to use. May be either 'cula' or 'cusolver' (default).
 
     Notes
     -----
@@ -720,13 +720,14 @@ def cho_solve(a_gpu, b_gpu, uplo='L', lib='cusolver'):
     Parameters
     ----------
     a : pycuda.gpuarray.GPUArray
-        Input matrix of shape `(m, m)` to decompose.
+        Input matrix of shape `(n, n)` to decompose.
     b : pycuda.gpuarray.GPUArray
-        Input matrix of shape `(m, 1)` to decompose.
+        Input matrix of shape `(n, m)` to decompose. If m > 1,
+        `a` and `b` must be stored in Fortran order.
     uplo: chr
         Use the upper='U' or lower='L' (default) triangle of `a`.
     lib : str
-        Library to use. May be either 'cula' or 'cusolver'.
+        Library to use. May be either 'cula' or 'cusolver' (default).
 
     Notes
     -----
@@ -1649,7 +1650,7 @@ def pinv(a_gpu, rcond=1e-15, lib='cusolver'):
         Singular values smaller than `rcond`*max(singular_values)`
         are set to zero.
     lib : str
-        Library to use. May be either 'cula' or 'cusolver'.
+        Library to use. May be either 'cula' or 'cusolver' (default).
 
     Returns
     -------
@@ -2186,7 +2187,7 @@ def inv(a_gpu, overwrite=False, ipiv_gpu=None, lib='cusolver'):
     ipiv_gpu : pycuda.gpuarray.GPUArray (optional)
         Temporary array of size `n`, can be supplied to save allocations.
     lib : str
-        Library to use. May be either 'cula' or 'cusolver'.
+        Library to use. May be either 'cula' or 'cusolver' (default).
 
     Returns
     -------
@@ -2364,7 +2365,7 @@ def det(a_gpu, overwrite=False, workspace_gpu=None, ipiv_gpu=None, handle=None, 
         CUBLAS context. If no context is specified, the default handle from
         `skcuda.misc._global_cublas_handle` is used.
     lib : str
-        Library to use. May be either 'cula' or 'cusolver'.
+        Library to use. May be either 'cula' or 'cusolver' (default).
 
     Returns
     -------
@@ -2475,7 +2476,7 @@ def qr(a_gpu, mode='reduced', handle=None, lib='cusolver'):
         CUBLAS context. If no context is specified, the default handle from
         `skcuda.misc._global_cublas_handle` is used.
     lib : str
-        Library to use. May be either 'cula' or 'cusolver'.
+        Library to use. May be either 'cula' or 'cusolver' (default).
 
     Returns
     -------
@@ -2702,7 +2703,7 @@ def eig(a_gpu, jobvl='N', jobvr='V', imag='F', lib='cusolver'):
          'T' : returns the imaginary parts of a real matrix
          (only relevant in the case of single/double precision ).
     lib : str
-        Library to use. May be either 'cula' or 'cusolver'. If using
+        Library to use. May be either 'cula' or 'cusolver' (default). If using
         'cusolver', only symmetric/Hermitian matrices are supported.
 
     Returns

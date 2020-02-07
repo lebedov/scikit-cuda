@@ -1162,10 +1162,10 @@ class test_linalg(TestCase):
                                                    # this test
 
         x = np.asarray(np.random.rand(N, N), dtype)
-        y = np.asarray(np.random.rand(N, N), dtype, order="F")
+        y = np.asarray(np.random.rand(N, N-1), dtype, order="F")
         if np.iscomplexobj(x):
             x = np.dot(np.conj(x.T), x).astype(dtype, order="F", copy=True)
-            y += 1j*np.asarray(np.random.rand(N, N), dtype, order="F")
+            y += 1j*np.asarray(np.random.rand(N, N-1), dtype, order="F")
             c = np.linalg.inv(x.T).dot(y)
         else:
             x = np.dot(x.T, x).astype(dtype, order="F", copy=True)
