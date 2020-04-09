@@ -6,6 +6,8 @@ Python interface to CUSPARSE functions.
 Note: this module does not explicitly depend on PyCUDA.
 """
 
+from __future__ import absolute_import
+
 import atexit
 import ctypes.util
 import platform
@@ -15,7 +17,7 @@ import warnings
 
 import numpy as np
 
-import cuda
+from . import cuda
 
 # Load library:
 _version_list = [10.1, 10.0, 9.2, 9.1, 9.0, 8.0, 7.5, 7.0, 6.5, 6.0, 5.5, 5.0, 4.0]
