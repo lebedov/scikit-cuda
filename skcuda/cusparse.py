@@ -174,13 +174,13 @@ def cusparseCreate():
 
     """
 
-    handle = ctypes.c_int()
+    handle = ctypes.c_void_p()
     status = _libcusparse.cusparseCreate(ctypes.byref(handle))
     cusparseCheckStatus(status)
     return handle.value
 
 _libcusparse.cusparseDestroy.restype = int
-_libcusparse.cusparseDestroy.argtypes = [ctypes.c_int]
+_libcusparse.cusparseDestroy.argtypes = [ctypes.c_void_p]
 def cusparseDestroy(handle):
     """
     Release CUSPARSE resources.
