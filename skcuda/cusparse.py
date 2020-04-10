@@ -454,3 +454,81 @@ def cusparseSgtsv2StridedBatch_bufferSizeExt(handle, m, dl, d, du, x, batchCount
         ctypes.byref(bufferSizeInBytes))
     cusparseCheckStatus(status)
     return bufferSizeInBytes.value
+
+_libcusparse.cusparseSgtsv2StridedBatch.restype = int
+_libcusparse.cusparseSgtsv2StridedBatch.argtypes =\
+    [ctypes.c_void_p,
+    ctypes.c_int,
+    ctypes.c_void_p,
+    ctypes.c_void_p,
+    ctypes.c_void_p,
+    ctypes.c_void_p,
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.c_void_p
+    ]
+def cusparseSgtsv2StridedBatch(handle, m, dl, d, du, x, batchCount, batchStride, pBuffer):
+    """
+    Compute the solution of multiple tridiagonal linear systems.
+    
+    Solves multiple tridiagonal linear systems, for i=0,…,batchCount:
+        A(i) ∗ y(i) = x(i)
+    The coefficient matrix A of each of these tri-diagonal linear system is
+    defined with three vectors corresponding to its lower (dl), main (d), and
+    upper (du) matrix diagonals; the right-hand sides are stored in the dense
+    matrix X. Notice that solution Y overwrites right-hand-side matrix X on exit.
+    The different matrices are assumed to be of the same size and are stored with
+    a fixed batchStride in memory.
+
+    The routine does not perform any pivoting and uses a combination of the
+    Cyclic Reduction (CR) and the Parallel Cyclic Reduction (PCR) algorithms to
+    find the solution. It achieves better performance when m is a power of 2.
+
+    Parameters
+    ----------
+    handle : ctypes.c_void_p
+        cuSPARSE context
+    m : int
+        Size of the linear system (must be >= 3)
+    dl : ctypes.c_void_p
+        Pointer to ${precision} ${real} dense array containing the lower
+        diagonal of the tri-diagonal linear system. The lower diagonal dl(i)
+        that corresponds to the ith linear system starts at location
+        dl+batchStride*i in memory. Also, the first element of each lower
+        diagonal must be zero.
+    d : ctypes.c_void_p
+        Pointer to ${precision} ${real} dense array containing the main
+        diagonal of the tri-diagonal linear system. The main diagonal d(i)
+        that corresponds to the ith linear system starts at location
+        d+batchStride*i in memory.
+    du : ctypes.c_void_p
+        Pointer to ${precision} ${real} dense array containing the upper
+        diagonal of the tri-diagonal linear system. The upper diagonal du(i)
+        that corresponds to the ith linear system starts at location
+        du+batchStride*i in memory. Also, the last element of each upper
+        diagonal must be zero.
+    x : ctypes.c_void_p
+        Pointer to ${precision} ${real} dense array that contains the
+        right-hand-side of the tri-diagonal linear system. The
+        right-hand-side x(i) that corresponds to the ith linear system
+        starts at location x+batchStride*i in memory.
+    batchCount : int
+        Number of systems to solve.
+    batchStride : int
+        Stride (number of elements) that separates the vectors of every
+        system (must be at least m).
+    pBuffer: ctypes.c_void_p
+        Buffer allocated by the user, the size is return by gtsv2StridedBatch_bufferSizeExt
+
+    Returns
+    -------
+    bufferSizeInBytes : int
+        number of bytes of the buffer used in the gtsv2StridedBatch.
+
+    References
+    ----------
+    `cusparse<t>gtsv2StridedBatch <https://docs.nvidia.com/cuda/cusparse/index.html#gtsv2stridedbatch>`_
+    """
+    status = _libcusparse.cusparseSgtsv2StridedBatch(
+        handle, m, int(dl), int(d), int(du), int(x), batchCount, batchStride, int(pBuffer))
+    cusparseCheckStatus(status)
