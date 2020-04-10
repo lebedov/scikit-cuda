@@ -8,7 +8,6 @@ Note: this module does not explicitly depend on PyCUDA.
 
 from __future__ import absolute_import
 
-import atexit
 import ctypes.util
 import platform
 from string import Template
@@ -88,6 +87,7 @@ class cusparseStatusMatrixTypeNotSupported(cusparseError):
     """The matrix type is not supported by this function"""
     pass
 
+# TODO: Check if this is complete list of exceptions, and that numbers are correct.
 cusparseExceptions = {
     1: cusparseStatusNotInitialized,
     2: cusparseStatusAllocFailed,
@@ -388,3 +388,69 @@ def cusparseSdense2csr(handle, m, n, descrA, A, lda,
                        nnzPerRow, csrValA, csrRowPtrA, csrColIndA):
     # Unfinished
     pass
+
+_libcusparse.cusparseSgtsv2StridedBatch_bufferSizeExt.restype = int
+_libcusparse.cusparseSgtsv2StridedBatch_bufferSizeExt.argtypes =\
+    [ctypes.c_void_p,
+    ctypes.c_int,
+    ctypes.c_void_p,
+    ctypes.c_void_p,
+    ctypes.c_void_p,
+    ctypes.c_void_p,
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.c_void_p
+    ]
+def cusparseSgtsv2StridedBatch_bufferSizeExt(handle, m, dl, d, du, x, batchCount, batchStride):
+    """
+    Calculate size of work buffer used by cusparseSgtsv2StridedBatch.
+
+    Parameters
+    ----------
+    handle : ctypes.c_void_p
+        cuSPARSE context
+    m : int
+        Size of the linear system (must be >= 3)
+    dl : ctypes.c_void_p
+        Pointer to ${precision} ${real} dense array containing the lower
+        diagonal of the tri-diagonal linear system. The lower diagonal dl(i)
+        that corresponds to the ith linear system starts at location
+        dl+batchStride*i in memory. Also, the first element of each lower
+        diagonal must be zero.
+    d : ctypes.c_void_p
+        Pointer to ${precision} ${real} dense array containing the main
+        diagonal of the tri-diagonal linear system. The main diagonal d(i)
+        that corresponds to the ith linear system starts at location
+        d+batchStride*i in memory.
+    du : ctypes.c_void_p
+        Pointer to ${precision} ${real} dense array containing the upper
+        diagonal of the tri-diagonal linear system. The upper diagonal du(i)
+        that corresponds to the ith linear system starts at location
+        du+batchStride*i in memory. Also, the last element of each upper
+        diagonal must be zero.
+    x : ctypes.c_void_p
+        Pointer to ${precision} ${real} dense array that contains the
+        right-hand-side of the tri-diagonal linear system. The
+        right-hand-side x(i) that corresponds to the ith linear system
+        starts at location x+batchStride*i in memory.
+    batchCount : int
+        Number of systems to solve.
+    batchStride : int
+        Stride (number of elements) that separates the vectors of every
+        system (must be at least m).
+
+    Returns
+    -------
+    bufferSizeInBytes : int
+        number of bytes of the buffer used in the gtsv2StridedBatch.
+
+    References
+    ----------
+    `cusparse<t>gtsv2StridedBatch_bufferSizeExt <https://docs.nvidia.com/cuda/cusparse/index.html#gtsv2stridedbatch_bufferSize>`_
+    """
+    bufferSizeInBytes = ctypes.c_int()
+    status = _libcusparse.cusparseSgtsv2StridedBatch_bufferSizeExt(
+        handle, m, int(dl), int(d), int(du), int(x), batchCount, batchStride,
+        ctypes.byref(bufferSizeInBytes))
+    cusparseCheckStatus(status)
+    return bufferSizeInBytes.value
