@@ -389,21 +389,9 @@ def cusparseSdense2csr(handle, m, n, descrA, A, lda,
     # Unfinished
     pass
 
-_libcusparse.cusparseSgtsv2StridedBatch_bufferSizeExt.restype = int
-_libcusparse.cusparseSgtsv2StridedBatch_bufferSizeExt.argtypes =\
-    [ctypes.c_void_p,
-    ctypes.c_int,
-    ctypes.c_void_p,
-    ctypes.c_void_p,
-    ctypes.c_void_p,
-    ctypes.c_void_p,
-    ctypes.c_int,
-    ctypes.c_int,
-    ctypes.c_void_p
-    ]
-def cusparseSgtsv2StridedBatch_bufferSizeExt(handle, m, dl, d, du, x, batchCount, batchStride):
+gtsv2StridedBatch_bufferSizeExt_doc = Template(
     """
-    Calculate size of work buffer used by cusparseSgtsv2StridedBatch.
+    Calculate size of work buffer used by cusparse<t>gtsv2StridedBatch.
 
     Parameters
     ----------
@@ -448,26 +436,38 @@ def cusparseSgtsv2StridedBatch_bufferSizeExt(handle, m, dl, d, du, x, batchCount
     ----------
     `cusparse<t>gtsv2StridedBatch_bufferSizeExt <https://docs.nvidia.com/cuda/cusparse/index.html#gtsv2stridedbatch_bufferSize>`_
     """
+)
+
+_libcusparse.cusparseSgtsv2StridedBatch_bufferSizeExt.restype = int
+_libcusparse.cusparseSgtsv2StridedBatch_bufferSizeExt.argtypes =\
+    [ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p,
+    ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int, ctypes.c_int,
+    ctypes.c_void_p
+    ]
+def cusparseSgtsv2StridedBatch_bufferSizeExt(handle, m, dl, d, du, x, batchCount, batchStride):
     bufferSizeInBytes = ctypes.c_int()
     status = _libcusparse.cusparseSgtsv2StridedBatch_bufferSizeExt(
         handle, m, int(dl), int(d), int(du), int(x), batchCount, batchStride,
         ctypes.byref(bufferSizeInBytes))
     cusparseCheckStatus(status)
     return bufferSizeInBytes.value
+cusparseSgtsv2StridedBatch_bufferSizeExt.__doc__ = \
+    gtsv2StridedBatch_bufferSizeExt_doc.substitute(precision='single precision', real='real')
 
-_libcusparse.cusparseSgtsv2StridedBatch.restype = int
-_libcusparse.cusparseSgtsv2StridedBatch.argtypes =\
-    [ctypes.c_void_p,
-    ctypes.c_int,
-    ctypes.c_void_p,
-    ctypes.c_void_p,
-    ctypes.c_void_p,
-    ctypes.c_void_p,
-    ctypes.c_int,
-    ctypes.c_int,
-    ctypes.c_void_p
-    ]
-def cusparseSgtsv2StridedBatch(handle, m, dl, d, du, x, batchCount, batchStride, pBuffer):
+_libcusparse.cusparseDgtsv2StridedBatch_bufferSizeExt.restype = int
+_libcusparse.cusparseDgtsv2StridedBatch_bufferSizeExt.argtypes =\
+    _libcusparse.cusparseSgtsv2StridedBatch_bufferSizeExt.argtypes
+def cusparseDgtsv2StridedBatch_bufferSizeExt(handle, m, dl, d, du, x, batchCount, batchStride):
+    bufferSizeInBytes = ctypes.c_int()
+    status = _libcusparse.cusparseDgtsv2StridedBatch_bufferSizeExt(
+        handle, m, int(dl), int(d), int(du), int(x), batchCount, batchStride,
+        ctypes.byref(bufferSizeInBytes))
+    cusparseCheckStatus(status)
+    return bufferSizeInBytes.value
+cusparseDgtsv2StridedBatch_bufferSizeExt.__doc__ = \
+    gtsv2StridedBatch_bufferSizeExt_doc.substitute(precision='double precision', real='real')
+
+gtsv2StridedBatch_doc = Template(
     """
     Compute the solution of multiple tridiagonal linear systems.
     
@@ -524,25 +524,34 @@ def cusparseSgtsv2StridedBatch(handle, m, dl, d, du, x, batchCount, batchStride,
     ----------
     `cusparse<t>gtsv2StridedBatch <https://docs.nvidia.com/cuda/cusparse/index.html#gtsv2stridedbatch>`_
     """
+)
+
+_libcusparse.cusparseSgtsv2StridedBatch.restype = int
+_libcusparse.cusparseSgtsv2StridedBatch.argtypes =\
+    [ctypes.c_void_p, ctypes.c_int, ctypes.c_void_p, ctypes.c_void_p,
+    ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int, ctypes.c_int,
+    ctypes.c_void_p
+    ]
+def cusparseSgtsv2StridedBatch(handle, m, dl, d, du, x, batchCount, batchStride, pBuffer):
     status = _libcusparse.cusparseSgtsv2StridedBatch(
         handle, m, int(dl), int(d), int(du), int(x), batchCount, batchStride, int(pBuffer))
     cusparseCheckStatus(status)
+cusparseSgtsv2StridedBatch.__doc__ = \
+    gtsv2StridedBatch_doc.substitute(precision='single precision', real='real')
 
-_libcusparse.cusparseSgtsvInterleavedBatch_bufferSizeExt.restype = int
-_libcusparse.cusparseSgtsvInterleavedBatch_bufferSizeExt.argtypes =\
-    [ctypes.c_void_p,
-    ctypes.c_int,
-    ctypes.c_int,
-    ctypes.c_void_p,
-    ctypes.c_void_p,
-    ctypes.c_void_p,
-    ctypes.c_void_p,
-    ctypes.c_int,
-    ctypes.c_void_p
-    ]
-def cusparseSgtsvInterleavedBatch_bufferSizeExt(handle, algo, m, dl, d, du, x, batchCount):
+_libcusparse.cusparseDgtsv2StridedBatch.restype = int
+_libcusparse.cusparseDgtsv2StridedBatch.argtypes =\
+    _libcusparse.cusparseSgtsv2StridedBatch.argtypes
+def cusparseDgtsv2StridedBatch(handle, m, dl, d, du, x, batchCount, batchStride, pBuffer):
+    status = _libcusparse.cusparseDgtsv2StridedBatch(
+        handle, m, int(dl), int(d), int(du), int(x), batchCount, batchStride, int(pBuffer))
+    cusparseCheckStatus(status)
+cusparseDgtsv2StridedBatch.__doc__ = \
+    gtsv2StridedBatch_doc.substitute(precision='double precision', real='real')
+
+gtsv2InterleavedBatch_bufferSizeExt_doc = Template(
     """
-    Calculate size of work buffer used by cusparseSgtsvInterleavedBatch.
+    Calculate size of work buffer used by cusparse<t>gtsvInterleavedBatch.
 
     Parameters
     ----------
@@ -576,26 +585,38 @@ def cusparseSgtsvInterleavedBatch_bufferSizeExt(handle, algo, m, dl, d, du, x, b
     ----------
     `cusparse<t>gtsvInterleavedBatch <https://docs.nvidia.com/cuda/cusparse/index.html#gtsvInterleavedBatch>`_
     """
+)
+
+_libcusparse.cusparseSgtsvInterleavedBatch_bufferSizeExt.restype = int
+_libcusparse.cusparseSgtsvInterleavedBatch_bufferSizeExt.argtypes =\
+    [ctypes.c_void_p, ctypes.c_int, ctypes.c_int, ctypes.c_void_p,
+    ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int,
+    ctypes.c_void_p
+    ]
+def cusparseSgtsvInterleavedBatch_bufferSizeExt(handle, algo, m, dl, d, du, x, batchCount):
     pBufferSizeInBytes = ctypes.c_int()
     status = _libcusparse.cusparseSgtsvInterleavedBatch_bufferSizeExt(
         handle, algo, m, int(dl), int(d), int(du), int(x), batchCount,
         ctypes.byref(pBufferSizeInBytes))
     cusparseCheckStatus(status)
     return pBufferSizeInBytes.value
+cusparseSgtsvInterleavedBatch_bufferSizeExt.__doc__ = \
+    gtsv2InterleavedBatch_bufferSizeExt_doc.substitute(precision='single precision', real='real')
 
-_libcusparse.cusparseSgtsvInterleavedBatch.restype = int
-_libcusparse.cusparseSgtsvInterleavedBatch.argtypes =\
-    [ctypes.c_void_p,
-    ctypes.c_int,
-    ctypes.c_int,
-    ctypes.c_void_p,
-    ctypes.c_void_p,
-    ctypes.c_void_p,
-    ctypes.c_void_p,
-    ctypes.c_int,
-    ctypes.c_void_p
-    ]
-def cusparseSgtsvInterleavedBatch(handle, algo, m, dl, d, du, x, batchCount, pBuffer):
+_libcusparse.cusparseDgtsvInterleavedBatch_bufferSizeExt.restype = int
+_libcusparse.cusparseDgtsvInterleavedBatch_bufferSizeExt.argtypes =\
+    _libcusparse.cusparseSgtsvInterleavedBatch_bufferSizeExt.argtypes
+def cusparseDgtsvInterleavedBatch_bufferSizeExt(handle, algo, m, dl, d, du, x, batchCount):
+    pBufferSizeInBytes = ctypes.c_int()
+    status = _libcusparse.cusparseDgtsvInterleavedBatch_bufferSizeExt(
+        handle, algo, m, int(dl), int(d), int(du), int(x), batchCount,
+        ctypes.byref(pBufferSizeInBytes))
+    cusparseCheckStatus(status)
+    return pBufferSizeInBytes.value
+cusparseDgtsvInterleavedBatch_bufferSizeExt.__doc__ = \
+    gtsv2InterleavedBatch_bufferSizeExt_doc.substitute(precision='double precision', real='real')
+
+gtsvInterleavedBatch_doc = Template(
     """
     Compute the solution of multiple tridiagonal linear systems.
 
@@ -662,6 +683,27 @@ def cusparseSgtsvInterleavedBatch(handle, algo, m, dl, d, du, x, batchCount, pBu
     ----------
     `cusparse<t>gtsvInterleavedBatch <https://docs.nvidia.com/cuda/cusparse/index.html#gtsvInterleavedBatch>`_
     """
+)
+
+_libcusparse.cusparseSgtsvInterleavedBatch.restype = int
+_libcusparse.cusparseSgtsvInterleavedBatch.argtypes =\
+    [ctypes.c_void_p, ctypes.c_int, ctypes.c_int, ctypes.c_void_p,
+    ctypes.c_void_p, ctypes.c_void_p, ctypes.c_void_p, ctypes.c_int,
+    ctypes.c_void_p
+    ]
+def cusparseSgtsvInterleavedBatch(handle, algo, m, dl, d, du, x, batchCount, pBuffer):
     status = _libcusparse.cusparseSgtsvInterleavedBatch(
         handle, algo, m, int(dl), int(d), int(du), int(x), batchCount, int(pBuffer))
     cusparseCheckStatus(status)
+cusparseSgtsvInterleavedBatch.__doc__ = \
+    gtsvInterleavedBatch_doc.substitute(precision='single precision', real='real')
+
+_libcusparse.cusparseDgtsvInterleavedBatch.restype = int
+_libcusparse.cusparseDgtsvInterleavedBatch.argtypes =\
+    _libcusparse.cusparseSgtsvInterleavedBatch.argtypes
+def cusparseDgtsvInterleavedBatch(handle, algo, m, dl, d, du, x, batchCount, pBuffer):
+    status = _libcusparse.cusparseDgtsvInterleavedBatch(
+        handle, algo, m, int(dl), int(d), int(du), int(x), batchCount, int(pBuffer))
+    cusparseCheckStatus(status)
+cusparseDgtsvInterleavedBatch.__doc__ = \
+    gtsvInterleavedBatch_doc.substitute(precision='double precision', real='real')
