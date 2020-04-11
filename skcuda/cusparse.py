@@ -520,15 +520,148 @@ def cusparseSgtsv2StridedBatch(handle, m, dl, d, du, x, batchCount, batchStride,
     pBuffer: ctypes.c_void_p
         Buffer allocated by the user, the size is return by gtsv2StridedBatch_bufferSizeExt
 
-    Returns
-    -------
-    bufferSizeInBytes : int
-        number of bytes of the buffer used in the gtsv2StridedBatch.
-
     References
     ----------
     `cusparse<t>gtsv2StridedBatch <https://docs.nvidia.com/cuda/cusparse/index.html#gtsv2stridedbatch>`_
     """
     status = _libcusparse.cusparseSgtsv2StridedBatch(
         handle, m, int(dl), int(d), int(du), int(x), batchCount, batchStride, int(pBuffer))
+    cusparseCheckStatus(status)
+
+_libcusparse.cusparseSgtsvInterleavedBatch_bufferSizeExt.restype = int
+_libcusparse.cusparseSgtsvInterleavedBatch_bufferSizeExt.argtypes =\
+    [ctypes.c_void_p,
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.c_void_p,
+    ctypes.c_void_p,
+    ctypes.c_void_p,
+    ctypes.c_void_p,
+    ctypes.c_int,
+    ctypes.c_void_p
+    ]
+def cusparseSgtsvInterleavedBatch_bufferSizeExt(handle, algo, m, dl, d, du, x, batchCount):
+    """
+    Calculate size of work buffer used by cusparseSgtsvInterleavedBatch.
+
+    Parameters
+    ----------
+    handle : ctypes.c_void_p
+        cuSPARSE context
+    algo : int
+        algo = 0: cuThomas (unstable algorithm); algo = 1: LU with pivoting
+        (stable algorithm); algo = 2: QR (stable algorithm)
+    m : int
+        Size of the linear system
+    dl : ctypes.c_void_p
+        Pointer to ${precision} ${real} dense array containing the lower
+        diagonal of the tri-diagonal linear system. The first element of each 
+        lower diagonal must be zero.
+    d : ctypes.c_void_p
+        Pointer to ${precision} ${real} dense array containing the main
+        diagonal of the tri-diagonal linear system.
+    du : ctypes.c_void_p
+        Pointer to ${precision} ${real} dense array containing the upper
+        diagonal of the tri-diagonal linear system. The last element of each
+        upper diagonal must be zero.
+    x : ctypes.c_void_p
+        Pointer to ${precision} ${real} dense array that contains the
+        right-hand-side of the tri-diagonal linear system.
+    batchCount : int
+        Number of systems to solve.
+    pBuffer: ctypes.c_void_p
+        Buffer allocated by the user, the size is return by gtsvInterleavedBatch_bufferSizeExt
+
+    References
+    ----------
+    `cusparse<t>gtsvInterleavedBatch <https://docs.nvidia.com/cuda/cusparse/index.html#gtsvInterleavedBatch>`_
+    """
+    pBufferSizeInBytes = ctypes.c_int()
+    status = _libcusparse.cusparseSgtsvInterleavedBatch_bufferSizeExt(
+        handle, algo, m, int(dl), int(d), int(du), int(x), batchCount,
+        ctypes.byref(pBufferSizeInBytes))
+    cusparseCheckStatus(status)
+    return pBufferSizeInBytes.value
+
+_libcusparse.cusparseSgtsvInterleavedBatch.restype = int
+_libcusparse.cusparseSgtsvInterleavedBatch.argtypes =\
+    [ctypes.c_void_p,
+    ctypes.c_int,
+    ctypes.c_int,
+    ctypes.c_void_p,
+    ctypes.c_void_p,
+    ctypes.c_void_p,
+    ctypes.c_void_p,
+    ctypes.c_int,
+    ctypes.c_void_p
+    ]
+def cusparseSgtsvInterleavedBatch(handle, algo, m, dl, d, du, x, batchCount, pBuffer):
+    """
+    Compute the solution of multiple tridiagonal linear systems.
+
+    Solves multiple tridiagonal linear systems, for i=0,…,batchCount:
+        A(i) ∗ y(i) = x(i)
+    The coefficient matrix A of each of these tri-diagonal linear system is
+    defined with three vectors corresponding to its lower (dl), main (d), and
+    upper (du) matrix diagonals; the right-hand sides are stored in the dense
+    matrix X. Notice that solution Y overwrites right-hand-side matrix X on exit.
+    The different matrices are assumed to be of the same size and are stored with
+    a fixed batchStride in memory.
+
+    Assuming A is of size m and base-1, dl, d and du are defined by the following formula:
+        dl(i) := A(i, i-1) for i=1,2,...,m
+    The first element of dl is out-of-bound (dl(1) := A(1,0)), so dl(1) = 0.
+        d(i) = A(i,i) for i=1,2,...,m
+        du(i) = A(i,i+1) for i=1,2,...,m
+    The last element of du is out-of-bound (du(m) := A(m,m+1)), so du(m) = 0.
+
+    The data layout is different from gtsvStridedBatch which aggregates all
+    matrices one after another. Instead, gtsvInterleavedBatch gathers
+    different matrices of the same element in a continous manner. If dl is
+    regarded as a 2-D array of size m-by-batchCount, dl(:,j) to store j-th
+    matrix. gtsvStridedBatch uses column-major while gtsvInterleavedBatch
+    uses row-major.
+
+    The routine provides three different algorithms, selected by parameter algo.
+    The first algorithm is cuThomas provided by Barcelona Supercomputing Center.
+    The second algorithm is LU with partial pivoting and last algorithm is QR.
+    From stability perspective, cuThomas is not numerically stable because it
+    does not have pivoting. LU with partial pivoting and QR are stable. From
+    performance perspective, LU with partial pivoting and QR is about 10% to 20%
+    slower than cuThomas.
+
+    Parameters
+    ----------
+    handle : ctypes.c_void_p
+        cuSPARSE context
+    algo : int
+        algo = 0: cuThomas (unstable algorithm); algo = 1: LU with pivoting
+        (stable algorithm); algo = 2: QR (stable algorithm)
+    m : int
+        Size of the linear system
+    dl : ctypes.c_void_p
+        Pointer to ${precision} ${real} dense array containing the lower
+        diagonal of the tri-diagonal linear system. The first element of each 
+        lower diagonal must be zero.
+    d : ctypes.c_void_p
+        Pointer to ${precision} ${real} dense array containing the main
+        diagonal of the tri-diagonal linear system.
+    du : ctypes.c_void_p
+        Pointer to ${precision} ${real} dense array containing the upper
+        diagonal of the tri-diagonal linear system. The last element of each
+        upper diagonal must be zero.
+    x : ctypes.c_void_p
+        Pointer to ${precision} ${real} dense array that contains the
+        right-hand-side of the tri-diagonal linear system.
+    batchCount : int
+        Number of systems to solve.
+    pBuffer: ctypes.c_void_p
+        Buffer allocated by the user, the size is return by gtsvInterleavedBatch_bufferSizeExt
+
+    References
+    ----------
+    `cusparse<t>gtsvInterleavedBatch <https://docs.nvidia.com/cuda/cusparse/index.html#gtsvInterleavedBatch>`_
+    """
+    status = _libcusparse.cusparseSgtsvInterleavedBatch(
+        handle, algo, m, int(dl), int(d), int(du), int(x), batchCount, int(pBuffer))
     cusparseCheckStatus(status)
