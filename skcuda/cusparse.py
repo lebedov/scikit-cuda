@@ -149,9 +149,7 @@ def cusparseCheckStatus(status):
     See Also
     --------
     cusparseExceptions
-
     """
-
     if status != 0:
         try:
             raise cusparseExceptions[status]
@@ -171,9 +169,7 @@ def cusparseCreate():
     -------
     handle : int
         CUSPARSE library context.
-
     """
-
     handle = ctypes.c_void_p()
     status = _libcusparse.cusparseCreate(ctypes.byref(handle))
     cusparseCheckStatus(status)
@@ -185,21 +181,18 @@ def cusparseDestroy(handle):
     """
     Release CUSPARSE resources.
 
-    Releases hardware resources used by CUSPARSE
+    Releases hardware resources used by CUSPARSE.
 
     Parameters
     ----------
     handle : int
         CUSPARSE library context.
-
     """
-
     status = _libcusparse.cusparseDestroy(handle)
     cusparseCheckStatus(status)
 
 _libcusparse.cusparseGetVersion.restype = int
-_libcusparse.cusparseGetVersion.argtypes = [ctypes.c_int,
-                                            ctypes.c_void_p]
+_libcusparse.cusparseGetVersion.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
 def cusparseGetVersion(handle):
     """
     Return CUSPARSE library version.
@@ -215,9 +208,7 @@ def cusparseGetVersion(handle):
     -------
     version : int
         CUSPARSE library version number.
-
     """
-
     version = ctypes.c_int()
     status = _libcusparse.cusparseGetVersion(handle,
                                              ctypes.byref(version))
@@ -225,8 +216,7 @@ def cusparseGetVersion(handle):
     return version.value
 
 _libcusparse.cusparseSetStream.restype = int
-_libcusparse.cusparseSetStream.argtypes = [ctypes.c_int,
-                                                 ctypes.c_int]
+_libcusparse.cusparseSetStream.argtypes = [ctypes.c_void_p, ctypes.c_int]
 def cusparseSetStream(handle, id):
     """
     Sets the CUSPARSE stream in which kernels will run.
@@ -237,11 +227,30 @@ def cusparseSetStream(handle, id):
         CUSPARSE library context.
     id : int
         Stream ID.
-
     """
-
     status = _libcusparse.cusparseSetStream(handle, id)
     cusparseCheckStatus(status)
+
+_libcusparse.cusparseGetStream.restype = int
+_libcusparse.cusparseGetStream.argtypes = [ctypes.c_void_p, ctypes.c_void_p]
+def cusparseGetStream(handle):
+    """
+    Gets the CUSPARSE stream in which kernels will run.
+
+    Parameters
+    ----------
+    handle : int
+        CUSPARSE library context.
+
+    Returns
+    -------
+    handle : int
+        CUSPARSE library context.
+    """
+    id = ctypes.c_int()
+    status = _libcusparse.cusparseGetStream(handle, ctypes.byref(id))
+    cusparseCheckStatus(status)
+    return id.value
 
 _libcusparse.cusparseCreateMatDescr.restype = int
 _libcusparse.cusparseCreateMatDescr.argtypes = [cusparseMatDescr]
@@ -395,7 +404,7 @@ gtsv2StridedBatch_bufferSizeExt_doc = Template(
 
     Parameters
     ----------
-    handle : ctypes.c_void_p
+    handle : int
         cuSPARSE context
     m : int
         Size of the linear system (must be >= 3)
@@ -486,7 +495,7 @@ gtsv2StridedBatch_doc = Template(
 
     Parameters
     ----------
-    handle : ctypes.c_void_p
+    handle : int
         cuSPARSE context
     m : int
         Size of the linear system (must be >= 3)
@@ -555,7 +564,7 @@ gtsv2InterleavedBatch_bufferSizeExt_doc = Template(
 
     Parameters
     ----------
-    handle : ctypes.c_void_p
+    handle : int
         cuSPARSE context
     algo : int
         algo = 0: cuThomas (unstable algorithm); algo = 1: LU with pivoting
@@ -653,7 +662,7 @@ gtsvInterleavedBatch_doc = Template(
 
     Parameters
     ----------
-    handle : ctypes.c_void_p
+    handle : int
         cuSPARSE context
     algo : int
         algo = 0: cuThomas (unstable algorithm); algo = 1: LU with pivoting

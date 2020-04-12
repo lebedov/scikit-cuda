@@ -185,6 +185,16 @@ class test_cusparse(TestCase):
             # Convert back from interleaved format
             sln = np.reshape(sln_int,(m,batchCount)).ravel('F')
             check_batch_tridiagonal(dl,d,du,x, sln, m,batchCount)
+        
+    def test_cusparseGetSetStream(self):
+        initial_stream = cusparse.cusparseGetStream(self.cusparse_handle)
+        # Switch stream
+        cusparse.cusparseSetStream(self.cusparse_handle, initial_stream+1)
+        final_stream = cusparse.cusparseGetStream(self.cusparse_handle)
+        assert(final_stream == initial_stream+1)
+
+    def test_cusparseGetVersion(self):
+        cusparse.cusparseGetVersion(self.cusparse_handle)
 
 def suite():
     s = TestSuite()
@@ -192,6 +202,9 @@ def suite():
     s.addTest(test_cusparse('test_cusparseDgtsv2StridedBatch'))
     s.addTest(test_cusparse('test_cusparseSgtsvInterleavedBatch'))
     s.addTest(test_cusparse('test_cusparseDgtsvInterleavedBatch'))
+
+    s.addTest(test_cusparse('test_cusparseGetSetStream'))
+    s.addTest(test_cusparse('test_cusparseGetVersion'))
     return s
 
 if __name__ == '__main__':
