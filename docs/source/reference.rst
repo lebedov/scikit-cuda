@@ -13,6 +13,7 @@ Library Wrapper Routines
    reference_cusolver
    reference_cula
    reference_pcula
+   reference_cusparse
 
 High-Level Routines
 -------------------
