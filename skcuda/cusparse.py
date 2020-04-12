@@ -200,6 +200,7 @@ def cusparseDestroy(handle):
 _libcusparse.cusparseGetVersion.restype = int
 _libcusparse.cusparseGetVersion.argtypes = [ctypes.c_int,
                                             ctypes.c_void_p]
+# XXX: Test
 def cusparseGetVersion(handle):
     """
     Return CUSPARSE library version.
@@ -227,6 +228,7 @@ def cusparseGetVersion(handle):
 _libcusparse.cusparseSetStream.restype = int
 _libcusparse.cusparseSetStream.argtypes = [ctypes.c_int,
                                                  ctypes.c_int]
+# XXX: Test. Check for cusparseGetStream
 def cusparseSetStream(handle, id):
     """
     Sets the CUSPARSE stream in which kernels will run.
