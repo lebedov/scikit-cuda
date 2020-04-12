@@ -8,13 +8,10 @@ Note: this module does not explicitly depend on PyCUDA.
 
 from __future__ import absolute_import
 
-import ctypes.util
+import ctypes
 import platform
 from string import Template
 import sys
-import warnings
-
-import numpy as np
 
 from . import cuda
 
