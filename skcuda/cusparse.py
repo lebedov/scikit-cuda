@@ -96,41 +96,6 @@ cusparseExceptions = {
     8: cusparseStatusMatrixTypeNotSupported,
     }
 
-# Matrix types:
-CUSPARSE_MATRIX_TYPE_GENERAL = 0
-CUSPARSE_MATRIX_TYPE_SYMMETRIC = 1
-CUSPARSE_MATRIX_TYPE_HERMITIAN = 2
-CUSPARSE_MATRIX_TYPE_TRIANGULAR = 3
-
-CUSPARSE_FILL_MODE_LOWER = 0
-CUSPARSE_FILL_MODE_UPPER = 1
-
-# Whether or not a matrix' diagonal entries are unity:
-CUSPARSE_DIAG_TYPE_NON_UNIT = 0
-CUSPARSE_DIAG_TYPE_UNIT = 1
-
-# Matrix index bases:
-CUSPARSE_INDEX_BASE_ZERO = 0
-CUSPARSE_INDEX_BASE_ONE = 1
-
-# Operation types:
-CUSPARSE_OPERATION_NON_TRANSPOSE = 0
-CUSPARSE_OPERATION_TRANSPOSE = 1
-CUSPARSE_OPERATION_CONJUGATE_TRANSPOSE = 2
-
-# Whether or not to parse elements of a dense matrix row or column-wise.
-CUSPARSE_DIRECTION_ROW = 0
-CUSPARSE_DIRECTION_COLUMN = 1
-
-# Helper functions:
-class cusparseMatDescr(ctypes.Structure):
-    _fields_ = [
-        ('MatrixType', ctypes.c_int),
-        ('FillMode', ctypes.c_int),
-        ('DiagType', ctypes.c_int),
-        ('IndexBase', ctypes.c_int)
-        ]
-
 def cusparseCheckStatus(status):
     """
     Raise CUSPARSE exception
