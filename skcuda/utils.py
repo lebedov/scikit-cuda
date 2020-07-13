@@ -128,9 +128,9 @@ def find_lib_path(name):
     """
     Find full path of a shared library.
 
-    Searches for the full path of a shared library. On Posix operating systems 
-    other than MacOS, this function checks the directories listed in 
-    LD_LIBRARY_PATH (if any) and in the ld.so cache. 
+    Searches for the full path of a shared library. On Posix operating systems
+    other than MacOS, this function checks the directories listed in
+    LD_LIBRARY_PATH (if any) and in the ld.so cache.
 
     Parameter
     ---------
@@ -204,4 +204,6 @@ def find_lib_path(name):
     res = re.search(expr, data)
     if not res:
         return None
-    return res.group(1)
+
+    # Follow symbolic links to the actual file:
+    return os.path.realpath(res.group(1))

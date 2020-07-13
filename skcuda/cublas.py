@@ -264,12 +264,12 @@ def _get_cublas_version():
     Results
     -------
     version : str
-        Zeros are appended to match format of version returned 
+        Zeros are appended to match format of version returned
         by cublasGetVersion() (e.g., '6050' corresponds to version 6.5).
 
     Notes
     -----
-    Since the version number does not appear to be obtainable from the 
+    Since the version number does not appear to be obtainable from the
     MacOSX CUBLAS library, this function must call cublasGetVersion() on
     MacOSX (but raises a warning to let the user know).
     """
