@@ -238,7 +238,7 @@ def get_compute_capability(dev):
         Compute capability.
     """
 
-    return np.float('.'.join([str(i) for i in
+    return float('.'.join([str(i) for i in
                                  dev.compute_capability()]))
 
 def get_current_device():
