@@ -1235,6 +1235,8 @@ def _sum_axis(x_gpu, axis=None, out=None, calc_mean=False, ddof=0,
         gemv = cublas.cublasZgemv
     elif (x_gpu.dtype == np.float64):
         gemv = cublas.cublasDgemv
+    else:
+        raise ValueError('unsupported dtype')
 
     alloc = _global_cublas_allocator
     ons = ones((sum_axis, ), x_gpu.dtype, allocator=alloc)
