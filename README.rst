@@ -103,9 +103,7 @@ file for more information.
 
 Note Regarding CULA Availability
 --------------------------------
-As of 2017, the CULA toolkit is available to premium tier users of
-`Celerity Tools <http://www.celeritytools.com>`_ (EM Photonics' new
-HPC site).
+As of 2021, the CULA toolkit by `EM Photonics <https://emphotonics.com/>`_ no longer appears to be available.
 
 Related
 -------
