@@ -634,7 +634,7 @@ diff.cache = {}
 
 
 # List of available numerical types provided by numpy:
-num_types = [np.typeDict[t] for t in \
+num_types = [np.sctypeDict[t] for t in \
              np.typecodes['AllInteger']+np.typecodes['AllFloat']]
 
 # Numbers of bytes occupied by each numerical type:
