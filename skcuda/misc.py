@@ -152,7 +152,7 @@ def init(allocator=drv.mem_alloc):
     """
     Initialize libraries used by scikit-cuda.
 
-    Initialize the CUBLAS, CULA, CUSOLVER, and MAGMA libraries used by 
+    Initialize the CUBLAS, CULA, CUSOLVER, and MAGMA libraries used by
     high-level functions provided by scikit-cuda.
 
     Parameters
@@ -171,7 +171,7 @@ def init(allocator=drv.mem_alloc):
     if not _global_cublas_handle:
         from . import cublas  # nest to avoid requiring cublas e.g. for FFT
         _global_cublas_handle = cublas.cublasCreate()
-    
+
     if _global_cublas_allocator is None:
         _global_cublas_allocator = allocator
 
@@ -195,7 +195,7 @@ def shutdown():
     """
     Shutdown libraries used by scikit-cuda.
 
-    Shutdown the CUBLAS, CULA, CUSOLVER, and MAGMA libraries used by 
+    Shutdown the CUBLAS, CULA, CUSOLVER, and MAGMA libraries used by
     high-level functions provided by scikits-cuda.
 
     Notes
@@ -1320,7 +1320,7 @@ def var(x_gpu, ddof=0, axis=None, stream=None, keepdims=False):
     x_gpu : pycuda.gpuarray.GPUArray
         Array containing numbers whose variance is desired.
     ddof : int (optional)
-        "Delta Degrees of Freedom": the divisor used in computing the 
+        "Delta Degrees of Freedom": the divisor used in computing the
         variance is ``N - ddof``, where ``N`` is the number of elements.
         Setting ``ddof = 1`` is equivalent to applying Bessel's
         correction.
@@ -1373,7 +1373,7 @@ def std(x_gpu, ddof=0, axis=None, stream=None, keepdims=False):
     x_gpu : pycuda.gpuarray.GPUArray
         Array containing numbers whose std is desired.
     ddof : int (optional)
-        "Delta Degrees of Freedom": the divisor used in computing the 
+        "Delta Degrees of Freedom": the divisor used in computing the
         variance is ``N - ddof``, where ``N`` is the number of elements.
         Setting ``ddof = 1`` is equivalent to applying Bessel's
         correction.

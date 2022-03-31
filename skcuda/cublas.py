@@ -257,9 +257,9 @@ def _get_cublas_version():
     """
     Get and save CUBLAS version using the CUBLAS library's SONAME.
 
-    This function tries to avoid calling cublasGetVersion because creating a 
-    CUBLAS context can subtly affect the performance of subsequent 
-    CUDA operations in certain circumstances. 
+    This function tries to avoid calling cublasGetVersion because creating a
+    CUBLAS context can subtly affect the performance of subsequent
+    CUDA operations in certain circumstances.
 
     Results
     -------
@@ -2644,7 +2644,7 @@ def cublasZgerc(handle, m, n, alpha, x, incx, y, incy, A, lda):
 
     References
     ----------
-    `cublas<t>ger <http://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-ger>`_    
+    `cublas<t>ger <http://docs.nvidia.com/cuda/cublas/#cublas-lt-t-gt-ger>`_
     """
 
     status = _libcublas.cublasZgerc_v2(handle,

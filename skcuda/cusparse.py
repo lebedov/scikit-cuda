@@ -299,7 +299,7 @@ def cusparseSetMatType(desc, type):
     cusparseCheckStatus(status)
 
 _libcusparse.cusparseGetMatType.restype = int
-_libcusparse.cusparseGetMatType.argtypes = [cusparseMatDescr]    
+_libcusparse.cusparseGetMatType.argtypes = [cusparseMatDescr]
 def cusparseGetMatType(desc):
     """
     Gets the matrix type of the specified matrix.
@@ -329,7 +329,7 @@ _libcusparse.cusparseSnnz.argtypes = [ctypes.c_int,
                                       ctypes.c_int,
                                       ctypes.c_void_p,
                                       ctypes.c_void_p]
-def cusparseSnnz(handle, dirA, m, n, descrA, A, lda, 
+def cusparseSnnz(handle, dirA, m, n, descrA, A, lda,
                  nnzPerRowColumn, nnzTotalDevHostPtr):
     """
     Compute number of non-zero elements per row, column, or dense matrix.
@@ -350,11 +350,11 @@ def cusparseSnnz(handle, dirA, m, n, descrA, A, lda,
         Dense matrix of dimensions (lda, n).
     lda : int
         Leading dimension of A.
-    
+
     Returns
     -------
     nnzPerRowColumn : pycuda.gpuarray.GPUArray
-        Array of length m or n containing the number of 
+        Array of length m or n containing the number of
         non-zero elements per row or column, respectively.
     nnzTotalDevHostPtr : pycuda.gpuarray.GPUArray
         Total number of non-zero elements in device or host memory.
@@ -365,7 +365,7 @@ def cusparseSnnz(handle, dirA, m, n, descrA, A, lda,
     nnzPerRowColumn = gpuarray.empty()
     nnzTotalDevHostPtr = gpuarray.empty()
 
-    status = _libcusparse.cusparseSnnz(handle, dirA, m, n, 
+    status = _libcusparse.cusparseSnnz(handle, dirA, m, n,
                                        descrA, int(A), lda,
                                        int(nnzPerRowColumn), int(nnzTotalDevHostPtr))
     cusparseCheckStatus(status)
@@ -382,7 +382,7 @@ _libcusparse.cusparseSdense2csr.argtypes = [ctypes.c_int,
                                             ctypes.c_void_p,
                                             ctypes.c_void_p,
                                             ctypes.c_void_p]
-def cusparseSdense2csr(handle, m, n, descrA, A, lda, 
+def cusparseSdense2csr(handle, m, n, descrA, A, lda,
                        nnzPerRow, csrValA, csrRowPtrA, csrColIndA):
     # Unfinished
     pass

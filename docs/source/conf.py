@@ -243,12 +243,12 @@ latex_elements = {
 #'pointsize': '10pt',
 
 # Additional stuff for the LaTeX preamble.
-'preamble': """
+'preamble': r"""
 \usepackage{amsmath}
 \usepackage{amsfonts}
 \usepackage{amssymb}
 \usepackage{ucs}
-\\renewcommand{\\familydefault}{\\sfdefault}
+\renewcommand{\familydefault}{\sfdefault}
 """
 }
 

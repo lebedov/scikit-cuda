@@ -32,7 +32,7 @@ class test_linalg(TestCase):
     def setUpClass(cls):
         cls.ctx = make_default_context()
         linalg.init()
- 
+
     @classmethod
     def tearDownClass(cls):
         linalg.shutdown()
@@ -42,7 +42,7 @@ class test_linalg(TestCase):
     def setUp(self):
         np.random.seed(0)
 
-        ### required for PCA tests ##### 
+        ### required for PCA tests #####
         self.M = 1000
         self.N = 100
         self.test_pca = linalg.PCA()
@@ -57,7 +57,7 @@ class test_linalg(TestCase):
         self.Xf = gpuarray.to_gpu(Xf_)
         self.XdT = gpuarray.to_gpu(Xd_.T.copy())
         self.XfT = gpuarray.to_gpu(Xf_.T.copy())
-        
+
     def test_pca_ortho_type_and_shape_float64_all_comp(self):
         # test that the shape is what we think it should be
         Td_all = self.test_pca.fit_transform(self.Xd)
@@ -86,12 +86,12 @@ class test_linalg(TestCase):
         self.assertTrue(linalg.dot(Td_2[:,0].copy(), Td_2[:,1].copy()) < self.max_ddot)
 
     def test_pca_ortho_type_and_shape_float32(self):
-        # test that the shape is what we think it should be	
+        # test that the shape is what we think it should be
         Tf_2 = self.test_pca2.fit_transform(self.Xf)
         self.assertIsNotNone(Tf_2)
         self.assertEqual(Tf_2.dtype, np.float32)
         self.assertEqual(Tf_2.shape, (self.M, self.K))
-        self.assertTrue(linalg.dot(Tf_2[:,0].copy(), Tf_2[:,1].copy()) < self.max_sdot) 
+        self.assertTrue(linalg.dot(Tf_2[:,0].copy(), Tf_2[:,1].copy()) < self.max_sdot)
 
     def test_pca_trans_ortho_type_and_shape_float64_all_comp(self):
         # test that the shape is what we think it should be
@@ -121,12 +121,12 @@ class test_linalg(TestCase):
         self.assertTrue(linalg.dot(Td_2[0,:].copy(), Td_2[1,:].copy()) < self.max_ddot)
 
     def test_pca_trans_ortho_type_and_shape_float32(self):
-        # test that the shape is what we think it should be	
+        # test that the shape is what we think it should be
         Tf_2 = self.test_pca2.fit_transform(self.XfT, True)
         self.assertIsNotNone(Tf_2)
         self.assertEqual(Tf_2.dtype, np.float32)
         self.assertEqual(Tf_2.shape, (self.K, self.M))
-        self.assertTrue(linalg.dot(Tf_2[0,:], Tf_2[1,:]) < self.max_sdot) 
+        self.assertTrue(linalg.dot(Tf_2[0,:], Tf_2[1,:]) < self.max_sdot)
 
     def test_pca_f_contiguous_check(self):
         try:
@@ -140,11 +140,11 @@ class test_linalg(TestCase):
     def test_pca_arr_2d_check(self):
         try:
             X_trash = np.random.rand(self.M, self.M, 3).astype(np.float32)
-            X_gpu_trash = gpuarray.to_gpu(X_trash)	
+            X_gpu_trash = gpuarray.to_gpu(X_trash)
             self.test_pca2.fit_transform(X_gpu_trash)
-            
+
             # should not reach this line. The prev line should fail and go to the except block
-            fail(msg="PCA Array dimensions check failed") 
+            fail(msg="PCA Array dimensions check failed")
         except ValueError:
             pass
 
@@ -152,9 +152,9 @@ class test_linalg(TestCase):
         self.test_pca.set_n_components(self.N+1)
         self.assertEqual(self.test_pca.get_n_components(), self.N+1)
         T1 = self.test_pca.fit_transform(self.Xf)
-        
+
         # should have been reset internally once the algorithm saw K was bigger than N
-        self.assertEqual(T1.shape[1], self.N)  
+        self.assertEqual(T1.shape[1], self.N)
 
     def test_pca_type_error_check(self):
         try:
@@ -163,7 +163,7 @@ class test_linalg(TestCase):
             self.test_pca2.fit_transform(X_gpu_trash)
 
             # should not reach this line. The prev line should fail and go to the except block
-            fail(msg="PCA Array data type check failed")         
+            fail(msg="PCA Array data type check failed")
         except TypeError:
             pass
 
@@ -301,7 +301,7 @@ class test_linalg(TestCase):
         a_gpu = gpuarray.to_gpu(a)
         b_gpu = gpuarray.to_gpu(b)
         c_gpu = linalg.dot(a_gpu, b_gpu)
-        assert_allclose(np.dot(a, b), c_gpu.get(), 
+        assert_allclose(np.dot(a, b), c_gpu.get(),
                             rtol=dtype_to_rtol[dtype],
                             atol=dtype_to_atol[dtype])
 
@@ -952,7 +952,7 @@ class test_linalg(TestCase):
         a_inv_gpu = linalg.pinv(a_gpu, lib='cusolver')
         assert_allclose(np.linalg.pinv(a), a_inv_gpu.get(),
                             atol=dtype_to_atol[np.complex64],
-                            rtol=dtype_to_rtol[np.complex64])                          
+                            rtol=dtype_to_rtol[np.complex64])
 
     def test_pinv_cusolver_complex128(self):
         a = np.asarray(np.random.rand(4, 8) + \
@@ -977,7 +977,7 @@ class test_linalg(TestCase):
         l_gpu = linalg.tril(a_gpu)
         assert_allclose(np.tril(a), l_gpu.get(),
                             atol=dtype_to_atol[np.float64],
-                            rtol=dtype_to_rtol[np.float64]) 
+                            rtol=dtype_to_rtol[np.float64])
 
     def test_tril_complex64(self):
         a = np.asarray(np.random.rand(4, 4), np.complex64)
@@ -985,7 +985,7 @@ class test_linalg(TestCase):
         l_gpu = linalg.tril(a_gpu)
         assert_allclose(np.tril(a), l_gpu.get(),
                             atol=dtype_to_atol[np.complex64],
-                            rtol=dtype_to_rtol[np.complex64])                          
+                            rtol=dtype_to_rtol[np.complex64])
 
     def test_tril_complex128(self):
         a = np.asarray(np.random.rand(4, 4), np.complex128)
@@ -993,7 +993,7 @@ class test_linalg(TestCase):
         l_gpu = linalg.tril(a_gpu)
         assert_allclose(np.tril(a), l_gpu.get(),
                             atol=dtype_to_atol[np.complex128],
-                            rtol=dtype_to_rtol[np.complex128])                          
+                            rtol=dtype_to_rtol[np.complex128])
 
     def test_triu_float32(self):
         a = np.asarray(np.random.rand(4, 4), np.float32)
@@ -1001,7 +1001,7 @@ class test_linalg(TestCase):
         l_gpu = linalg.triu(a_gpu)
         assert_allclose(np.triu(a), l_gpu.get(),
                             atol=dtype_to_atol[np.float32],
-                            rtol=dtype_to_rtol[np.float32])                          
+                            rtol=dtype_to_rtol[np.float32])
 
     def test_triu_float64(self):
         a = np.asarray(np.random.rand(4, 4), np.float64)
@@ -1009,7 +1009,7 @@ class test_linalg(TestCase):
         l_gpu = linalg.triu(a_gpu)
         assert_allclose(np.triu(a), l_gpu.get(),
                             atol=dtype_to_atol[np.float64],
-                            rtol=dtype_to_rtol[np.float64])                          
+                            rtol=dtype_to_rtol[np.float64])
 
     def test_triu_complex64(self):
         a = np.asarray(np.random.rand(4, 4), np.complex64)
@@ -1017,7 +1017,7 @@ class test_linalg(TestCase):
         l_gpu = linalg.triu(a_gpu)
         assert_allclose(np.triu(a), l_gpu.get(),
                             atol=dtype_to_atol[np.complex64],
-                            rtol=dtype_to_rtol[np.complex64])                          
+                            rtol=dtype_to_rtol[np.complex64])
 
     def test_triu_complex128(self):
         a = np.asarray(np.random.rand(4, 4), np.complex128)
@@ -1025,7 +1025,7 @@ class test_linalg(TestCase):
         l_gpu = linalg.triu(a_gpu)
         assert_allclose(np.triu(a), l_gpu.get(),
                             atol=dtype_to_atol[np.complex128],
-                            rtol=dtype_to_rtol[np.complex128])                          
+                            rtol=dtype_to_rtol[np.complex128])
 
     def _impl_test_multiply(self, N, dtype):
         mk_matrix = lambda N, dtype: np.asarray(np.random.rand(N, N), dtype)

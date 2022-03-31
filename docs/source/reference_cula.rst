@@ -77,7 +77,7 @@ Double Precision Complex
    culaDeviceZgeTransposeConjugate
    culaDeviceZgeTransposeInplace
    culaDeviceZgeTransposeConjugateInplace
-    
+
 BLAS Routines
 -------------
 
@@ -134,7 +134,7 @@ Single Precision Real
    culaDeviceSgglse
    culaDeviceSposv
    culaDeviceSpotrf
-   
+
 Single Precision Complex
 ^^^^^^^^^^^^^^^^^^^^^^^^
 .. autosummary::

@@ -41,7 +41,7 @@ class test_cublasxt(TestCase):
         b = np.random.rand(4, 4).astype(np.float32)
         c = np.zeros((4, 4), np.float32)
         cublasxt.cublasXtSgemm(self.handle,
-                               'N', 'N', 
+                               'N', 'N',
                                4, 4, 4, np.float32(1.0),
                                a.ctypes.data, 4, b.ctypes.data, 4, np.float32(0.0),
                                c.ctypes.data, 4)
@@ -51,11 +51,11 @@ class test_cublasxt(TestCase):
         a = np.random.rand(4, 4).astype(np.float64)
         b = np.random.rand(4, 4).astype(np.float64)
         c = np.zeros((4, 4), np.float64)
-        
+
         cublasxt.cublasXtDgemm(self.handle,
                                'N', 'N', 4, 4, 4,
                                np.float64(1.0),
-                               a.ctypes.data, 4, b.ctypes.data, 4, np.float64(0.0),                               
+                               a.ctypes.data, 4, b.ctypes.data, 4, np.float64(0.0),
                                c.ctypes.data, 4)
         np.allclose(np.dot(b.T, a.T).T, c)
 
@@ -63,9 +63,9 @@ class test_cublasxt(TestCase):
         a = (np.random.rand(4, 4)+1j*np.random.rand(4, 4)).astype(np.complex128)
         b = (np.random.rand(4, 4)+1j*np.random.rand(4, 4)).astype(np.complex128)
         c = np.zeros((4, 4), np.complex128)
-        
+
         cublasxt.cublasXtCgemm(self.handle,
-                               'N', 'N', 4, 4, 4,           
+                               'N', 'N', 4, 4, 4,
                                np.complex128(1.0),
                                a.ctypes.data, 4, b.ctypes.data, 4, np.complex128(0.0),
                                c.ctypes.data, 4)
@@ -75,7 +75,7 @@ class test_cublasxt(TestCase):
         a = (np.random.rand(4, 4)+1j*np.random.rand(4, 4)).astype(np.complex256)
         b = (np.random.rand(4, 4)+1j*np.random.rand(4, 4)).astype(np.complex256)
         c = np.zeros((4, 4), np.complex256)
-        
+
         cublasxt.cublasXtZgemm(self.handle,
                                'N', 'N', 4, 4, 4,
                                np.complex256(1.0),

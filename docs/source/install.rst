@@ -16,7 +16,7 @@ not already on your system.
 
 Obtaining the Latest Software
 -----------------------------
-The latest stable and development versions of ``scikit-cuda`` can be downloaded 
+The latest stable and development versions of ``scikit-cuda`` can be downloaded
 from `GitHub <https://github.com/lebedov/scikit-cuda>`_
 
 Online documentation is available at `<https://scikit-cuda.readthedocs.org>`_
@@ -32,12 +32,12 @@ installed:
 * `NumPy <http://www.numpy.org>`_ 1.2.0 or later.
 * `PyCUDA <http://mathema.tician.de/software/pycuda>`_ 2016.1 or later (some
   parts of ``scikit-cuda`` might not work properly with earlier versions).
-* `NVIDIA CUDA Toolkit <http://www.nvidia.com/object/cuda_home_new.html>`_ 5.0 
+* `NVIDIA CUDA Toolkit <http://www.nvidia.com/object/cuda_home_new.html>`_ 5.0
   or later.
 
-Note that both Python and the CUDA Toolkit must be built for the same 
-architecture, i.e., Python compiled for a 32-bit architecture will not find the 
-libraries provided by a 64-bit CUDA installation. CUDA versions from 7.0 onwards 
+Note that both Python and the CUDA Toolkit must be built for the same
+architecture, i.e., Python compiled for a 32-bit architecture will not find the
+libraries provided by a 64-bit CUDA installation. CUDA versions from 7.0 onwards
 are 64-bit.
 
 To run the unit tests, the following packages are also required:
@@ -70,13 +70,13 @@ Building and Installation
 -------------------------
 ``scikit-cuda`` searches for CUDA libraries in the system library
 search path when imported. You may have to modify this path (e.g., by adding the
-path to the CUDA libraries to ``/etc/ld.so.conf`` and running ``ldconfig`` as 
+path to the CUDA libraries to ``/etc/ld.so.conf`` and running ``ldconfig`` as
 root or to the
-``LD_LIBRARY_PATH`` environmental variable on Linux, or by adding the CUDA 
+``LD_LIBRARY_PATH`` environmental variable on Linux, or by adding the CUDA
 library path to the ``DYLD_LIBRARY_PATH`` on MacOSX) if the libraries are
 not being found.
 
-To build and install the toolbox, download and unpack the source 
+To build and install the toolbox, download and unpack the source
 release and run::
 
    python setup.py install

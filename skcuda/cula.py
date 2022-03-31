@@ -499,7 +499,7 @@ except AttributeError:
         """
         QR factorization - Generate Q from QR factorization
         """
-        
+
         raise NotImplementedError('CULA Dense required')
 else:
     def culaDeviceSorgqr(m, n, k, a, lda, tau):
@@ -1489,7 +1489,7 @@ def culaDeviceZgemv(trans, m, n, alpha, A, lda, x, incx, beta, y, incy):
                                                beta.imag),
                            int(y), incy)
     culaCheckStatus(status)
-    
+
 # SGEEV, DGEEV, CGEEV, ZGEEV
 try:
     _libcula.culaDeviceSgeev.restype = \
@@ -1591,8 +1591,8 @@ else:
         jobvr = jobvr.encode('ascii')
         status = _libcula.culaDeviceZgeev(jobvl, jobvr, n, int(a), lda, int(w),
                                int(vl), ldvl, int(vr), ldvr)
-        culaCheckStatus(status)   
-    
+        culaCheckStatus(status)
+
 # Auxiliary routines:
 
 try:

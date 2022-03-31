@@ -1235,7 +1235,7 @@ def magma_zgesvd_buffersize(jobu, jobvt, m, n, a, lda, s, u, ldu, vt, ldvt):
 def _magma_gels_buffersize(trans, m, n, nrhs, a, lda, b, ldb, func, dtype):
     work = np.zeros(1, dtype)
     func(trans, m, n, nrhs,
-         int(a), lda, int(b), ldb, 
+         int(a), lda, int(b), ldb,
          int(work.ctypes.data), -1)
     return int(work[0])
 
@@ -1569,7 +1569,7 @@ def magma_cgeqrf(m, n, A, lda, tau, work, lwork):
     """
     QR factorization.
     """
-    
+
     info = c_int_type()
     status = _libmagma.magma_cgeqrf(m, n, int(A), lda,
                                     int(tau), int(work),
@@ -1585,11 +1585,11 @@ _libmagma.magma_zgeqrf.argtypes = [c_int_type,
                                    ctypes.c_void_p,
                                    c_int_type,
                                    ctypes.c_void_p]
-def magma_zgeqrf(m, n, A, lda, tau, work, lwork):  
+def magma_zgeqrf(m, n, A, lda, tau, work, lwork):
     """
     QR factorization.
     """
-    
+
     info = c_int_type()
     status = _libmagma.magma_zgeqrf(m, n, int(A), lda,
                                     int(tau), int(work),
@@ -3771,13 +3771,13 @@ def magma_ssyevdx(jobz, rnge, uplo, n, A, lda,
     """
 
     # _XXX_conversion[] returns integer according to magma_types.h
-    jobz = _vec_conversion[jobz] 
+    jobz = _vec_conversion[jobz]
     rnge = _range_conversion[rnge]
     uplo = _uplo_conversion[uplo]
     info = c_int_type()
     status = _libmagma.magma_ssyevdx(jobz, rnge, uplo, n, int(A), lda,
                                         vl, vu, il, iu, int(m),
-                                        int(w), int(work), lwork, int(iwork), liwork, 
+                                        int(w), int(work), lwork, int(iwork), liwork,
                                         ctypes.byref(info))
     magmaCheckStatus(status)
 
@@ -3791,13 +3791,13 @@ def magma_dsyevdx(jobz, rnge, uplo, n, A, lda,
     Multi-GPU, data on host, expert mode
     """
     # _XXX_conversion[] returns integer according to magma_types.h
-    jobz = _vec_conversion[jobz] 
+    jobz = _vec_conversion[jobz]
     rnge = _range_conversion[rnge]
     uplo = _uplo_conversion[uplo]
     info = c_int_type()
     status = _libmagma.magma_dsyevdx(jobz, rnge, uplo, n, int(A), lda,
-                                        vl, vu, il, iu, int(m), 
-                                        int(w), int(work), lwork, int(iwork), liwork, 
+                                        vl, vu, il, iu, int(m),
+                                        int(w), int(work), lwork, int(iwork), liwork,
                                         ctypes.byref(info))
     magmaCheckStatus(status)
 
@@ -3831,13 +3831,13 @@ def magma_ssyevdx_m(ngpu, jobz, rnge, uplo, n, A, lda,
     source: ssyedx_m.cpp
     """
     # _XXX_conversion[] returns integer according to magma_types.h
-    jobz = _vec_conversion[jobz] 
+    jobz = _vec_conversion[jobz]
     rnge = _range_conversion[rnge]
     uplo = _uplo_conversion[uplo]
     info = c_int_type()
     status = _libmagma.magma_ssyevdx_m(ngpu, jobz, rnge, uplo, n, int(A), lda,
                                         vl, vu, il, iu, int(m),
-                                        int(w), int(work), lwork, int(iwork), liwork, 
+                                        int(w), int(work), lwork, int(iwork), liwork,
                                         ctypes.byref(info))
     magmaCheckStatus(status)
 
@@ -3853,13 +3853,13 @@ def magma_dsyevdx_m(ngpu, jobz, rnge, uplo, n, A, lda,
     source: dsyedx_m.cpp
     """
     # _XXX_conversion[] returns integer according to magma_types.h
-    jobz = _vec_conversion[jobz] 
+    jobz = _vec_conversion[jobz]
     rnge = _range_conversion[rnge]
     uplo = _uplo_conversion[uplo]
     info = c_int_type()
     status = _libmagma.magma_dsyevdx_m(ngpu, jobz, rnge, uplo, n, int(A), lda,
                                         vl, vu, il, iu, int(m),
-                                        int(w), int(work), lwork, int(iwork), liwork, 
+                                        int(w), int(work), lwork, int(iwork), liwork,
                                         ctypes.byref(info))
     magmaCheckStatus(status)
 
@@ -3886,7 +3886,7 @@ _libmagma.magma_ssyevdx_gpu.argtypes = [c_int_type,     # jobz
                                         ctypes.c_void_p]# info
 def magma_ssyevdx_gpu(jobz, rnge, uplo, n, A, lda,
                     vl, vu, il, iu, m,
-                    w, wa, ldwa, 
+                    w, wa, ldwa,
                     work, lwork, iwork, liwork):
     """
     Compute eigenvalues of real symmetric matrix.
@@ -3895,14 +3895,14 @@ def magma_ssyevdx_gpu(jobz, rnge, uplo, n, A, lda,
     source: dsyedx_m.cpp
     """
     # _XXX_conversion[] returns integer according to magma_types.h
-    jobz = _vec_conversion[jobz] 
+    jobz = _vec_conversion[jobz]
     rnge = _range_conversion[rnge]
     uplo = _uplo_conversion[uplo]
     info = c_int_type()
     status = _libmagma.magma_ssyevdx_gpu(jobz, rnge, uplo, n, int(A), lda,
                                         vl, vu, il, iu, int(m),
                                         int(w), int(wa), ldwa,
-                                        int(work), lwork, int(iwork), liwork, 
+                                        int(work), lwork, int(iwork), liwork,
                                         ctypes.byref(info))
     magmaCheckStatus(status)
 
@@ -3910,7 +3910,7 @@ _libmagma.magma_dsyevdx_gpu.restype = int
 _libmagma.magma_dsyevdx_gpu.argtypes = _libmagma.magma_ssyevdx_gpu.argtypes
 def magma_dsyevdx_gpu(jobz, rnge, uplo, n, A, lda,
                     vl, vu, il, iu, m,
-                    w, wa, ldwa, 
+                    w, wa, ldwa,
                     work, lwork, iwork, liwork):
     """
     Compute eigenvalues of real symmetric matrix.
@@ -3918,14 +3918,14 @@ def magma_dsyevdx_gpu(jobz, rnge, uplo, n, A, lda,
 
     source: dsyedx_m.cpp
     """
-    jobz = _vec_conversion[jobz] 
+    jobz = _vec_conversion[jobz]
     rnge = _range_conversion[rnge]
     uplo = _uplo_conversion[uplo]
     info = c_int_type()
     status = _libmagma.magma_dsyevdx_gpu(jobz, rnge, uplo, n, int(A), lda,
                                         vl, vu, il, iu, int(m),
                                         int(w), int(wa), ldwa,
-                                        int(work), lwork, int(iwork), liwork, 
+                                        int(work), lwork, int(iwork), liwork,
                                         ctypes.byref(info))
     magmaCheckStatus(status)
 

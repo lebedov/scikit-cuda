@@ -23,7 +23,7 @@ typedict = {'s': np.float32, 'd': np.float64, 'c': np.complex64, 'z': np.complex
 typedict_= {v: k for k, v in typedict.items()}
 
 def _test_syev(N, type_key, data_gpu=False, ngpu=1, expert=False, keigs=None):
-    """A simple test of the eigenvalue solver for symmetric matrix. 
+    """A simple test of the eigenvalue solver for symmetric matrix.
     Random matrix is used.
 
     :param N: size of the testing matrix
@@ -46,7 +46,7 @@ def _test_syev(N, type_key, data_gpu=False, ngpu=1, expert=False, keigs=None):
             print("Imported pycuda.gpuarray")
         except:
             raise ImportError("Cannot import pycuda.gpuarray!")
-    
+
     dtype = typedict[type_key]
     if dtype in [np.complex64, np.complex128]:
         raise ValueError("Complex types are not supported yet.")
@@ -55,8 +55,8 @@ def _test_syev(N, type_key, data_gpu=False, ngpu=1, expert=False, keigs=None):
     np.random.seed(1234)
     M = np.random.random((N, N)).astype(dtype)
     M_cpu = M.copy() # for comparison
-    
-    # GPU 
+
+    # GPU
     jobz = 'N' # do not compute eigenvectors
     uplo = 'U' # use upper diagonal
     if expert:
@@ -64,7 +64,7 @@ def _test_syev(N, type_key, data_gpu=False, ngpu=1, expert=False, keigs=None):
         vl = 0; vu = 1e10
         if keigs is None:
             keigs = int(np.ceil(N/2))
-        il = 1; iu = keigs; 
+        il = 1; iu = keigs;
         m = np.zeros((1,), dtype=int) # no. of eigenvalues found
 
     # allocate memory for eigenvalues
@@ -119,7 +119,7 @@ def _test_syev(N, type_key, data_gpu=False, ngpu=1, expert=False, keigs=None):
         if 'x' in magma_function.__name__:
             # expert
             status = magma_function(ngpu, jobz, rnge, uplo, N, M.ctypes.data, N,
-                                    vl, vu, il, iu, m.ctypes.data, 
+                                    vl, vu, il, iu, m.ctypes.data,
                                     w_gpu.ctypes.data, work.ctypes.data, lwork, iwork.ctypes.data, liwork)
         else:
             # non-expert
@@ -131,7 +131,7 @@ def _test_syev(N, type_key, data_gpu=False, ngpu=1, expert=False, keigs=None):
         M_gpu = gpuarray.to_gpu(M)
         if 'x' in magma_function.__name__:
             status = magma_function(jobz, rnge, uplo, N, M_gpu.gpudata, N,
-                                    vl, vu, il, iu, m.ctypes.data, 
+                                    vl, vu, il, iu, m.ctypes.data,
                                     w_gpu.ctypes.data, worka.ctypes.data, ldwa,
                                     work.ctypes.data, lwork, iwork.ctypes.data, liwork)
         else:
@@ -143,7 +143,7 @@ def _test_syev(N, type_key, data_gpu=False, ngpu=1, expert=False, keigs=None):
         if 'x' in magma_function.__name__:
             # expert
             status = magma_function(jobz, rnge, uplo, N, M.ctypes.data, N,
-                                    vl, vu, il, iu, m.ctypes.data, 
+                                    vl, vu, il, iu, m.ctypes.data,
                                     w_gpu.ctypes.data, work.ctypes.data, lwork, iwork.ctypes.data, liwork)
         else:
             # non-expert
@@ -203,6 +203,6 @@ def main():
                     _test_syev(N=N, type_key=t, data_gpu=True,
                                 ngpu=1, expert=expert)
     magma_finalize()
-   
+
 if __name__=='__main__':
     main()
