@@ -5,7 +5,7 @@ import pycuda.gpuarray as gpuarray
 import numpy as np
 import skcuda.linalg as linalg
 from skcuda.linalg import PCA as cuPCA
-from matplotlib import pyplot as plt 
+from matplotlib import pyplot as plt
 from sklearn import datasets
 
 iris = datasets.load_iris()
@@ -29,25 +29,25 @@ for i in range(len(demo_types)):
     demo_type = demo_types[i]
 
     # 1000 samples of 4-dimensional data vectors
-    X = X_orig.astype(demo_type) 
+    X = X_orig.astype(demo_type)
 
     X_gpu = gpuarray.to_gpu(X) # copy data to gpu
 
     T_gpu = pca.fit_transform(X_gpu) # calculate the principal components
 
-    # show that the resulting eigenvectors are orthogonal 
-    # Note that GPUArray.copy() is necessary to create a contiguous array 
+    # show that the resulting eigenvectors are orthogonal
+    # Note that GPUArray.copy() is necessary to create a contiguous array
     # from the array slice, otherwise there will be undefined behavior
-    dot_product = linalg.dot(T_gpu[:,0].copy(), T_gpu[:,1].copy()) 	
+    dot_product = linalg.dot(T_gpu[:,0].copy(), T_gpu[:,1].copy())
     T = T_gpu.get()
 
-    print("The dot product of the first two " + str(precisions[i]) + 
+    print("The dot product of the first two " + str(precisions[i]) +
             " precision eigenvectors is: " + str(dot_product))
-    
+
     # now get the variance of the eigenvectors and create the ratio explained from the total
     std_vec = np.std(T, axis=0)
-    print("We explained " + str(100 * np.sum(std_vec[:2]) / np.sum(std_vec)) + 
-            "% of the variance with 2 principal components in " +  
+    print("We explained " + str(100 * np.sum(std_vec[:2]) / np.sum(std_vec)) +
+            "% of the variance with 2 principal components in " +
             str(precisions[i]) +  " precision\n\n")
 
     # Plot results for double precision

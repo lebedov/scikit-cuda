@@ -19,7 +19,7 @@ Helper Routines
    cublasGetVersion
    cublasSetPointerMode
    cublasSetStream
-   
+
 Wrapper Routines
 ----------------
 
@@ -81,7 +81,7 @@ Double Precision BLAS1 Routines
    cublasDznrm2
    cublasIzamax
    cublasIzamin
-   
+
    cublasZaxpy
    cublasZcopy
    cublasZdotc

@@ -1,5 +1,5 @@
 """
-Demo of using ssyedx_m 
+Demo of using ssyedx_m
 """
 import numpy as np
 from skcuda import magma
@@ -56,11 +56,11 @@ def eigs(a_gpu, k=None, which='LM', imag=False, return_eigenvectors=True):
 
     if t == 's':
         status = magma.magma_ssyevdx_m(ngpu, jobz, rnge, uplo, N, a_gpu.ctypes.data, N,
-                                    vl, vu, il, iu, m, 
+                                    vl, vu, il, iu, m,
                                     w_gpu.ctypes.data, work.ctypes.data, lwork, iwork.ctypes.data, liwork)
     elif t == 'd':
         status = magma.magma_dsyevdx_m(ngpu, jobz, rnge, uplo, N, a_gpu.ctypes.data, N,
-                                    vl, vu, il, iu, m, 
+                                    vl, vu, il, iu, m,
                                     w_gpu.ctypes.data, work.ctypes.data, lwork, iwork.ctypes.data, liwork)
     else:
         raise ValueError('unsupported type')
@@ -81,10 +81,10 @@ if __name__=='__main__':
     N = int(sys.argv[1])
 
     # not symmetric, but only side of the diagonal is used
-    M_gpu = np.random.random((N, N)) 
+    M_gpu = np.random.random((N, N))
     M_gpu = M_gpu.astype(np.float32)
     M_cpu = M_gpu.copy()
-    
+
     # GPU
     t1 = time.time()
     W_gpu, V_gpu = eigs(M_gpu)

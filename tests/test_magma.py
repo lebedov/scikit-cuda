@@ -7,8 +7,8 @@ Real symmetric eigensolvers: magma_[s,d]syevd[,x][,_m,_gpu]
 """
 from unittest import (
     main,
-    # makeSuite, 
-    # skipUnless, 
+    # makeSuite,
+    # skipUnless,
     TestCase,
     TestSuite
 )
@@ -67,7 +67,7 @@ class test_magma(TestCase):
         mat = np.random.rand(self.N*self.N)
         if type_key in ['c', 'z']:
             mat = mat + 1j*np.random.rand(self.N*self.N)
-        
+
         mat = mat.astype(dtype).reshape((self.N, self.N), order='F')
         mat_numpy = mat.copy() # cpu
 

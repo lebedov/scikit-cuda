@@ -24,7 +24,7 @@ Wrapper Routines
 .. autosummary::
     :toctree: generated/
     :nosignatures:
-    
+
     cufftPlan1d
     cufftPlan2d
     cufftPlan3d

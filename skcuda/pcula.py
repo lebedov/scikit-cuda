@@ -71,7 +71,7 @@ def pculaSgemm(config, transa, transb, m, n, k, alpha, A, lda, B, ldb,
 
     """
 
-    status = _libpcula.pculaSgemm(ctypes.byref(config), transa, transb, m, n, k, alpha, 
+    status = _libpcula.pculaSgemm(ctypes.byref(config), transa, transb, m, n, k, alpha,
                                   int(A), lda, int(B), ldb, beta, int(C), ldc)
     culaCheckStatus(status)
 
@@ -97,7 +97,7 @@ def pculaDgemm(config, transa, transb, m, n, k, alpha, A, lda, B, ldb,
 
     """
 
-    status = _libpcula.pculaDgemm(ctypes.byref(config), transa, transb, m, n, k, alpha, 
+    status = _libpcula.pculaDgemm(ctypes.byref(config), transa, transb, m, n, k, alpha,
                                   int(A), lda, int(B), ldb, beta, int(C), ldc)
     culaCheckStatus(status)
 
@@ -123,7 +123,7 @@ def pculaCgemm(config, transa, transb, m, n, k, alpha, A, lda, B, ldb,
 
     """
 
-    status = _libpcula.pculaCgemm(ctypes.byref(config), transa, transb, m, n, k, alpha, 
+    status = _libpcula.pculaCgemm(ctypes.byref(config), transa, transb, m, n, k, alpha,
                                   int(A), lda, int(B), ldb, beta, int(C), ldc)
     culaCheckStatus(status)
 
@@ -149,7 +149,7 @@ def pculaZgemm(config, transa, transb, m, n, k, alpha, A, lda, B, ldb,
 
     """
 
-    status = _libpcula.pculaZgemm(ctypes.byref(config), transa, transb, m, n, k, alpha, 
+    status = _libpcula.pculaZgemm(ctypes.byref(config), transa, transb, m, n, k, alpha,
                                   int(A), lda, int(B), ldb, beta, int(C), ldc)
     culaCheckStatus(status)
 
@@ -174,7 +174,7 @@ def pculaStrsm(config, side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb):
     """
 
     status = _libpcula.pculaStrsm(ctypes.byref(config), side, uplo, transa,
-                                  diag, m, n, alpha, int(a), lda, int(b), ldb)                                  
+                                  diag, m, n, alpha, int(a), lda, int(b), ldb)
     culaCheckStatus(status)
 
 _libpcula.pculaDtrsm.restype = int
@@ -197,7 +197,7 @@ def pculaDtrsm(config, side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb):
     """
 
     status = _libpcula.pculaDtrsm(ctypes.byref(config), side, uplo, transa,
-                                  diag, m, n, alpha, int(a), lda, int(b), ldb)                                  
+                                  diag, m, n, alpha, int(a), lda, int(b), ldb)
     culaCheckStatus(status)
 
 _libpcula.pculaCtrsm.restype = int
@@ -220,7 +220,7 @@ def pculaCtrsm(config, side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb):
     """
 
     status = _libpcula.pculaCtrsm(ctypes.byref(config), side, uplo, transa,
-                                  diag, m, n, alpha, int(a), lda, int(b), ldb)                                  
+                                  diag, m, n, alpha, int(a), lda, int(b), ldb)
     culaCheckStatus(status)
 
 _libpcula.pculaZtrsm.restype = int
@@ -243,7 +243,7 @@ def pculaZtrsm(config, side, uplo, transa, diag, m, n, alpha, a, lda, b, ldb):
     """
 
     status = _libpcula.pculaZtrsm(ctypes.byref(config), side, uplo, transa,
-                                  diag, m, n, alpha, int(a), lda, int(b), ldb)                                  
+                                  diag, m, n, alpha, int(a), lda, int(b), ldb)
     culaCheckStatus(status)
 
 # SGESV, DGESV, CGESV, ZGESV

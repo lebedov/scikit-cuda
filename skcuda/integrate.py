@@ -117,8 +117,8 @@ def gen_simps_mult(N, dtype, even='avg'):
     length is equivalent to the definite integral of the latter
     computed using composite Simpson's rule.
 
-    If there are an even number of samples, N, then there are an odd 
-    number of intervals (N-1), but Simpson's rule requires an even number 
+    If there are an even number of samples, N, then there are an odd
+    number of intervals (N-1), but Simpson's rule requires an even number
     of intervals. The parameter 'even' controls how this is handled.
 
     Parameters
@@ -160,7 +160,7 @@ def gen_simps_mult(N, dtype, even='avg'):
             raise ValueError("Parameter 'even' must be "
                              "'avg', 'last', or 'first'.")
         basic_simps = gen_simps_mult(N-1, dtype)
-        
+
         if even in ['avg', 'first']:
             x_gpu[:-1] += basic_simps
             x_gpu[-2:] += 0.5 # trapz on last interval
@@ -173,12 +173,12 @@ def gen_simps_mult(N, dtype, even='avg'):
 
 def simps(x_gpu, dx=1.0, even='avg', handle=None):
     """
-    Implementation of composite Simpson's rule similar to 
+    Implementation of composite Simpson's rule similar to
     scipy.integrate.simps.
 
     Integrate x_gpu with spacing dx using composite Simpson's rule.
-    If there are an even number of samples, N, then there are an odd 
-    number of intervals (N-1), but Simpson's rule requires an even number 
+    If there are an even number of samples, N, then there are an odd
+    number of intervals (N-1), but Simpson's rule requires an even number
     of intervals. The parameter 'even' controls how this is handled.
 
     Parameters

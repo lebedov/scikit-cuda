@@ -41,8 +41,8 @@ Development
 The latest source code can be obtained from
 `<https://github.com/lebedov/scikit-cuda>`_.
 
-When submitting bug reports or questions via the `issue tracker 
-<https://github.com/lebedov/scikit-cuda/issues>`_, please include the following 
+When submitting bug reports or questions via the `issue tracker
+<https://github.com/lebedov/scikit-cuda/issues>`_, please include the following
 information:
 
 - Python version.
@@ -71,9 +71,9 @@ If you use scikit-cuda in a scholarly publication, please cite it as follows: ::
                         Jan Schl\"{u}ter and
                         Brian Thomas and
                         Chris Capdevila and
-                        Alex Rubinsteyn and 
+                        Alex Rubinsteyn and
                         Michael M. Forbes and
-                        Jacob Frelinger and 
+                        Jacob Frelinger and
                         Tim Klein and
                         Bruce Merry and
                         Nate Merill and
@@ -107,7 +107,7 @@ As of 2021, the CULA toolkit by `EM Photonics <https://emphotonics.com/>`_ no lo
 
 Related
 -------
-Python wrappers for `cuDNN <https://developer.nvidia.com/cudnn>`_ by Hannes 
+Python wrappers for `cuDNN <https://developer.nvidia.com/cudnn>`_ by Hannes
 Bretschneider are available `here
 <https://github.com/hannes-brt/cudnn-python-wrappers>`_.
 

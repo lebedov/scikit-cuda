@@ -14,7 +14,7 @@ Release 0.5.3 (May 26, 2019)
 * Add MAGMA GELS wrappers (#271).
 * Add context-dependent memoization to skcuda.fft and other modules (#273).
 * Fix issues finding CUDA libraries on Windows.
-  
+
 Release 0.5.2 (November 6, 2018)
 --------------------------------
 * Prevent exceptions when CULA Dense free is present (#146).
@@ -39,11 +39,11 @@ Release 0.5.2 (November 6, 2018)
 * Skip CULA-dependent unit tests when CULA isn't present.
 * CUSOLVER support for symmetric eigenvalue decomposition (enh. by Bryant Menn).
 * CUSOLVER support for matrix inversion, QR decomposition (#198).
-* Prevent objdump output from changing due to environment language (fix by 
+* Prevent objdump output from changing due to environment language (fix by
   Arnaud Bergeron).
 * Fix diag() support for column-major 2D array inputs (#219).
 * Use absolute path for skcuda header includes (enh. by S. Clarkson).
-* Fix QR issues by reverting fix for #131 and raising PyCUDA version requirement 
+* Fix QR issues by reverting fix for #131 and raising PyCUDA version requirement
   (fix by S. Clarkson).
 * More batch CUBLAS wrappers (enh. by Li Yong Liu)
 * Numerical integration with Simpson's Rule (enh. by Alexander Weyman)
@@ -63,7 +63,7 @@ Release 0.5.1 - (October 30, 2015)
 * Standard and randomized Dynamic Mode Decomposition (enh. by N. Benjamin Erichson).
 * Randomized linear algebra routines (enh. by N. Benjamin Erichson).
 * Add triu function (enh. by N. Benjamin Erichson).
-* Support Bessel correction in computation of variance and standard 
+* Support Bessel correction in computation of variance and standard
   deviation (#143).
 * Fix pip installation issues.
 
